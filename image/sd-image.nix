@@ -1,0 +1,66 @@
+# save as sd-image.nix
+{ lib, pkgs, ... }: {
+  imports = [
+    # Import SD card installer modules
+    <nixpkgs/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix>
+    # For nixpkgs cache
+    <nixpkgs/nixos/modules/installer/cd-dvd/channel.nix>
+  ];
+
+  # Disable image compression
+  sdImage.compressImage = false;
+
+  system.stateVersion = "23.05"; # Did you read the comment?
+
+  # Define system packages
+  environment.systemPackages = with pkgs; [
+    vim
+    curl
+    htop
+    # Other packages can be uncommented as needed
+  ];
+
+  # User configuration
+  users.users.hl = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" ]; # Add user to wheel group for admin privileges
+  };
+
+  # Networking setup
+  networking.useDHCP = false;
+  networking.interfaces.eth0.useDHCP = true;
+  networking.interfaces.wlan0.useDHCP = true;
+
+  # SSH configuration
+  services.openssh.enable = true;
+  services.openssh.settings.PermitRootLogin = "yes";
+  users.extraUsers.nixos.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPCfAwxYdoLR6YzoIx2+L593yLGpHaseGTCm3fxrshgD yurifl03@gmail.com"
+  ];
+
+  # OpenSSH is forced to have an empty `wantedBy` on the installer system[1], this won't allow it
+  # to be automatically started. Override it with the normal value.
+  # [1] https://github.com/NixOS/nixpkgs/blob/9e5aa25/nixos/modules/profiles/installation-device.nix#L76
+  systemd.services.sshd.wantedBy = lib.mkOverride 40 [ "multi-user.target" ];
+
+  # Enable OpenSSH out of the box.
+  services.sshd.enable = true;
+
+
+  # NTP time sync.
+  services.timesyncd.enable = true;
+
+  # NGINX sample
+  networking.firewall.allowedTCPPorts = [ 80 ];
+  services.nginx.enable = true;
+
+  # Auto-login on TTY1
+  services.mingetty.autologinUser = "hl";
+
+  # Execute htop after login on TTY1
+  environment.etc."profile".text = lib.mkBefore ''
+    if [[ "$(tty)" == "/dev/tty1" ]]; then
+      exec htop
+    fi
+  '';
+}

@@ -1,0 +1,25 @@
+{
+    "name": "NixOS Pi Development Container",
+    "image": "nixos/nix:latest",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "/run/current-system/sw/bin/bash"
+            },
+            "extensions": [
+                "ms-vscode-remote.remote-containers"
+            ]
+        }
+    },
+    "runArgs": [
+        "--cap-add=SYS_ADMIN",
+        "--security-opt",
+        "seccomp=unconfined"
+    ],
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+    ],
+    "remoteUser": "root",
+    "workspaceFolder": "/workspace",
+    "postCreateCommand": "nix-shell"
+}
