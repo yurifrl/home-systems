@@ -13,6 +13,19 @@ nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./sd-
 
 cp ./result/sd-image/*.img* .
 
+
+search packages
+
+nix search nixpkgs cowsay   
+
+
+## Nix Emergency Kit
+
+You are going to leave this running for you know how long, you will forget how to do basic stuff
+
+# TO inspect current system?
+
+nix eval --raw --impure --expr "builtins.currentSystem"
 ### Bulk
 
 - [davegallant/nixos-pi: NixOS configuration and OS image builder (builds for the Raspberry Pi)](https://github.com/davegallant/nixos-pi)
@@ -27,8 +40,12 @@ cp ./result/sd-image/*.img* .
 
 - [NixOS on ARM/Raspberry Pi 4 - NixOS Wiki](https://nixos.wiki/wiki/NixOS_on_ARM/Raspberry_Pi_4)
   - Nix wiki, talks about pi configs in general, hardware, network, after the install is done, might need to come here
+- [Why you don't need flake-utils · ayats.org](https://ayats.org/blog/no-flake-utils/)
+- [First steps in NixOps, with Flakes](https://github.com/akavel/garden/blob/main/%40seed/20230830-%40nixops-howto.%40flakes.md)
+- [Goodbye Kubernetes](https://xeiaso.net/blog/backslash-kubernetes-2021-01-03/)
 
 
+[Flakes - MyNixOS](https://mynixos.com/flakes)
 
 # Cli
 
@@ -49,4 +66,18 @@ python3 -m pip install -r requirements.txt
     User = "nobody";
     Cmd = [ "/bin/sh" "-l" ];
   };
+```
+
+
+Build nix flake
+
+```
+COPY nix/ .
+
+RUN nix \
+    --option filter-syscalls false \
+    --show-trace \
+    build
+
+RUN mv result /result
 ```

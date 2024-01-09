@@ -7,10 +7,10 @@
     <nixpkgs/nixos/modules/installer/cd-dvd/channel.nix>
   ];
 
-  # Disable image compression
+  # If true, will build a .zst compressed image.
   sdImage.compressImage = false;
 
-  system.stateVersion = "23.05"; # Did you read the comment?
+  system.stateVersion = "23.05";
 
   # Define system packages
   environment.systemPackages = with pkgs; [
@@ -19,12 +19,6 @@
     htop
     # Other packages can be uncommented as needed
   ];
-
-  # User configuration
-  users.users.hl = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" ]; # Add user to wheel group for admin privileges
-  };
 
   # Networking setup
   networking.useDHCP = false;
@@ -54,8 +48,15 @@
   networking.firewall.allowedTCPPorts = [ 80 ];
   services.nginx.enable = true;
 
+
+  # User configuration
+  users.users.hl = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" ]; # Add user to wheel group for admin privileges
+  };
+
   # Auto-login on TTY1
-  services.mingetty.autologinUser = "hl";
+  services.getty.autologinUser = "hl";
 
   # Execute htop after login on TTY1
   environment.etc."profile".text = lib.mkBefore ''
