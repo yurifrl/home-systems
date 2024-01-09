@@ -81,3 +81,11 @@ RUN nix \
 
 RUN mv result /result
 ```
+
+
+
+# Errors
+
+
+- Git tree is dirty
+  - Commit everything, cleanup stash
