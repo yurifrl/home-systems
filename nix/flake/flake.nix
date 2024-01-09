@@ -5,7 +5,7 @@
     # I used NixOS 22.11, as this matches what was recommended by the
     # nix-infect usage guide at the time of writing. And nix-infect was
     # what I used to install NixOS on my remote machine. 
-    nixpkgs.url = "github:nixos/nixpkgs/release-22.11";
+    nixpkgs.url = "github:nixos/nixpkgs/release-23.11";
   };
 
   outputs = { self, ... }@inputs: {
