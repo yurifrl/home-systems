@@ -1,53 +1,85 @@
 {
-  description = "NixOps config of my servers";
+  description = "Description for the project";
 
   inputs = {
-    # I used NixOS 22.11, as this matches what was recommended by the
-    # nix-infect usage guide at the time of writing. And nix-infect was
-    # what I used to install NixOS on my remote machine. 
-    nixpkgs.url = "github:nixos/nixpkgs/release-22.11";
-    flake-parts.url = "github:hercules-ci/flake-parts";
-
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = inputs@{ self, nixpkgs, flake-parts, ... }: flake-parts.lib.mkFlake { inherit inputs; } {
+  outputs = inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        # To import a flake module
+        # 1. Add foo to inputs
+        # 2. Add foo as a parameter to the outputs function
+        # 3. Add here: foo.flakeModule
 
+      ];
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        # "aarch64-darwin"
+        "x86_64-darwin"
+      ];
+      perSystem = { config, self', inputs', pkgs, system, ... }: {
+        # Per-system attributes can be defined here. The self' and inputs'
+        # module parameters provide easy access to attributes of the same
+        # system.
 
-
-
-    systems = [
-      "x86_64-linux"
-      "aarch64-linux"
-      "x86_64-darwin"
-    ];
-
-    perSystem = { pkgs, system, ... }: {
-      nixopsConfigurations.default = {
-        inherit (inputs) nixpkgs; # required! nixops complains if not present
-        network.storage.legacy = { }; # required! nixops complains if not present
-
-        ## TODO: here we will specify all the "regular" NixOps properties,
-        ## like network.description, machine definitions, etc.
-        ## ...
-
+        # Equivalent to  inputs'.nixpkgs.legacyPackages.hello;
+        packages.default = pkgs.hello;
+        # Install cowsay
+        packages.cowsay = pkgs.cowsay;
       };
-      # Equivalent to  inputs'.nixpkgs.legacyPackages.hello;
-      packages.default = pkgs.hello;
+      flake = {
+        # The usual flake attributes can be defined here, including system-
+        # agnostic ones like nixosModule and system-enumerating ones, although
+        # those are more easily expressed in perSystem.
+        nixopsConfigurations.default = {
+          inherit (inputs) nixpkgs;
+          network.storage.legacy = { };
+          # This is a nixops thing
+          defaults = {
+            imports = [ ./sd-image.nix ];
+          };
 
-      # packages.default = pkgs.callPackage ./package.nix { };
+          master =
+            { config, pkgs, ... }:
+            {
+              # https://github.com/NixOS/nixops/blob/master/nix/options.nix
+              deployment =
+                {
+                  targetUser = "nixos";
+                  provisionSSHKey = true;
+                  targetHost = "192.168.68.102";
 
-      # packages.x86_64-linux.hello = nixpkgs.legacyPackages.x86_64-linux.hello;
+                };
 
-      # packages.x86_64-linux.default = self.packages.x86_64-linux.hello;
+              environment.systemPackages = with pkgs; [ figlet ];
 
-      # packages.x86_64-darwin.default = self.packages.x86_64-darwin.hello;
+              networking.firewall.allowedTCPPorts = [ 80 22 ];
 
-      # packages.x86_64-darwin.hello = nixpkgs.legacyPackages.x86_64-darwin.hello;
+              services = {
+                nginx = {
+                  enable = true;
+                  virtualHosts.vhost1 = {
+                    default = true;
+                    locations."/" = {
+                      root = pkgs.writeTextDir "index.html" "Hello akavel's world!";
+                    };
+                  };
+                };
+              };
 
 
+            };
+
+          # n1 =
+          #   { config, pkgs, ... }:
+          #   {
+          #     # Fake
+          #     deployment.targetHost = "000.000.00.00";
+          #   };
+        };
+      };
     };
-
-  };
 }
-
-

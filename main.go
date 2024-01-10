@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	// "github.com/yurifrl/home-systems/pkg/utils"
 )
 
 // Global variables
@@ -118,6 +119,16 @@ var buildNixCmd = &cobra.Command{
 	},
 }
 
+// Find connectable devices in network
+var findInNetwork = &cobra.Command{
+	Use:   "find-in-network",
+	Short: "TODO",
+	Long:  `TODO`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("TODO")
+	},
+}
+
 // flashCmd represents the flash command
 var flashCmd = &cobra.Command{
 	Use:   "flash",
@@ -212,6 +223,7 @@ func init() {
 	rootCmd.AddCommand(dockerCmd)
 	rootCmd.AddCommand(containerCmd)
 	rootCmd.AddCommand(flashCmd)
+	rootCmd.AddCommand(findInNetwork)
 	//
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.app.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
