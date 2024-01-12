@@ -7,9 +7,11 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/yurifrl/home-systems/pkg/utils"
 	// "github.com/yurifrl/home-systems/pkg/utils"
 )
 
@@ -95,7 +97,8 @@ var dockerRunCmd = &cobra.Command{
 	Short: "Run Docker container",
 	Long:  `Runs a Docker container from the specified image.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		executeCommand("docker", "run", "-it", "--rm", "-v", ".:/workdir", "--entrypoint", "fish", image)
+		executeCommand("docker", "volume", "create", "nix")
+		executeCommand("docker", "run", "-it", "--rm", "-v", "nix:/nix/store", "-v", ".:/workdir", "--entrypoint", "fish", image)
 	},
 }
 
@@ -125,7 +128,14 @@ var findInNetwork = &cobra.Command{
 	Short: "TODO",
 	Long:  `TODO`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("TODO")
+		subnet := "192.168.1."
+		for i := 1; i <= 255; i++ {
+			go utils.ScanAddress(fmt.Sprintf("%s%d", subnet, i))
+		}
+
+		// Wait to prevent the program from exiting immediately
+		// In a real-world scenario, use proper synchronization
+		time.Sleep(5 * time.Minute)
 	},
 }
 

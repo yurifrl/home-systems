@@ -6,7 +6,7 @@
     # For nixpkgs cache
     <nixpkgs/nixos/modules/installer/cd-dvd/channel.nix>
   ];
-
+  
   # If true, will build a .zst compressed image.
   sdImage.compressImage = false;
 

@@ -103,7 +103,19 @@ Sure, let's categorize these links into relevant groups:
 - [Using Nix with Dockerfiles](https://mitchellh.com/writing/nix-with-dockerfiles)
 - [Building container images with Nix](https://thewagner.net/blog/2021/02/25/building-container-images-with-nix/)
 
-
+## To categorize
+- https://stackoverflow.com/questions/62957306/nixops-how-to-deploy-to-an-existing-nixos-vm
+- https://nix-community.github.io/awesome-nix/
+- [The Nix Hour #29 [Python libraries in overlays, switching to home-manager on Ubuntu]](https://www.youtube.com/watch?v=pP1bnQwomDg)
 ### Studing nix docs
 
 - [LlamaIndex](https://docs.llamaindex.ai/en/stable/getting_started/starter_example.html)
+
+https://nixos.wiki/wiki/NixOS_configuration_editors
+
+Nix packages discovery
+```nix
+❯ nix-repl
+nix-repl> :l . # In a flake
+nix-repl>  nixopsConfigurations.default.network.storage.legacy # Then you can look at stuff
+```

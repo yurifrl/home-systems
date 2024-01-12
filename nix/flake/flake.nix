@@ -6,6 +6,7 @@
   };
 
   outputs = inputs@{ flake-parts, ... }:
+
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         # To import a flake module
@@ -31,6 +32,7 @@
         packages.cowsay = pkgs.cowsay;
       };
       flake = {
+
         # The usual flake attributes can be defined here, including system-
         # agnostic ones like nixosModule and system-enumerating ones, although
         # those are more easily expressed in perSystem.
@@ -48,9 +50,9 @@
               # https://github.com/NixOS/nixops/blob/master/nix/options.nix
               deployment =
                 {
-                  targetUser = "nixos";
+                  # targetUser = "nixos";
                   provisionSSHKey = true;
-                  targetHost = "192.168.68.102";
+                  targetHost = "192.168.68.105";
 
                 };
 
@@ -83,3 +85,4 @@
       };
     };
 }
+
