@@ -49,9 +49,9 @@
               # https://github.com/NixOS/nixops/blob/master/nix/options.nix
               deployment =
                 {
-                  # targetUser = "nixos";
+                  targetUser = "nixos";
                   provisionSSHKey = true;
-                  targetHost = "192.168.68.105";
+                  targetHost = "192.168.68.102";
 
                 };
 
@@ -81,6 +81,22 @@
           #     deployment.targetHost = "000.000.00.00";
           #   };
         };
+
+
+        worker =
+          { config, pkgs, ... }:
+          {
+            # Add your worker machine configuration here
+            # For example, let's set its host to "192.168.68.103"
+            deployment =
+              {
+                targetUser = "nixos";
+                provisionSSHKey = true;
+                targetHost = "192.168.68.103";
+              };
+
+            # Additional configurations go here...
+          };
       };
     };
 }
