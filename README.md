@@ -123,5 +123,8 @@ nix-repl>  nixopsConfigurations.default.network.storage.legacy # Then you can lo
 nixops info -d v7
 
 
+## TODO Sort
 
+- [Old tutorial but very complete](https://github.com/illegalprime/nixos-on-arm)
 - [Same problem of no machine](https://github.com/NixOS/nixops/issues/1477)
+- [Simple nixops example](https://github.com/NixOS/nixpkgs/blob/master/nixos/tests/nixops/legacy/nixops.nix)

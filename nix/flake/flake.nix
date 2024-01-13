@@ -95,9 +95,7 @@
               provisionSSHKey = true;
               targetHost = "192.168.68.104";
             };
-
           };
-
 
           # n1 =
           #   { config, pkgs, ... }:

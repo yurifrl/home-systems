@@ -9,6 +9,7 @@
 
   # If true, will build a .zst compressed image.
   sdImage.compressImage = false;
+  # sdImage.enable = true; # What does this do?
 
   system.stateVersion = "23.05";
 
