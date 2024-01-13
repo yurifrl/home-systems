@@ -18,6 +18,9 @@
     vim
     curl
     htop
+    cowsay
+    hello
+    fortune
     # Other packages can be uncommented as needed
   ];
 
