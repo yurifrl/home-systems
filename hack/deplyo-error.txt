@@ -1,0 +1,29 @@
+master> Perl script erroneously interpreted as shell script,
+master> does target platform match nixpkgs.crossSystem platform?
+master> error: Traceback (most recent call last):
+File "/nix/store/ibpk0zfpki667b585rmq44niansylbfc-nixops-unstable-2023-12-17/lib/python3.11/site-packages/nixops/deployment.py", line 906, in worker
+raise Exception(
+Exception: unable to activate new configuration (exit code 1)
+
+Traceback (most recent call last):
+File "/nix/store/ibpk0zfpki667b585rmq44niansylbfc-nixops-unstable-2023-12-17/bin/.nixops-wrapped", line 9, in <module>
+sys.exit(main())
+^^^^^^
+File "/nix/store/ibpk0zfpki667b585rmq44niansylbfc-nixops-unstable-2023-12-17/lib/python3.11/site-packages/nixops/__main__.py", line 56, in main
+args.op(args)
+File "/nix/store/ibpk0zfpki667b585rmq44niansylbfc-nixops-unstable-2023-12-17/lib/python3.11/site-packages/nixops/script_defs.py", line 715, in op_deploy
+depl.deploy(
+File "/nix/store/ibpk0zfpki667b585rmq44niansylbfc-nixops-unstable-2023-12-17/lib/python3.11/site-packages/nixops/deployment.py", line 1365, in deploy
+self.run_with_notify("deploy", lambda: self._deploy(**kwargs))
+File "/nix/store/ibpk0zfpki667b585rmq44niansylbfc-nixops-unstable-2023-12-17/lib/python3.11/site-packages/nixops/deployment.py", line 1354, in run_with_noti
+fy
+f()
+File "/nix/store/ibpk0zfpki667b585rmq44niansylbfc-nixops-unstable-2023-12-17/lib/python3.11/site-packages/nixops/deployment.py", line 1365, in <lambda>
+self.run_with_notify("deploy", lambda: self._deploy(**kwargs))
+^^^^^^^^^^^^^^^^^^^^^^
+File "/nix/store/ibpk0zfpki667b585rmq44niansylbfc-nixops-unstable-2023-12-17/lib/python3.11/site-packages/nixops/deployment.py", line 1300, in _deploy
+self.activate_configs(
+File "/nix/store/ibpk0zfpki667b585rmq44niansylbfc-nixops-unstable-2023-12-17/lib/python3.11/site-packages/nixops/deployment.py", line 947, in activate_confi
+gs
+raise Exception(
+Exception: activation of 1 of 1 machines failed (namely on ‘master’)

@@ -115,7 +115,13 @@ https://nixos.wiki/wiki/NixOS_configuration_editors
 
 Nix packages discovery
 ```nix
-❯ nix-repl
+❯ nix repl
 nix-repl> :l . # In a flake
 nix-repl>  nixopsConfigurations.default.network.storage.legacy # Then you can look at stuff
 ```
+
+nixops info -d v7
+
+
+
+- [Same problem of no machine](https://github.com/NixOS/nixops/issues/1477)
