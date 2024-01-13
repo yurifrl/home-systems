@@ -40,28 +40,6 @@
   # Enable OpenSSH out of the box.
   services.sshd.enable = true;
 
-
   # NTP time sync.
   services.timesyncd.enable = true;
-
-  # NGINX sample
-  networking.firewall.allowedTCPPorts = [ 80 ];
-  services.nginx.enable = true;
-
-
-  # User configuration
-  users.users.hl = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" ]; # Add user to wheel group for admin privileges
-  };
-
-  # Auto-login on TTY1
-  services.getty.autologinUser = "hl";
-
-  # Execute htop after login on TTY1
-  environment.etc."profile".text = lib.mkBefore ''
-    if [[ "$(tty)" == "/dev/tty1" ]]; then
-      exec htop
-    fi
-  '';
 }

@@ -1,14 +1,17 @@
 {
     "name": "NixOS Pi Development Container",
-    "image": "nixos/nix:latest",
+    "build": {
+        "dockerfile": "../Dockerfile",
+        "context": "../"
+    },
     "customizations": {
         "vscode": {
             "settings": {
-                "terminal.integrated.shell.linux": "/run/current-system/sw/bin/bash"
+                "terminal.integrated.shell.linux": "fish"
             },
             "extensions": [
-                "ms-vscode-remote.remote-containers",
-                "jnoortheen.nix-ide"
+                "ms-vscode-remote.remote-containers"
+                // "jnoortheen.nix-ide"
             ]
         }
     },
@@ -18,9 +21,9 @@
         "seccomp=unconfined"
     ],
     "mounts": [
-        "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+        "source=${localWorkspaceFolder},target=/workdir,type=bind,consistency=cached"
     ],
     "remoteUser": "root",
-    "workspaceFolder": "/workspace",
+    "workspaceFolder": "/workdir",
     "postCreateCommand": "nix-shell"
 }

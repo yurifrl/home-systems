@@ -17,11 +17,12 @@ import (
 
 // Global variables
 var (
-	cfgFile string
-	verbose bool
-	image   = "nixos-sd-image"
-	workdir = "."
-	isosDir = "isos"
+	cfgFile        string
+	verbose        bool
+	image          = "hs"
+	workdir        = "."
+	isosDir        = "isos"
+	dockerfilePath = "docker"
 	// Flash
 	isoImage = ""
 	device   = ""
@@ -75,7 +76,7 @@ var dockerCmd = &cobra.Command{
 	Long:  `Commands to manage Docker containers.`,
 }
 
-// Docker command group
+// Container command group
 var containerCmd = &cobra.Command{
 	Use:   "container",
 	Short: "Operations inside the docker container",
@@ -84,7 +85,7 @@ var containerCmd = &cobra.Command{
 	// TODO: short and long destriptions
 }
 
-// Docker command group
+// Nix command group
 var nixCmd = &cobra.Command{
 	Use:   "nix",
 	Short: "TODO",
@@ -97,8 +98,9 @@ var dockerRunCmd = &cobra.Command{
 	Short: "Run Docker container",
 	Long:  `Runs a Docker container from the specified image.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		executeCommand("docker", "volume", "create", "nix")
-		executeCommand("docker", "run", "-it", "--rm", "-v", "nix:/nix/store", "-v", ".:/workdir", "--entrypoint", "fish", image)
+		// executeCommand("docker", "volume", "create", "nixvolume")
+		// executeCommand("docker", "run", "-it", "--rm", "-v", "nixvolume:/nix/store", "-v", ".:/workdir", "--entrypoint=fish", image)
+		executeCommand("docker", "run", "--rm", "--entrypoint=fish", "-it", "-v", ".:/workdir", image)
 	},
 }
 

@@ -1,35 +1,38 @@
 # Stage 1: QEMU for cross-platform support
 FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
 
+# Stage 2: Build cli
+FROM golang:alpine as gobuilder
+
+WORKDIR /workdir
+
+COPY go.mod go.sum ./
+RUN go mod tidy
+
+COPY . .
+RUN go build -o hs
+
 # Final Stage: Setup Nix environment
+# FROM gcr.io/nixos/nix
 FROM nixos/nix
 
 # Copy QEMU binary for ARM architecture
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 
-WORKDIR /workdir
-ENV PATH="/result/bin:/usr/local/bin:$PATH"
+# Is for generation of the sd image
+RUN nix-env -f https://github.com/nix-community/nixos-generators/archive/master.tar.gz -i
 
 # Configure Nix for experimental features and extra platforms
 RUN echo 'extra-experimental-features = nix-command flakes' >> /etc/nix/nix.conf
 RUN echo 'extra-platforms = aarch64-linux' >> /etc/nix/nix.conf
 
-# Install packages using Nix
-RUN nix-env -f https://github.com/nix-community/nixos-generators/archive/master.tar.gz -i
-
 # Update the Nix channel
 RUN nix-channel --update
 
-# TODO: This should be in a flake
-RUN nix-env -i vim fish go nixops-unstable nixpkgs-fmt
+# COPY --from=gobuilder /workdir/hs /usr/local/bin/hs
+RUN nix-env -iA nixpkgs.nixopsUnstable nixpkgs.fish nixpkgs.go nixpkgs.vim nixpkgs.nixpkgs-fmt nixpkgs.gnused nixpkgs.ncurses
 
-#
-COPY go.mod go.sum ./
-RUN go mod tidy
-#
-COPY . .
-# Maybe this should be in a flake to
-RUN go build -o /usr/local/bin/hs
+WORKDIR /workdir
 
 # Set the default command
 ENTRYPOINT ["hs"]
