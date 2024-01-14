@@ -29,12 +29,23 @@ RUN echo 'extra-platforms = aarch64-linux' >> /etc/nix/nix.conf
 # Update the Nix channel
 RUN nix-channel --update
 
-# COPY --from=gobuilder /workdir/hs /usr/local/bin/hs
-RUN nix-env -iA nixpkgs.nixopsUnstable nixpkgs.fish nixpkgs.go nixpkgs.vim nixpkgs.nixpkgs-fmt nixpkgs.gnused nixpkgs.ncurses
+RUN nix-env -iA nixpkgs.nixopsUnstable \
+    nixpkgs.fish \
+    nixpkgs.go \
+    nixpkgs.vim \ 
+    nixpkgs.nixpkgs-fmt \
+    nixpkgs.gnused \
+    nixpkgs.ncurses \
+    nixpkgs.rrsync
 
 WORKDIR /workdir
+VOLUME [ "/nixops", "/etc/gocache" ]
 
 ENV NIXOPS_STATE=/nixops/deployments.nixops
+
+COPY --from=gobuilder /workdir/hs /usr/local/bin/hs
+ENV PATH /etc/gocache:$PATH
+COPY utils.fish /root/.config/fish/functions/utils.fish
 
 # Set the default command
 ENTRYPOINT ["hs"]

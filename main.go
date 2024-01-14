@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,8 +12,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/yurifrl/home-systems/pkg/nixops"
 	"github.com/yurifrl/home-systems/pkg/utils"
-	// "github.com/yurifrl/home-systems/pkg/utils"
 )
 
 // Global variables
@@ -23,6 +24,9 @@ var (
 	workdir        = "."
 	isosDir        = "isos"
 	dockerfilePath = "docker"
+	nixopsWorkdir  = "/workdir/nix/nixops/"
+	redeploy       = false
+
 	// Flash
 	isoImage = ""
 	device   = ""
@@ -76,15 +80,6 @@ var dockerCmd = &cobra.Command{
 	Long:  `Commands to manage Docker containers.`,
 }
 
-// Container command group
-var containerCmd = &cobra.Command{
-	Use:   "container",
-	Short: "Operations inside the docker container",
-	Long:  `TODO`,
-
-	// TODO: short and long destriptions
-}
-
 // Nix command group
 var nixCmd = &cobra.Command{
 	Use:   "nix",
@@ -99,7 +94,7 @@ var dockerRunCmd = &cobra.Command{
 	Long:  `Runs a Docker container from the specified image.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// executeCommand("docker", "volume", "create", "nixops")
-		executeCommand("docker", "run", "-it", "--rm", "-v", "nixops:/nixops", "-v", ".:/workdir", "--entrypoint=fish", image)
+		executeCommand("docker", "run", "-it", "--rm", "-v", "nixops:/nixops", "-v", "./secrets:/etc/secrets", "-v", ".:/workdir", "--entrypoint=fish", image)
 		// executeCommand("docker", "run", "--rm", "--entrypoint=fish", "-it", "-v", ".:/workdir", image)
 	},
 }
@@ -115,12 +110,59 @@ var dockerBuildCmd = &cobra.Command{
 }
 
 // Build nix image
-var buildNixCmd = &cobra.Command{
+var nixBuildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Build Nix package",
 	Long:  `Builds a Nix package from the specified configuration.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		executeCommand("nix-build", "<nixpkgs/nixos>", "-A", "config.system.build.sdImage", "-I", "nixos-config=./nix/sd-image.nix", "--argstr", "system", "aarch64-linux")
+		executeCommand("nix-build", "--show-trace", "<nixpkgs/nixos>", "-A", "config.system.build.sdImage", "-I", "nixos-config=/workdir/nix/sd-image.nix", "--argstr", "system", "aarch64-linux")
+	},
+}
+
+// nixDeployCmd represents the nix deploy command
+var nixDeployCmd = &cobra.Command{
+	Use:   "deploy",
+	Short: "Deploy using NixOps with version increment",
+	Long:  `Deploys NixOS configuration using NixOps, auto-incrementing the deployment version.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		nixosData, err := nixops.FetchEverything()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Use the fetched data as needed
+		// For example, printing some of it:
+		fmt.Println(nixosData)
+		// versionInfo := utils.GetLatestVersion(nixopsWorkdir)
+		// var version = ""
+		// if redeploy {
+		// 	fmt.Println("Redeploying version:", versionInfo.OldVersion)
+		// 	version = versionInfo.UUID
+		// } else {
+		// 	fmt.Println("Deploying version:", versionInfo.NewVersion)
+		// 	version = versionInfo.NewVersion
+		// }
+		// panic("ono")
+
+		// // Nixops Create
+		// nixCmd := exec.Command("nixops", "create", "-d", version)
+		// nixCmd.Dir = filepath.Clean(workdir)
+
+		// // Execute the command
+		// _, err := nixCmd.Output()
+		// if err != nil {
+		// 	fmt.Println("Error executing nixops create:", err)
+		// }
+
+		// // Nixops Create
+		// nixCmd = exec.Command("nixops", "deploy", "-d", version)
+		// nixCmd.Dir = filepath.Clean(workdir)
+
+		// // Execute the command
+		// _, err = nixCmd.Output()
+		// if err != nil {
+		// 	fmt.Println("Error executing nixops deploy:", err)
+		// }
 	},
 }
 
@@ -182,18 +224,19 @@ var flashCmd = &cobra.Command{
 			}
 			isoImage = isoFiles[choice-1]
 		}
+		comand := []string{"sudo", "dd", "bs=4M", "status=progress", "conv=fsync", "of=" + device, "if=" + isoImage}
 
 		// Prompt user for confirmation before proceeding
-		fmt.Printf("Are you sure you want to flash '%s' to '%s'? This will erase all data on the device. Type 'yes' to confirm: ", isoImage, device)
+		fmt.Println(strings.Join(comand, " "))
+		fmt.Println()
+		fmt.Printf("Are you sure you want to flash '%s' to '%s'? This will erase all data on the device. Type 'y' to confirm: ", isoImage, device)
 		var confirmation string
 		fmt.Scanln(&confirmation)
 		if confirmation != "y" {
 			fmt.Println("Flash operation cancelled.")
 			return
 		}
-
-		comand := []string{"sudo", "dd", "bs=4M", "status=progress", "conv=fsync", "of=" + device, "if=" + isoImage}
-		fmt.Println(strings.Join(comand, " "))
+		executeCommand("diskutil", "unmountDisk", "/dev/disk2")
 		// Execute the dd command to flash the ISO to the device
 		// executeCommand("sudo", "dd", "bs=4M", "status=progress", "conv=fsync", "of="+device, "if="+isoImage)
 	},
@@ -233,7 +276,7 @@ func init() {
 	//
 	rootCmd.SetHelpCommand(helpCmd)
 	rootCmd.AddCommand(dockerCmd)
-	rootCmd.AddCommand(containerCmd)
+	rootCmd.AddCommand(nixCmd)
 	rootCmd.AddCommand(flashCmd)
 	rootCmd.AddCommand(findInNetwork)
 	//
@@ -243,10 +286,13 @@ func init() {
 	flashCmd.PersistentFlags().StringVarP(&isoImage, "iso", "i", "", "Path to the ISO image file")
 	flashCmd.PersistentFlags().StringVarP(&device, "device", "d", "", "Device path (e.g., /dev/sdx)")
 	//
+	nixDeployCmd.PersistentFlags().BoolVarP(&redeploy, "redeploy", "r", false, "Redeploy the last version")
+	//
 	dockerCmd.AddCommand(dockerBuildCmd)
 	dockerCmd.AddCommand(dockerRunCmd)
 	//
-	containerCmd.AddCommand(nixCmd)
-	//
-	nixCmd.AddCommand(buildNixCmd)
+	nixCmd.AddCommand(nixBuildCmd)
+	nixCmd.AddCommand(nixDeployCmd)
 }
+
+// /nix/store/dgsinnmdaak3gjh9pqlbgwfpzbia5h2m-nixos-sd-image-24.05pre568310.eabe8d3eface-aarch64-linux.img/sd-image/nixos-sd-image-24.05pre568310.eabe8d3eface-aarch64-linux.img nixos-sd-image-24.05pre568310.eabe8d3eface-aarch64-linux.img

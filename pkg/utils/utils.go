@@ -7,6 +7,12 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+type VersionInfo struct {
+	UUID       string
+	OldVersion string
+	NewVersion string
+}
+
 func ScanAddress(ip string) {
 	// Define the SSH configuration
 	config := &ssh.ClientConfig{

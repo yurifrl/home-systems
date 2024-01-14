@@ -21,4 +21,10 @@
   swapDevices = [ ];
 
   networking.useDHCP = lib.mkDefault true;
+
+  # Define system architecture for ARM
+  nixpkgs.localSystem = {
+    system = "aarch64-linux";
+    config = "aarch64-unknown-linux-gnu";
+  };
 }

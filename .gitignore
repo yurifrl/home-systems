@@ -1,3 +1,4 @@
 *.iso
-*.imig
+*.img
 result
+secrets

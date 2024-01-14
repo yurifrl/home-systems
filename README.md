@@ -2,22 +2,15 @@
 
 Build the image, boot it, kubernetes starts, turn on the lights.
 
-## References
-
-- [Robertof - Build custom SD images of NixOS for your Raspberry Pi.](https://github.com/Robertof/nixos-docker-sd-image-builder)
-    - This is the most recent and most complete build process I have found yet.
-
 ## Notes
 
 nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./sd-image.nix --argstr system aarch64-linux
 
 cp ./result/sd-image/*.img* .
 
-
 search packages
 
 nix search nixpkgs cowsay   
-
 
 ## Nix Emergency Kit
 
@@ -27,31 +20,6 @@ You are going to leave this running for you know how long, you will forget how t
 
 nix eval --raw --impure --expr "builtins.currentSystem"
 
-# Cli
-
-pip install pipreqs
-
-pipreqs . --force         
-
-python3 -m pip install -r requirements.txt 
-
-
-
-# TODO
-
-- [ ] Config nix to run as nobody
-
-```
-  config = {
-    User = "nobody";
-    Cmd = [ "/bin/sh" "-l" ];
-  };
-```
-- [ ] Install Tailscale
-  - [ ] On tailscale, have one network for admin, one for people, and one for iot, maybe have multiple for iot, cameras, I dont know, have to master that
-
-
-Build nix flake
 
 ```
 COPY nix/ .
@@ -63,13 +31,34 @@ RUN nix \
 
 RUN mv result /result
 ```
+### 
 
+https://nixos.wiki/wiki/NixOS_configuration_editors
+
+Nix packages discovery
+```nix
+❯ nix repl
+nix-repl> :l . # In a flake
+nix-repl> nixopsConfigurations.default.network.storage.legacy # Then you can look at stuff
+```
+#
+nixops info -d v7
 
 # Errors
 
 - Git tree is dirty
   - Commit everything, cleanup stash
   - `set -Ux NIX_GIT_CHECKS false` To disable this behaviout
+
+
+# TODO
+
+- [ ] Config nix to run as nobody
+- [ ] Install Tailscale
+  - [ ] On tailscale, have one network for admin, one for people, and one for iot, maybe have multiple for iot, cameras, I dont know, have to master that
+  - [ ] 
+#
+Build nix flake
 
 # Reference
 
@@ -103,28 +92,68 @@ Sure, let's categorize these links into relevant groups:
 - [Using Nix with Dockerfiles](https://mitchellh.com/writing/nix-with-dockerfiles)
 - [Building container images with Nix](https://thewagner.net/blog/2021/02/25/building-container-images-with-nix/)
 
-## To categorize
-- https://stackoverflow.com/questions/62957306/nixops-how-to-deploy-to-an-existing-nixos-vm
-- https://nix-community.github.io/awesome-nix/
-- [The Nix Hour #29 [Python libraries in overlays, switching to home-manager on Ubuntu]](https://www.youtube.com/watch?v=pP1bnQwomDg)
-### Studing nix docs
-
-- [LlamaIndex](https://docs.llamaindex.ai/en/stable/getting_started/starter_example.html)
-
-https://nixos.wiki/wiki/NixOS_configuration_editors
-
-Nix packages discovery
-```nix
-❯ nix repl
-nix-repl> :l . # In a flake
-nix-repl>  nixopsConfigurations.default.network.storage.legacy # Then you can look at stuff
-```
-
-nixops info -d v7
-
 
 ## TODO Sort
 
 - [Old tutorial but very complete](https://github.com/illegalprime/nixos-on-arm)
 - [Same problem of no machine](https://github.com/NixOS/nixops/issues/1477)
 - [Simple nixops example](https://github.com/NixOS/nixpkgs/blob/master/nixos/tests/nixops/legacy/nixops.nix)
+- [Robertof - Build custom SD images of NixOS for your Raspberry Pi.](https://github.com/Robertof/nixos-docker-sd-image-builder)
+    - This is the most recent and most complete build process I have found yet.
+
+- https://stackoverflow.com/questions/62957306/nixops-how-to-deploy-to-an-existing-nixos-vm
+- https://nix-community.github.io/awesome-nix/
+- [The Nix Hour #29 [Python libraries in overlays, switching to home-manager on Ubuntu]](https://www.youtube.com/watch?v=pP1bnQwomDg)
+
+- [LlamaIndex](https://docs.llamaindex.ai/en/stable/getting_started/starter_example.html)
+
+
+https://tailscale.com/kb/1281/app-connectors
+
+
+https://tailscale.com/kb/1096/nixos-minecraft
+
+https://www.thedroneely.com/posts/nixops-towards-the-final-frontier/
+  - Talks about user management and secrets
+
+https://elvishjerricco.github.io/2018/06/24/secure-declarative-key-management.html
+  - Dont know the gist here, but it's about secrets
+
+https://docs.hercules-ci.com/hercules-ci/
+
+https://nixops.readthedocs.io/en/latest/overview.html#managing-keys
+https://www.thedroneely.com/posts/nixops-towards-the-final-frontier/
+https://blog.sekun.net/posts/manage-secrets-in-nixos/
+https://github.com/Mic92/sops-nix#setting-a-users-password
+https://lgug2z.com/articles/handling-secrets-in-nixos-an-overview/
+
+[Automagically assimilating NixOS machines into your Tailnet with Terraform - Xe Iaso](https://xeiaso.net/blog/nix-flakes-terraform/)
+# TODO
+
+- [ ] Config nix to run as nobody
+- [ ] Install Tailscale
+  - [ ] On tailscale, have one network for admin, one for people, and one for iot, maybe have multiple for iot, cameras, I dont know, have to master that
+  - [ ] 
+
+
+- Local Workflow
+- New node
+  - `hs new-sd` flash the image localy, using docker
+  - goal is to do something like `hs flash`, and go prompt by prombt
+  - 3 images found, want to build a new one? y or number to reuse
+  - It also offerts to download from github artifacts
+  - this parameter can be passed as option parameters -n1, -nx creates new version
+  - .img is built inside docker image, and the output will spill to the system to /etc/home-systems/isos
+  - next it will ask if you want to flash the image, it will prompt you to choose an device
+  - here will be some devices black listed, preferably only sds will show here
+  - in iteractive mode, this is will ofer retry in case o failure
+  - the target device, can also be passed with a -fd
+  - QUESTION: can I make a .img that contains a secret?
+- After flash
+  -  
+
+- Automated
+  - On github actions or other ci, it does the build locally, (preferably it will run on a arm image)
+- This will generate an artifact and put it on a registry
+
+- Runtime
