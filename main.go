@@ -98,9 +98,9 @@ var dockerRunCmd = &cobra.Command{
 	Short: "Run Docker container",
 	Long:  `Runs a Docker container from the specified image.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// executeCommand("docker", "volume", "create", "nixvolume")
-		// executeCommand("docker", "run", "-it", "--rm", "-v", "nixvolume:/nix/store", "-v", ".:/workdir", "--entrypoint=fish", image)
-		executeCommand("docker", "run", "--rm", "--entrypoint=fish", "-it", "-v", ".:/workdir", image)
+		// executeCommand("docker", "volume", "create", "nixops")
+		executeCommand("docker", "run", "-it", "--rm", "-v", "nixops:/nixops", "-v", ".:/workdir", "--entrypoint=fish", image)
+		// executeCommand("docker", "run", "--rm", "--entrypoint=fish", "-it", "-v", ".:/workdir", image)
 	},
 }
 

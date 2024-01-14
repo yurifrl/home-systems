@@ -34,6 +34,8 @@ RUN nix-env -iA nixpkgs.nixopsUnstable nixpkgs.fish nixpkgs.go nixpkgs.vim nixpk
 
 WORKDIR /workdir
 
+ENV NIXOPS_STATE=/nixops/deployments.nixops
+
 # Set the default command
 ENTRYPOINT ["hs"]
 CMD ["help"]
