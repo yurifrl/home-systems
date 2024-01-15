@@ -2,17 +2,30 @@ package utils
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/creack/pty"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/term"
 )
 
-type VersionInfo struct {
-	UUID       string
-	OldVersion string
-	NewVersion string
+type Context struct {
+	Workdir string
+	Verbose bool
 }
 
+func NewContext(workdir string, verbose bool) *Context {
+	return &Context{
+		Workdir: workdir,
+		Verbose: verbose,
+	}
+}
 func ScanAddress(ip string) {
 	// Define the SSH configuration
 	config := &ssh.ClientConfig{
@@ -27,10 +40,41 @@ func ScanAddress(ip string) {
 	// Attempt to establish an SSH connection
 	client, err := ssh.Dial("tcp", ip+":22", config)
 	if err != nil {
-		fmt.Printf("Failed to connect to %s: %s\n", ip, err)
+		log.Printf("Failed to connect to %s: %s\n", ip, err)
 		return
 	}
 	defer client.Close()
 
-	fmt.Printf("Successfully connected to %s\n", ip)
+	log.Printf("Successfully connected to %s\n", ip)
+}
+
+func (c *Context) ExecuteCommand(name string, args ...string) {
+	fmt.Printf("Executing command: `%s %s`\n", name, strings.Join(args, " "))
+
+	cmd := exec.Command(name, args...)
+	cmd.Dir = filepath.Join(c.Workdir)
+
+	// Start the command with a pty
+	ptmx, err := pty.Start(cmd)
+	if err != nil {
+		log.Fatalf("Failed to start command with pty: %s\n", err)
+	}
+	defer func() { _ = ptmx.Close() }()
+
+	// Set stdin in a non-blocking mode.
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	if err != nil {
+		log.Fatalf("Failed to set stdin to raw mode: %s\n", err)
+	}
+	defer func() { _ = term.Restore(int(os.Stdin.Fd()), oldState) }()
+
+	// Copy stdin to the pty and the pty to stdout.
+	go func() { _, _ = io.Copy(ptmx, os.Stdin) }()
+	go func() { _, _ = io.Copy(os.Stdout, ptmx) }()
+
+	// Wait for the command to finish
+	err = cmd.Wait()
+	if err != nil {
+		log.Printf("Command finished with error: %s\n", err)
+	}
 }

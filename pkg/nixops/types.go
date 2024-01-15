@@ -4,12 +4,6 @@ type SchemaVersion struct {
 	Version int
 }
 
-type DeploymentAttr struct {
-	Deployment string
-	Name       string
-	Value      string
-}
-
 type Resource struct {
 	ID         int
 	Deployment string
@@ -25,7 +19,8 @@ type ResourceAttr struct {
 
 type Deployment struct {
 	UUID  string
-	Attrs map[string]string // Using a map to store attributes
+	Name  string
+	Value string
 }
 
 type Nixops struct {

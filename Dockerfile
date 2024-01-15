@@ -42,9 +42,9 @@ WORKDIR /workdir
 VOLUME [ "/nixops", "/etc/gocache" ]
 
 ENV NIXOPS_STATE=/nixops/deployments.nixops
+ENV PATH /etc/gocache:/usr/local/bin:$PATH
 
 COPY --from=gobuilder /workdir/hs /usr/local/bin/hs
-ENV PATH /etc/gocache:$PATH
 COPY utils.fish /root/.config/fish/functions/utils.fish
 
 # Set the default command

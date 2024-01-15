@@ -3,13 +3,13 @@ let
   tailscaleTokenSource = builtins.readFile "/etc/secrets/tailscale-token";
 in
 {
-  # Tailscale user and group creation
-  users.users.tailscale = {
-    isNormalUser = true;
-    group = "tailscale";
-  };
+  # # Tailscale user and group creation
+  # users.users.tailscale = {
+  #   isNormalUser = true;
+  #   group = "tailscale";
+  # };
 
-  users.groups.tailscale = { };
+  # users.groups.tailscale = { };
 
   environment.systemPackages = with pkgs; [
     jq
@@ -27,23 +27,30 @@ in
     enable = true;
   };
 
-  # Tailscale automatic connection setup
   systemd.services.tailscale-autoconnect = {
     description = "Automatic connection to Tailscale";
+
+    # make sure tailscale is running before trying to connect to tailscale
     after = [ "network-pre.target" "tailscale.service" ];
     wants = [ "network-pre.target" "tailscale.service" ];
     wantedBy = [ "multi-user.target" ];
+
+    # set this service as a oneshot job
     serviceConfig.Type = "oneshot";
-    serviceConfig.User = "tailscale";
-    script = ''
+
+    # have the job run this shell script
+    script = with pkgs; ''
+      # wait for tailscaled to settle
       sleep 2
-      status="$(tailscale status -json | jq -r .BackendState)"
-      if [ "$status" = "Running" ]; then
-        echo "Procress running, exiting"
+
+      # check if we are already authenticated to tailscale
+      status="$(${tailscale}/bin/tailscale status -json | ${jq}/bin/jq -r .BackendState)"
+      if [ $status = "Running" ]; then # if so, then do nothing
         exit 0
       fi
-      echo "Starting tailscale"
-      tailscale up -authkey $(cat /etc/secrets/tailscale-token)
+
+      # otherwise authenticate with tailscale
+      ${tailscale}/bin/tailscale up -authkey $(cat /etc/secrets/tailscale-token)
     '';
   };
 }

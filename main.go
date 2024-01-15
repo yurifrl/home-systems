@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -18,39 +17,20 @@ import (
 
 // Global variables
 var (
-	cfgFile        string
-	verbose        bool
-	image          = "hs"
-	workdir        = "."
-	isosDir        = "isos"
-	dockerfilePath = "docker"
-	nixopsWorkdir  = "/workdir/nix/nixops/"
-	redeploy       = false
+	cfgFile          string
+	verbose          bool
+	nctx             = &utils.Context{}
+	image            = "hs"
+	workdir          = "."
+	isosDir          = "isos"
+	dockerfilePath   = "docker"
+	nixopsWorkdir    = "/workdir/nix/nixops/"
+	nixDeployVersion = ""
 
 	// Flash
 	isoImage = ""
 	device   = ""
 )
-
-// ExecuteCommand runs a command with given arguments.
-func executeCommand(name string, args ...string) {
-	cmd := exec.Command(name, args...)
-	cmd.Dir = filepath.Join(".", workdir)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if verbose {
-		cmdStr := fmt.Sprintf("Executing command: `%s %s`", name, strings.Join(args, " "))
-		fmt.Println(cmdStr)
-	}
-	if err := cmd.Run(); err != nil {
-		if verbose {
-			fmt.Printf("Error executing command: %s\n", err)
-		} else {
-			fmt.Printf("Error: command failed\n")
-		}
-	}
-}
 
 // Simplified global help command
 var helpCmd = &cobra.Command{
@@ -78,6 +58,9 @@ var dockerCmd = &cobra.Command{
 	Use:   "docker",
 	Short: "Docker operations from the builder machine",
 	Long:  `Commands to manage Docker containers.`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		nctx = utils.NewContext(workdir, verbose)
+	},
 }
 
 // Nix command group
@@ -87,15 +70,28 @@ var nixCmd = &cobra.Command{
 	Long:  `TODO`,
 }
 
+// NixOps command group
+var nixOpsCmd = &cobra.Command{
+	Use:   "nixops",
+	Short: "TODO",
+	Long:  `TODO`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		nctx = utils.NewContext(nixopsWorkdir, verbose)
+	},
+}
+
 // Docker run command
 var dockerRunCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run Docker container",
 	Long:  `Runs a Docker container from the specified image.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// executeCommand("docker", "volume", "create", "nixops")
-		executeCommand("docker", "run", "-it", "--rm", "-v", "nixops:/nixops", "-v", "./secrets:/etc/secrets", "-v", ".:/workdir", "--entrypoint=fish", image)
-		// executeCommand("docker", "run", "--rm", "--entrypoint=fish", "-it", "-v", ".:/workdir", image)
+		nctx.ExecuteCommand(
+			"docker", "run", "-it", "--rm", "--entrypoint=fish",
+			"-v", "ssh:/root/.ssh",
+			"-v", "nixops:/nixops",
+			"-v", "./secrets:/etc/secrets",
+			"-v", ".:/workdir", image)
 	},
 }
 
@@ -105,7 +101,7 @@ var dockerBuildCmd = &cobra.Command{
 	Short: "Build Docker image",
 	Long:  `Builds a Docker image from the specified Dockerfile.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		executeCommand("docker", "build", "-t", image, ".")
+		nctx.ExecuteCommand("docker", "build", "-t", image, ".")
 	},
 }
 
@@ -115,54 +111,41 @@ var nixBuildCmd = &cobra.Command{
 	Short: "Build Nix package",
 	Long:  `Builds a Nix package from the specified configuration.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		executeCommand("nix-build", "--show-trace", "<nixpkgs/nixos>", "-A", "config.system.build.sdImage", "-I", "nixos-config=/workdir/nix/sd-image.nix", "--argstr", "system", "aarch64-linux")
+		nctx.ExecuteCommand("nix-build", "--show-trace", "<nixpkgs/nixos>", "-A", "config.system.build.sdImage", "-I", "nixos-config=/workdir/nix/sd-image.nix", "--argstr", "system", "aarch64-linux")
 	},
 }
 
 // nixDeployCmd represents the nix deploy command
-var nixDeployCmd = &cobra.Command{
+var nixOpsDeployCmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploy using NixOps with version increment",
 	Long:  `Deploys NixOS configuration using NixOps, auto-incrementing the deployment version.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		nixosData, err := nixops.FetchEverything()
+		n, err := nixops.NewNixOps()
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		// Use the fetched data as needed
-		// For example, printing some of it:
-		fmt.Println(nixosData)
-		// versionInfo := utils.GetLatestVersion(nixopsWorkdir)
-		// var version = ""
-		// if redeploy {
-		// 	fmt.Println("Redeploying version:", versionInfo.OldVersion)
-		// 	version = versionInfo.UUID
-		// } else {
-		// 	fmt.Println("Deploying version:", versionInfo.NewVersion)
-		// 	version = versionInfo.NewVersion
-		// }
-		// panic("ono")
+		// nctx.ExecuteCommand("nixops", "list")
+		nctx.ExecuteCommand("nixops", "create", "-d", "latest")
 
-		// // Nixops Create
-		// nixCmd := exec.Command("nixops", "create", "-d", version)
-		// nixCmd.Dir = filepath.Clean(workdir)
+		uuid := n.GetLatestDeploymentUUID()
+		log.Println("nixops deploy -d", uuid)
+		// nctx.ExecuteCommand("nixops", "deploy", "-d", uuid)
+	},
+}
 
-		// // Execute the command
-		// _, err := nixCmd.Output()
-		// if err != nil {
-		// 	fmt.Println("Error executing nixops create:", err)
-		// }
-
-		// // Nixops Create
-		// nixCmd = exec.Command("nixops", "deploy", "-d", version)
-		// nixCmd.Dir = filepath.Clean(workdir)
-
-		// // Execute the command
-		// _, err = nixCmd.Output()
-		// if err != nil {
-		// 	fmt.Println("Error executing nixops deploy:", err)
-		// }
+// nixOpsListCmd ...
+var nixOpsListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List NixOps releases",
+	Long:  `Deploys NixOS configuration using NixOps, auto-incrementing the deployment version.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		n, err := nixops.NewNixOps()
+		if err != nil {
+			log.Fatal(err)
+		}
+		n.PrintDeployments()
 	},
 }
 
@@ -192,7 +175,7 @@ var flashCmd = &cobra.Command{
 		// Check if the device parameter is provided
 		device, _ := cmd.Flags().GetString("device")
 		if device == "" {
-			fmt.Println("Error: Device parameter is required")
+			log.Println("Error: Device parameter is required")
 			os.Exit(1)
 		}
 
@@ -203,23 +186,23 @@ var flashCmd = &cobra.Command{
 		if isoImage == "" {
 			isoFiles, err := filepath.Glob(filepath.Join(isosDir, "*.img"))
 			if err != nil {
-				fmt.Println("Error listing ISO images files:", err)
+				log.Println("Error listing ISO images files:", err)
 				return
 			}
 			if len(isoFiles) == 0 {
-				fmt.Println("No ISO images files found in", isosDir)
+				log.Println("No ISO images files found in", isosDir)
 				return
 			}
 			// Sort and display ISO files for user to select
 			sort.Strings(isoFiles)
 			for i, file := range isoFiles {
-				fmt.Printf("%d: %s\n", i+1, file)
+				log.Printf("%d: %s\n", i+1, file)
 			}
-			fmt.Print("Enter the number of the ISO images file to flash: ")
+			log.Print("Enter the number of the ISO images file to flash: ")
 			var choice int
 			fmt.Scanln(&choice)
 			if choice < 1 || choice > len(isoFiles) {
-				fmt.Println("Invalid choice")
+				log.Println("Invalid choice")
 				return
 			}
 			isoImage = isoFiles[choice-1]
@@ -227,16 +210,16 @@ var flashCmd = &cobra.Command{
 		comand := []string{"sudo", "dd", "bs=4M", "status=progress", "conv=fsync", "of=" + device, "if=" + isoImage}
 
 		// Prompt user for confirmation before proceeding
-		fmt.Println(strings.Join(comand, " "))
-		fmt.Println()
-		fmt.Printf("Are you sure you want to flash '%s' to '%s'? This will erase all data on the device. Type 'y' to confirm: ", isoImage, device)
+		log.Println(strings.Join(comand, " "))
+		log.Println()
+		log.Printf("Are you sure you want to flash '%s' to '%s'? This will erase all data on the device. Type 'y' to confirm: ", isoImage, device)
 		var confirmation string
 		fmt.Scanln(&confirmation)
 		if confirmation != "y" {
-			fmt.Println("Flash operation cancelled.")
+			log.Println("Flash operation cancelled.")
 			return
 		}
-		executeCommand("diskutil", "unmountDisk", "/dev/disk2")
+		nctx.ExecuteCommand("diskutil", "unmountDisk", "/dev/disk2")
 		// Execute the dd command to flash the ISO to the device
 		// executeCommand("sudo", "dd", "bs=4M", "status=progress", "conv=fsync", "of="+device, "if="+isoImage)
 	},
@@ -254,22 +237,8 @@ func initConfig() {
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err == nil && verbose {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		log.Println("Using config file:", viper.ConfigFileUsed())
 	}
-}
-
-// Main entry point of the application
-func main() {
-	cobra.OnInitialize(initConfig)
-	if err := Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
-
-// Execute runs the root command.
-func Execute() error {
-	return rootCmd.Execute()
 }
 
 func init() {
@@ -277,6 +246,7 @@ func init() {
 	rootCmd.SetHelpCommand(helpCmd)
 	rootCmd.AddCommand(dockerCmd)
 	rootCmd.AddCommand(nixCmd)
+	rootCmd.AddCommand(nixOpsCmd)
 	rootCmd.AddCommand(flashCmd)
 	rootCmd.AddCommand(findInNetwork)
 	//
@@ -286,13 +256,29 @@ func init() {
 	flashCmd.PersistentFlags().StringVarP(&isoImage, "iso", "i", "", "Path to the ISO image file")
 	flashCmd.PersistentFlags().StringVarP(&device, "device", "d", "", "Device path (e.g., /dev/sdx)")
 	//
-	nixDeployCmd.PersistentFlags().BoolVarP(&redeploy, "redeploy", "r", false, "Redeploy the last version")
+	nixOpsDeployCmd.PersistentFlags().StringVarP(&nixDeployVersion, "version", "n", "", "Version to deploy to or X to redeploy the last")
 	//
 	dockerCmd.AddCommand(dockerBuildCmd)
 	dockerCmd.AddCommand(dockerRunCmd)
 	//
 	nixCmd.AddCommand(nixBuildCmd)
-	nixCmd.AddCommand(nixDeployCmd)
+	//
+	nixOpsCmd.AddCommand(nixOpsDeployCmd)
+	nixOpsCmd.AddCommand(nixOpsListCmd)
+}
+
+// Execute runs the root command.
+func Execute() error {
+	return rootCmd.Execute()
+}
+
+// Main entry point of the application
+func main() {
+	cobra.OnInitialize(initConfig)
+	if err := Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
 // /nix/store/dgsinnmdaak3gjh9pqlbgwfpzbia5h2m-nixos-sd-image-24.05pre568310.eabe8d3eface-aarch64-linux.img/sd-image/nixos-sd-image-24.05pre568310.eabe8d3eface-aarch64-linux.img nixos-sd-image-24.05pre568310.eabe8d3eface-aarch64-linux.img

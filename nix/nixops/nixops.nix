@@ -1,6 +1,6 @@
 {
   network = {
-    description = "Legacy Network using <nixpkgs> and legacy state.";
+    description = "Home Systems";
     enableRollback = true;
     # NB this is not really what makes it a legacy network; lack of flakes is.
     storage.legacy = {

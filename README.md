@@ -157,3 +157,18 @@ https://lgug2z.com/articles/handling-secrets-in-nixos-an-overview/
 - This will generate an artifact and put it on a registry
 
 - Runtime
+
+- Usage
+- hs docker run
+- copy ~/.ssh to ~/.ssh in the container
+
+```bash
+# Host
+cp -r ~/.ssh ssh
+
+# Container
+rm -rf ~/.ssh
+cp -r ./ssh ~/.ssh
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/*
+```

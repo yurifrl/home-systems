@@ -54,7 +54,7 @@ in
 
   # SSH authorized keys for user 'nixos'
   users.extraUsers.nixos.openssh.authorizedKeys.keys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPCfAwxYdoLR6YzoIx2+L593yLGpHaseGTCm3fxrshgD yurifl03@gmail.com"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAvaTuBhwuQHdjIP1k9YQk9YMqmGiOate19iXe6T4IL/"
   ];
 
   # Systemd service configuration for OpenSSH
@@ -67,4 +67,8 @@ in
       nixos ALL=(ALL) NOPASSWD: ALL
     '';
   };
+
+  nix.extraOptions = ''
+    experimental-features = nix-command flakes
+  '';
 }
