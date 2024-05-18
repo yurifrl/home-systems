@@ -15,20 +15,25 @@ jobs:
         extra_nix_config: |
           experimental-features = nix-command flakes
 
+    - name: Create /etc/secrets directory
+      run: sudo mkdir -p /etc/secrets
+
+    - name: Add Tailscale token to /etc/secrets
+      run: echo ${{ secrets.TAILSCALE_TOKEN }} | sudo tee /etc/secrets/tailscale-token
 
     - name: Build NixOS SD Image
       run: |
         nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./nix/sd-image.nix --argstr system aarch64-linux
 
 
-    # - name: Move Image to Artifact Directory
-    #   run: |
-    #     mkdir -p artifacts
-    #     cp result/*.img* ./artifacts/
+    - name: Move Image to Artifact Directory
+      run: |
+        mkdir -p artifacts
+        cp result/*.img* ./artifacts/
 
-    # - name: Upload Image as Artifact
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: nixos-sd-image
-    #     path: ./artifacts/*.img*
+    - name: Upload Image as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: nixos-sd-image
+        path: ./artifacts/*.img*
 
