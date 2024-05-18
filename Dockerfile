@@ -2,9 +2,9 @@
 FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
 
 # Stage 2: Build cli
-FROM golang:alpine as gobuilder
+FROM golang:alpine as cli
 
-WORKDIR /workdir
+WORKDIR /src
 
 COPY go.mod go.sum ./
 RUN go mod tidy
@@ -29,7 +29,7 @@ RUN echo 'extra-platforms = aarch64-linux' >> /etc/nix/nix.conf
 # Update the Nix channel
 RUN nix-channel --update
 
-RUN nix-env -iA nixpkgs.nixopsUnstable \
+RUN nix-env -iA \
     nixpkgs.fish \
     nixpkgs.go \
     nixpkgs.vim \ 
@@ -38,13 +38,15 @@ RUN nix-env -iA nixpkgs.nixopsUnstable \
     nixpkgs.ncurses \
     nixpkgs.rrsync
 
-WORKDIR /workdir
+RUN nix-env -iA nixpkgs.nixops_unstable_minimal
+
+WORKDIR /src
 VOLUME [ "/nixops", "/etc/gocache" ]
 
 ENV NIXOPS_STATE=/nixops/deployments.nixops
 ENV PATH /etc/gocache:/usr/local/bin:$PATH
 
-COPY --from=gobuilder /workdir/hs /usr/local/bin/hs
+COPY --from=cli /src/hs /usr/local/bin/hs
 COPY utils.fish /root/.config/fish/functions/utils.fish
 
 # Set the default command

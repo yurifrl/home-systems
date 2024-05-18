@@ -113,7 +113,7 @@ nixops info -d v7
 - But, at the same time edit the same original image file
 - so if you genarate a new image, it will be updated
   
-# References
+# References Links
 
 ## NixOS on Raspberry Pi
 - [davegallant/nixos-pi: NixOS configuration and OS image builder (builds for the Raspberry Pi)](https://github.com/davegallant/nixos-pi)

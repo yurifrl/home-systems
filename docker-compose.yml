@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  cli:
+    command: go run main.go worker
+    entrypoint: ""
+    build:
+      context: .
+    volumes:
+      - .:/src

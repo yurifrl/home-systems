@@ -15,6 +15,13 @@
     {
       "matchDatasources": ["nixpkgs"],
       "groupName": "nix-packages"
+    },
+    {
+      "matchDatasources": ["gomod"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "branch",
+      "groupName": "go-modules"
     }
   ],
   "updateNotScheduled": false,
