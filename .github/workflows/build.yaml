@@ -25,7 +25,6 @@ jobs:
       run: |
         nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./nix/sd-image.nix --argstr system aarch64-linux
 
-
     - name: Move Image to Artifact Directory
       run: |
         mkdir -p artifacts

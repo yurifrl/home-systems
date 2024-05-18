@@ -106,6 +106,12 @@ nixops info -d v7
 - [x] Install Tailscale:
   - [ ] Set up multiple networks for admin, users, and IoT devices.
   - [ ] Find a way to not add the secret to the artifact
+
+# Notes
+
+- The idea is to have one image, and patch it with new things
+- But, at the same time edit the same original image file
+- so if you genarate a new image, it will be updated
   
 # References
 
