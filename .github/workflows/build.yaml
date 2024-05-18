@@ -30,7 +30,7 @@ jobs:
         cp result/*.img* ./artifacts/
 
     - name: Upload Image as Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: nixos-sd-image
         path: ./artifacts/*.img*
