@@ -102,10 +102,10 @@ nixops info -d v7
 
 # TODO
 
-## Configuration and Installation
 - [ ] Configure Nix to run as nobody.
-- [ ] Install Tailscale:
+- [x] Install Tailscale:
   - [ ] Set up multiple networks for admin, users, and IoT devices.
+  - [ ] Find a way to not add the secret to the artifact
   
 # References
 
