@@ -17,7 +17,6 @@ func NewNixOps() (n *Nixops, error error) {
 	}
 	defer db.Close()
 
-	// Use LEFT JOIN to fetch Deployments and their attributes
 	query := `
    SELECT d.uuid, a.name, a.value
    FROM Deployments d
@@ -71,4 +70,39 @@ func (n *Nixops) PrintDeployments() {
 	}
 
 	table.Render() // Send output
+}
+
+func (n *Nixops) PurgeDatabase() error {
+	// Open the database connection
+	db, err := sql.Open("sqlite", "file:/nixops/deployments.nixops")
+	if err != nil {
+		return err // use return for errors to avoid panic and allow caller to handle the error
+	}
+	defer db.Close()
+
+	// Begin a transaction
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Execute a DELETE statement for each table
+	_, err = tx.Exec("DELETE FROM DeploymentAttrs")
+	if err != nil {
+		tx.Rollback() // rollback in case of error
+		return err
+	}
+
+	_, err = tx.Exec("DELETE FROM Deployments")
+	if err != nil {
+		tx.Rollback() // rollback in case of error
+		return err
+	}
+
+	// Commit the transaction
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil // Return nil on success
 }

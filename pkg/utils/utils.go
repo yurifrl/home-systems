@@ -48,7 +48,7 @@ func ScanAddress(ip string) {
 	log.Printf("Successfully connected to %s\n", ip)
 }
 
-func (c *Context) ExecuteCommand(name string, args ...string) {
+func (c *Context) ExecuteCommand2(name string, args ...string) {
 	fmt.Printf("Executing command: `%s %s`\n", name, strings.Join(args, " "))
 
 	cmd := exec.Command(name, args...)
@@ -77,4 +77,25 @@ func (c *Context) ExecuteCommand(name string, args ...string) {
 	if err != nil {
 		log.Printf("Command finished with error: %s\n", err)
 	}
+}
+
+// ExecuteCommand runs a command with given arguments.
+func (c *Context) ExecuteCommand(name string, args ...string) (err error) {
+	cmd := exec.Command(name, args...)
+	cmd.Dir = filepath.Join(".", c.Workdir)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if c.Verbose {
+		cmdStr := fmt.Sprintf("Executing command: `%s %s`", name, strings.Join(args, " "))
+		fmt.Println(cmdStr)
+	}
+	if err := cmd.Run(); err != nil {
+		if c.Verbose {
+			fmt.Printf("Error executing command: %s\n", err)
+		} else {
+			fmt.Printf("Error: command failed\n")
+		}
+	}
+	return
 }
