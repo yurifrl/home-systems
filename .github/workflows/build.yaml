@@ -12,20 +12,23 @@ jobs:
     - uses: cachix/install-nix-action@v27
       with:
         nix_path: nixpkgs=channel:nixos-unstable
+        extra_nix_config: |
+          experimental-features = nix-command flakes
 
 
     - name: Build NixOS SD Image
       run: |
-        nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./nixops.nix --argstr system aarch64-linux
+        nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./nix/sd-image.nix --argstr system aarch64-linux
 
-    - name: Move Image to Artifact Directory
-      run: |
-        mkdir -p artifacts
-        cp result/*.img* ./artifacts/
 
-    - name: Upload Image as Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: nixos-sd-image
-        path: ./artifacts/*.img*
+    # - name: Move Image to Artifact Directory
+    #   run: |
+    #     mkdir -p artifacts
+    #     cp result/*.img* ./artifacts/
+
+    # - name: Upload Image as Artifact
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: nixos-sd-image
+    #     path: ./artifacts/*.img*
 
