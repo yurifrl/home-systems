@@ -1,4 +1,4 @@
-name: Build NixOS Image
+name: Build
 
 on: [push]
 
