@@ -1,0 +1,37 @@
+name: Build NixOS Image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Nix
+      uses: cachix/install-nix-action@v16
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.7.1/install
+        install_options: '--daemon'
+
+    - name: Build NixOS SD Image
+      run: |
+        nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./nixops.nix --argstr system aarch64-linux
+
+    - name: Move Image to Artifact Directory
+      run: |
+        mkdir -p artifacts
+        cp result/*.img* ./artifacts/
+
+    - name: Upload Image as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: nixos-sd-image
+        path: ./artifacts/*.img*
+
