@@ -50,14 +50,10 @@ For editing NixOS configurations, refer to the [NixOS configuration editors](htt
 ```nix
 ❯ nix repl
 nix-repl> :l . # In a flake
-nix-repl> nixopsConfigurations.default.network.storage.legacy # Then you can look at stuff
+nix-repl> fooConfigurations.default.network.storage.legacy # Then you can look at stuff
 ```
 
-## NixOps Info
-To get information on your NixOps deployment, use:
-```bash
-nixops info -d v7
-```
+## Terraform Info
 
 # Workflow
 
@@ -118,7 +114,6 @@ nixops info -d v7
 ## NixOS on Raspberry Pi
 - [davegallant/nixos-pi: NixOS configuration and OS image builder (builds for the Raspberry Pi)](https://github.com/davegallant/nixos-pi)
 - [dfrankland/nixos-rpi-sd-image: A convenient way to create custom Raspberry Pi NixOS SD images.](https://github.com/dfrankland/nixos-rpi-sd-image/tree/main)
-- [hugolgst/nixos-raspberry-pi-cluster: A user-guide to create a Raspberry Pi (3B+, 4) cluster under NixOS and managed by NixOps](https://github.com/hugolgst/nixos-raspberry-pi-cluster/tree/master)
 - [Installing NixOS on Raspberry Pi 4](https://mtlynch.io/nixos-pi4/)
 - [NixOS on ARM/Raspberry Pi 4 - NixOS Wiki](https://nixos.wiki/wiki/NixOS_on_ARM/Raspberry_Pi_4)
 - [NixOS on a Raspberry Pi: creating a custom SD image with OpenSSH out of the box | Roberto Frenna](https://rbf.dev/blog/2020/05/custom-nixos-build-for-raspberry-pis/#nixos-on-a-raspberry-pi)
@@ -127,7 +122,6 @@ nixops info -d v7
 - [nix-community/nixos-generators: Collection of image builders [maintainer=@Lassulus]](https://github.com/nix-community/nixos-generators)
 
 ## NixOS Management and Deployment
-- [First steps in NixOps, with Flakes](https://github.com/akavel/garden/blob/main/%40seed/20230830-%40nixops-howto.%40flakes.md)
 - [Goodbye Kubernetes](https://xeiaso.net/blog/backslash-kubernetes-2021-01-03/)
 - [Deploying with GitHub Actions and more Nix](https://thewagner.net/blog/2020/12/06/deploying-with-github-actions-and-more-nix/)
 - [Paranoid NixOS Setup - Xe Iaso](https://xeiaso.net/blog/paranoid-nixos-2021-07-18/)
@@ -137,7 +131,6 @@ nixops info -d v7
 - [Why you don't need flake-utils · ayats.org](https://ayats.org/blog/no-flake-utils/)
 - [Flakes - MyNixOS](https://mynixos.com/flakes)
 - [Introduction - flake-parts](https://flake.parts/)
-- [garden/@seed/20230830-@nixops-howto.@flakes.md at main · akavel/garden](https://github.com/akavel/garden/blob/main/@seed/20230830-%40nixops-howto.%40flakes.md)
 
 ## Nix with Docker
 - [Using Nix with Dockerfiles](https://mitchellh.com/writing/nix-with-dockerfiles)
@@ -145,10 +138,7 @@ nixops info -d v7
 
 ## Various Useful Links
 - [Old tutorial but very complete](https://github.com/illegalprime/nixos-on-arm)
-- [Same problem of no machine](https://github.com/NixOS/nixops/issues/1477)
-- [Simple nixops example](https://github.com/NixOS/nixpkgs/blob/master/nixos/tests/nixops/legacy/nixops.nix)
 - [Robertof - Build custom SD images of NixOS for your Raspberry Pi.](https://github.com/Robertof/nixos-docker-sd-image-builder)
-- [NixOps: Deploy to an existing NixOS VM](https://stackoverflow.com/questions/62957306/nixops-how-to-deploy-to-an-existing-nixos-vm)
 - [Nix Community - Awesome Nix](https://nix-community.github.io/awesome-nix/)
 - [The Nix Hour #29 [Python libraries in overlays, switching to home-manager on Ubuntu]](https://www.youtube.com/watch?v=pP1bnQwomDg)
 
@@ -156,10 +146,8 @@ nixops info -d v7
 - [LlamaIndex](https://docs.llamaindex.ai/en/stable/getting_started/starter_example.html)
 - [Tailscale App Connectors](https://tailscale.com/kb/1281/app-connectors)
 - [NixOS Minecraft](https://tailscale.com/kb/1096/nixos-minecraft)
-- [Towards the Final Frontier with NixOps](https://www.thedroneely.com/posts/nixops-towards-the-final-frontier/)
 - [Secure Declarative Key Management](https://elvishjerricco.github.io/2018/06/24/secure-declarative-key-management.html)
 - [Hercules CI Documentation](https://docs.hercules-ci.com/hercules-ci/)
-- [NixOps Documentation](https://nixops.readthedocs.io/en/latest/overview.html#managing-keys)
 - [Managing Secrets in NixOS](https://blog.sekun.net/posts/manage-secrets-in-nixos/)
 - [Handling Secrets in NixOS](https://github.com/Mic92/sops-nix#setting-a-users-password)
 - [Handling Secrets in NixOS - Overview](https://lgug2z.com/articles/handling-secrets-in-nixos-an-overview/)

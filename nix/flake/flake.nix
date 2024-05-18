@@ -31,33 +31,6 @@
         # Install cowsay
         packages.cowsay = pkgs.cowsay;
       };
-      flake = {
-        # The usual flake attributes can be defined here, including system-
-        # agnostic ones like nixosModule and system-enumerating ones, although
-        # those are more easily expressed in perSystem.
-        nixopsConfigurations.default = {
-          inherit (inputs) nixpkgs;
-
-          # network.storage.legacy = { };
-          network = {
-            description = "My network description";
-            # storage.memory = { };
-            storage.legacy = { };
-
-          };
-          # This is a nixops thing
-          defaults = {
-            imports = [ ./sd-image.nix ];
-          };
-
-          master = { pkgs, ... }: {
-            deployment = {
-              targetUser = "nixos";
-              provisionSSHKey = true;
-              targetHost = "192.168.68.104";
-            };
-          };
-        };
-      };
+      flake = { };
     };
 }
