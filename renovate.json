@@ -6,6 +6,19 @@
   "lockFileMaintenance": {
     "enabled": true
   },
+  "packageRules": [
+    {
+      "matchDatasources": ["github-releases"],
+      "matchPackagePatterns": ["^actions/checkout$"],
+      "groupName": "github-actions"
+    },
+    {
+      "matchDatasources": ["nixpkgs"],
+      "groupName": "nix-packages"
+    }
+  ],
+  "updateNotScheduled": false,
+  "schedule": ["at any time"],
   "extends": [
     "config:base"
   ]

@@ -1,6 +1,9 @@
 {
     "cSpell.words": [
         "bootable",
-        "nixops"
+        "Datasources",
+        "nixops",
+        "nixpkgs",
+        "Tailscale"
     ]
 }
