@@ -1,13 +1,12 @@
-terraform {
-  backend "remote" {
-    workspaces {
-      name = "home-systems"
-    }
-  }
+provider "local" {
+  version = "~> 2.1"
 }
 
-
-module "nixos_image" {
-  source  = "git::https://github.com/tweag/terraform-nixos.git//aws_image_nixos?ref=5f5a0408b299874d6a29d1271e9bffeee4c9ca71"
-  release = "20.09"
+module "deploy_nixos" {
+  source               = "github.com/awakesecurity/terraform-nixos//deploy_nixos?ref=c4b1ee6d24b54e92fa3439a12bce349a6805bcdd"
+  nixos_config         = "${path.module}/sd-image.nix"
+  hermetic             = true
+  target_user          = "root"
+  target_host          = aws_instance.hermetic-nixos-system[0].public_ip
+  ssh_private_key_file = pathexpand("~/.ssh/yourkeyname.pem")
 }

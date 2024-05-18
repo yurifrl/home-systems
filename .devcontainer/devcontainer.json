@@ -21,9 +21,9 @@
         "seccomp=unconfined"
     ],
     "mounts": [
-        "source=${localWorkspaceFolder},target=/workdir,type=bind,consistency=cached"
+        "source=${localWorkspaceFolder},target=/src,type=bind,consistency=cached"
     ],
     "remoteUser": "root",
-    "workspaceFolder": "/workdir",
+    "workspaceFolder": "/src",
     "postCreateCommand": "nix-shell"
 }
