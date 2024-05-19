@@ -25,7 +25,7 @@ var nixBuildCmd = &cobra.Command{
 		executor := &executors.LocalExecutor{}
 
 		err := executor.ExecuteCommand(
-			"nix-build",
+			"nix-build", "-v",
 			"--show-trace",
 			"<nixpkgs/nixos>",
 			"-A", "config.system.build.sdImage.outPath",
@@ -33,11 +33,6 @@ var nixBuildCmd = &cobra.Command{
 			"--argstr",
 			"system", "aarch64-linux",
 		)
-		if err != nil {
-			panic(err)
-		}
-
-		err = executor.ExecuteCommand("ls", "-la")
 		if err != nil {
 			panic(err)
 		}

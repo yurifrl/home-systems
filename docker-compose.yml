@@ -8,9 +8,9 @@ x-base-service: &base_service
     - .:/src
     - ./secrets:/etc/secrets
 services:
-  cli:
+  sh:
     <<: *base_service
-    entrypoint: "fish"
+    entrypoint: fish
   hs:
     <<: *base_service
-    entrypoint: "hs"
+    entrypoint: hs
