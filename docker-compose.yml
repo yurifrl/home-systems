@@ -6,6 +6,7 @@ x-base-service: &base_service
   image: ghcr.io/yurifrl/home-systems
   volumes:
     - .:/src
+    - ./secrets:/etc/secrets
 services:
   cli:
     <<: *base_service

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/yurifrl/home-systems/pkg/cmd"
+	"github.com/yurifrl/home-systems/cmd"
 )
 
 func main() {

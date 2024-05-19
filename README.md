@@ -4,6 +4,20 @@
 
 This guide provides a comprehensive approach to setting up, managing, and troubleshooting your NixOS home system. Whether you're using a Raspberry Pi or a different ARM device, this guide will help you through the process of building, deploying, and managing your NixOS setup.
 
+# Cli
+
+The cli needs to run in its docker image to work properly.
+
+```bash
+
+docker compose run --rm hs
+
+hs run
+
+```
+
+- `hs nix build`
+
 # Building and Booting the Image
 
 ## Building the Image

@@ -42,6 +42,7 @@ WORKDIR /src
 VOLUME [ "/etc/gocache" ]
 
 ENV PATH /etc/gocache:/usr/local/bin:$PATH
+ENV IN_CONTAINER true
 
 COPY --from=cli /src/hs /usr/local/bin/hs
 

@@ -3,26 +3,20 @@ package utils
 import (
 	"fmt"
 	"log"
-	"os"
-	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
+	"github.com/yurifrl/home-systems/pkg/types"
 	"golang.org/x/crypto/ssh"
 )
 
-type Context struct {
-	CurrentWorkdir string
-	Verbose        bool
-}
+var (
+	isosDir = "isos"
+	device  = ""
+)
 
-func NewContext(currentWorkdir string, verbose bool) *Context {
-	return &Context{
-		CurrentWorkdir: currentWorkdir,
-		Verbose:        verbose,
-	}
-}
 func ScanAddress(ip string) {
 	// Define the SSH configuration
 	config := &ssh.ClientConfig{
@@ -45,17 +39,45 @@ func ScanAddress(ip string) {
 	log.Printf("Successfully connected to %s\n", ip)
 }
 
-// ExecuteCommand runs a command with given arguments.
-func (c *Context) ExecuteCommand(name string, args ...string) (err error) {
-	cmd := exec.Command(name, args...)
-	cmd.Dir = filepath.Join(".", c.CurrentWorkdir)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	fmt.Printf("Executing command: `%s %s`\n", name, strings.Join(args, " "))
-	if err := cmd.Run(); err != nil {
-		fmt.Printf("Error executing command: %s\n", err)
+func Flash(devise string, isoImage string, exec types.Executor) {
+	// Code that can go to a function
+	if isoImage == "" {
+		isoFiles, err := filepath.Glob(filepath.Join(isosDir, "*.img"))
+		if err != nil {
+			log.Println("Error listing ISO images files:", err)
+			return
+		}
+		if len(isoFiles) == 0 {
+			log.Println("No ISO images files found in", isosDir)
+			return
+		}
+		// Sort and display ISO files for user to select
+		sort.Strings(isoFiles)
+		for i, file := range isoFiles {
+			log.Printf("%d: %s\n", i+1, file)
+		}
+		log.Print("Enter the number of the ISO images file to flash: ")
+		var choice int
+		fmt.Scanln(&choice)
+		if choice < 1 || choice > len(isoFiles) {
+			log.Println("Invalid choice")
+			return
+		}
+		isoImage = isoFiles[choice-1]
 	}
-	return
+	comand := []string{"sudo", "dd", "bs=4M", "status=progress", "conv=fsync", "of=" + device, "if=" + isoImage}
+
+	// Prompt user for confirmation before proceeding
+	log.Println(strings.Join(comand, " "))
+	log.Println()
+	log.Printf("Are you sure you want to flash '%s' to '%s'? This will erase all data on the device. Type 'y' to confirm: ", isoImage, device)
+	var confirmation string
+	fmt.Scanln(&confirmation)
+	if confirmation != "y" {
+		log.Println("Flash operation cancelled.")
+		return
+	}
+	// exec.ExecuteCommand("diskutil", "unmountDisk", "/dev/disk2")
+	// Execute the dd command to flash the ISO to the device
+	// exec.executeCommand("sudo", "dd", "bs=4M", "status=progress", "conv=fsync", "of="+device, "if="+isoImage)
 }
