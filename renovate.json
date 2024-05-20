@@ -1,0 +1,32 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "nix": {
+    "enabled": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "matchDatasources": ["github-releases"],
+      "matchPackagePatterns": ["^actions/checkout$"],
+      "groupName": "github-actions"
+    },
+    {
+      "matchDatasources": ["nixpkgs"],
+      "groupName": "nix-packages"
+    },
+    {
+      "matchDatasources": ["gomod"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "branch",
+      "groupName": "go-modules"
+    }
+  ],
+  "updateNotScheduled": false,
+  "schedule": ["at any time"],
+  "extends": [
+    "config:base"
+  ]
+}

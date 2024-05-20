@@ -1,0 +1,15 @@
+version: "3.8"
+
+x-base-service: &base_service
+  build:
+    context: .
+  image: ghcr.io/yurifrl/home-systems
+  volumes:
+    - .:/src
+services:
+  sh:
+    <<: *base_service
+    entrypoint: fish
+  hs:
+    <<: *base_service
+    entrypoint: hs
