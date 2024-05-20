@@ -1,7 +1,7 @@
 {
   description = "Build Raspberry PI 4 image";
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
     fbbe.url = "github:RCasatta/fbbe";
   };
   outputs = { self, nixpkgs, fbbe }: let
