@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/yurifrl/home-systems/internal/executors"
@@ -37,16 +38,29 @@ var nixBuildCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// // Move built image to output directory
-		// err = executor.ExecuteCommand(
-		// 	"mv",
-		// 	"/nix/store/*-nixos-sd-image-*/sd-image/*.img",
-		// 	fmt.Sprintf("%s/output/", dockerWorkdir),
-		// )
-		// if err != nil {
-		// 	fmt.Printf("Error moving the image: %v\n", err)
-		// 	os.Exit(1)
-		// }
-		// fmt.Println("SD image built and moved successfully.")
+		matches, err := filepath.Glob("/src/nix/result/sd-image/*.img")
+		if err != nil {
+			fmt.Printf("Failed to find files: %v\n", err)
+			os.Exit(1)
+		}
+		if len(matches) == 0 {
+			fmt.Println("No files to copy.")
+			os.Exit(1)
+		}
+
+		for _, match := range matches {
+			executor := &executors.LocalExecutor{}
+
+			// Extract filename for destination
+			filename := filepath.Base(match)
+			destination := filepath.Join("/src", filename)
+
+			err := executor.ExecuteCommand("cp", match, destination)
+			if err != nil {
+				fmt.Printf("Failed to copy %s: %v\n", match, err)
+				os.Exit(1)
+			}
+		}
+		fmt.Println("Files copied successfully.")
 	},
 }
