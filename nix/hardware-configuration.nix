@@ -1,4 +1,4 @@
-{  lib, modulesPath, ... }:
+{ lib, modulesPath, ... }:
 
 {
   imports =
@@ -17,6 +17,7 @@
     device = "/dev/disk/by-label/NIXOS_SD";
     fsType = "ext4";
   };
+
   swapDevices = [ ];
 
   networking.useDHCP = lib.mkDefault true;

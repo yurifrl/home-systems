@@ -1,41 +1,34 @@
+# nix build .#nixosConfigurations.rpi.config.system.build.sdImage
+# nix flake check
 {
-  description = "Build Raspberry PI 4 image";
+  description = "NixOS configuration for Raspberry Pi";
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
-    fbbe.url = "github:RCasatta/fbbe";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   };
-  outputs = { self, nixpkgs, fbbe }: let
-    system = "aarch64-linux";
-    pkgs = import nixpkgs {
-      inherit system;
+  outputs = { self, nixpkgs }: 
+    let
+      system = "aarch64-linux";
+      # pkgs = import nixpkgs { inherit system; };
+    in
+    {
+      nixosConfigurations.rpi = nixpkgs.lib.nixosSystem {
+        inherit system;
+        modules = [
+          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
+          "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
+          # ({ config, lib, pkgs, ... }: {
+          #   imports = [ ./sd-image.nix ];
+          # })
+          ./sd-image.nix
+          ./hardware-configuration.nix
+          ./tailscale.nix
+        ];
+      };
     };
-    fbbe-pkg = fbbe.packages.${system};
-    nixosConfigurations.rpi4 = nixpkgs.lib.nixosSystem {
-      inherit system pkgs;
-      modules = [
-        "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
-        ({ ... }: {
-          config = {
-            time.timeZone = "Europe/Rome";
-            i18n.defaultLocale = "it_IT.UTF-8";
-            sdImage.compressImage = false;
-            console.keyMap = "it";
-
-            users.users.root.initialHashedPassword = "$y$j9T$/29noYRT4W/22Hy4lW7B71$MNtGBgjk01Zo3LtKgFRQtwaXdv6I15oiSgGGCMkt9s2"; # =test use mkpasswd to generate
-            system = {
-              stateVersion = "23.05";
-            };
-            networking = {
-              wireless.enable = false;
-              useDHCP = false;
-            };
-            environment.systemPackages = [ pkgs.git pkgs.bitcoin pkgs.gnupg pkgs.pass pkgs.age pkgs.htop fbbe-pkg.fbbe ];
-          };
-        })
-      ];
-    };
-    in {
-      image.rpi4 = nixosConfigurations.rpi4.config.system.build.sdImage;
-    };
-
 }
+
+# nix build .#nixosConfigurations.rpi.config.system.build.sdImage  
+# 1. x min - Control compressImage true
+# 2. x min - Same as above to check if rebuild is quicker can be cached
+# 3. x min - compressImage false
+# 4. x min - Same as above to check if rebuild is quicker can be cached

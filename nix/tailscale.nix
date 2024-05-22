@@ -36,7 +36,7 @@
       fi
 
       # otherwise authenticate with tailscale
-      ${tailscale}/bin/tailscale up -authkey /src/secrets/tailscale-token)
+      ${tailscale}/bin/tailscale up -authkey $(cat /etc/secrets/tailscale-token)
     '';
   };
 }

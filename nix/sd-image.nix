@@ -1,21 +1,70 @@
-{ config, pkgs, ... }:
-
+{ pkgs, lib, ... }:
+let
+  # Define the script as a variable
+  showVersionScript = pkgs.writeShellScriptBin "version" ''
+    #!/bin/sh
+    echo "Custom Version: 4.0"
+  '';
+in
 {
-  boot.loader.generic-extlinux-compatible.enable = true;
-  boot.loader.generic-extlinux-compatible.useGenImage = true;
-  boot.kernelPackages = pkgs.linuxPackages_rpi4;
+  # Configuration options
+  sdImage.compressImage = false; # If true, will build a .zst compressed image.
+  # sdImage.enable = true; # What does this do?
 
-  fileSystems."/" = {
-    device = "/dev/disk/by-label/NIXOS_SD";
-    fsType = "ext4";
+  system = {
+    stateVersion = "23.05";
   };
 
-  # Example configurations
-  networking.hostName = "rpi4";
-  time.timeZone = "UTC";
-  services.openssh.enable = true;
+  # System packages
+  environment.systemPackages = with pkgs; [
+    libraspberrypi
+    raspberrypi-eeprom
 
-  users.users.root = {
-    password = "root";  # Replace with a secure password
+    vim
+    curl
+    htop
+    cowsay
+    hello
+    fortune
+    jq
+
+    showVersionScript
+  ];
+
+  # Networking configuration
+  networking = {
+    useDHCP = false;
+    interfaces.eth0.useDHCP = true;
   };
+
+  services.openssh = {
+    enable = true;
+    settings = {
+      # PermitRootLogin = lib.mkForce "prohibit-password";
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+      ChallengeResponseAuthentication = false;
+    };
+    extraConfig = "Compression no";
+  };
+
+  # SSH authorized keys for user 'nixos'
+  users.extraUsers.nixos.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAvaTuBhwuQHdjIP1k9YQk9YMqmGiOate19iXe6T4IL/"
+  ];
+
+  # Systemd service configuration for OpenSSH
+  systemd.services.sshd.wantedBy = lib.mkOverride 40 [ "multi-user.target" ];
+
+  security.sudo = {
+    enable = true;
+    wheelNeedsPassword = false;
+    extraConfig = ''
+      nixos ALL=(ALL) NOPASSWD: ALL
+    '';
+  };
+
+  nix.extraOptions = ''
+    experimental-features = nix-command flakes
+  '';
 }

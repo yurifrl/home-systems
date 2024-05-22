@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/yurifrl/home-systems/internal/executors"
@@ -24,21 +25,28 @@ var nixBuildCmd = &cobra.Command{
 		// Choose the executor based on an environment variable
 		executor := &executors.LocalExecutor{}
 
+		// New approach using nix build which is more up-to-date with Nix version 2.x
+		// --json???
 		err := executor.ExecuteCommand(
-			"nix-build", "-v", "--show-trace",
-			"<nixpkgs/nixos>",
-			"-A", "config.system.build.sdImage.outPath",
+			"nix", "build", ".#nixosConfigurations.rpi.config.system.build.sdImage",
+			"--show-trace",
 			"-I", fmt.Sprintf("nixos-config=%s/nix/sd-image.nix", dockerWorkdir),
-			"--argstr",
-			"system", "aarch64-linux",
 		)
 		if err != nil {
-			panic(err)
+			fmt.Printf("Error during the build process: %v\n", err)
+			os.Exit(1)
 		}
 
-		err = executor.ExecuteCommand("mv", "/nix/store/*-nixos-sd-image-*/sd-image/*.img", fmt.Sprintf("%s/output/", dockerWorkdir))
-		if err != nil {
-			panic(err)
-		}
+		// // Move built image to output directory
+		// err = executor.ExecuteCommand(
+		// 	"mv",
+		// 	"/nix/store/*-nixos-sd-image-*/sd-image/*.img",
+		// 	fmt.Sprintf("%s/output/", dockerWorkdir),
+		// )
+		// if err != nil {
+		// 	fmt.Printf("Error moving the image: %v\n", err)
+		// 	os.Exit(1)
+		// }
+		// fmt.Println("SD image built and moved successfully.")
 	},
 }

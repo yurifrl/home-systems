@@ -181,3 +181,8 @@ nix-repl> fooConfigurations.default.network.storage.legacy # Then you can look a
 # WIP
 
 -  nix build .#iso.config.system.build.isoImage        
+- [Build raspberry image with preinstalled software - Help - NixOS Discourse](https://discourse.nixos.org/t/build-raspberry-image-with-preinstalled-software/33055/3)
+-  read -> [Flake does not provide attribute - Help - NixOS Discourse](https://discourse.nixos.org/t/flake-does-not-provide-attribute/32156/2)
+-  [Flake does not provide attribute - Help - NixOS Discourse](https://discourse.nixos.org/t/flake-does-not-provide-attribute/32156/2)
+-  [Flake to create a simple SD image for RPI4 (cross) - Help - NixOS Discourse](https://discourse.nixos.org/t/flake-to-create-a-simple-sd-image-for-rpi4-cross/35185/25)
+-  read -> [Practical Nix flake anatomy: a guided tour of flake.nix | Vladimir Timofeenko's blog](https://vtimofeenko.com/posts/practical-nix-flake-anatomy-a-guided-tour-of-flake.nix/)

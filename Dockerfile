@@ -10,7 +10,7 @@ COPY go.mod go.sum ./
 RUN go mod tidy
 
 COPY . .
-RUN go build -o hs
+RUN go build -o /src/hs
 
 # Final Stage: Setup Nix environment
 # FROM gcr.io/nixos/nix
@@ -43,5 +43,5 @@ WORKDIR /src
 COPY --from=cli /src/hs /usr/local/bin/hs
 
 # Set the default command
-ENTRYPOINT ["hs"]
+ENTRYPOINT ["/usr/local/bin/hs"]
 CMD ["help"]
