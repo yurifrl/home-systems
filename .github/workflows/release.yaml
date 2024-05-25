@@ -33,7 +33,7 @@ jobs:
 
       - name: Build NixOS SD Image
         run: |
-          docker build --no-cache -t ghcr.io/yurifrl/home-systems:latest
+          docker build . --no-cache -t ghcr.io/yurifrl/home-systems:latest
           docker run --rm -v ".:/src" ghcr.io/yurifrl/home-systems:latest nix build 
 
       - name: Upload Image as Artifact
