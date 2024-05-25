@@ -19,12 +19,12 @@ jobs:
       #     username: ${{ github.actor }}
       #     password: ${{ secrets.GHA_PAT }}
     
-      # - name: Build and push Docker image
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: .
-      #     push: true
-      #     tags: ghcr.io/yurifrl/home-systems
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          # push: true
+          tags: ghcr.io/yurifrl/home-systems
 
       - name: Add Tailscale token to /etc/secrets
         run: | 
@@ -33,6 +33,7 @@ jobs:
 
       - name: Build NixOS SD Image
         run: |
+          ls -la
           docker run -v ".:/src" --rm ghcr.io/yurifrl/home-systems nix build 
 
       - name: Upload Image as Artifact
