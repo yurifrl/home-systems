@@ -176,8 +176,6 @@ nix-repl> fooConfigurations.default.network.storage.legacy # Then you can look a
 - [paklids/rpi-terraform-rke: Setup a Raspberry Pi Kubernetes cluster with Terraform](https://github.com/paklids/rpi-terraform-rke)
 
 
-
-
 # WIP
 
 -  nix build .#iso.config.system.build.isoImage        
@@ -186,3 +184,6 @@ nix-repl> fooConfigurations.default.network.storage.legacy # Then you can look a
 -  [Flake does not provide attribute - Help - NixOS Discourse](https://discourse.nixos.org/t/flake-does-not-provide-attribute/32156/2)
 -  [Flake to create a simple SD image for RPI4 (cross) - Help - NixOS Discourse](https://discourse.nixos.org/t/flake-to-create-a-simple-sd-image-for-rpi4-cross/35185/25)
 -  read -> [Practical Nix flake anatomy: a guided tour of flake.nix | Vladimir Timofeenko's blog](https://vtimofeenko.com/posts/practical-nix-flake-anatomy-a-guided-tour-of-flake.nix/)
+-  
+
+nix build .#nixosConfigurations.rpi.config.system.build.sdImage --show-trace --print-out-paths --json

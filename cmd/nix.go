@@ -27,11 +27,14 @@ var nixBuildCmd = &cobra.Command{
 		executor := &executors.LocalExecutor{}
 
 		// New approach using nix build which is more up-to-date with Nix version 2.x
-		// --json???
+		// --json ???
+		// --debugger - Opens iterative shell
+		// --debug - show debug level log
 		err := executor.ExecuteCommand(
 			"nix", "build", ".#nixosConfigurations.rpi.config.system.build.sdImage",
 			"--show-trace",
-			"-I", fmt.Sprintf("nixos-config=%s/nix/sd-image.nix", dockerWorkdir),
+			"--print-out-paths",
+			"--json",
 		)
 		if err != nil {
 			fmt.Printf("Error during the build process: %v\n", err)
