@@ -72,7 +72,6 @@ func init() {
 	//
 	rootCmd.SetHelpCommand(helpCmd)
 	//
-	rootCmd.AddCommand(findInNetwork)
 	rootCmd.AddCommand(flashCmd)
 	rootCmd.AddCommand(nixCmd)
 	rootCmd.AddCommand(TestCmd)
