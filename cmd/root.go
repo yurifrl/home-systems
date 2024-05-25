@@ -46,7 +46,7 @@ var TestCmd = &cobra.Command{
 			executor = &executors.DockerExecutor{}
 		}
 
-		err := executor.ExecuteCommand("test")
+		_, err := executor.ExecuteCommand("test")
 		if err != nil {
 			panic(err)
 		}

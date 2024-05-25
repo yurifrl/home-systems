@@ -8,7 +8,6 @@
   outputs = { self, nixpkgs }: 
     let
       system = "aarch64-linux";
-      # pkgs = import nixpkgs { inherit system; };
     in
     {
       nixosConfigurations.rpi = nixpkgs.lib.nixosSystem {
@@ -22,13 +21,8 @@
           ./sd-image.nix
           ./hardware-configuration.nix
           ./tailscale.nix
+          { nixpkgs.config.warn-dirty = true; }
         ];
       };
     };
 }
-
-# nix build .#nixosConfigurations.rpi.config.system.build.sdImage  
-# 1. x min - Control compressImage true
-# 2. x min - Same as above to check if rebuild is quicker can be cached
-# 3. x min - compressImage false
-# 4. x min - Same as above to check if rebuild is quicker can be cached

@@ -2,12 +2,17 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
-	"path/filepath"
 
+	"github.com/k0kubun/pp/v3"
 	"github.com/spf13/cobra"
 	"github.com/yurifrl/home-systems/internal/executors"
+	"github.com/yurifrl/home-systems/pkg/utils"
 )
+
+var distDir = "/src/dist"
+var nixBuildString = "./nix/#nixosConfigurations.rpi.config.system.build.sdImage"
 
 // Nix command group
 var nixCmd = &cobra.Command{
@@ -16,53 +21,41 @@ var nixCmd = &cobra.Command{
 	Long:  `TODO`,
 }
 
-// Build nix image
+// Define the build command
 var nixBuildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Build Nix package",
 	Long:  `Builds a Nix package from the specified configuration.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// Choose the executor based on an environment variable
-		executor := &executors.LocalExecutor{}
+	Run:   runBuild,
+}
 
-		// New approach using nix build which is more up-to-date with Nix version 2.x
-		// --json ???
-		// --debugger - Opens iterative shell
-		// --debug - show debug level log
-		err := executor.ExecuteCommand(
-			"nix", "build", "./nix/#nixosConfigurations.rpi.config.system.build.sdImage",
-			"--show-trace",
-			"--print-out-paths",
-			"--json",
-		)
-		if err != nil {
-			fmt.Printf("Error during the build process: %v\n", err)
-			os.Exit(1)
-		}
+// Run the build command
+func runBuild(cmd *cobra.Command, args []string) {
+	executor := &executors.LocalExecutor{}
+	stdout, err := executor.ExecuteCommand(
+		"nix", "build", nixBuildString,
+		"--show-trace",
+		"--print-out-paths",
+		"--no-link",
+		"--json",
+	)
+	if err != nil {
+		fmt.Printf("Error during the build process: %v\n", err)
+		os.Exit(1)
+	}
 
-		matches, err := filepath.Glob("/src/nix/result/sd-image/*.img")
-		if err != nil {
-			fmt.Printf("Failed to find files: %v\n", err)
-			os.Exit(1)
-		}
-		if len(matches) == 0 {
-			fmt.Println("No files to copy.")
-			os.Exit(1)
-		}
+	parsedJSON, err := utils.ExtractAndParseJSON(stdout.String())
+	if err != nil {
+		log.Fatalf("Failed to parse JSON: %s", err)
+	}
 
-		for _, match := range matches {
-			executor := &executors.LocalExecutor{}
+	fmt.Printf("Nix build output: %+v\n", parsedJSON)
 
-			// Extract filename for destination
-			filename := filepath.Base(match)
-			destination := filepath.Join("/src", filename)
-
-			err := executor.ExecuteCommand("cp", match, destination)
-			if err != nil {
-				fmt.Printf("Failed to copy %s: %v\n", match, err)
-				os.Exit(1)
-			}
-		}
-		fmt.Println("Files copied successfully.")
-	},
+	outputPaths := utils.GetOutputPaths(parsedJSON)
+	pp.Println(outputPaths)
+	if err := utils.HandleBuildArtifacts(outputPaths, distDir); err != nil {
+		fmt.Printf("Failed to handle build artifacts: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("Files copied successfully.")
 }

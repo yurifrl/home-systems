@@ -188,3 +188,6 @@ nix-repl> fooConfigurations.default.network.storage.legacy # Then you can look a
 
 nix build .#nixosConfigurations.rpi.config.system.build.sdImage \
 --show-trace --print-out-paths --json
+
+
+Pass secrets on dd?

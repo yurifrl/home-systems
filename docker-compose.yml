@@ -4,10 +4,11 @@ x-base-service: &base_service
   image: ghcr.io/yurifrl/home-systems
   volumes:
     - .:/src
+  working_dir: /src
 services:
   sh:
     <<: *base_service
     entrypoint: fish
   hs:
     <<: *base_service
-    entrypoint: hs
+    entrypoint: go run main.go

@@ -1,6 +1,7 @@
 package executors
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,8 +15,9 @@ type DockerExecutor struct {
 }
 
 // ExecuteCommand runs a command with given arguments.
-func (c *DockerExecutor) ExecuteCommand(name string, args ...string) (err error) {
+func (c *DockerExecutor) ExecuteCommand(name string, args ...string) (_ bytes.Buffer, err error) {
 	pp.Println("Running on docker")
+	var stdout bytes.Buffer
 
 	executor := NewExecutor()
 
@@ -34,12 +36,12 @@ func (c *DockerExecutor) ExecuteCommand(name string, args ...string) (err error)
 	cmd := exec.Command("docker", dockerArgs...)
 	cmd.Dir = filepath.Join(".", executor.currentWorkdir)
 	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
+	cmd.Stdout = &stdout
 	cmd.Stderr = os.Stderr
 
 	fmt.Printf("Executing command: `%s %s`\n", "docker", strings.Join(dockerArgs, " "))
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("Error executing command: %s\n", err)
 	}
-	return nil
+	return stdout, nil
 }
