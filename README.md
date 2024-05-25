@@ -186,4 +186,5 @@ nix-repl> fooConfigurations.default.network.storage.legacy # Then you can look a
 -  read -> [Practical Nix flake anatomy: a guided tour of flake.nix | Vladimir Timofeenko's blog](https://vtimofeenko.com/posts/practical-nix-flake-anatomy-a-guided-tour-of-flake.nix/)
 -  
 
-nix build .#nixosConfigurations.rpi.config.system.build.sdImage --show-trace --print-out-paths --json
+nix build .#nixosConfigurations.rpi.config.system.build.sdImage \
+--show-trace --print-out-paths --json

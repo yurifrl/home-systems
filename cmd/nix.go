@@ -22,7 +22,6 @@ var nixBuildCmd = &cobra.Command{
 	Short: "Build Nix package",
 	Long:  `Builds a Nix package from the specified configuration.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
 		// Choose the executor based on an environment variable
 		executor := &executors.LocalExecutor{}
 

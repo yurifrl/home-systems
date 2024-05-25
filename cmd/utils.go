@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/yurifrl/home-systems/internal/executors"
@@ -27,22 +25,5 @@ var flashCmd = &cobra.Command{
 		// Check if the isoImage image parameter is provided, if not, list available ISOs
 		isoImage, _ := cmd.Flags().GetString("iso")
 		utils.Flash(device, isoImage, executors.LocalExecutor{})
-	},
-}
-
-// Find connectable devices in network
-var findInNetwork = &cobra.Command{
-	Use:   "find-in-network",
-	Short: "TODO",
-	Long:  `TODO`,
-	Run: func(cmd *cobra.Command, args []string) {
-		subnet := "192.168.1."
-		for i := 1; i <= 255; i++ {
-			go utils.ScanAddress(fmt.Sprintf("%s%d", subnet, i))
-		}
-
-		// Wait to prevent the program from exiting immediately
-		// In a real-world scenario, use proper synchronization
-		time.Sleep(5 * time.Minute)
 	},
 }

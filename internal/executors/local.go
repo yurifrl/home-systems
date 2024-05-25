@@ -14,7 +14,7 @@ func (LocalExecutor) ExecuteCommand(name string, args ...string) (err error) {
 	// executor := NewExecutor()
 
 	cmd := exec.Command(name, args...)
-	cmd.Dir = "./nix"
+	cmd.Dir = "/src/nix"
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
