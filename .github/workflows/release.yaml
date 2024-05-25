@@ -33,6 +33,7 @@ jobs:
 
       - name: Build NixOS SD Image
         run: |
+          sudo chown -R $(whoami) .
           ls -la
           docker run -v ".:/src" --rm ghcr.io/yurifrl/home-systems nix build 
 
