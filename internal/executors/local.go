@@ -4,17 +4,22 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+
+	"github.com/k0kubun/pp/v3"
 )
 
 type LocalExecutor struct {
 }
 
 func (LocalExecutor) ExecuteCommand(name string, args ...string) (err error) {
-	// executor := NewExecutor()
+	pp.Println("Running locally")
+
+	executor := NewExecutor()
 
 	cmd := exec.Command(name, args...)
-	cmd.Dir = "/src/nix"
+	cmd.Dir = filepath.Join(".", executor.currentWorkdir)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

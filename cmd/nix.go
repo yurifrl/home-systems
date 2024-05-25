@@ -30,7 +30,7 @@ var nixBuildCmd = &cobra.Command{
 		// --debugger - Opens iterative shell
 		// --debug - show debug level log
 		err := executor.ExecuteCommand(
-			"nix", "build", ".#nixosConfigurations.rpi.config.system.build.sdImage",
+			"nix", "build", "./nix/#nixosConfigurations.rpi.config.system.build.sdImage",
 			"--show-trace",
 			"--print-out-paths",
 			"--json",
