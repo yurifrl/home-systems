@@ -31,11 +31,15 @@ jobs:
           mkdir secrets
           echo ${{ secrets.TAILSCALE_TOKEN }} | sudo tee ./secrets/tailscale-token
 
+      # - name: Build NixOS SD Image
+      #   run: |
+      #     docker build . --no-cache -t ghcr.io/yurifrl/home-systems:latest
+      #     docker run --entrypoint="" -v ".:/src" ghcr.io/yurifrl/home-systems nix build ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --show-trace --print-out-paths --json 
+
       - name: Build NixOS SD Image
         run: |
-          docker build . --no-cache -t ghcr.io/yurifrl/home-systems:latest
-          docker run --entrypoint="" -v ".:/src" ghcr.io/yurifrl/home-systems nix build ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --show-trace --print-out-paths --json 
-
+          docker compose run --rm hs 
+         
       - name: Upload Image as Artifact
         uses: actions/upload-artifact@v4
         with:

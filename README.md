@@ -175,6 +175,11 @@ nix-repl> fooConfigurations.default.network.storage.legacy # Then you can look a
 - [Stack Builders - Combining Nix with Terraform for better DevOps](https://www.stackbuilders.com/blog/combining-nix-with-terraform-for-better-devops/)
 - [paklids/rpi-terraform-rke: Setup a Raspberry Pi Kubernetes cluster with Terraform](https://github.com/paklids/rpi-terraform-rke)
 
+## PXE
+- [sleinen/nixos-pxe-installer: Framework for fully automated installation of customized NixOS via PXE netboot](https://github.com/sleinen/nixos-pxe-installer)
+- [Netboot - NixOS Wiki](https://nixos.wiki/wiki/Netboot)
+- [Agenix - NixOS Wiki](https://nixos.wiki/wiki/Agenix)
+- [chvp/nixos-config: Configuration of my machines (main development happens at https://git.chvp.be/chvp/nixos-config these days)](https://github.com/chvp/nixos-config)
 
 # WIP
 
@@ -186,8 +191,14 @@ nix-repl> fooConfigurations.default.network.storage.legacy # Then you can look a
 -  read -> [Practical Nix flake anatomy: a guided tour of flake.nix | Vladimir Timofeenko's blog](https://vtimofeenko.com/posts/practical-nix-flake-anatomy-a-guided-tour-of-flake.nix/)
 -  
 
-nix build .#nixosConfigurations.rpi.config.system.build.sdImage \
---show-trace --print-out-paths --json
-
-
 Pass secrets on dd?
+
+
+nix build --rebuild --impure --builders 'ssh://nixos@192.168.68.108' ./nix/#nixosConfigurations.rpi.config.system.build.sdImage
+
+NIX_SSHOPTS="-A" nixos-rebuild switch --flake ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --target-host ssh://nixos@192.168.68.108 --use-remote-sudo
+
+- [Using 1P SSH from inside a local Docker container — 1Password Community](https://1password.community/discussion/127482/feature-request-using-1p-ssh-from-inside-a-local-docker-container)
+- [Using NixOs on your selfhosted server ? : selfhosted](https://old.reddit.com/r/selfhosted/comments/1cx4cjg/using_nixos_on_your_selfhosted_server/)
+  - https://github.com/pSub/configs/tree/master/nixos%2Fserver
+  - [configs/nixos/server at master · pSub/configs](https://github.com/pSub/configs/tree/master/nixos%2Fserver)

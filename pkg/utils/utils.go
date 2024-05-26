@@ -17,8 +17,7 @@ import (
 )
 
 var (
-	isosDir = "isos"
-	device  = ""
+	isosDir = "dist"
 )
 
 func ScanAddress(ip string) {
@@ -43,7 +42,7 @@ func ScanAddress(ip string) {
 	log.Printf("Successfully connected to %s\n", ip)
 }
 
-func Flash(devise string, isoImage string, exec types.Executor) {
+func Flash(device string, isoImage string, exec types.Executor) {
 	// Code that can go to a function
 	if isoImage == "" {
 		isoFiles, err := filepath.Glob(filepath.Join(isosDir, "*.img"))
@@ -69,10 +68,14 @@ func Flash(devise string, isoImage string, exec types.Executor) {
 		}
 		isoImage = isoFiles[choice-1]
 	}
-	comand := []string{"sudo", "dd", "bs=4M", "status=progress", "conv=fsync", "of=" + device, "if=" + isoImage}
+	command := []string{"sudo", "dd", "bs=4M", "status=progress", "conv=fsync", "of=" + device, "if=" + isoImage}
 
+	//
+	log.Println()
+	exec.ExecuteCommand("diskutil", "info", device)
+	log.Println()
 	// Prompt user for confirmation before proceeding
-	log.Println(strings.Join(comand, " "))
+	log.Println(strings.Join(command, " "))
 	log.Println()
 	log.Printf("Are you sure you want to flash '%s' to '%s'? This will erase all data on the device. Type 'y' to confirm: ", isoImage, device)
 	var confirmation string
@@ -81,9 +84,9 @@ func Flash(devise string, isoImage string, exec types.Executor) {
 		log.Println("Flash operation cancelled.")
 		return
 	}
-	// exec.ExecuteCommand("diskutil", "unmountDisk", "/dev/disk2")
+	exec.ExecuteCommand("diskutil", "unmountDisk", device)
 	// Execute the dd command to flash the ISO to the device
-	// exec.executeCommand("sudo", "dd", "bs=4M", "status=progress", "conv=fsync", "of="+device, "if="+isoImage)
+	exec.ExecuteCommand("sudo", "dd", "bs=4M", "status=progress", "conv=fsync", "of="+device, "if="+isoImage)
 }
 
 // Extract and parse JSON from the output

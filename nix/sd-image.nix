@@ -1,9 +1,9 @@
 { pkgs, lib, ... }:
 let
   # Define the script as a variable
-  showVersionScript = pkgs.writeShellScriptBin "version" ''
+  show-version = pkgs.writeShellScriptBin "show-version" ''
     #!/bin/sh
-    echo "Custom Version: 4.0"
+    echo "Custom Version: 5.0"
   '';
 in
 {
@@ -26,9 +26,9 @@ in
     cowsay
     hello
     fortune
-    jq
+    jq 
 
-    showVersionScript
+    show-version   
   ];
 
   # Networking configuration

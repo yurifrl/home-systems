@@ -3,12 +3,14 @@ FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
 
 # Stage 2: Build cli
 FROM golang:alpine as build
-
 WORKDIR /src
+
+#
+ENV GOMODCACHE /go/pkg/mod/  
 
 # Cache Go modules
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
 COPY . .
 RUN go build -o /bin/hs
@@ -38,10 +40,13 @@ RUN nix-env -iA \
     nixpkgs.rrsync \
     nixpkgs.rsync
 
+ENV GOMODCACHE /go/pkg/mod/
+
 WORKDIR /src
 
 # Copy built CLI binary
 COPY --from=build /bin/hs /bin/hs
+COPY --from=build /go/pkg/mod /go/pkg/mod
 
 # Set the default command
 ENTRYPOINT ["/bin/hs"]

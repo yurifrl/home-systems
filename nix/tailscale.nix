@@ -1,4 +1,7 @@
 { pkgs, ... }:
+let
+  tailscaleTokenSource = "tskey-auth-foo";
+in 
 {
   services.tailscale.enable = true;
 
@@ -7,11 +10,11 @@
     tailscale
   ];
 
-  # # Add the secret file to the image
-  # # environment.etc."secrets/tailscale-token".text = tailscaleTokenSource; # How to pass this If I wanted to?
-  # environment.etc."secrets/tailscale-token".mode = "0400"; # Read-only for owner
-  # environment.etc."secrets/tailscale-token".user = "tailscale";
-  # environment.etc."secrets/tailscale-token".group = "tailscale";
+  # Add the secret file to the image
+  environment.etc."secrets/tailscale-token".text = tailscaleTokenSource;
+  environment.etc."secrets/tailscale-token".mode = "0400";
+  environment.etc."secrets/tailscale-token".user = "tailscale";
+  environment.etc."secrets/tailscale-token".group = "tailscale";
 
   systemd.services.tailscale-autoconnect = {
     description = "Automatic connection to Tailscale";

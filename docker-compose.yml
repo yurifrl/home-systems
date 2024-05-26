@@ -2,9 +2,13 @@ x-base-service: &base_service
   build:
     context: .
   image: ghcr.io/yurifrl/home-systems
+  working_dir: /src
   volumes:
     - .:/src
-  working_dir: /src
+    - go-mod:/go/pkg/mod
+    - $SSH_AUTH_SOCK:/ssh-agent
+  environment:
+    SSH_AUTH_SOCK: /ssh-agent
 services:
   sh:
     <<: *base_service
@@ -12,3 +16,5 @@ services:
   hs:
     <<: *base_service
     entrypoint: go run main.go
+volumes:
+  go-mod:
