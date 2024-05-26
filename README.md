@@ -199,6 +199,9 @@ nix build --rebuild --impure --builders 'ssh://nixos@192.168.68.108' ./nix/#nixo
 NIX_SSHOPTS="-A" nixos-rebuild switch --flake ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --target-host ssh://nixos@192.168.68.108 --use-remote-sudo
 
 - [Using 1P SSH from inside a local Docker container — 1Password Community](https://1password.community/discussion/127482/feature-request-using-1p-ssh-from-inside-a-local-docker-container)
-- [Using NixOs on your selfhosted server ? : selfhosted](https://old.reddit.com/r/selfhosted/comments/1cx4cjg/using_nixos_on_your_selfhosted_server/)
-  - https://github.com/pSub/configs/tree/master/nixos%2Fserver
-  - [configs/nixos/server at master · pSub/configs](https://github.com/pSub/configs/tree/master/nixos%2Fserver)
+
+- Nixops flake
+  - [Using NixOs on your selfhosted server ? : selfhosted](https://old.reddit.com/r/selfhosted/comments/1cx4cjg/using_nixos_on_your_selfhosted_server/)
+    - https://github.com/pSub/configs/tree/master/nixos%2Fserver
+    - [configs/nixos/server at master · pSub/configs](https://github.com/pSub/configs/tree/master/nixos%2Fserver)
+    - [Nixops with flakes? - Help - NixOS Discourse](https://discourse.nixos.org/t/nixops-with-flakes/13306/6)

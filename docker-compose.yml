@@ -5,7 +5,7 @@ x-base-service: &base_service
   working_dir: /src
   volumes:
     - .:/src
-    - go-mod:/go/pkg/mod
+    - gomod-cache:/go/pkg/mod
     - $SSH_AUTH_SOCK:/ssh-agent
   environment:
     SSH_AUTH_SOCK: /ssh-agent
@@ -17,4 +17,4 @@ services:
     <<: *base_service
     entrypoint: go run main.go
 volumes:
-  go-mod:
+  gomod-cache:

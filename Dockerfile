@@ -40,13 +40,18 @@ RUN nix-env -iA \
     nixpkgs.rrsync \
     nixpkgs.rsync
 
-ENV GOMODCACHE /go/pkg/mod/
-
-WORKDIR /src
+RUN nix-env -iA nixpkgs.nixops_unstable_minimal
 
 # Copy built CLI binary
 COPY --from=build /bin/hs /bin/hs
 COPY --from=build /go/pkg/mod /go/pkg/mod
+
+ENV GOMODCACHE /go/pkg/mod/
+ENV NIXOPS_STATE=/nixops/deployments.nixops
+
+WORKDIR /src
+
+VOLUME [ "/nixops", "gomod-cache" ]
 
 # Set the default command
 ENTRYPOINT ["/bin/hs"]

@@ -18,6 +18,9 @@ var (
 	// Flash
 	isoImage = ""
 	device   = ""
+	// NixOps
+	nixopsWorkdir    = "/workdir/nix/nixops/"
+	nixDeployVersion = ""
 )
 
 // Simplified global help command
@@ -83,4 +86,10 @@ func init() {
 	flashCmd.PersistentFlags().StringVarP(&device, "device", "d", "", "Device path (e.g., /dev/sdx)")
 	//
 	nixCmd.AddCommand(nixBuildCmd)
+	// NixOps
+	rootCmd.AddCommand(nixOpsCmd)
+	nixOpsDeployCmd.PersistentFlags().StringVarP(&nixDeployVersion, "version", "n", "", "Version to deploy to or X to redeploy the last")
+	nixOpsCmd.AddCommand(nixOpsDeployCmd)
+	nixOpsCmd.AddCommand(nixOpsListCmd)
+	nixOpsCmd.AddCommand(nixOpsPurgeCmd)
 }
