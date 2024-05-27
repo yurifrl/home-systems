@@ -198,6 +198,9 @@ nix build --rebuild --impure --builders 'ssh://nixos@192.168.68.108' ./nix/#nixo
 
 NIX_SSHOPTS="-A" nixos-rebuild switch --flake ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --target-host ssh://nixos@192.168.68.108 --use-remote-sudo
 
+nix run github:serokell/deploy-rs nix/
+
+
 - [Using 1P SSH from inside a local Docker container — 1Password Community](https://1password.community/discussion/127482/feature-request-using-1p-ssh-from-inside-a-local-docker-container)
 
 - Nixops flake

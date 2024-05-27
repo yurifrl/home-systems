@@ -40,6 +40,8 @@ RUN nix-env -iA \
     nixpkgs.rrsync \
     nixpkgs.rsync
 
+RUN nix-env -iA nixpkgs.deploy-rs
+
 RUN nix-env -iA nixpkgs.nixops_unstable_minimal
 
 # Copy built CLI binary
