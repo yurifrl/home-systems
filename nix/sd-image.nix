@@ -3,7 +3,7 @@ let
   # Define the script as a variable
   show-version = pkgs.writeShellScriptBin "show-version" ''
     #!/bin/sh
-    echo "Custom Version: 5.0"
+    echo "Custom Version: 6.0"
   '';
 in
 {
