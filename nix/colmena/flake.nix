@@ -18,15 +18,12 @@
           # ({ config, lib, pkgs, ... }: {
           #   imports = [ ./sd-image.nix ];
           # })
-          ./sd-image.nix
-          ./hardware-configuration.nix
-          ./tailscale.nix
+          ../sd-image.nix
+          ../hardware-configuration.nix
+          ../tailscale.nix
           { nixpkgs.config.warn-dirty = true; }
         ];
       };
-      defaultPackage.${system} = self.nixosConfigurations.rpi.config.system.build.sdImage;
-      defaultPackage.x86_64-linux = self.nixosConfigurations.rpi.config.system.build.sdImage;
-
       colmena = {
         meta = {
           nixpkgs = import nixpkgs {

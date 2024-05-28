@@ -41,7 +41,7 @@ RUN nix-env -iA \
     nixpkgs.rsync
 
 RUN nix-env -iA nixpkgs.deploy-rs
-
+RUN nix-env -if https://github.com/zhaofengli/colmena/tarball/main
 RUN nix-env -iA nixpkgs.nixops_unstable_minimal
 
 # Copy built CLI binary
