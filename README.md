@@ -208,3 +208,4 @@ nix run github:serokell/deploy-rs nix/
     - https://github.com/pSub/configs/tree/master/nixos%2Fserver
     - [configs/nixos/server at master · pSub/configs](https://github.com/pSub/configs/tree/master/nixos%2Fserver)
     - [Nixops with flakes? - Help - NixOS Discourse](https://discourse.nixos.org/t/nixops-with-flakes/13306/6)
+    - 
