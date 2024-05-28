@@ -36,7 +36,7 @@
 
         host-b = {
           deployment = {
-            targetHost = "192.168.68.10";
+            targetHost = "192.168.68.108";
             targetUser = "nixos";
           };
           boot.isContainer = true;
