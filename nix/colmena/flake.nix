@@ -24,7 +24,9 @@
           { nixpkgs.config.warn-dirty = true; }
         ];
       };
-      colmena = {
+      colmena = nixpkgs.lib.nixosSystem {
+        inherit system;
+
         meta = {
           nixpkgs = import nixpkgs {
             system = "aarch64-linux";
