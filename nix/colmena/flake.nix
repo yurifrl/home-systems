@@ -27,10 +27,9 @@
       colmena = {
         meta = {
           nixpkgs = import nixpkgs {
-            system = "x86_64-linux";
+            system = "aarch64-linux";
           };
         };
-
 
         host-b = {
           deployment = {
