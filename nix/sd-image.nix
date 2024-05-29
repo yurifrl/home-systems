@@ -1,9 +1,9 @@
 { pkgs, lib, ... }:
 let
   # Define the script as a variable
-  show-version = pkgs.writeShellScriptBin "show-version" ''
+  version = pkgs.writeShellScriptBin "version" ''
     #!/bin/sh
-    echo "Custom Version: 6.0"
+    echo "System Version: 6.0"
   '';
 in
 {
@@ -28,7 +28,7 @@ in
     fortune
     jq 
 
-    show-version   
+    version   
   ];
 
   # Networking configuration

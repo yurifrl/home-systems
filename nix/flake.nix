@@ -28,6 +28,10 @@
       defaultPackage.x86_64-linux = self.nixosConfigurations.rpi.config.system.build.sdImage;
 
       colmena = {
+        inherit system;
+        modules = [
+          { nixpkgs.config.warn-dirty = true; }
+        ];
         meta = {
           nixpkgs = import nixpkgs {
             system = "aarch64-linux";
