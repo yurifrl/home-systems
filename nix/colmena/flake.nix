@@ -21,12 +21,10 @@
           ../sd-image.nix
           ../hardware-configuration.nix
           ../tailscale.nix
-          { nixpkgs.config.warn-dirty = true; }
+          { nixpkgs.config.warn-dirty = false; }
         ];
       };
-      colmena = nixpkgs.lib.nixosSystem {
-        inherit system;
-
+      colmena = {
         meta = {
           nixpkgs = import nixpkgs {
             system = "aarch64-linux";
