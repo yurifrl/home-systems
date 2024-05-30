@@ -1,6 +1,6 @@
 { pkgs, ... }:
 let
-  tailscaleTokenSource = "tskey-auth-foo";
+  tailscaleTokenSource = builtins.readFile "/src/secrets/tailscale-token";
 in 
 {
   services.tailscale.enable = true;

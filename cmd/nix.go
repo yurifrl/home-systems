@@ -32,12 +32,14 @@ var nixBuildCmd = &cobra.Command{
 // Run the build command
 func runBuild(cmd *cobra.Command, args []string) {
 	executor := &executors.LocalExecutor{}
+	// Needs to be impute because of tailscale secret
 	stdout, err := executor.ExecuteCommand(
 		"nix", "build", nixBuildString,
 		"--show-trace",
 		"--print-out-paths",
 		"--no-link",
 		"--json",
+		"--impure",
 	)
 	if err != nil {
 		fmt.Printf("Error during the build process: %v\n", err)

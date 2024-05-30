@@ -67,4 +67,6 @@ in
   nix.extraOptions = ''
     experimental-features = nix-command flakes
   '';
+  
+  console.keyMap = "us";
 }
