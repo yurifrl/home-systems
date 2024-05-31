@@ -16,7 +16,7 @@
         "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
         "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
         { nixpkgs.config.warn-dirty = true; }
-        # ./common.nix
+        ./common.nix
         ./tailscale.nix
         # ./machines/${protoName}/definition.nix
       ];
