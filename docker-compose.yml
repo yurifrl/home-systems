@@ -2,7 +2,7 @@ x-base-service: &base_service
   build:
     context: .
   image: ghcr.io/yurifrl/home-systems
-  working_dir: /src
+  working_dir: /src/nix
   volumes:
     - .:/src
     - gomod-cache:/go/pkg/mod

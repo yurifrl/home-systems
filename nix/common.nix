@@ -72,6 +72,5 @@ in
   '';
   
   console.keyMap = "us";
-  boot.isContainer = true; # ??? What does this do ???
   time.timeZone = "America/Los_Angeles";
 }
