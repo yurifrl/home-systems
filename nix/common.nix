@@ -1,3 +1,4 @@
+# nix/common.nix
 { pkgs, lib, ... }:
 let
   # Define the script as a variable
@@ -7,9 +8,9 @@ let
   '';
 in
 {
-  # Configuration options
-  sdImage.compressImage = false; # If true, will build a .zst compressed image.
-  # sdImage.enable = true; # What does this do?
+  imports = [
+    ./modules/tailscale.nix
+  ];
 
   system = {
     stateVersion = "23.05";
@@ -49,9 +50,15 @@ in
   };
 
   # SSH authorized keys for user 'nixos'
-  users.extraUsers.nixos.openssh.authorizedKeys.keys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAvaTuBhwuQHdjIP1k9YQk9YMqmGiOate19iXe6T4IL/"
-  ];
+  users.extraUsers.nixos = {
+    isNormalUser = true;
+    group = "nixos";
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAvaTuBhwuQHdjIP1k9YQk9YMqmGiOate19iXe6T4IL/"
+    ];
+  };
+
+  users.groups.nixos = {};
 
   # Systemd service configuration for OpenSSH
   systemd.services.sshd.wantedBy = lib.mkOverride 40 [ "multi-user.target" ];
@@ -69,4 +76,6 @@ in
   '';
   
   console.keyMap = "us";
+  boot.isContainer = true; # ??? What does this do ???
+  time.timeZone = "America/Los_Angeles";
 }

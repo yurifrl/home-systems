@@ -11,7 +11,6 @@
         "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
         "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
         ./common.nix
-        ./tailscale.nix
         ./machines/rpi/definition.nix
       ];
     };
@@ -21,7 +20,6 @@
       modules = [
         "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
         ./common.nix
-        ./tailscale.nix
         ./machines/vm/definition.nix
       ];
     };
@@ -32,16 +30,19 @@
     colmena = {
       meta = {
         nixpkgs = import nixpkgs {
-          system = "aarch64-linux";
+          # system = "aarch64-linux";
+          system = "x86_64-linux";
           overlays = [];
         };
       };
 
       defaults = { pkgs, lib, name, nodes, meta, ... }: {
         imports = [
+          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
+          "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
+          #
           ./machines/${name}/definition.nix
           ./common.nix
-          ./tailscale.nix
         ];
 
         deployment = {
@@ -49,13 +50,19 @@
         };
       };
       
-      rpi = {
+      # rpi = {
+      #   deployment = {
+      #     targetHost = "192.168.68.109";
+      #     targetUser = "nixos";
+      #   };
+      # };
+
+      vm = {
         deployment = {
-          targetHost = "192.168.68.108";
+          targetHost = "127.0.0.1";
+          targetPort = 2222;
           targetUser = "nixos";
         };
-        boot.isContainer = true;
-        time.timeZone = "America/Los_Angeles";
       };
     };
   };

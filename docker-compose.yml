@@ -9,6 +9,8 @@ x-base-service: &base_service
     - $SSH_AUTH_SOCK:/ssh-agent
   environment:
     SSH_AUTH_SOCK: /ssh-agent
+  network_mode: "host"
+
 services:
   sh:
     <<: *base_service
