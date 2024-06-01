@@ -12,9 +12,10 @@
         "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
         ./common.nix
         ./machines/rpi/definition.nix
-      ];
-
-
+        ({ ... }: {
+          sdImage.compressImage = false; # If true, will build a .zst compressed image.
+        })
+      ];  
     };
 
     nixosConfigurations.vm = nixpkgs.lib.nixosSystem {
