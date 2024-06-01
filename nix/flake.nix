@@ -2,10 +2,9 @@
   description = "NixOS configuration for Raspberry Pi and VirtualBox VM on Intel Mac";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixos.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, nixpkgs, nixos, ... }: {
+  outputs = { self, nixpkgs, ... }: {
     nixosConfigurations.rpi = nixpkgs.lib.nixosSystem {
       system = "aarch64-linux";
       modules = [
@@ -26,21 +25,7 @@
         "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
         ./common.nix
         ./modules
-        # ./machines/vm/definition.nix
-        ({ pkgs, ... }: {
-          boot.loader.grub.enable = true;
-          boot.loader.grub.device = "dummy"; # Needed for ISO image
-          boot.supportedFilesystems = [ "zfs" "btrfs" "xfs" "ext4" ];
-
-          # Example custom packages
-          environment.systemPackages = with pkgs; [
-            vim
-            git
-            curl
-          ];
-
-          services.sshd.enable = true;
-        })
+        ./machines/vm/definition.nix
       ];
     };
 
