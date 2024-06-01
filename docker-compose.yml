@@ -18,5 +18,8 @@ services:
   hs:
     <<: *base_service
     entrypoint: go run main.go
+  apply:
+    <<: *base_service
+    entrypoint: colmena apply --impure
 volumes:
   gomod-cache:

@@ -36,11 +36,9 @@
       x86_64-linux = self.nixosConfigurations.vm.config.system.build.isoImage;
     };
     
-
     colmena = {
       meta = {
         nixpkgs = import nixpkgs {
-          # system = "aarch64-linux";
           system = "x86_64-linux";
           overlays = [];
         };
@@ -48,27 +46,24 @@
 
       defaults = { pkgs, lib, name, nodes, meta, ... }: {
         imports = [
-          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
-          "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
           "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
 
           ./common.nix
-          ./modules
-          ./machines/rpi/definition.nix
+          # ./modules
+          ./machines/${name}/definition.nix
         ];
 
         deployment = {
           buildOnTarget = lib.mkDefault true;
         };
       };
+      rpi = {
+        deployment = {
+          targetHost = "192.168.68.109";
+          targetUser = "nixos";
+        };
+      };
       
-      # rpi = {
-      #   deployment = {
-      #     targetHost = "192.168.68.109";
-      #     targetUser = "nixos";
-      #   };
-      # };
-
       vm = {
         deployment = {
           targetHost = "127.0.0.1";
