@@ -50,6 +50,7 @@ COPY --from=build /go/pkg/mod /go/pkg/mod
 
 ENV GOMODCACHE /go/pkg/mod/
 ENV NIXOPS_STATE=/nixops/deployments.nixops
+ENV PATH=/bin:$PATH
 
 WORKDIR /src
 

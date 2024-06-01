@@ -5,32 +5,37 @@
   };
 
   outputs = { self, nixpkgs, ... }: {
-    nixosConfigurations.rpi = nixpkgs.lib.nixosSystem {
-      system = "aarch64-linux";
-      modules = [
-        "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
-        "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
-        ./common.nix
-        ./modules
-        ./machines/rpi/definition.nix
-        ({ ... }: {
-          sdImage.compressImage = false; # If true, will build a .zst compressed image.
-        })
-      ];  
+    nixosConfigurations = {
+      rpi = nixpkgs.lib.nixosSystem {
+        system = "aarch64-linux";
+        modules = [
+          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
+          "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
+          ./common.nix
+          ./modules
+          ./machines/rpi/definition.nix
+          ({ ... }: {
+            sdImage.compressImage = false; # If true, will build a .zst compressed image.
+          })
+        ];  
+      };
+
+      vm = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+          ./common.nix
+          ./modules
+          ./machines/vm/definition.nix
+        ];
+      };
     };
 
-    nixosConfigurations.vm = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      modules = [
-        "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
-        ./common.nix
-        ./modules
-        ./machines/vm/definition.nix
-      ];
+    packages = {
+      aarch64-linux.default = self.nixosConfigurations.rpi.config.system.build.sdImage;
+      x86_64-linux = self.nixosConfigurations.vm.config.system.build.isoImage;
     };
-
-    packages.aarch64-linux.default = self.nixosConfigurations.rpi.config.system.build.sdImage;
-    packages.x86_64-linux = self.nixosConfigurations.vm.config.system.build.isoImage;
+    
 
     colmena = {
       meta = {
@@ -43,9 +48,13 @@
 
       defaults = { pkgs, lib, name, nodes, meta, ... }: {
         imports = [
+          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
+          "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
+          "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+
           ./common.nix
           ./modules
-          ./machines/${name}/definition.nix
+          ./machines/rpi/definition.nix
         ];
 
         deployment = {
@@ -53,12 +62,12 @@
         };
       };
       
-      rpi = {
-        deployment = {
-          targetHost = "192.168.68.109";
-          targetUser = "nixos";
-        };
-      };
+      # rpi = {
+      #   deployment = {
+      #     targetHost = "192.168.68.109";
+      #     targetUser = "nixos";
+      #   };
+      # };
 
       vm = {
         deployment = {
