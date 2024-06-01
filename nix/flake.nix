@@ -26,6 +26,9 @@
         ./common.nix
         ./modules
         ./machines/vm/definition.nix
+        ({ system, ... }: {
+          isoImage.initialRamdisk = builtins.storePath (builtins.getFlake (toString ./.)).legacyPackages.${system}.initialRamdisk;
+        })
       ];
     };
 
