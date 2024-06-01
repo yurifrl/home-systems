@@ -11,6 +11,7 @@
         "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
         "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
         ./common.nix
+        ./modules
         ./machines/rpi/definition.nix
         ({ ... }: {
           sdImage.compressImage = false; # If true, will build a .zst compressed image.
@@ -23,6 +24,7 @@
       modules = [
         "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
         ./common.nix
+        ./modules
         ./machines/vm/definition.nix
       ];
     };

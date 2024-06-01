@@ -8,10 +8,6 @@ let
   '';
 in
 {
-  imports = [
-    ./modules/tailscale.nix
-  ];
-
   system = {
     stateVersion = "23.05";
   };

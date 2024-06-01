@@ -210,3 +210,4 @@ nix run github:serokell/deploy-rs nix/
     - [Nixops with flakes? - Help - NixOS Discourse](https://discourse.nixos.org/t/nixops-with-flakes/13306/6)
 - Colmena
   - https://sourcegraph.com/github.com/Cottand/selfhosted@6ddede91264e7d1f3eb627d35983e2e7743761bd/-/blob/flake.nix?L30:7-30:18
+- nix flake check
