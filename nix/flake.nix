@@ -13,6 +13,9 @@
         ./common.nix
         ./machines/rpi/definition.nix
       ];
+
+      sdImage.compressImage = false; # If true, will build a .zst compressed image.
+      # sdImage.enable = true; # What does this do?
     };
 
     nixosConfigurations.vm = nixpkgs.lib.nixosSystem {
@@ -38,9 +41,6 @@
 
       defaults = { pkgs, lib, name, nodes, meta, ... }: {
         imports = [
-          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
-          "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
-          #
           ./machines/${name}/definition.nix
           ./common.nix
         ];
@@ -50,12 +50,12 @@
         };
       };
       
-      # rpi = {
-      #   deployment = {
-      #     targetHost = "192.168.68.109";
-      #     targetUser = "nixos";
-      #   };
-      # };
+      rpi = {
+        deployment = {
+          targetHost = "192.168.68.109";
+          targetUser = "nixos";
+        };
+      };
 
       vm = {
         deployment = {
