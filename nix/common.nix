@@ -4,7 +4,7 @@ let
   # Define the script as a variable
   version = pkgs.writeShellScriptBin "version" ''
     #!/bin/sh
-    echo "System Version: 6.0"
+    echo "System Version: 7.0"
   '';
 in
 {

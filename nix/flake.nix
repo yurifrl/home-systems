@@ -43,8 +43,9 @@
 
       defaults = { pkgs, lib, name, nodes, meta, ... }: {
         imports = [
-          ./machines/${name}/definition.nix
           ./common.nix
+          ./modules
+          ./machines/${name}/definition.nix
         ];
 
         deployment = {
