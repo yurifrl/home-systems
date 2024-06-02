@@ -7,8 +7,8 @@ import (
 
 	"github.com/k0kubun/pp/v3"
 	"github.com/spf13/cobra"
-	"github.com/yurifrl/home-systems/internal/executors"
-	"github.com/yurifrl/home-systems/pkg/utils"
+	"github.com/yurifrl/home-systems/src/internal/executors"
+	"github.com/yurifrl/home-systems/src/pkg/utils"
 )
 
 var distDir = "/src/dist"

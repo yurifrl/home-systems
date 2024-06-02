@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/yurifrl/home-systems/internal/executors"
-	"github.com/yurifrl/home-systems/pkg/utils"
+	"github.com/yurifrl/home-systems/src/internal/executors"
+	"github.com/yurifrl/home-systems/src/pkg/utils"
 )
 
 // flashCmd represents the flash command

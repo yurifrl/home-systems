@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
-	"github.com/yurifrl/home-systems/internal/executors"
-	"github.com/yurifrl/home-systems/internal/nixops"
+	"github.com/yurifrl/home-systems/src/internal/executors"
+	"github.com/yurifrl/home-systems/src/internal/nixops"
 )
 
 var nctx executors.LocalExecutor

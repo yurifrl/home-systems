@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/yurifrl/home-systems/pkg/types"
+	"github.com/yurifrl/home-systems/src/pkg/types"
 	"golang.org/x/crypto/ssh"
 )
 
