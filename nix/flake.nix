@@ -11,6 +11,7 @@
         modules = [
           "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
           "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
+          ./common.nix
           ./modules
           ./machines/rpi/definition.nix
           ({ ... }: {
@@ -23,6 +24,7 @@
         system = "x86_64-linux";
         modules = [
           "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+          ./common.nix
           ./modules
           ./machines/vm/definition.nix
         ];
@@ -45,6 +47,8 @@
       defaults = { lib, name, ... }: {
         imports = [
           "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+
+          ./common.nix
           ./modules
           ./machines/${name}/definition.nix
         ];
