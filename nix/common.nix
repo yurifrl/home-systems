@@ -1,7 +1,7 @@
 # nix/common.nix
 { pkgs, lib, ... }:
 let
-  cowsay-version = import ./packages/cowsay-version.nix { inherit pkgs; };
+  cowsayVersion = import ./packages/cowsay-version.nix { inherit (pkgs) stdenv cowsay; };
 in
 {
   # System packages
@@ -12,11 +12,9 @@ in
     vim
     curl
     htop
-    fortune
     jq 
 
-    cowsay-version   
-    hs
+    cowsayVersion
   ];
 
   system = {

@@ -1,27 +1,19 @@
-{
-  description = "A very basic flake with cowsay outputting version info";
+# nix-build -E '(import <nixpkgs> {}).callPackage ./cowsay-version.nix {}'  
+{ cowsay, stdenv }:
 
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
-  };
+stdenv.mkDerivation {
+  name = "cowsay-version";
+  src = ./.;
 
-  outputs = { self, nixpkgs }: {
+  phases = [ "installPhase" ];
 
-    packages.x86_64-linux.cowsay-version = nixpkgs.legacyPackages.x86_64-linux.stdenv.mkDerivation {
-      name = "cowsay-version";
-      buildInputs = [ nixpkgs.legacyPackages.x86_64-linux.cowsay ];
-
-      buildCommand = ''
-        mkdir -p $out/bin
-
-        # Create a script that runs cowsay with the contents of the version file
-        echo "#!${nixpkgs.legacyPackages.x86_64-linux.stdenv.shell}" > $out/bin/cowsay-version
-        echo "${nixpkgs.legacyPackages.x86_64-linux.cowsay}/bin/cowsay \\"$(cat ${/src/VERSION})\\"" >> $out/bin/cowsay-version
-
-        chmod +x $out/bin/cowsay-version
-      '';
-    };
-
-    packages.x86_64-linux.default = self.packages.x86_64-linux.cowsay-version;
-  };
+  propagatedBuildInputs = [ cowsay ];
+  buildInputs = [ cowsay ];
+  
+  installPhase = ''
+    mkdir -p $out/bin
+    echo '#!/bin/sh' > $out/bin/cowsay-version
+    echo '${cowsay}/bin/cowsay "Home Automation Systems Version $(cat ${/src/VERSION})"' >> $out/bin/cowsay-version
+    chmod +x $out/bin/cowsay-version
+  '';
 }

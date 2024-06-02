@@ -211,3 +211,9 @@ nix run github:serokell/deploy-rs nix/
 - Colmena
   - https://sourcegraph.com/github.com/Cottand/selfhosted@6ddede91264e7d1f3eb627d35983e2e7743761bd/-/blob/flake.nix?L30:7-30:18
 - nix flake check
+
+
+- Derivations
+  - Works: `nix-build -E '(import <nixpkgs> {}).callPackage ./cowsay-version.nix {}'`
+  - nix-build cowsay-version.nix --arg cowsay '(import <nixpkgs> {}).cowsay' --arg stdenv '(import <nixpkgs> {}).stdenv'
+  - nix-instantiate -E '(import <nixpkgs> {}).callPackage ./cowsay-version.nix {}'     
