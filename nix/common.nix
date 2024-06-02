@@ -1,14 +1,7 @@
 # nix/common.nix
 { pkgs, lib, ... }:
 let
-  # Define the script as a variable
-  version = pkgs.writeShellScriptBin "version" ''
-    #!/bin/sh
-    echo "System Version: 10.0"
-  '';
-
-  # hs = import ./packages/hs.nix { inherit pkgs; };
-
+  cowsay-version = import ./packages/cowsay-version.nix { inherit pkgs; };
 in
 {
   # System packages
@@ -19,13 +12,11 @@ in
     vim
     curl
     htop
-    cowsay
-    hello
     fortune
     jq 
 
-    version   
-    # hs
+    cowsay-version   
+    hs
   ];
 
   system = {
