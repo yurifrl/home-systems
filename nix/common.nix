@@ -6,12 +6,11 @@ let
     #!/bin/sh
     echo "System Version: 10.0"
   '';
+
+  # hs = import ./packages/hs.nix { inherit pkgs; };
+
 in
 {
-  system = {
-    stateVersion = "23.05";
-  };
-
   # System packages
   environment.systemPackages = with pkgs; [
     libraspberrypi
@@ -26,7 +25,12 @@ in
     jq 
 
     version   
+    # hs
   ];
+
+  system = {
+    stateVersion = "23.05";
+  };
 
   # Networking configuration
   networking = {
