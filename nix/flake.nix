@@ -44,30 +44,44 @@
         };
       };
 
-      defaults = { pkgs, lib, name, nodes, meta, ... }: {
+      defaults = { lib, name, ... }: {
         imports = [
           "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
 
           ./common.nix
-          # ./modules
+          ./modules
           ./machines/${name}/definition.nix
         ];
 
         deployment = {
           buildOnTarget = lib.mkDefault true;
+
+          keys = {
+            "tailscale-token" = {
+              keyFile = "/src/secrets/${name}/tailscale-token";
+              destDir = "/etc/secrets/";
+              user = "tailscale";
+              permissions = "0400";
+            };
+          };
         };
       };
-      rpi = {
-        deployment = {
-          targetHost = "192.168.68.109";
-          targetUser = "nixos";
-        };
-      };
+
+      # rpi = {
+      #   deployment = {
+      #     targetHost = "192.168.68.109";
+      #     targetUser = "nixos";
+      #   };
+      # };
       
       vm = {
+        # Via tailscale
         deployment = {
-          targetHost = "127.0.0.1";
-          targetPort = 2222;
+          # targetHost = "127.0.0.1";
+          # targetPort = 2222;
+          #
+          targetHost = "100.94.23.120"; # Tailscale
+          #
           targetUser = "nixos";
         };
       };

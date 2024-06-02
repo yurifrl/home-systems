@@ -20,6 +20,6 @@ services:
     entrypoint: go run main.go
   apply:
     <<: *base_service
-    entrypoint: colmena apply --impure
+    entrypoint: colmena apply
 volumes:
   gomod-cache:
