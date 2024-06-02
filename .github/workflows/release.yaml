@@ -38,7 +38,8 @@ jobs:
 
       - name: Build NixOS SD Image
         run: |
-          docker compose run --rm hs 
+          docker compose run --rm build
+          ls -la 
          
       - name: Upload Image as Artifact
         uses: actions/upload-artifact@v4

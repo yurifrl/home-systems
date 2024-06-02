@@ -18,8 +18,8 @@ services:
   hs:
     <<: *base_service
     entrypoint: go run main.go
-  apply:
+  build:
     <<: *base_service
-    entrypoint: colmena apply
+    entrypoint: nix build nix#packages.aarch64-linux.default nix#packages.x86_64-linux
 volumes:
   gomod-cache:
