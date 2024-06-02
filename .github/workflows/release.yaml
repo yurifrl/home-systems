@@ -12,35 +12,33 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # - name: Login to GitHub Container Registry
-      #   uses: docker/login-action@v3
-      #   with:
-      #     registry: ghcr.io
-      #     username: ${{ github.actor }}
-      #     password: ${{ secrets.GHA_PAT }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHA_PAT }}
     
-      # - name: Build and push Docker image
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: .
-      #     # push: true
-      #     tags: ghcr.io/yurifrl/home-systems:latest
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          # push: true
+          tags: ghcr.io/yurifrl/home-systems:latest
 
       - name: Add Tailscale token to /etc/secrets
         run: | 
-          mkdir secrets
-          echo ${{ secrets.TAILSCALE_TOKEN }} | sudo tee ./secrets/tailscale-token
-
-      # - name: Build NixOS SD Image
-      #   run: |
-      #     docker build . --no-cache -t ghcr.io/yurifrl/home-systems:latest
-      #     docker run --entrypoint="" -v ".:/src" ghcr.io/yurifrl/home-systems nix build ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --show-trace --print-out-paths --json 
+          mkdir -p secrets/vm
+          mkdir -p secrets/rpi
+          echo ${{ secrets.TAILSCALE_TOKEN }} | sudo tee ./secrets/vm/tailscale-token
+          echo ${{ secrets.TAILSCALE_TOKEN }} | sudo tee ./secrets/rpi/tailscale-token
 
       - name: Build NixOS SD Image
         run: |
-          docker compose run --rm build
-          ls -la 
-         
+          docker build . --no-cache -t ghcr.io/yurifrl/home-systems:latest
+          docker run --entrypoint="" -v ".:/src" ghcr.io/yurifrl/home-systems nix build ./nix#packages.aarch64-linux.default ./nix#packages.x86_64-linux 
+          docker run --entrypoint="" -v ".:/src" ghcr.io/yurifrl/home-systems colmena build
+
       - name: Upload Image as Artifact
         uses: actions/upload-artifact@v4
         with:
