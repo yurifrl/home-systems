@@ -4,7 +4,7 @@ let
   # Define the script as a variable
   version = pkgs.writeShellScriptBin "version" ''
     #!/bin/sh
-    echo "System Version: 9.0"
+    echo "System Version: 10.0"
   '';
 in
 {
@@ -30,7 +30,8 @@ in
 
   # Networking configuration
   networking = {
-    useDHCP = false;
+    nameservers = [ "8.8.8.8" "8.8.4.4" ];
+    firewall.enable = false;
     interfaces.eth0.useDHCP = true;
   };
 

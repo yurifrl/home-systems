@@ -59,28 +59,30 @@
           keys = {
             "tailscale-token" = {
               keyFile = "/src/secrets/${name}/tailscale-token";
-              destDir = "/etc/secrets/";
+              # dstFile = "/etc/tailscale/tailscale.conf";
+              # destDir = "/etc/secrets/";
               user = "tailscale";
+              group = "tailscale";
               permissions = "0400";
             };
           };
         };
       };
 
-      # rpi = {
-      #   deployment = {
-      #     targetHost = "192.168.68.109";
-      #     targetUser = "nixos";
-      #   };
-      # };
+      rpi = {
+        deployment = {
+          targetHost = "192.168.68.103";
+          targetUser = "nixos";
+        };
+      };
       
       vm = {
         # Via tailscale
         deployment = {
-          # targetHost = "127.0.0.1";
-          # targetPort = 2222;
+          targetHost = "127.0.0.1";
+          targetPort = 2222;
           #
-          targetHost = "100.94.23.120"; # Tailscale
+          # targetHost = "100.94.23.120"; # Tailscale
           #
           targetUser = "nixos";
         };

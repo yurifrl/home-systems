@@ -1,24 +1,18 @@
 { pkgs, ... }:
 {
   # Tailscale user and group creation
-  users.users.tailscale = {
-    isNormalUser = true;
-    group = "tailscale";
+  users = {
+    users.tailscale = {
+      isNormalUser = true;
+      group = "tailscale";
+    };
+    groups.tailscale = { };
   };
-
-  # Fixes: "The following users have a primary group that is undefined"
-  users.groups.tailscale = {};
 
   environment.systemPackages = with pkgs; [
     jq
     tailscale
   ];
-
-  # Add the secret file to the image
-  environment.etc."secrets/tailscale-token".text = "/etc/secrets/tailscale-token";
-  environment.etc."secrets/tailscale-token".mode = "0400"; # Read-only for owner
-  environment.etc."secrets/tailscale-token".user = "tailscale";
-  environment.etc."secrets/tailscale-token".group = "tailscale";
 
   # Tailscale service configuration
   services.tailscale = {
@@ -48,7 +42,7 @@
       fi
 
       # otherwise authenticate with tailscale
-      ${tailscale}/bin/tailscale up -authkey $(cat /etc/secrets/tailscale-token)
+      ${tailscale}/bin/tailscale up -authkey $(cat /run/keys/tailscale-token)
     '';
   };
 }
