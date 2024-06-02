@@ -1,8 +1,8 @@
 # nix/common.nix
 { pkgs, lib, ... }:
-let
-  cowsayVersion = import ./packages/cowsay-version.nix { inherit (pkgs) stdenv cowsay; };
-in
+# let
+#   cowsayVersion = import ./packages/cowsay-version.nix { inherit (pkgs) stdenv cowsay; };
+# in
 {
   # System packages
   environment.systemPackages = with pkgs; [
@@ -14,7 +14,7 @@ in
     htop
     jq 
 
-    cowsayVersion
+    # cowsayVersion
   ];
 
   system = {
