@@ -19,7 +19,12 @@ services:
     <<: *base_service
     entrypoint: go run main.go
   build:
-    <<: *base_service
-    entrypoint: nix build nix#packages.aarch64-linux.default nix#packages.x86_64-linux
+    build:
+      context: .
+    image: ghcr.io/yurifrl/home-systems
+    entrypoint: nix build .#packages.aarch64-linux.default .#packages.x86_64-linux
+    working_dir: /src/nix
+    volumes:
+      - .:/src
 volumes:
   gomod-cache:
