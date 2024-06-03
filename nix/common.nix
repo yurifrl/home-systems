@@ -17,9 +17,6 @@ in
     cowsayVersion
   ];
 
-  system = {
-    stateVersion = "23.05";
-  };
 
   # Networking configuration
   networking = {
@@ -67,4 +64,15 @@ in
   
   console.keyMap = "us";
   time.timeZone = "America/Los_Angeles";
+
+  # This is here otherwise colemena will complain
+  boot.loader.grub.device = "/dev/sda";
+  fileSystems."/" = {
+    device = "/dev/sda1";
+    fsType = "ext4";
+  };
+
+  system = {
+    stateVersion = "23.05";
+  };
 }

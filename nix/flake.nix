@@ -46,12 +46,6 @@
 
       defaults = { lib, name, ... }: {
         imports = [
-          # rpi
-          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
-          "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
-          # vm
-          "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
-
           ./common.nix
           ./modules
           ./machines/${name}/definition.nix
@@ -63,8 +57,6 @@
           keys = {
             "tailscale-token" = {
               keyFile = "/src/secrets/${name}/tailscale-token";
-              # dstFile = "/etc/tailscale/tailscale.conf";
-              # destDir = "/etc/secrets/";
               user = "tailscale";
               group = "tailscale";
               permissions = "0400";
@@ -90,6 +82,7 @@
           #
           targetUser = "nixos";
         };
+
       };
     };
   };
