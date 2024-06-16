@@ -1,5 +1,7 @@
 {
-    imports = [
-        ./tailscale.nix
-    ];
+  imports = [
+    ./tailscale.nix
+    ./auth.nix
+  ];
 }
+

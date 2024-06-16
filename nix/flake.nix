@@ -71,7 +71,7 @@
           "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
         ];
         deployment = {
-          targetHost = "192.168.68.100";
+          targetHost = "192.168.68.101";
           targetUser = "nixos";
         };
       };
