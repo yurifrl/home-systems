@@ -2,6 +2,7 @@
 { pkgs, lib, ... }:
 let
   cowsayVersion = import ./packages/cowsay-version.nix { inherit (pkgs) stdenv cowsay; };
+  hs = import ./packages/hs.nix { inherit (pkgs) stdenv hs; };
 in
 {
   # System packages
@@ -15,6 +16,7 @@ in
     jq
     inetutils
 
+    hs
     cowsayVersion
   ];
 
