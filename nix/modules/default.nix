@@ -1,7 +1,7 @@
 {
   imports = [
     ./tailscale.nix
-    ./auth.nix
+    ./nertowkr-self-registry.nix
   ];
 }
 
