@@ -208,11 +208,15 @@ nix run github:serokell/deploy-rs nix/
     - https://github.com/pSub/configs/tree/master/nixos%2Fserver
     - [configs/nixos/server at master · pSub/configs](https://github.com/pSub/configs/tree/master/nixos%2Fserver)
     - [Nixops with flakes? - Help - NixOS Discourse](https://discourse.nixos.org/t/nixops-with-flakes/13306/6)
+
+  - Dev and Build
+    - nix flake check
+    - nix build .#packages.aarch64-linux.default .#packages.x86_64-linux 
+
 - Colmena
   - https://sourcegraph.com/github.com/Cottand/selfhosted@6ddede91264e7d1f3eb627d35983e2e7743761bd/-/blob/flake.nix?L30:7-30:18
+  - docker compose run --rm colmena apply --impure --on vm
 
-- nix flake check
-- nix build .#packages.aarch64-linux.default .#packages.x86_64-linux 
 
 - Derivations
   - Works: `nix-build -E '(import <nixpkgs> {}).callPackage ./cowsay-version.nix {}'`

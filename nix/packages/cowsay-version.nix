@@ -2,17 +2,17 @@
 { cowsay, stdenv }:
 
 let
-  version = "0.0.14";
+  version = "0.0.16";
 in
 stdenv.mkDerivation {
   name = "cowsay-version";
   src = ../../.;
-  
+
   phases = [ "installPhase" ];
 
   propagatedBuildInputs = [ cowsay ];
   buildInputs = [ cowsay ];
-  
+
   installPhase = ''
     mkdir -p $out/bin
     echo '#!/bin/sh' > $out/bin/cowsay-version

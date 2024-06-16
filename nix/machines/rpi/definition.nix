@@ -2,7 +2,7 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ pkgs, ... }:
+{ ... }:
 
 {
   imports = [
@@ -17,10 +17,11 @@
   networking.firewall.allowedUDPPorts = [
     # 8472 # k3s, flannel: required if using multi-node for inter-node networking
   ];
-  services.k3s.enable = true;
-  services.k3s.role = "server";
-  services.k3s.extraFlags = toString [
-    # "--kubelet-arg=v=4" # Optionally add additional args to k3s
-  ];
-  environment.systemPackages = [ pkgs.k3s ];
+  services.k3s = {
+    enable = true;
+    role = "server";
+    extraFlags = toString [
+      # "--kubelet-arg=v=4" # Optionally add additional args to k3s
+    ];
+  };
 }

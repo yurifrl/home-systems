@@ -17,7 +17,7 @@
           ({ ... }: {
             sdImage.compressImage = false; # If true, will build a .zst compressed image.
           })
-        ];  
+        ];
       };
 
       vm = nixpkgs.lib.nixosSystem {
@@ -40,7 +40,7 @@
       meta = {
         nixpkgs = import nixpkgs {
           system = "x86_64-linux";
-          overlays = [];
+          overlays = [ ];
         };
       };
 
@@ -66,23 +66,26 @@
       };
 
       rpi = {
+        imports = [
+          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
+          "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
+        ];
         deployment = {
-          targetHost = "192.168.68.103";
+          targetHost = "192.168.68.100";
           targetUser = "nixos";
         };
       };
-      
+
       vm = {
+        imports = [
+          "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+        ];
         # Via tailscale
         deployment = {
           targetHost = "127.0.0.1";
           targetPort = 2222;
-          #
-          # targetHost = "100.94.23.120"; # Tailscale
-          #
           targetUser = "nixos";
         };
-
       };
     };
   };

@@ -12,7 +12,8 @@ in
     vim
     curl
     htop
-    jq 
+    jq
+    inetutils
 
     cowsayVersion
   ];
@@ -45,7 +46,7 @@ in
     ];
   };
 
-  users.groups.nixos = {};
+  users.groups.nixos = { };
 
   # Systemd service configuration for OpenSSH
   systemd.services.sshd.wantedBy = lib.mkOverride 40 [ "multi-user.target" ];
@@ -61,16 +62,9 @@ in
   nix.extraOptions = ''
     experimental-features = nix-command flakes
   '';
-  
+
   console.keyMap = "us";
   time.timeZone = "America/Los_Angeles";
-
-  # This is here otherwise colemena will complain
-  boot.loader.grub.device = "/dev/sda";
-  fileSystems."/" = {
-    device = "/dev/sda1";
-    fsType = "ext4";
-  };
 
   system = {
     stateVersion = "23.05";
