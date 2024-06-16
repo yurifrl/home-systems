@@ -1,8 +1,7 @@
-# nix/common.nix
-{ pkgs, lib, ... }:
+{ pkgs, lib, stdenv, buildGoModule, ... }:
 let
   cowsayVersion = import ./packages/cowsay-version.nix { inherit (pkgs) stdenv cowsay; };
-  hs = import ./packages/hs.nix { inherit (pkgs) stdenv hs; };
+  hs = import ./packages/hs.nix { inherit (pkgs) lib stdenv buildGoModule; };
 in
 {
   # System packages
@@ -16,10 +15,9 @@ in
     jq
     inetutils
 
-    hs
     cowsayVersion
+    hs
   ];
-
 
   # Networking configuration
   networking = {
@@ -72,3 +70,4 @@ in
     stateVersion = "23.05";
   };
 }
+
