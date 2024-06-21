@@ -44,12 +44,15 @@
         };
       };
 
+
       defaults = { lib, name, ... }: {
         imports = [
           ./common.nix
           ./modules
           ./machines/${name}/definition.nix
         ];
+
+        networking.hostName = lib.mkDefault name;
 
         deployment = {
           buildOnTarget = lib.mkDefault true;

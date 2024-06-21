@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/k0kubun/pp/v3"
 	"github.com/spf13/cobra"
@@ -33,12 +35,14 @@ var helpCmd = &cobra.Command{
 	},
 }
 
-// Build nix image
 var TestCmd = &cobra.Command{
 	Use:   "test",
 	Short: "",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Print date
+		fmt.Println(time.Now().Format("2006-01-02 15:04:05"))
+		return
 		var executor types.Executor
 
 		if os.Getenv("USE_DOCKER") == "true" {

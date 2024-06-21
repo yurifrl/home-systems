@@ -1,3 +1,4 @@
+# nix-build -E '(import <nixpkgs> {}).callPackage ./cowsay-version.nix {}'  
 { lib, stdenv, buildGoModule }:
 
 buildGoModule rec {
@@ -7,7 +8,13 @@ buildGoModule rec {
   # Use the current directory as the source
   src = ../../.;
 
-  vendorHash = null; # If you are using vendored dependencies
+  vendorHash = "sha256-C2s52W2YqGiJZ6dqO9UflRSXmC85ODY7fRpWUSX83qY="; # If you are using vendored dependencies
+
+  # Rename the binary otherwise it will be named after the package name
+  installPhase = ''
+    mkdir -p $out/bin
+    cp -v $GOPATH/bin/* $out/bin/hs
+  '';
 
   meta = with lib; {
     description = "Your description of the hs binary";

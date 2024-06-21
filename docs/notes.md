@@ -23,7 +23,7 @@ nix run github:serokell/deploy-rs nix/
   - nix build .#packages.aarch64-linux.default .#packages.x86_64-linux 
 
 - Colmena
-  - https://sourcegraph.com/github.com/Cottand/selfhosted@6ddede91264e7d1f3eb627d35983e2e7743761bd/-/blob/flake.nix?L30:7-30:18
+  - [Cottand/selfhosted: My home-lab setup, a cluster of 7 servers running 50-70 containers](https://github.com/Cottand/selfhosted/tree/master)
   - docker compose run --rm colmena apply --impure --on vm
 
 # Next

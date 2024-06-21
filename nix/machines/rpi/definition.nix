@@ -1,6 +1,3 @@
-# Edit this configuration file to define what should be installed on
-# your system. Help is available in the configuration.nix(5) man page, on
-# https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
 { ... }:
 
@@ -9,14 +6,27 @@
     ./hardware-configuration.nix
   ];
 
-  networking.firewall.allowedTCPPorts = [
-    6443 # k3s: required so that pods can reach the API server (running on port 6443 by default)
-    # 2379 # k3s, etcd clients: required if using a "High Availability Embedded etcd" configuration
-    # 2380 # k3s, etcd peers: required if using a "High Availability Embedded etcd" configuration
-  ];
-  networking.firewall.allowedUDPPorts = [
-    # 8472 # k3s, flannel: required if using multi-node for inter-node networking
-  ];
+  networking = {
+    interfaces.eth0 = {
+      ipv4.addresses = [
+        {
+          address = "192.168.68.101";
+          prefixLength = 24;
+        }
+      ];
+    };
+    defaultGateway = {
+      address = "192.168.68.1";
+      interface = "eth0";
+    };
+    firewall.allowedTCPPorts = [
+      6443 # k3s: required so that pods can reach the API server (running on port 6443 by default)
+    ];
+    firewall.allowedUDPPorts = [
+      # 8472 # k3s, flannel: required if using multi-node for inter-node networking
+    ];
+  };
+
   services.k3s = {
     enable = true;
     role = "server";
