@@ -5,8 +5,7 @@ FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
 FROM golang:alpine as build
 WORKDIR /src
 
-#
-ENV GOMODCACHE /go/pkg/mod/  
+ENV GOMODCACHE /go/pkg/mod/
 
 # Cache Go modules
 COPY go.mod go.sum ./
@@ -21,15 +20,13 @@ FROM nixos/nix
 # Copy QEMU binary for ARM architecture
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 
-# Install Nix environment and dependencies
-RUN nix-env -f https://github.com/nix-community/nixos-generators/archive/master.tar.gz -i
-
+# Install Nix environment and dependencies from the latest nixpkgs
 RUN echo 'extra-experimental-features = nix-command flakes' >> /etc/nix/nix.conf
 RUN echo 'extra-platforms = aarch64-linux' >> /etc/nix/nix.conf
 
-RUN nix-channel --update
+# Add nixpkgs-unstable channel
+RUN nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable && nix-channel --update
 
-## If we cache /nix/store ina volume, everything here will be deleated
 RUN nix-env -iA \
     nixpkgs.fish \
     nixpkgs.go \

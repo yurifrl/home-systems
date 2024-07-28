@@ -1,25 +1,32 @@
-{ pkgs, lib, stdenv, buildGoModule, ... }:
+{ lib, ... }:
 let
+  # Import the stable nixpkgs channel
   pkgs = import <nixpkgs> { };
-  cowsayVersion = import ./packages/cowsay-version.nix { inherit (pkgs) stdenv cowsay; };
-  hs = import ./packages/hs.nix { inherit (pkgs) lib stdenv buildGoModule; };
-  tailscale = import ./packages/tailscale.nix { inherit (pkgs) stdenv fetchFromGitHub; };
+
+  # Import the unstable nixpkgs channel
+  unstablePkgs = import <nixpkgs-unstable> { };
+
+  # Import custom packages
+  cowsayVersion = pkgs.callPackage ./packages/cowsay-version.nix {};
+  hs = pkgs.callPackage ./packages/hs.nix {};
 in
 {
   # System packages
   environment.systemPackages = with pkgs; [
+    # Raspberry Pi packages
     libraspberrypi
     raspberrypi-eeprom
-
+    # Basic packages
     vim
     curl
     htop
     jq
     inetutils
-
+    # custom packages
     cowsayVersion
     hs
-    tailscale
+    # Unstable packages
+    unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
   ];
 
   # Networking configuration
@@ -73,4 +80,3 @@ in
     stateVersion = "23.05";
   };
 }
-

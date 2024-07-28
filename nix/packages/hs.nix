@@ -1,5 +1,5 @@
-# nix-build -E '(import <nixpkgs> {}).callPackage ./cowsay-version.nix {}'  
-{ lib, stdenv, buildGoModule }:
+# nix-build -E '(import <nixpkgs> {}).callPackage ./hs.nix {}'  
+{ lib, buildGoModule }:
 
 buildGoModule rec {
   pname = "hs";

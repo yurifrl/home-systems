@@ -33,7 +33,7 @@
 
     packages = {
       aarch64-linux.default = self.nixosConfigurations.rpi.config.system.build.sdImage;
-      x86_64-linux = self.nixosConfigurations.vm.config.system.build.isoImage;
+      x86_64-linux.default = self.nixosConfigurations.vm.config.system.build.isoImage;
     };
 
     colmena = {
@@ -43,7 +43,6 @@
           overlays = [ ];
         };
       };
-
 
       defaults = { lib, name, ... }: {
         imports = [
