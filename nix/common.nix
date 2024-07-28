@@ -1,12 +1,8 @@
-{ lib, ... }:
+{ pkgs, lib, ... }:
 let
-  # Import the stable nixpkgs channel
-  pkgs = import <nixpkgs> { };
-
   # Import the unstable nixpkgs channel
   unstablePkgs = import <nixpkgs-unstable> { };
-
-  # Import custom packages
+  #
   cowsayVersion = pkgs.callPackage ./packages/cowsay-version.nix {};
   hs = pkgs.callPackage ./packages/hs.nix {};
 in
@@ -80,3 +76,4 @@ in
     stateVersion = "23.05";
   };
 }
+
