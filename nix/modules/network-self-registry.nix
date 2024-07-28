@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
   config = {
@@ -14,11 +14,8 @@
       wantedBy = [ "multi-user.target" ];
       enable = true;
 
-      # set this service as a oneshot job
-      serviceConfig.Type = "oneshot";
-
       # have the job run this shell script
-      script = with pkgs; ''
+      script = ''
         echo 'Network is up2!' > /var/log/network-self-registry.log
       '';
     };

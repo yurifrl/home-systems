@@ -1,7 +1,8 @@
 {
   imports = [
     ./tailscale.nix
-    ./nertowkr-self-registry.nix
+    ./network-self-registry.nix
+    ./nix-status-check
   ];
 }
 
