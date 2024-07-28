@@ -13,7 +13,6 @@
 1. Get the image
 2. Flash the image locally using Docker with `hs new-sd`.
 
-
 ### After Flash
 Configure the newly flashed device.
 
@@ -21,7 +20,7 @@ Configure the newly flashed device.
 1. On GitHub Actions or other CI, build the image locally (preferably on an ARM image).
 2. Generate an artifact and upload it to a registry.
 
-# Dev Workdlow
+# Dev Workflow
 
 - Dev and Build:
   - `nix flake check`
@@ -36,3 +35,18 @@ Configure the newly flashed device.
   - Works: `nix-build -E '(import <nixpkgs> {}).callPackage ./cowsay-version.nix {}'`
   - `nix-build cowsay-version.nix --arg cowsay '(import <nixpkgs> {}).cowsay' --arg stdenv '(import <nixpkgs> {}).stdenv'`
   - `nix-instantiate -E '(import <nixpkgs> {}).callPackage ./cowsay-version.nix {}'`
+
+
+# Rolling Update Workflow
+
+
+```bash
+# Deploy everywhere
+docker compose run --rm colmena apply --impure
+
+# Deploy only on the vm
+docker compose run --rm colmena apply --impure --on vm
+
+# Deploy only on the rpi
+docker compose run --rm colmena apply --impure --on rpi
+```

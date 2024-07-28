@@ -25,4 +25,3 @@ To inspect the current system, run:
 ```bash
 nix eval --raw --impure --expr "builtins.currentSystem"
 ```
-```

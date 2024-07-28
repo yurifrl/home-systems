@@ -1,7 +1,9 @@
 { pkgs, lib, stdenv, buildGoModule, ... }:
 let
+  pkgs = import <nixpkgs> { };
   cowsayVersion = import ./packages/cowsay-version.nix { inherit (pkgs) stdenv cowsay; };
   hs = import ./packages/hs.nix { inherit (pkgs) lib stdenv buildGoModule; };
+  tailscale = import ./packages/tailscale.nix { inherit (pkgs) stdenv fetchFromGitHub; };
 in
 {
   # System packages
@@ -17,6 +19,7 @@ in
 
     cowsayVersion
     hs
+    tailscale
   ];
 
   # Networking configuration
