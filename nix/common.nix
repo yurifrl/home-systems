@@ -18,6 +18,7 @@ in
     htop
     jq
     inetutils
+    git
     # custom packages
     cowsayVersion
     hs
