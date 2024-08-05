@@ -41,8 +41,9 @@
       hostname = "192.168.68.102";
       profiles = {
         system = {
-          user = "nixos";
-          path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.rpi;
+          sshUser = "nixos";
+          path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations.rpi;
+          # path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.rpi;
         };
       };
     };
