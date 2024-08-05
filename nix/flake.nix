@@ -37,13 +37,18 @@
       x86_64-linux.default = self.nixosConfigurations.vm.config.system.build.isoImage;
     };
 
-    deploy.nodes.some-random-system = {
-      hostname = "192.168.68.102";
-      profiles = {
-        system = {
-          sshUser = "nixos";
-          path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations.rpi;
-          # path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.rpi;
+    deploy = {
+      nodes = {
+        rpi = {
+          name = "rpi";
+          hostname = "192.168.68.102";
+          profiles = {
+            system = {
+              sshUser = "nixos";
+              remoteBuild = true;
+              path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations.rpi;
+            };
+          };
         };
       };
     };

@@ -48,12 +48,11 @@ COPY --from=build /bin/hs /bin/hs
 COPY --from=build /go/pkg/mod /go/pkg/mod
 
 ENV GOMODCACHE /go/pkg/mod/
-ENV NIXOPS_STATE=/nixops/deployments.nixops
 ENV PATH=/bin:$PATH
 
 WORKDIR /src
 
-VOLUME [ "/nixops", "gomod-cache" ]
+VOLUME [ "gomod-cache" ]
 
 # Set the default command
 ENTRYPOINT ["/bin/hs"]
