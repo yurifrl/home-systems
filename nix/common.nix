@@ -36,7 +36,7 @@ in
   services.openssh = {
     enable = true;
     settings = {
-      # PermitRootLogin = lib.mkForce "prohibit-password";
+      PermitRootLogin = lib.mkForce "prohibit-password";
       PasswordAuthentication = false;
       KbdInteractiveAuthentication = false;
       ChallengeResponseAuthentication = false;
