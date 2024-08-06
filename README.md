@@ -2,6 +2,8 @@
 
 
 ```
+op item get "Home Server" --fields "private key" --reveal > secrets/id_ed25519
+
 nix flake check
 
 # Build amd an intel images

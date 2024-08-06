@@ -18,9 +18,9 @@ services:
   hs:
     <<: *base_service
     entrypoint: go run main.go
-  colmena:
+  deploy:
     <<: *base_service
-    entrypoint: colmena
+    entrypoint: deploy
 
 volumes:
   gomod-cache:

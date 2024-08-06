@@ -29,6 +29,7 @@ RUN nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstab
 
 RUN nix-env -iA \
     nixpkgs.fish \
+    nixpkgs.zsh \
     nixpkgs.go \
     nixpkgs.vim \
     nixpkgs.nixpkgs-fmt \
