@@ -4,6 +4,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./kubernetes.nix
   ];
 
   networking = {
@@ -24,14 +25,6 @@
     ];
     firewall.allowedUDPPorts = [
       # 8472 # k3s, flannel: required if using multi-node for inter-node networking
-    ];
-  };
-
-  services.k3s = {
-    enable = true;
-    role = "server";
-    extraFlags = toString [
-      # "--kubelet-arg=v=4" # Optionally add additional args to k3s
     ];
   };
 }
