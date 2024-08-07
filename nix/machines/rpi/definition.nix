@@ -20,11 +20,5 @@
       address = "192.168.68.1";
       interface = "eth0";
     };
-    firewall.allowedTCPPorts = [
-      6443 # k3s: required so that pods can reach the API server (running on port 6443 by default)
-    ];
-    firewall.allowedUDPPorts = [
-      # 8472 # k3s, flannel: required if using multi-node for inter-node networking
-    ];
   };
 }
