@@ -13,6 +13,11 @@ nix build .#packages.aarch64-linux.default .#packages.x86_64-linux
 docker compose run --rm deploy . -- --impure
 ```
 
+# Developing on pi
+
+Copy your id_ed25519 to the pi
+
+
 # TODO
 - [ ] Make so that the system never comes up without tailscale
 
