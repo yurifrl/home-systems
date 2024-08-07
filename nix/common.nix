@@ -19,6 +19,7 @@ in
     jq
     inetutils
     git
+    fish
     # custom packages
     cowsayVersion
     hs
@@ -36,7 +37,7 @@ in
   services.openssh = {
     enable = true;
     settings = {
-      PermitRootLogin = lib.mkForce "prohibit-password";
+      PermitRootLogin = "yes"; 
       PasswordAuthentication = false;
       KbdInteractiveAuthentication = false;
       ChallengeResponseAuthentication = false;
