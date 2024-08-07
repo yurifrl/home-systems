@@ -17,6 +17,9 @@ docker compose run --rm deploy . -- --impure
 
 Copy your id_ed25519 to the pi
 
+clone this repo in the rpi
+
+sudo nixos-rebuild switch --flake .#rpi --impure --show-trace 
 
 # TODO
 - [ ] Make so that the system never comes up without tailscale
