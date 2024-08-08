@@ -2,6 +2,9 @@ name: Release Image
 
 on: [push]
 
+permissions:
+  packages: read
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
