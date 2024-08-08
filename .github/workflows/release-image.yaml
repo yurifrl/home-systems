@@ -1,0 +1,20 @@
+name: Release
+
+on: [push]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build NixOS SD Image
+        run: |
+          docker pull ghcr.io/yurifrl/home-systems
+          docker run --entrypoint="" -v ".:/src" ghcr.io/yurifrl/home-systems nix build ./nix#packages.aarch64-linux.default ./nix#packages.x86_64-linux.default --impure
+          ls -la
+      - name: Upload Image as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nixos-sd-image
+          path: ./*.img*
