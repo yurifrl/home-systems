@@ -7,7 +7,7 @@ op item get "Home Server" --fields "private key" --reveal > secrets/id_ed25519
 nix flake check
 
 # Build amd an intel images
-nix build .#packages.aarch64-linux.default .#packages.x86_64-linux 
+nix build .#packages.aarch64-linux.default .#packages.x86_64-linux.default --impure
 
 # Deploy everywhere
 docker compose run --rm deploy . -- --impure

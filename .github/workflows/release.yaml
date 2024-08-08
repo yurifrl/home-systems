@@ -24,23 +24,15 @@ jobs:
         with:
           context: .
           # push: true
-          tags: ghcr.io/yurifrl/home-systems:latest
-
-      - name: Add Tailscale token to /etc/secrets
-        run: | 
-          mkdir -p secrets/vm
-          mkdir -p secrets/rpi
-          echo ${{ secrets.TAILSCALE_TOKEN }} | sudo tee ./secrets/vm/tailscale-token
-          echo ${{ secrets.TAILSCALE_TOKEN }} | sudo tee ./secrets/rpi/tailscale-token
+          tags: ghcr.io/yurifrl/home-systems
 
       - name: Build NixOS SD Image
         run: |
-          docker build . --no-cache -t ghcr.io/yurifrl/home-systems:latest
-          docker run --entrypoint="" -v ".:/src" ghcr.io/yurifrl/home-systems nix build ./nix#packages.aarch64-linux.default ./nix#packages.x86_64-linux 
-          docker run --entrypoint="" -v ".:/src" ghcr.io/yurifrl/home-systems colmena build
-
-      - name: Upload Image as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: nixos-sd-image
-          path: ./*.img*
+          ls -la
+          docker run --entrypoint="" -v ".:/src" ghcr.io/yurifrl/home-systems nix build ./nix#packages.aarch64-linux.default ./nix#packages.x86_64-linux.default --impure
+          ls -la
+      # - name: Upload Image as Artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: nixos-sd-image
+      #     path: ./*.img*

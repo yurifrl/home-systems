@@ -1,0 +1,2 @@
+- [magics/k8s-cluster/kubernetes/default.nix at master · thpham/magics](https://github.com/thpham/magics/blob/master/k8s-cluster/kubernetes/default.nix#L32)
+- [Setting up Kubernetes on NixOS - Stack Overflow](https://stackoverflow.com/questions/49963703/setting-up-kubernetes-on-nixos)

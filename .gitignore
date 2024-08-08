@@ -5,3 +5,5 @@ result
 secrets
 .bkp
 vendor/
+.DS_Store
+result-*
