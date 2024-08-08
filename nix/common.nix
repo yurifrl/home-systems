@@ -1,14 +1,18 @@
 { pkgs, lib, ... }:
-
 let
+  # Import the unstable nixpkgs channel
   unstablePkgs = import <nixpkgs-unstable> { };
+  #
   cowsayVersion = pkgs.callPackage ./packages/cowsay-version.nix {};
   hs = pkgs.callPackage ./packages/hs.nix {};
 in
 {
+  # System packages
   environment.systemPackages = with pkgs; [
+    # Raspberry Pi packages
     libraspberrypi
     raspberrypi-eeprom
+    # Basic packages
     vim
     curl
     htop
@@ -16,17 +20,18 @@ in
     inetutils
     git
     fish
+    # custom packages
     cowsayVersion
     hs
-    unstablePkgs.tailscale
+    # Unstable packages
+    unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
   ];
 
+  # Networking configuration
   networking = {
     nameservers = [ "8.8.8.8" "8.8.4.4" ];
+    firewall.enable = false;
     interfaces.eth0.useDHCP = false;
-    interfaces.eth0.ipv4.addresses = [ { address = "192.168.68.102"; prefixLength = 24; } ];
-    defaultGateway.address = "192.168.68.1";
-    defaultGateway.interface = "eth0";
   };
 
   services.openssh = {
@@ -40,6 +45,7 @@ in
     extraConfig = "Compression no";
   };
 
+  # SSH authorized keys for user 'nixos'
   users.extraUsers.nixos = {
     isNormalUser = true;
     group = "nixos";
@@ -50,6 +56,7 @@ in
 
   users.groups.nixos = { };
 
+  # Systemd service configuration for OpenSSH
   systemd.services.sshd.wantedBy = lib.mkOverride 40 [ "multi-user.target" ];
 
   security.sudo = {
@@ -67,5 +74,8 @@ in
   console.keyMap = "us";
   time.timeZone = "America/Los_Angeles";
 
-  system.stateVersion = "23.05";
+  system = {
+    stateVersion = "23.05";
+  };
 }
+
