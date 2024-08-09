@@ -20,7 +20,7 @@ jobs:
       - name: Build NixOS SD Image
         run: |
           docker pull ghcr.io/yurifrl/home-systems
-          docker run --entrypoint="" -v ".:/src" ghcr.io/yurifrl/home-systems nix build ./nix#packages.aarch64-linux.default ./nix#packages.x86_64-linux.default --impure
+          docker run --user $(id -u):$(id -g) --entrypoint="" -v ".:/src" ghcr.io/yurifrl/home-systems nix build ./nix#packages.aarch64-linux.default ./nix#packages.x86_64-linux.default --impure
           ls -la
       - name: Upload Image as Artifact
         uses: actions/upload-artifact@v4
