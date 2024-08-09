@@ -38,7 +38,7 @@ RUN nix-env -iA \
     nixpkgs.rrsync \
     nixpkgs.rsync \
     nixpkgs.iputils \
-    nixpkgs.node \
+    nixpkgs.nodejs \
     nixpkgs.curl
 
 RUN nix-env -iA nixpkgs.deploy-rs
