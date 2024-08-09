@@ -11,10 +11,10 @@ in
   # networking.extraHosts = "${kubeMasterIP} ${kubeMasterHostname}";
 
   # packages for administration tasks
-  environment.systemPackages = with pkgs; [
-    kubectl
-    kubernetes
-  ];
+  # environment.systemPackages = with pkgs; [
+  #   kubectl
+  #   kubernetes
+  # ];
 
   services.kubernetes = {
     roles = ["master" "node"];
