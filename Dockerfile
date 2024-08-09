@@ -51,7 +51,7 @@ COPY --from=build /go/pkg/mod /go/pkg/mod
 ENV GOMODCACHE /go/pkg/mod/
 ENV PATH=/bin:$PATH
 
-WORKDIR /app
+WORKDIR /src
 
 VOLUME [ "gomod-cache" ]
 

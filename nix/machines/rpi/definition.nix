@@ -13,7 +13,7 @@
     interfaces.eth0 = {
       ipv4.addresses = [
         {
-          address = "192.168.68.102";
+          address = "192.168.68.105";
           prefixLength = 24;
         }
       ];

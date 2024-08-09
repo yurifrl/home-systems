@@ -2,9 +2,9 @@ x-base-service: &base_service
   build:
     context: .
   image: ghcr.io/yurifrl/home-systems
-  working_dir: /app/nix
+  working_dir: /src/nix
   volumes:
-    - .:/app
+    - .:/src
     - gomod-cache:/go/pkg/mod
     - $SSH_AUTH_SOCK:/ssh-agent
   environment:
