@@ -14,9 +14,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHA_PAT }}
     steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Build NixOS SD Image
         run: |
           nix build ./nix#packages.aarch64-linux.default ./nix#packages.x86_64-linux.default --impure

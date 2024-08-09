@@ -36,14 +36,11 @@ in
 
   services.openssh = {
     enable = true;
-    # ports = [ 22 ];
     settings = {
       PermitRootLogin = lib.mkForce "prohibit-password";
       PasswordAuthentication = false;
       KbdInteractiveAuthentication = false;
       ChallengeResponseAuthentication = false;
-      # AllowUsers = null;
-      # UseDns = true;
     };
     extraConfig = "Compression no";
   };
@@ -57,6 +54,10 @@ in
     ];
   };
 
+  users.users.root.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAvaTuBhwuQHdjIP1k9YQk9YMqmGiOate19iXe6T4IL/"
+  ];
+  
   users.groups.nixos = { };
 
   # Systemd service configuration for OpenSSH
