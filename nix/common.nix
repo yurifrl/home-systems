@@ -70,9 +70,16 @@ in
     '';
   };
 
-  nix.extraOptions = ''
-    experimental-features = nix-command flakes
-  '';
+  nix = {
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
+
+    nixPath = [
+      "nixpkgs=https://nixos.org/channels/nixpkgs-unstable"
+      "nixos-config=/etc/nixos/configuration.nix"
+    ];
+  };
 
   console.keyMap = "us";
   time.timeZone = "America/Los_Angeles";
