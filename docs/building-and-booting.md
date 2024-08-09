@@ -9,6 +9,12 @@ To build the NixOS image for an ARM device (e.g., Raspberry Pi), use the followi
 nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./sd-image.nix --argstr system aarch64-linux
 ```
 
+This seems to work as well:
+```bash
+nix build ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --show-trace --print-out-paths --no-link --json --impure
+```
+
+
 After building, copy the image:
 ```bash
 cp ./result/sd-image/*.img* .

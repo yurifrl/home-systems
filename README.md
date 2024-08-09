@@ -19,7 +19,12 @@ Copy your id_ed25519 to the pi
 
 clone this repo in the rpi
 
+```bash
+sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable
+sudo nix-channel --update
+
 sudo nixos-rebuild switch --flake .#rpi --impure --show-trace 
+```
 
 # TODO
 - [ ] Make so that the system never comes up without tailscale
@@ -30,3 +35,4 @@ sudo nixos-rebuild switch --flake .#rpi --impure --show-trace
 - [Zero-configuration networking - Wikipedia](https://en.wikipedia.org/wiki/Zero-configuration_networking#DNS-SD)
 - [BMC API](https://docs.turingpi.com/docs/turing-pi2-bmc-api#flash--firmware)
 - [Storage](https://docs.turingpi.com/docs/turing-pi2-kubernetes-cluster-storage#option-2-the-longhorn)
+- `nix build ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --show-trace --print-out-paths --no-link --json --impure`
