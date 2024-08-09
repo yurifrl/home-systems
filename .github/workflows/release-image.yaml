@@ -23,8 +23,10 @@ jobs:
           ls -la
       - uses: addnab/docker-run-action@v3
         with:
-          image: yurifrl/home-systems
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHA_PAT }}
           registry: ghcr.io
+          image: yurifrl/home-systems
           run: |
             nix build ./nix#packages.aarch64-linux.default ./nix#packages.x86_64-linux.default --impure
       - name: Upload Image as Artifact
