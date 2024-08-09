@@ -31,7 +31,7 @@ in
   networking = {
     nameservers = [ "8.8.8.8" "8.8.4.4" ];
     firewall.enable = false;
-    interfaces.eth0.useDHCP = false;
+    interfaces.eth0.useDHCP = true;
   };
 
   services.openssh = {
