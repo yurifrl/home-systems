@@ -21,7 +21,8 @@ jobs:
         run: docker pull ghcr.io/yurifrl/home-systems
       - name: Build NixOS SD Image
         run: |
-          docker run --entrypoint="" -v ".:/app" ghcr.io/yurifrl/home-systems \
+          docker run --entrypoint="" -v "${{ github.workspace }}:/app" \
+            -u $(id -u):$(id -g) ghcr.io/yurifrl/home-systems \
             nix build ./nix#packages.aarch64-linux.default ./nix#packages.x86_64-linux.default --impure
           ls -la
       - name: Upload Image as Artifact
