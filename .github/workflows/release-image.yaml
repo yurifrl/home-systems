@@ -15,7 +15,7 @@ jobs:
           password: ${{ secrets.GHA_PAT }}
     steps:
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build NixOS SD Image
