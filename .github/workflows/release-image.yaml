@@ -11,17 +11,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+      - uses: addnab/docker-run-action@v3
         with:
-          registry: ghcr.io
+          image: test-image:latest
+          registry: gcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHA_PAT }}
-      - name: Build NixOS SD Image
-        run: |
-          docker pull ghcr.io/yurifrl/home-systems
-          docker run --user $(id -u):$(id -g) --entrypoint="" -v ".:/src" ghcr.io/yurifrl/home-systems nix build ./nix#packages.aarch64-linux.default ./nix#packages.x86_64-linux.default --impure
-          ls -la
+          run: |
+            nix build ./nix#packages.aarch64-linux.default ./nix#packages.x86_64-linux.default --impure
+      - run: ls -la
       - name: Upload Image as Artifact
         uses: actions/upload-artifact@v4
         with:
