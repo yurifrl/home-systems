@@ -14,6 +14,7 @@ in
     raspberrypi-eeprom
     # Basic packages
     vim
+    neovim
     curl
     htop
     jq

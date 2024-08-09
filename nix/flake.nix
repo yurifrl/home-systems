@@ -3,10 +3,6 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     deploy-rs.url = "github:serokell/deploy-rs";
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs = { self, nixpkgs, deploy-rs, home-manager, ... }: {
@@ -19,17 +15,6 @@
           ./common.nix
           ./modules
           ./machines/rpi/definition.nix
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-
-            # TODO replace ryan with your own username
-            home-manager.users.nixos = import ./home.nix;
-            home-manager.users.root = import ./home.nix;
-
-            # Optionally, use home-manager.extraSpecialArgs to pass arguments to home.nix
-          }
           ({ ... }: {
             sdImage.compressImage = false; # If true, will build a .zst compressed image.
           })
