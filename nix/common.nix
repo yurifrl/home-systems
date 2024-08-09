@@ -36,15 +36,14 @@ in
 
   services.openssh = {
     enable = true;
-    ports = [ 22 ];
+    # ports = [ 22 ];
     settings = {
       PermitRootLogin = lib.mkForce "prohibit-password";
       PasswordAuthentication = false;
       KbdInteractiveAuthentication = false;
       ChallengeResponseAuthentication = false;
-      AllowUsers = null;
-      UseDns = true;
-      
+      # AllowUsers = null;
+      # UseDns = true;
     };
     extraConfig = "Compression no";
   };
