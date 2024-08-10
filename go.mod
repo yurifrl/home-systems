@@ -5,7 +5,7 @@ go 1.22.3
 require (
 	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	golang.org/x/crypto v0.23.0
 	modernc.org/sqlite v1.30.0
 )
