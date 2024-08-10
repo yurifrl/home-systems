@@ -6,7 +6,7 @@ let
   # kubeMasterHostname = "api.kube";
   # kubeMasterAPIServerPort = 6443;
 
-  kubeMasterIP = "10.1.1.2";
+  kubeMasterIP = "192.168.68.105";
   kubeMasterHostname = "localhost";
   kubeMasterAPIServerPort = 6443;
 in
