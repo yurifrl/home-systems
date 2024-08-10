@@ -4,3 +4,4 @@
 - [nixos/modules/services/cluster/kubernetes/apiserver.nix - NixOS/nixpkgs - Sourcegraph](https://sourcegraph.com/github.com/NixOS/nixpkgs/-/blob/nixos/modules/services/cluster/kubernetes/apiserver.nix)
 
 -  [nixos-configuration/containers/kube-master/flake.nix at <<REDACTED>> · JD95/nixos-configuration](https://github.com/JD95/nixos-configuration/blob/<<REDACTED>>/containers/kube-master/flake.nix#L31)
+-  [nixos-config/modules/kubernetes/k8s-dev-single-node.nix at 1850141fd63517c81dabfe4e213b7aa71d651106 · kczulko/nixos-config](https://github.com/kczulko/nixos-config/blob/1850141fd63517c81dabfe4e213b7aa71d651106/modules/kubernetes/k8s-dev-single-node.nix#L60)
