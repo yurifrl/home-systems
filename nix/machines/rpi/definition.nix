@@ -4,7 +4,7 @@
 {
   imports = [
     ./hardware-configuration.nix
-    # ./kubernetes.nix
+    ./kubernetes.nix
   ];
 
   networking = {
