@@ -21,7 +21,6 @@ in
 
   services.kubernetes = {
     roles = ["master" "node"];
-    addons.dashboard.enable = true;
     masterAddress = "localhost";
 
     # masterAddress = kubeMasterHostname;
