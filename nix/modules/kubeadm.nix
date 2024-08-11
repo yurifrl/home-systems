@@ -73,8 +73,22 @@ in {
         Statedirectory = "kubelet";
         ConfigurationDirectory = "kubernetes";
         ExecStart = {
-          master = "${pkgs.kubernetes}/bin/kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=${cfg.apiserverAddress} --ignore-preflight-errors='all' --token ${cfg.bootstrapToken} --token-ttl 0 --upload-certs";
-          node = "${pkgs.kubernetes}/bin/kubeadm join ${cfg.apiserverAddress} --token ${cfg.bootstrapToken}  --discovery-token-unsafe-skip-ca-verification --ignore-preflight-errors all --discovery-token-ca-cert-hash ${cfg.discoveryTokenCaCertHash}";
+          master = ''
+            ${pkgs.kubernetes}/bin/kubeadm init \
+              --pod-network-cidr=10.244.0.0/16 \
+              --apiserver-advertise-address=${cfg.apiserverAddress} \
+              --ignore-preflight-errors='all' \
+              --token ${cfg.bootstrapToken} \
+              --token-ttl 0 \
+              --upload-certs
+          '';
+          node = ''
+            ${pkgs.kubernetes}/bin/kubeadm join ${cfg.apiserverAddress} \
+              --token ${cfg.bootstrapToken}  \
+              --discovery-token-unsafe-skip-ca-verification \
+              --ignore-preflight-errors all \
+              --discovery-token-ca-cert-hash ${cfg.discoveryTokenCaCertHash}
+          '';
         }.${cfg.role};
       };
     };
@@ -99,8 +113,6 @@ in {
             --kubeconfig=/etc/kubernetes/kubelet.conf \
             --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf \
             --config=/var/lib/kubelet/config.yaml \
-            --address="${cfg.nodeip}" \
-            --node-ip="${cfg.nodeip}" \
             $KUBELET_KUBEADM_ARGS
         '';
       };
