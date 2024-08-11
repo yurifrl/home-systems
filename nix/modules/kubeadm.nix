@@ -1,8 +1,11 @@
-{ pkgs, lib, config, ... }: let cfg = config.services.kubeadm; in {
+# https://discourse.nixos.org/t/kubernetes-network-malfunction-after-upgrading-to-19-09/4620/3
+{ pkgs, lib, config, ... }: let 
+  cfg = config.services.kubeadm;
+in {
   options.services.kubeadm = {
     enable = lib.mkEnableOption "kubeadm";
     role = lib.mkOption {
-      type = lib.types.enum ["master" "worker" ];
+      type = lib.types.enum ["master" "node" ];
     };
     apiserverAddress = lib.mkOption {
       type = lib.types.str;
@@ -19,12 +22,9 @@
     nodeip = lib.mkOption {
       type = lib.types.str;
     };
-
     discoveryTokenCaCertHash = lib.mkOption {
       type = lib.types.str;
     };
-
-
   };
   config = lib.mkIf cfg.enable {
 
@@ -35,6 +35,7 @@
     };
 
     environment.systemPackages = with pkgs; [
+      crictl
       gitMinimal
       openssh
       docker
@@ -68,7 +69,7 @@
         ConfigurationDirectory = "kubernetes";
         ExecStart = {
           master = "${pkgs.kubernetes}/bin/kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=${cfg.apiserverAddress} --ignore-preflight-errors='all' --token ${cfg.bootstrapToken} --token-ttl 0 --upload-certs";
-          worker = "${pkgs.kubernetes}/bin/kubeadm join ${cfg.apiserverAddress} --token ${cfg.bootstrapToken}  --discovery-token-unsafe-skip-ca-verification --ignore-preflight-errors all --discovery-token-ca-cert-hash ${cfg.discoveryTokenCaCertHash}";
+          node = "${pkgs.kubernetes}/bin/kubeadm join ${cfg.apiserverAddress} --token ${cfg.bootstrapToken}  --discovery-token-unsafe-skip-ca-verification --ignore-preflight-errors all --discovery-token-ca-cert-hash ${cfg.discoveryTokenCaCertHash}";
         }.${cfg.role};
       };
     };
