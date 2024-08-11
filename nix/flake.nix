@@ -14,7 +14,7 @@
           "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
           ./common.nix
           ./modules/tailscale.nix
-          ./modules/kubernetes.nix
+          # ./modules/kubernetes.nix
           ./modules/network-self-registry.nix
           # ./nix-status-check.nix
           ./machines/rpi/definition.nix
