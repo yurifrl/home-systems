@@ -28,6 +28,11 @@ in
     unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
   ];
 
+  environment.etc."ssh/ssh_config".text = ''
+    Host *
+        StrictHostKeyChecking no
+  '';
+
   # Networking configuration
   networking = {
     nameservers = [ "8.8.8.8" "8.8.4.4" ];

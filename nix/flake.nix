@@ -44,6 +44,7 @@
           hostname = "192.168.68.106";
           profiles = {
             system = {
+              sshUser = "root";
               remoteBuild = true;
               path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations.rpi;
             };
