@@ -94,8 +94,8 @@
             --kubeconfig=/etc/kubernetes/kubelet.conf \
             --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf \
             --config=/var/lib/kubelet/config.yaml \
-            --fail-swap-on=false \
-            --cni-bin-dir="/opt/cni/bin" \
+            # --fail-swap-on=false \
+            # --cni-bin-dir="/opt/cni/bin" \
             --address="${cfg.nodeip}" \
             --node-ip="${cfg.nodeip}" \
             $KUBELET_KUBEADM_ARGS
