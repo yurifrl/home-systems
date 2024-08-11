@@ -64,7 +64,7 @@ in {
         '';
 
       # These paths are needed to convince kubeadm to bootstrap
-      path = with pkgs; [ kubernetes jq gitMinimal openssh docker utillinux iproute ethtool thin-provisioning-tools iptables socat ];
+      path = with pkgs; [ kubernetes jq gitMinimal openssh cri-tools containerd utillinux iproute ethtool thin-provisioning-tools iptables socat ];
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
