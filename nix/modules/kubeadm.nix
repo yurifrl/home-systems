@@ -50,7 +50,7 @@ in {
 
     virtualisation.containerd = {
       enable = true;
-      # configFile = ./containerd-config.toml;
+      configFile = ./containerd-config.toml;
     };
 
 
