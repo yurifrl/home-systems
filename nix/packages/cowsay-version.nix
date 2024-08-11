@@ -2,7 +2,7 @@
 { cowsay, stdenv }:
 
 let
-  version = "0.0.23";
+  version = "0.0.24";
 in
 stdenv.mkDerivation {
   name = "cowsay-version";
