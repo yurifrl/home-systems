@@ -35,7 +35,6 @@ in {
     };
 
     environment.systemPackages = with pkgs; [
-      crictl
       gitMinimal
       openssh
       docker
