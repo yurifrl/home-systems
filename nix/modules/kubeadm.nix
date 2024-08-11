@@ -44,9 +44,15 @@ in {
       thin-provisioning-tools
       iptables
       socat
+      containerd
+      cri-tools
     ];
 
-    virtualisation.docker.enable = true;
+    virtualisation.containerd = {
+      enable = true;
+      # configFile = ./containerd-config.toml;
+    };
+
 
     systemd.services.kubeadm = {
       wantedBy = [ "multi-user.target" ];
@@ -93,8 +99,6 @@ in {
             --kubeconfig=/etc/kubernetes/kubelet.conf \
             --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf \
             --config=/var/lib/kubelet/config.yaml \
-            # --fail-swap-on=false \
-            # --cni-bin-dir="/opt/cni/bin" \
             --address="${cfg.nodeip}" \
             --node-ip="${cfg.nodeip}" \
             $KUBELET_KUBEADM_ARGS
