@@ -42,6 +42,7 @@
 - [Nix Community - Awesome Nix](https://nix-community.github.io/awesome-nix/)
 - [The Nix Hour #29 [Python libraries in overlays, switching to home-manager on Ubuntu]](https://www.youtube.com/watch?v=pP1bnQwomDg)
 - [Using 1P SSH from inside a local Docker container — 1Password Community](https://1password.community/discussion/127482/feature-request-using-1p-ssh-from-inside-a-local-docker-container)
+- [Distributed build - NixOS Wiki](https://nixos.wiki/wiki/Distributed_build)
 
 ## Additional Resources
 - [LlamaIndex](https://docs.llamaindex.ai/en/stable/getting_started/starter_example.html)
