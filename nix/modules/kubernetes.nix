@@ -6,6 +6,9 @@ let
   # kubeMasterHostname = "api.kube";
   # kubeMasterAPIServerPort = 6443;
 
+  unstablePkgs = import <nixpkgs-unstable> { };
+
+
   kubeMasterIP = "10.1.1.2";
   kubeMasterHostname = "kube-master";
   kubeMasterAPIServerPort = 6443;
@@ -15,7 +18,8 @@ in
   environment.systemPackages = with pkgs; [
     kompose
     kubectl
-    kubernetes
+    unstablePkgs.kubernetes
+    # unstablePkgs.containerd
   ];
 
   # resolve master hostname

@@ -21,11 +21,11 @@ in
     inetutils
     git
     fish
+    # Unstable packages
+    unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
     # custom packages
     cowsayVersion
     # hs
-    # Unstable packages
-    unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
   ];
 
   environment.etc."ssh/ssh_config".text = ''

@@ -2,7 +2,7 @@
 { cowsay, stdenv }:
 
 let
-  version = "0.0.24";
+  version = "0.0.26";
 in
 stdenv.mkDerivation {
   name = "cowsay-version";
@@ -22,3 +22,5 @@ stdenv.mkDerivation {
     chmod +x $out/bin/cowsay-version
   '';
 }
+
+
