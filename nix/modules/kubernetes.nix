@@ -9,7 +9,7 @@ let
   unstablePkgs = import <nixpkgs-unstable> { };
 
 
-  kubeMasterIP = "10.1.1.2";
+  kubeMasterIP = "127.0.0.1";
   kubeMasterHostname = "kube-master";
   kubeMasterAPIServerPort = 6443;
 in
