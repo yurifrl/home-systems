@@ -13,11 +13,11 @@ journalctl -u kube-scheduler.service
 sudo journalctl -u etcd.service \
 -u flannel.service -u kube-apiserver.service -u kube-controller-manager.service -u kube-proxy.service -u kube-scheduler.service
 
-systemctl status etcd.service && \
-systemctl status flannel.service && \
-systemctl status kube-apiserver.service && \
-systemctl status kube-controller-manager.service && \
-systemctl status kube-proxy.service && \
+systemctl status etcd.service
+systemctl status flannel.service
+systemctl status kube-apiserver.service
+systemctl status kube-controller-manager.service
+systemctl status kube-proxy.service
 systemctl status kube-scheduler.service
 
 rm -rf /var/lib/kubernetes/ /var/lib/etcd/ /var/lib/cfssl/ /var/lib/kubelet/ /var/lib/kubernetes/secrets/ /etc/kube-flannel/ /etc/kubernetes/
@@ -41,3 +41,5 @@ kubectl --server=https://10.1.1.2:6443 --certificate-authority=/var/lib/cfssl/ca
    A personal repository containing NixOS configurations, including Kubernetes setup.
 - [kczulko/nixos-config](https://github.com/kczulko/nixos-config/blob/master/modules/kubernetes/k8s-dev-single-node.nix):  
    NixOS configuration for deploying a single-node Kubernetes development environment.
+- [Kubernetes: network malfunction after upgrading to 19.09 - Development - NixOS Discourse](https://discourse.nixos.org/t/kubernetes-network-malfunction-after-upgrading-to-19-09/4620/6)
+    Dude uses kubeadm
