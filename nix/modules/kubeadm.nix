@@ -87,7 +87,6 @@ in {
         EnvironmentFile = "-/var/lib/kubelet/kubeadm-flags.env";
 
         Restart = "always";
-        StartLimitInterval= 0;
         RestartSec = 10;
 
         ExecStart = ''
