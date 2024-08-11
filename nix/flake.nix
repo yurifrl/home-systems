@@ -41,10 +41,9 @@
       nodes = {
         rpi = {
           name = "rpi";
-          hostname = "192.168.68.105";
+          hostname = "192.168.68.106";
           profiles = {
             system = {
-              sshUser = "nixos";
               remoteBuild = true;
               path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations.rpi;
             };

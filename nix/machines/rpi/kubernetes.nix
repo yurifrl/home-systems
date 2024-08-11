@@ -6,20 +6,20 @@ let
   # kubeMasterHostname = "api.kube";
   # kubeMasterAPIServerPort = 6443;
 
-  kubeMasterIP = "192.168.68.105";
-  kubeMasterHostname = "localhost";
+  kubeMasterIP = "10.1.1.2";
+  kubeMasterHostname = "kube-master";
   kubeMasterAPIServerPort = 6443;
 in
 {
-  # resolve master hostname
-  networking.extraHosts = "${kubeMasterIP} ${kubeMasterHostname}";
-
   # packages for administration tasks
   environment.systemPackages = with pkgs; [
     kompose
     kubectl
     kubernetes
   ];
+
+  # resolve master hostname
+  networking.extraHosts = "${kubeMasterIP} ${kubeMasterHostname}";
 
   services.kubernetes = {
     roles = ["master" "node"];
