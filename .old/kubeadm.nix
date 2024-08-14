@@ -28,31 +28,31 @@ in {
   };
   config = lib.mkIf cfg.enable {
 
-    boot.kernelModules = [ "br_netfilter" ];
+    boot.kernelModules = [ "overlay" "br_netfilter" ];
     boot.kernel.sysctl = {
-      "net.ipv4.ip_forward" = 1;
       "net.bridge.bridge-nf-call-iptables" = 1;
+      "net.bridge.bridge-nf-call-ip6tables" = 1;
+      "net.ipv4.ip_forward" = 1;
     };
 
     environment.systemPackages = with pkgs; [
-      gitMinimal
-      openssh
-      docker
-      utillinux
-      iproute
-      ethtool
-      thin-provisioning-tools
-      iptables
-      socat
       containerd
       cri-tools
+      docker
+      ethtool
+      gitMinimal
+      iproute
+      iptables
+      openssh
+      socat
+      thin-provisioning-tools
+      utillinux
     ];
 
     virtualisation.containerd = {
       enable = true;
       configFile = ./containerd-config.toml;
     };
-
 
     systemd.services.kubeadm = {
       wantedBy = [ "multi-user.target" ];
@@ -70,7 +70,7 @@ in {
         RemainAfterExit = true;
         # Makes sure that its only started once, during bootstrap
         ConditionPathExists = "!/var/lib/kubelet/config.yaml";
-        Statedirectory = "kubelet";
+        StateDirectory = "kubelet";
         ConfigurationDirectory = "kubernetes";
         ExecStart = {
           master = ''

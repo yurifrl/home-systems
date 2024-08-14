@@ -70,3 +70,8 @@
 
 ## DHCP
 - [Adding to dhcpcd.conf - Help - NixOS Discourse](https://discourse.nixos.org/t/adding-to-dhcpcd-conf/33727/1)
+
+
+## Nixos environment talsks
+- [Nix Kubernetes and the Pursuit of Reproducibility - Josh Rosso, Reddit - YouTube](https://www.youtube.com/watch?v=U-mSWU4see0)
+- [NixCon2023 Nix and Kubernetes: Deployments Done Right - YouTube](https://www.youtube.com/watch?v=SEA1Qm8K4gY&t=1186s)

@@ -1,10 +1,16 @@
-{ ... }:
 
+{ pkgs, ... }:
 {
   imports = [
     ./kubeadm.nix
   ];
+  
+  # packages for administration tasks
+  environment.systemPackages = with pkgs; [
+    kubectl
+  ];
 
+  # Using kubeadm
   services = {
     kubeadm.enable = true;
     kubeadm.role = "master";
