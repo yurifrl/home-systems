@@ -24,6 +24,8 @@ sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unsta
 sudo nix-channel --update
 
 sudo nixos-rebuild switch --flake .#rpi --impure --show-trace 
+
+sudo nixos-rebuild switch --flake .#rpi --impure --show-trace -I nixpkgs-unstable=https://nixos.org/channels/nixpkgs-unstable
 ```
 
 # TODO
