@@ -47,7 +47,8 @@
           profiles = {
             system = {
               sshUser = "root";
-              remoteBuild = true;
+              # remoteBuild = true;
+              remoteBuild = false;
               path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations.rpi;
             };
           };

@@ -56,7 +56,6 @@ kubectl --server=https://10.1.1.2:6443 --certificate-authority=/var/lib/cfssl/ca
 
 
 ## Kubeadm
-- [nixos-configuration/modules/kubeadm/default.nix at a300c7716ca60dfeaa6b2c160f24db0400bdbec2 · BenSchZA/nixos-configuration](https://github.com/BenSchZA/nixos-configuration/blob/a300c7716ca60dfeaa6b2c160f24db0400bdbec2/modules/kubeadm/default.nix#L95)
-- [nixos-stuff/modules/kubeadm/kubeadm-base.nix at d48050357fb558b9bb4829219057ee5fe4e3dd39 · arianvp/nixos-stuff](https://github.com/arianvp/nixos-stuff/blob/d48050357fb558b9bb4829219057ee5fe4e3dd39/modules/kubeadm/kubeadm-base.nix#L58)
 - [Kubernetes: network malfunction after upgrading to 19.09 - Development - NixOS Discourse](https://discourse.nixos.org/t/kubernetes-network-malfunction-after-upgrading-to-19-09/4620/6)
-- [nixos-stuff/modules/kubeadm/kubeadm-base.nix at d48050357fb558b9bb4829219057ee5fe4e3dd39 · arianvp/nixos-stuff](https://github.com/arianvp/nixos-stuff/blob/d48050357fb558b9bb4829219057ee5fe4e3dd39/modules/kubeadm/kubeadm-base.nix#L61)
+- [nixos-configuration/modules/kubeadm/default.nix at master · BenSchZA/nixos-configuration](https://github.com/BenSchZA/nixos-configuration/blob/master/modules/kubeadm/default.nix)
+- [nixos-stuff/modules/kubeadm/kubeadm-base.nix at master · arianvp/nixos-stuff](https://github.com/arianvp/nixos-stuff/blob/master/modules/kubeadm/kubeadm-base.nix)

@@ -1,6 +1,7 @@
 x-base-service: &base_service
   build:
     context: .
+    dockerfile: ./Dockerfile.arm
   image: ghcr.io/yurifrl/home-systems
   working_dir: /src/nix
   volumes:
