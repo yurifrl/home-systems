@@ -23,31 +23,31 @@
 
   nixpkgs.hostPlatform = lib.mkDefault "aarch64-linux";
 
-  systemd.repart.partitions = {
-    "00-esp" = {
-      Type = "esp";
-      SizeMaxBytes = "1G";
-      Format = "vfat";
-    };
-    "10-root" = {
-      Type = "root-arm64";
-      Format = "btrfs"; # or "ext4" depending on your preference
-    };
-  };
+  # systemd.repart.partitions = {
+  #   "00-esp" = {
+  #     Type = "esp";
+  #     SizeMaxBytes = "1G";
+  #     Format = "vfat";
+  #   };
+  #   "10-root" = {
+  #     Type = "root-arm64";
+  #     Format = "btrfs"; # or "ext4" depending on your preference
+  #   };
+  # };
 
-  fileSystems."/" =
-    let
-      root = config.systemd.repart.partitions."10-root";
-    in
-    {
-      device = "/dev/disk/by-partlabel/${root.Type}";
-      fsType = lib.mkForce root.Format; # Ensures correct fsType without conflicts
-    };
+  # fileSystems."/" =
+  #   let
+  #     root = config.systemd.repart.partitions."10-root";
+  #   in
+  #   {
+  #     device = "/dev/disk/by-partlabel/${root.Type}";
+  #     fsType = lib.mkForce root.Format; # Ensures correct fsType without conflicts
+  #   };
 
-  fileSystems."/mnt" = {
-    device = "share";
-    fsType = "virtiofs";
-  };
+  # fileSystems."/mnt" = {
+  #   device = "share";
+  #   fsType = "virtiofs";
+  # };
 
   systemd.network.networks.main = {
     matchConfig.Name = "en*";
