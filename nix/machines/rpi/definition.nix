@@ -5,7 +5,10 @@
   imports = [
     ./hardware-configuration.nix
     ./kubernetes.nix
+    ./disko-config.nix
   ];
+
+  disko.devices.disk.main.device = "/dev/sda";
 
   networking = {
     nameservers = [ "8.8.8.8" "8.8.4.4" ];

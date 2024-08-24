@@ -3,15 +3,18 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     deploy-rs.url = "github:serokell/deploy-rs";
+    disko.url = "github:nix-community/disko";
+    disko.inputs.nixpkgs.follows = "nixpkgs";
   };
-
-  outputs = { self, nixpkgs, deploy-rs, home-manager, ... }: {
+  
+  outputs = { self, nixpkgs, deploy-rs, home-manager, disko, ... }: {
     nixosConfigurations = {
       rpi = nixpkgs.lib.nixosSystem {
         system = "aarch64-linux";
         modules = [
           "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
           "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
+          disko.nixosModules.disko
           ./common.nix
           # ./modules/tailscale.nix
           # ./modules/network-self-registry.nix
