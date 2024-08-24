@@ -43,7 +43,7 @@
       root = config.systemd.repart.partitions."10-root";
     in
     {
-      device = "/dev/disk/by-partlabel/${root.Type}";
+      device = lib.mkForce "/dev/disk/by-partlabel/${root.Type}";
       fsType = lib.mkForce root.Format; # Ensures correct fsType without conflicts
     };
 
