@@ -1,11 +1,8 @@
-{ ... }:
-
 {
   imports = [
     ./hardware-configuration.nix
     ./kubernetes.nix
   ];
-
   networking = {
     nameservers = [
       "8.8.8.8"

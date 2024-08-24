@@ -58,7 +58,7 @@
         nodes = {
           rpi = {
             name = "rpi";
-            hostname = "192.168.68.108";
+            hostname = "192.168.68.107";
             profiles = {
               system = {
                 sshUser = "root";
