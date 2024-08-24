@@ -1,6 +1,7 @@
-{ pkgs, config, ... }: {
+{ pkgs, config, ... }:
+{
   imports = [
-    ./crio.nix
+    # ./crio.nix
     ./cilium.nix
     ./kured.nix
     ./kubeadm
@@ -49,7 +50,10 @@
     systemd.services.cni-dhcp = {
       description = "CNI DHCP service";
       documentation = [ "https://github.com/containernetworking/plugins/tree/master/plugins/ipam/dhcp" ];
-      after = [ "network.target" "cni-dhcp.socket" ];
+      after = [
+        "network.target"
+        "cni-dhcp.socket"
+      ];
       requires = [ "cni-dhcp.socket" ];
 
       serviceConfig.ExecStart = "${pkgs.cni-plugins}/bin/dhcp daemon";

@@ -6,8 +6,6 @@
     ./kubernetes.nix
   ];
 
-  disko.devices.disk.main.device = "/dev/sda";
-
   networking = {
     nameservers = [
       "8.8.8.8"
@@ -24,7 +22,7 @@
     #   ];
     # };
     defaultGateway = {
-      address = "192.168.68.1";
+      address = "192.168.68.107";
       interface = "eth0";
     };
   };
