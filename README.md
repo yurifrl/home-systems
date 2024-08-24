@@ -39,9 +39,6 @@ sudo nixos-rebuild switch --flake .#rpi --impure --show-trace -I nixpkgs-unstabl
 - [Storage](https://docs.turingpi.com/docs/turing-pi2-kubernetes-cluster-storage#option-2-the-longhorn)
 - `nix build ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --show-trace --print-out-paths --no-link --json --impure`
 
-󰂃 5% ❯ sudo dd bs=4M if=./dist/nixos-sd-image-24.11.20240731.9f918d6-aarch64-linux.img of=/dev/disk2 conv=fsync status=progress
-Password:
-sudo: a password is required
-
-~
-󰂃 5% ❯ diskutil list
+sudo dd bs=4M if=./dist/nixos-sd-image-24.11.20240731.9f918d6-aarch64-linux.img of=/dev/disk conv=fsync status=progress
+diskutil unmountDisk /dev/disk5
+diskutil list
