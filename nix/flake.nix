@@ -13,8 +13,8 @@
           "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
           "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
           ./common.nix
-          ./modules/tailscale.nix
-          ./modules/network-self-registry.nix
+          # ./modules/tailscale.nix
+          # ./modules/network-self-registry.nix
           # ./nix-status-check.nix
           ./machines/rpi/definition.nix
           ({ ... }: {

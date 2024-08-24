@@ -24,4 +24,16 @@
       interface = "eth0";
     };
   };
+
+  systemd.repart.partitions = {
+    "00-esp" = {
+      Type = "esp";  # EFI System Partition
+      SizeMaxBytes = "1G";
+      Format = "vfat";
+    };
+    "10-root" = {
+      Type = "root-arm64";  # Root partition for ARM64 architecture
+      Format = "btrfs";
+    };
+  };
 }

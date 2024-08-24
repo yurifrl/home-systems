@@ -1,7 +1,7 @@
 { pkgs, lib, ... }:
 let
   # Import the unstable nixpkgs channel
-  unstablePkgs = import <nixpkgs-unstable> { };
+  # unstablePkgs = import <nixpkgs-unstable> { };
   #
   cowsayVersion = pkgs.callPackage ./packages/cowsay-version.nix {};
   # hs = pkgs.callPackage ./packages/hs.nix {};
@@ -22,7 +22,7 @@ in
     git
     fish
     # Unstable packages
-    unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
+    # unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
     # custom packages
     cowsayVersion
     # hs
