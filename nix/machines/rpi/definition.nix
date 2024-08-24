@@ -24,5 +24,4 @@
       interface = "eth0";
     };
   };
-
 }
