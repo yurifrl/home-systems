@@ -28,7 +28,7 @@
             # ./modules/tailscale.nix
             # ./modules/network-self-registry.nix
             # ./nix-status-check.nix
-            ./machines/rpi/definition.nix
+            ./machines/rpi/default.nix
             (
               { ... }:
               {
@@ -44,7 +44,7 @@
             "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
             ./common.nix
             ./modules/tailscale.nix
-            ./machines/vm/definition.nix
+            ./machines/vm/default.nix
           ];
         };
       };

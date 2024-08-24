@@ -10,6 +10,7 @@ journalctl -u kube-controller-manager.service
 journalctl -u kube-proxy.service
 journalctl -u kube-scheduler.service
 
+
 sudo journalctl -u etcd.service \
 -u flannel.service -u kube-apiserver.service -u kube-controller-manager.service -u kube-proxy.service -u kube-scheduler.service
 
@@ -19,6 +20,8 @@ systemctl status kube-apiserver.service
 systemctl status kube-controller-manager.service
 systemctl status kube-proxy.service
 systemctl status kube-scheduler.service
+systemctl status cni-dhcp
+
 
 rm -rf /var/lib/kubernetes/ /var/lib/etcd/ /var/lib/cfssl/ /var/lib/kubelet/ /var/lib/kubernetes/secrets/ /etc/kube-flannel/ /etc/kubernetes/
 
