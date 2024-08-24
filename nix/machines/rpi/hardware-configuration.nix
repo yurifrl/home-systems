@@ -44,7 +44,7 @@
     in
     {
       device = "/dev/disk/by-partlabel/${root.Type}";
-      fsType = lib.mkDefaultroot.Format;
+      fsType = lib.Force root.Format;
     };
 
   fileSystems."/mnt" = {
