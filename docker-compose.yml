@@ -8,6 +8,8 @@ x-base-service: &base_service
     - .:/src
     - gomod-cache:/go/pkg/mod
     - $SSH_AUTH_SOCK:/ssh-agent
+    - /dev/disk5:/dev/disk5
+
   environment:
     SSH_AUTH_SOCK: /ssh-agent
   network_mode: host
@@ -22,6 +24,10 @@ services:
   deploy:
     <<: *base_service
     entrypoint: deploy
+  sh2:
+    <<: *base_service
+    entrypoint: fish
+    privileged: true
 
 volumes:
   gomod-cache:

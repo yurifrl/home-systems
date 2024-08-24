@@ -38,7 +38,8 @@ RUN nix-env -iA \
     nixpkgs.rrsync \
     nixpkgs.rsync \
     nixpkgs.iputils \
-    nixpkgs.curl
+    nixpkgs.curl \
+    nixpkgs.util-linux
 
 RUN nix-env -iA nixpkgs.deploy-rs
 RUN nix-env -if https://github.com/zhaofengli/colmena/tarball/main
