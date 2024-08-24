@@ -3,9 +3,9 @@ let
   # Import the unstable nixpkgs channel
   # unstablePkgs = import <nixpkgs-unstable> { };
   #
-  cowsayVersion = pkgs.callPackage ./packages/cowsay-version.nix {};
-  # hs = pkgs.callPackage ./packages/hs.nix {};
+  cowsayVersion = pkgs.callPackage ./packages/cowsay-version.nix { };
 in
+# hs = pkgs.callPackage ./packages/hs.nix {};
 {
   # System packages
   environment.systemPackages = with pkgs; [
@@ -35,7 +35,10 @@ in
 
   # Networking configuration
   networking = {
-    nameservers = [ "8.8.8.8" "8.8.4.4" ];
+    nameservers = [
+      "8.8.8.8"
+      "8.8.4.4"
+    ];
     firewall.enable = false;
     interfaces.eth0.useDHCP = true;
   };
@@ -63,7 +66,7 @@ in
   users.users.root.openssh.authorizedKeys.keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAvaTuBhwuQHdjIP1k9YQk9YMqmGiOate19iXe6T4IL/"
   ];
-  
+
   users.groups.nixos = { };
 
   # Systemd service configuration for OpenSSH
@@ -95,4 +98,3 @@ in
     stateVersion = "23.05";
   };
 }
-

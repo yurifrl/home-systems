@@ -26,15 +26,19 @@ in
 
       proxy.disabled = true;
 
-      controllerManager.extraArgs = [{
-        name = "bind-address";
-        value = "0.0.0.0";
-      }];
+      controllerManager.extraArgs = [
+        {
+          name = "bind-address";
+          value = "0.0.0.0";
+        }
+      ];
 
-      scheduler.extraArgs = [{
-        name = "bind-address";
-        value = "0.0.0.0";
-      }];
+      scheduler.extraArgs = [
+        {
+          name = "bind-address";
+          value = "0.0.0.0";
+        }
+      ];
     };
 
     init.kubeletConfig = {

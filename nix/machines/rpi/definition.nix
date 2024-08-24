@@ -1,17 +1,18 @@
-
 { ... }:
 
 {
   imports = [
     ./hardware-configuration.nix
     ./kubernetes.nix
-    ./disko-config.nix
   ];
 
   disko.devices.disk.main.device = "/dev/sda";
 
   networking = {
-    nameservers = [ "8.8.8.8" "8.8.4.4" ];
+    nameservers = [
+      "8.8.8.8"
+      "8.8.4.4"
+    ];
     firewall.enable = false;
     interfaces.eth0.useDHCP = true;
     # interfaces.eth0 = {
