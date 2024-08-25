@@ -1,7 +1,7 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ./kubernetes.nix
+    ./kubernetes-configuration.nix
   ];
   networking = {
     nameservers = [
