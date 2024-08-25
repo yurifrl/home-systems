@@ -1,7 +1,7 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ./kubernetes.nix
+    ../default.nix
   ];
   networking = {
     nameservers = [
@@ -15,5 +15,12 @@
       address = "192.168.68.107";
       interface = "eth0";
     };
+  };
+  ## nucles/default.nix
+  networking.hostName = "nucle1";
+
+  services.kubeadm.init = {
+    enable = true;
+    bootstrapTokenFile = "/var/secret/kubeadm-bootstrap-token";
   };
 }
