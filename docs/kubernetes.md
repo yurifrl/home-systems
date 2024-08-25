@@ -46,8 +46,7 @@ kubectl --server=https://10.1.1.2:6443 --certificate-authority=/var/lib/cfssl/ca
    NixOS configuration for deploying a single-node Kubernetes development environment.
 
 - [etcd not init etcd.pem with services.kubernetes.roles master · Issue #59364 · NixOS/nixpkgs](https://github.com/NixOS/nixpkgs/issues/59364)
-[immutable-web-platform/nix/nixos/modules/kubernetes/kubelet.nix at 375b3c8c51fd289ef5329d5accd1bbc40a78dc23 · BuildIt-Poland/immutable-web-platform](https://github.com/BuildIt-Poland/immutable-web-platform/blob/375b3c8c51fd289ef5329d5accd1bbc40a78dc23/nix/nixos/modules/kubernetes/kubelet.nix#L69)
-
+- [BuildIt-Poland/immutable-web-platform](https://github.com/BuildIt-Poland/immutable-web-platform/blob/375b3c8c51fd289ef5329d5accd1bbc40a78dc23/nix/nixos/modules/kubernetes/kubelet.nix#L69)
 - [rydnr/nixos-kubernetes: NixOS modules for Kubernetes](https://github.com/rydnr/nixos-kubernetes/tree/main)
   - Kubernetes from scratch on NixOS
 
