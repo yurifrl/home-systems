@@ -1,4 +1,9 @@
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 let
   cfg = config.services.kubeadm;
 in
@@ -11,7 +16,7 @@ in
     systemd.services.kubelet = {
       description = "Kubernetes Kubelet Service";
       wantedBy = [ "multi-user.target" ];
-      after = [ "crio.service" ];
+      # after = [ "crio.service" ];
 
       path = with pkgs; [
         gitMinimal

@@ -13,7 +13,8 @@ in
   services.kubeadm = {
     enable = true;
     package = pkgs.kubernetes;
-    kubelet.enable = true;
+    # HERE
+    kubelet.enable = false;
     init.initConfig = { };
 
     init.clusterConfig = {

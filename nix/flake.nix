@@ -3,8 +3,8 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     deploy-rs.url = "github:serokell/deploy-rs";
-    disko.url = "github:nix-community/disko";
-    disko.inputs.nixpkgs.follows = "nixpkgs";
+    nixos-hardware.url = "github:nixos/nixos-hardware";
+    vscode-server.url = "github:nix-community/nixos-vscode-server";
   };
 
   outputs =
@@ -13,26 +13,26 @@
       nixpkgs,
       deploy-rs,
       home-manager,
-      disko,
+      nixos-hardware,
+      vscode-server,
       ...
     }:
-    {
+    rec {
+
       nixosConfigurations = {
         rpi = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
           modules = [
-            "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
-            "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
-            disko.nixosModules.disko
+            "${nixpkgs}/nixos/modules/profiles/minimal.nix"
+            # "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
+            nixos-hardware.nixosModules.raspberry-pi-4
             ./common.nix
-            # ./packages/tailscale.nix
-            # ./packages/network-self-registry.nix
-            # ./nix-status-check.nix
             ./machines/rpi/default.nix
+            vscode-server.nixosModules.default
             (
-              { ... }:
+              { config, pkgs, ... }:
               {
-                sdImage.compressImage = false; # If true, will build a .zst compressed image.
+                services.vscode-server.enable = true;
               }
             )
           ];
@@ -49,10 +49,25 @@
         };
       };
 
-      packages = {
-        aarch64-linux.default = self.nixosConfigurations.rpi.config.system.build.sdImage;
-        x86_64-linux.default = self.nixosConfigurations.vm.config.system.build.isoImage;
+      images = {
+        rpi =
+          (self.nixosConfigurations.rpi.extendModules {
+            modules = [
+              "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+              {
+                disabledModules = [ "profiles/base.nix" ];
+                sdImage.compressImage = false;
+              }
+            ];
+          }).config.system.build.sdImage;
       };
+      packages.x86_64-linux.pi-image = images.rpi;
+      packages.aarch64-linux.pi-image = images.rpi;
+
+      # packages = {
+      #   aarch64-linux.default = self.nixosConfigurations.rpi.config.system.build.sdImage;
+      #   x86_64-linux.default = self.nixosConfigurations.vm.config.system.build.isoImage;
+      # };
 
       deploy = {
         nodes = {
