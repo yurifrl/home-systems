@@ -1,7 +1,7 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ../default.nix
+    # ../default.nix
   ];
   networking = {
     nameservers = [
@@ -19,8 +19,8 @@
   ## nucles/default.nix
   networking.hostName = "nucle1";
 
-  services.kubeadm.init = {
-    enable = true;
-    bootstrapTokenFile = "/var/secret/kubeadm-bootstrap-token";
-  };
+  # services.kubeadm.init = {
+  #   enable = true;
+  #   bootstrapTokenFile = "/var/secret/kubeadm-bootstrap-token";
+  # };
 }

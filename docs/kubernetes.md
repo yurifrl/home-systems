@@ -61,3 +61,19 @@ kubectl --server=https://10.1.1.2:6443 --certificate-authority=/var/lib/cfssl/ca
 - [Kubernetes: network malfunction after upgrading to 19.09 - Development - NixOS Discourse](https://discourse.nixos.org/t/kubernetes-network-malfunction-after-upgrading-to-19-09/4620/6)
 - [nixos-configuration/modules/kubeadm/default.nix at master · BenSchZA/nixos-configuration](https://github.com/BenSchZA/nixos-configuration/blob/master/modules/kubeadm/default.nix)
 - [nixos-stuff/modules/kubeadm/kubeadm-base.nix at master · arianvp/nixos-stuff](https://github.com/arianvp/nixos-stuff/blob/master/modules/kubeadm/kubeadm-base.nix)
+
+## Cleanup
+
+reset to a clean state
+Sometimes it helps to have a clean state on all instances:
+
+comment kubernetes-related code in configuration.nix
+`nixos-rebuild switch`
+
+clean up filesystem
+```
+rm -rf /var/lib/kubernetes/ /var/lib/etcd/ /var/lib/cfssl/ /var/lib/kubelet/
+rm -rf /etc/kube-flannel/ /etc/kubernetes/
+```
+uncomment kubernetes-related code again
+`nixos-rebuild switch`
