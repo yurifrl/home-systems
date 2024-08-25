@@ -1,6 +1,8 @@
 { pkgs, config, ... }:
 {
   imports = [
+    ./crio.nix
+    ./cilium.nix
     ./kubeadm
   ];
 
