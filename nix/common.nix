@@ -91,6 +91,9 @@ in
     ];
   };
 
+  # Needed for vscode
+  programs.nix-ld.enable = true;
+
   console.keyMap = "us";
   time.timeZone = "America/Los_Angeles";
 
