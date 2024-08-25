@@ -14,25 +14,19 @@ in
     enable = true;
     package = pkgs.kubernetes;
     kubelet.enable = true;
-
     init.initConfig = { };
 
     init.clusterConfig = {
       clusterName = "nucles";
-
       controlPlaneEndpoint = "nucles.localdomain:6443";
-
       apiServer.certSANs = hosts;
-
       proxy.disabled = true;
-
       controllerManager.extraArgs = [
         {
           name = "bind-address";
           value = "0.0.0.0";
         }
       ];
-
       scheduler.extraArgs = [
         {
           name = "bind-address";
