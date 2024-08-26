@@ -24,10 +24,9 @@
           system = "aarch64-linux";
           modules = [
             "${nixpkgs}/nixos/modules/profiles/minimal.nix"
-            # "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
             nixos-hardware.nixosModules.raspberry-pi-4
             ./common.nix
-            ./machines/rpi/default.nix
+            ./machines/rpi
             vscode-server.nixosModules.default
             (
               { config, pkgs, ... }:
@@ -43,12 +42,11 @@
           modules = [
             "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
             ./common.nix
-            # ./packages/tailscale.nix
-            ./machines/vm/default.nix
+            ./machines/vm
           ];
         };
       };
-
+      # Spliting this makes switching faster
       images = {
         rpi =
           (self.nixosConfigurations.rpi.extendModules {
@@ -61,6 +59,7 @@
             ];
           }).config.system.build.sdImage;
       };
+
       packages.x86_64-linux.pi-image = images.rpi;
       packages.aarch64-linux.pi-image = images.rpi;
 

@@ -10,11 +10,26 @@ in
     ../packages/kube
   ];
 
+  # System config
+  networking.domain = "localdomain";
+  networking.useNetworkd = true;
+
+  systemd.network.enable = true;
+  systemd.network.networks.lan.name = "en*";
+  systemd.network.networks.lan.DHCP = "yes";
+  systemd.network.wait-online.anyInterface = true;
+  services.resolved.dnssec = "false";
+
+  security.sudo.wheelNeedsPassword = false;
+
+  nix.gc.automatic = true;
+  nix.gc.options = "--delete-older-than 14d";
+
+  # Kube
   services.kubeadm = {
     enable = true;
     package = pkgs.kubernetes;
-    # HERE
-    kubelet.enable = false;
+    kubelet.enable = true;
     init.initConfig = { };
 
     init.clusterConfig = {

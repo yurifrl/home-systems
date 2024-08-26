@@ -3,7 +3,7 @@
   imports = [
     # ./crio.nix
     ./cilium.nix
-    ./kured.nix
+    # ./kured.nix
     ./kubeadm
   ];
 
