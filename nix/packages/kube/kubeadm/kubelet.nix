@@ -46,6 +46,7 @@ in
         RestartSec = 10;
 
         ExecStart = ''
+          echo "Starting kubelet ======================"
           ${cfg.package}/bin/kubelet \
             --kubeconfig=/etc/kubernetes/kubelet.conf \
             --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf \

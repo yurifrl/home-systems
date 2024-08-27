@@ -1,6 +1,16 @@
 # Nix
 
-- [ ] 
+## Doing
+
+- [ ] Check if kubeadm is running
+- [ ] Check if kubelet is running
+- [ ] Check if kube-proxy is running
+- [ ] Check if kube-apiserver is running
+- [ ] Check if kube-controller-manager is running
+- [ ] Check if kube-scheduler is running
+- [ ] Check if kube-proxy is running
+- [ ] Check if kube-scheduler is running
+- [ ] Check if kube-proxy is running
 
 # Notes
 
@@ -52,6 +62,7 @@ journalctl -u kubelet --no-pager
 journalctl -u kubeadm --no-pager
 
 
+@codebase how do I check if kubeadm is running?
 
 sudo journalctl -u etcd.service \
 -u flannel.service -u kube-apiserver.service -u kube-controller-manager.service -u kube-proxy.service -u kube-scheduler.service
