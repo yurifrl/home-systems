@@ -28,12 +28,6 @@
             ./common.nix
             ./machines/rpi
             vscode-server.nixosModules.default
-            (
-              { config, pkgs, ... }:
-              {
-                services.vscode-server.enable = true;
-              }
-            )
           ];
         };
 

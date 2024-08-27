@@ -7,6 +7,7 @@ let
 in
 # hs = pkgs.callPackage ./packages/hs.nix {};
 {
+  
   # System packages
   environment.systemPackages = with pkgs; [
     # Raspberry Pi packages
@@ -28,6 +29,7 @@ in
     # hs
   ];
 
+
   environment.etc."ssh/ssh_config".text = ''
     Host *
         StrictHostKeyChecking no
@@ -42,6 +44,8 @@ in
     firewall.enable = false;
     interfaces.eth0.useDHCP = true;
   };
+
+  services.vscode-server.enable = true;
 
   services.openssh = {
     enable = true;
@@ -100,4 +104,6 @@ in
   system = {
     stateVersion = "23.05";
   };
+
+
 }

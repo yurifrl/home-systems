@@ -1,17 +1,20 @@
 # Nix
 
+- [ ] 
+
+# Notes
 
 ```
-nix flake check
-
-nix build .#images.rpi --impure
-
 sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable
 sudo nix-channel --update
-
-sudo nixos-rebuild switch --flake .#rpi --impure --show-trace 
-
 sudo nixos-rebuild switch --flake .#rpi --impure --show-trace -I nixpkgs-unstable=https://nixos.org/channels/nixpkgs-unstable
+
+# Check things
+nix flake check
+# To switch inside the Pi
+nixos-rebuild switch --flake .#rpi --impure --show-trace 
+# To build the image for the Pi
+nix build .#images.rpi --impure
 ```
 
 # Kubernetes
