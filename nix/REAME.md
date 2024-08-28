@@ -2,16 +2,7 @@
 
 ## Doing
 
-- [ ] Check if kubeadm is running
-- [ ] Check if kubelet is running
-- [ ] Check if kube-proxy is running
-- [ ] Check if kube-apiserver is running
-- [ ] Check if kube-controller-manager is running
-- [ ] Check if kube-scheduler is running
-- [ ] Check if kube-proxy is running
-- [ ] Check if kube-scheduler is running
-- [ ] Check if kube-proxy is running
-
+- [ ] Find where kubelet config.yaml is
 # Notes
 
 ```
@@ -33,6 +24,8 @@ nix build .#images.rpi --impure
 
 
 ```bash
+journalctl -u kubelet.service
+journalctl -u etcd.service
 journalctl -u etcd.service
 journalctl -u flannel.service
 journalctl -u kube-apiserver.service
@@ -40,6 +33,7 @@ journalctl -u kube-controller-manager.service
 journalctl -u kube-proxy.service
 journalctl -u kube-scheduler.service
 
+systemctl status kubelet.service
 systemctl status etcd.service
 systemctl status flannel.service
 systemctl status kube-apiserver.service
@@ -104,5 +98,6 @@ kubectl --server=https://10.1.1.2:6443 --certificate-authority=/var/lib/cfssl/ca
 
 ### Kubeadm
 - [Kubernetes: network malfunction after upgrading to 19.09 - Development - NixOS Discourse](https://discourse.nixos.org/t/kubernetes-network-malfunction-after-upgrading-to-19-09/4620/6)
-- [nixos-configuration/modules/kubeadm/default.nix at master · BenSchZA/nixos-configuration](https://github.com/BenSchZA/nixos-configuration/blob/master/modules/kubeadm/default.nix)
-- [nixos-stuff/modules/kubeadm/kubeadm-base.nix at master · arianvp/nixos-stuff](https://github.com/arianvp/nixos-stuff/blob/master/modules/kubeadm/kubeadm-base.nix)
+- [BenSchZA/nixos-configuration](https://github.com/BenSchZA/nixos-configuration/blob/master/modules/kubeadm/default.nix)
+- [arianvp/nixos-stuff](https://github.com/arianvp/nixos-stuff/blob/master/modules/kubeadm/kubeadm-base.nix)
+- [addreas/homelab](https://github.com/addreas/homelab/tree/main)

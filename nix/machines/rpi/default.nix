@@ -1,7 +1,7 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ./kubernetes-configuration.nix
+    ../default.nix
   ];
   networking = {
     nameservers = [
@@ -21,7 +21,7 @@
 
   services.kubeadm.init = {
     enable = true;
-    bootstrapTokenFile = "/var/secret/kubeadm-bootstrap-token";
+    bootstrapTokenFile = "/var/secret/kubeadm-cert-key";
   };
 
   # System config copied from that repo
