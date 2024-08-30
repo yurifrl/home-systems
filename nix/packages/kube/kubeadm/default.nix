@@ -56,13 +56,7 @@ in
         if !cfg.controlPlane then
           [ ]
         else
-          [
-            6443
-            2379
-            2380
-            10259
-            10257
-          ]
+          [ 6443 2379 2380 10259 10257]
       );
     networking.firewall.allowedTCPPortRanges = [
       {
