@@ -7,7 +7,7 @@ let
 in
 {
   imports = [
-    ../../packages/kube
+    ../packages/kube
   ];
 
   services.kubeadm = {

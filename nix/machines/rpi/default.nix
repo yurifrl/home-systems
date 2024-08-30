@@ -1,7 +1,7 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ../default.nix
+    ../kubernetes.nix
   ];
   networking = {
     nameservers = [
@@ -23,19 +23,4 @@
     enable = true;
     bootstrapTokenFile = "/var/secret/kubeadm-cert-key";
   };
-
-  # System config copied from that repo
-  networking.domain = "localdomain";
-  networking.useNetworkd = true;
-
-  systemd.network.enable = true;
-  systemd.network.networks.lan.name = "en*";
-  systemd.network.networks.lan.DHCP = "yes";
-  systemd.network.wait-online.anyInterface = true;
-  services.resolved.dnssec = "false";
-
-  security.sudo.wheelNeedsPassword = false;
-
-  nix.gc.automatic = true;
-  nix.gc.options = "--delete-older-than 14d";
 }

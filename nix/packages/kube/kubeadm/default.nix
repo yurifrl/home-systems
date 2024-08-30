@@ -52,11 +52,7 @@ in
     #   "d /var/lib/kubernetes 0755 kubernetes kubernetes -"
     # ];
 
-    networking.firewall.allowedTCPPorts =
-      [
-        10250
-      ]
-      ++ (
+    networking.firewall.allowedTCPPorts = [ 10250 ] ++ (
         if !cfg.controlPlane then
           [ ]
         else
