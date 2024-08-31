@@ -71,6 +71,21 @@
         "type": "indirect"
       }
     },
+    "mypkgs": {
+      "locked": {
+        "lastModified": 1725112201,
+        "narHash": "sha256-GOO85rvY+cAM4X8BeM7H8UPQVA0s1+RDRVE3yS/KKFg=",
+        "owner": "yurifrl",
+        "repo": "nixpkgs",
+        "rev": "9904d0bf8edb1e2b678dd23c807ba776b5bba4d6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "yurifrl",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixos-hardware": {
       "locked": {
         "lastModified": 1724575805,
@@ -152,6 +167,7 @@
       "inputs": {
         "deploy-rs": "deploy-rs",
         "home-manager": "home-manager",
+        "mypkgs": "mypkgs",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_3",
         "vscode-server": "vscode-server"

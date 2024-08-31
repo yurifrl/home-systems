@@ -12,6 +12,8 @@ x-base-service: &base_service
 
   environment:
     SSH_AUTH_SOCK: /ssh-agent
+    NIXPKGS_ALLOW_BROKEN: 1
+    NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM: 1
   network_mode: host
 
 services:

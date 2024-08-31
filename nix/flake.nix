@@ -48,7 +48,7 @@
         rpi =
           (self.nixosConfigurations.rpi.extendModules {
             modules = [
-              "${mypkgs}/nixos/modules/installer/sd-card/sd-image-raspberrypi.nix"
+              "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-raspberrypi.nix"
               {
                 disabledModules = [ "profiles/base.nix" ];
                 sdImage.compressImage = false;
@@ -59,11 +59,6 @@
 
       packages.x86_64-linux.pi-image = images.rpi;
       packages.aarch64-linux.pi-image = images.rpi;
-
-      # packages = {
-      #   aarch64-linux.default = self.nixosConfigurations.rpi.config.system.build.sdImage;
-      #   x86_64-linux.default = self.nixosConfigurations.vm.config.system.build.isoImage;
-      # };
 
       deploy = {
         nodes = {
