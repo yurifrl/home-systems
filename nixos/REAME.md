@@ -5,13 +5,10 @@
 - [ ] Find where kubelet config.yaml is
 - [ ] Look into the init of kubeadm in default.nix
 - [ ] 16min ...
-# Notes
 
-```
-sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable
-sudo nix-channel --update
-sudo nixos-rebuild switch --flake .#rpi --impure --show-trace -I nixpkgs-unstable=https://nixos.org/channels/nixpkgs-unstable
+# Now
 
+```bash
 # Check things
 nix flake check
 # To switch inside the Pi
@@ -97,9 +94,17 @@ kubectl --server=https://10.1.1.2:6443 --certificate-authority=/var/lib/cfssl/ca
 - [nixos-configuration/containers/kube-master/flake.nix at main · JD95/nixos-configuration](https://github.com/JD95/nixos-configuration/blob/main/containers/kube-master/flake.nix)
 - [Kubernetes: network malfunction after upgrading to 19.09 - Development - NixOS Discourse](https://discourse.nixos.org/t/kubernetes-network-malfunction-after-upgrading-to-19-09/4620/3)
 
-
 ### Kubeadm
 - [Kubernetes: network malfunction after upgrading to 19.09 - Development - NixOS Discourse](https://discourse.nixos.org/t/kubernetes-network-malfunction-after-upgrading-to-19-09/4620/6)
 - [BenSchZA/nixos-configuration](https://github.com/BenSchZA/nixos-configuration/blob/master/modules/kubeadm/default.nix)
 - [arianvp/nixos-stuff](https://github.com/arianvp/nixos-stuff/blob/master/modules/kubeadm/kubeadm-base.nix)
 - [addreas/homelab](https://github.com/addreas/homelab/tree/main)
+
+# Notes
+
+```bash
+
+sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable
+sudo nix-channel --update
+sudo nixos-rebuild switch --flake .#rpi --impure --show-trace -I nixpkgs-unstable=https://nixos.org/channels/nixpkgs-unstable
+```
