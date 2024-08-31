@@ -46,7 +46,7 @@
         rpi =
           (self.nixosConfigurations.rpi.extendModules {
             modules = [
-              "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-raspberrypi.nix"
+              "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
               {
                 disabledModules = [ "profiles/base.nix" ];
                 sdImage.compressImage = false;
