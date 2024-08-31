@@ -12,6 +12,7 @@ x-base-service: &base_service
 
   environment:
     SSH_AUTH_SOCK: /ssh-agent
+    NIXPKGS_ALLOW_BROKEN: 1
   network_mode: host
 
 services:
@@ -27,7 +28,7 @@ services:
   sh2:
     <<: *base_service
     entrypoint: fish
-    privileged: true
+    working_dir: /src/nix2
 
 volumes:
   gomod-cache:
