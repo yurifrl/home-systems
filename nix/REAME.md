@@ -4,6 +4,7 @@
 
 - [ ] Find where kubelet config.yaml is
 - [ ] Look into the init of kubeadm in default.nix
+- [ ] 16min 
 # Notes
 
 ```

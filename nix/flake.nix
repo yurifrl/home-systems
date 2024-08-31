@@ -41,12 +41,11 @@
         };
       };
       # Spliting this makes switching faster
-      # nix build .#images.rpi --impure
       images = {
         rpi =
           (self.nixosConfigurations.rpi.extendModules {
             modules = [
-              "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+              "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
               {
                 disabledModules = [ "profiles/base.nix" ];
                 sdImage.compressImage = false;

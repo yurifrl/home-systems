@@ -1,7 +1,7 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ../kubernetes.nix
+    ../../packages/k8s
   ];
   networking = {
     nameservers = [
@@ -16,11 +16,9 @@
       interface = "eth0";
     };
   };
-  ## nucles/default.nix copied from that repo
-  networking.hostName = "nucle1";
+  networking.hostName = "nixos";
 
-  services.kubeadm.init = {
+  services.k8s.init = {
     enable = true;
-    bootstrapTokenFile = "/var/secret/kubeadm-cert-key";
   };
 }

@@ -1,4 +1,9 @@
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 {
   options.services.kubeadm.init = with lib; {
     enable = mkEnableOption "kubeadm init";
