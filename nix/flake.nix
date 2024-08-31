@@ -2,7 +2,6 @@
   description = "NixOS configuration for Raspberry Pi and VirtualBox VM on Intel Mac";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    mypkgs.url = "github:yurifrl/nixpkgs";
     deploy-rs.url = "github:serokell/deploy-rs";
     nixos-hardware.url = "github:nixos/nixos-hardware";
     vscode-server.url = "github:nix-community/nixos-vscode-server";
@@ -12,7 +11,6 @@
     {
       self,
       nixpkgs,
-      mypkgs,
       deploy-rs,
       home-manager,
       nixos-hardware,
