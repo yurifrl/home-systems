@@ -24,7 +24,7 @@ in
     fish
     nixfmt-rfc-style
     # Unstable packages
-    # unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
+    unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
     # custom packages
     cowsayVersion
     # hs
@@ -36,25 +36,6 @@ in
         StrictHostKeyChecking no
   '';
   
-  networking = {
-      nftables.enable = true;
-      inherit hostName;
-      defaultGateway = {
-          address = "192.168.1.1";
-      };
-      interfaces = {
-        eth0 = {
-          useDHCP = true;
-          ipv4.addresses = [
-            {
-              address = ipAddress;
-                  prefixLength = 24;
-            }
-          ];
-        };
-    };
-  };
-
   services.vscode-server.enable = true;
 
   services.openssh = {

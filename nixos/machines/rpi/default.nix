@@ -1,7 +1,6 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ../../packages/k8s
   ];
   networking = {
     nameservers = [
@@ -10,15 +9,11 @@
     ];
     firewall.enable = false;
     interfaces.eth0.useDHCP = true;
-
-    # defaultGateway = {
-    #   address = "192.168.68.107";
-    #   interface = "eth0";
-    # };
+    hostName = "nixos";
   };
-  networking.hostName = "nixos";
 
-  services.k8s = {
-    enable = true;
+  services.k3s = {
+    services.k3s.enable = true;
+    services.k3s.role = "server";
   };
 }
