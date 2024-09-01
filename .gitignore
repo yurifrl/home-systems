@@ -7,4 +7,3 @@ secrets
 vendor/
 .DS_Store
 result-*
-flake.lock
