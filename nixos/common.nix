@@ -35,15 +35,24 @@ in
     Host *
         StrictHostKeyChecking no
   '';
-
-  # Networking configuration
+  
   networking = {
-    nameservers = [
-      "8.8.8.8"
-      "8.8.4.4"
-    ];
-    firewall.enable = false;
-    interfaces.eth0.useDHCP = true;
+      nftables.enable = true;
+      inherit hostName;
+      defaultGateway = {
+          address = "192.168.1.1";
+      };
+      interfaces = {
+        eth0 = {
+          useDHCP = true;
+          ipv4.addresses = [
+            {
+              address = ipAddress;
+                  prefixLength = 24;
+            }
+          ];
+        };
+    };
   };
 
   services.vscode-server.enable = true;
@@ -102,9 +111,5 @@ in
   console.keyMap = "us";
   time.timeZone = "America/Los_Angeles";
 
-  system = {
-    stateVersion = "23.05";
-  };
-
-
+  system.stateVersion = "24.05";
 }
