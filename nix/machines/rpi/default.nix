@@ -18,7 +18,7 @@
   };
   networking.hostName = "nixos";
 
-  services.k8s.init = {
+  services.k8s.enable = {
     enable = true;
   };
 }

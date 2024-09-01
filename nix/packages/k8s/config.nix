@@ -5,7 +5,7 @@
   ...
 }:
 {
-  options.services.k8s.init = with lib; {
-    enable = mkEnableOption "kubernetes init";
+  options.services.k8s.enable = with lib; {
+    enable = mkEnableOption "kubernetes enable";
   };
 }
