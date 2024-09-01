@@ -9,13 +9,17 @@
 # Now
 
 ```bash
+alias k=kubectl
+set -gx KUBECONFIG /etc/rancher/k3s/k3s.yaml
+k get nodes
+sudo chmod 644 /etc/rancher/k3s/k3s.yaml
+
 # Check things
 nix flake check
 # To switch inside the Pi
 nixos-rebuild switch --flake .#rpi --impure --show-trace 
 # To build the image for the Pi
 nix build .#images.rpi --impure
-
 ```
 
 # Kubernetes

@@ -12,8 +12,12 @@
     hostName = "nixos-1";
   };
 
+  # https://github.com/rancher/rancher/issues/38849
   services.k3s = {
     enable = true;
     role = "server";
+    extraFlags = [
+      "--disable=traefik"
+    ];
   };
 }
