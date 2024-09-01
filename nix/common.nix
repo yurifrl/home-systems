@@ -22,6 +22,7 @@ in
     inetutils
     git
     fish
+    nixfmt-rfc-style
     # Unstable packages
     # unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
     # custom packages

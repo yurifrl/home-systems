@@ -15,6 +15,7 @@ nix flake check
 nixos-rebuild switch --flake .#rpi --impure --show-trace 
 # To build the image for the Pi
 nix build .#images.rpi --impure
+
 ```
 
 # Kubernetes
@@ -23,8 +24,11 @@ nix build .#images.rpi --impure
 
 
 ```bash
-journalctl -u kubelet.service
-journalctl -u etcd.service
+
+
+# Troubleshooting
+systemctl status etcd.service flannel.service kube-apiserver.service kube-controller-manager.service kube-proxy.service kube-scheduler.service
+
 journalctl -u etcd.service
 journalctl -u flannel.service
 journalctl -u kube-apiserver.service
@@ -33,29 +37,18 @@ journalctl -u kube-proxy.service
 journalctl -u kube-scheduler.service
 
 systemctl status kubelet.service
-systemctl status etcd.service
-systemctl status flannel.service
-systemctl status kube-apiserver.service
-systemctl status kube-controller-manager.service
-systemctl status kube-proxy.service
-systemctl status kube-scheduler.service
+journalctl -u kubelet.service
+systemctl status kubeadm.service
+journalctl -u kubeadm.service
 
+sudo journalctl -u etcd.service -u flannel.service -u kube-apiserver.service -u kube-controller-manager.service -u kube-proxy.service -u kube-scheduler.service --no-pager
 
-# Kubeadam
-systemctl status kubelet
-systemctl status kubeadm
-systemctl status kube-apiserver
-systemctl status kube-controller-manager
-systemctl status cni-dhcp
+journalctl -u kube-scheduler.service
 
+systemctl status kubelet.service
 
 journalctl -u kube-apiserver --no-pager
-journalctl -u kube-controller-manager --no-pager
-journalctl -u kubelet --no-pager
-journalctl -u kubeadm --no-pager
 
-
-@codebase how do I check if kubeadm is running?
 
 sudo journalctl -u etcd.service \
 -u flannel.service -u kube-apiserver.service -u kube-controller-manager.service -u kube-proxy.service -u kube-scheduler.service
