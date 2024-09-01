@@ -9,11 +9,11 @@
     ];
     firewall.enable = false;
     interfaces.eth0.useDHCP = true;
-    hostName = "nixos";
+    hostName = "nixos-1";
   };
 
   services.k3s = {
-    services.k3s.enable = true;
-    services.k3s.role = "server";
+    enable = true;
+    role = "server";
   };
 }

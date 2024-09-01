@@ -1,3 +1,6 @@
+Before anything, this is in the for front of my mind: https://github.com/m1dugh/nix-cluster/tree/master
+
+
 # Home Systems
 
 
@@ -27,6 +30,10 @@ sudo nixos-rebuild switch --flake .#rpi --impure --show-trace
 
 sudo nixos-rebuild switch --flake .#rpi --impure --show-trace -I nixpkgs-unstable=https://nixos.org/channels/nixpkgs-unstable
 ```
+
+# Kuubernetes the hard way
+
+- https://github.com/m1dugh/nix-cluster/tree/master
 
 # TODO
 - [ ] Make so that the system never comes up without tailscale

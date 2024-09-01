@@ -1,11 +1,10 @@
 { pkgs, lib, ... }:
 let
   # Import the unstable nixpkgs channel
-  # unstablePkgs = import <nixpkgs-unstable> { };
+  unstablePkgs = import <nixpkgs-unstable> { };
   #
   cowsayVersion = pkgs.callPackage ./packages/cowsay-version.nix { };
 in
-# hs = pkgs.callPackage ./packages/hs.nix {};
 {
   
   # System packages
@@ -24,18 +23,14 @@ in
     fish
     nixfmt-rfc-style
     # Unstable packages
-    unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
+    # unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
     # custom packages
     cowsayVersion
     # hs
   ];
 
+  # services.tailscale.authKeyFile = "/etc/tailscale/auth.key";
 
-  environment.etc."ssh/ssh_config".text = ''
-    Host *
-        StrictHostKeyChecking no
-  '';
-  
   services.vscode-server.enable = true;
 
   services.openssh = {
@@ -64,6 +59,10 @@ in
 
   users.groups.nixos = { };
 
+  environment.etc."ssh/ssh_config".text = ''
+    Host *
+        StrictHostKeyChecking no
+  '';
   # Systemd service configuration for OpenSSH
   systemd.services.sshd.wantedBy = lib.mkOverride 40 [ "multi-user.target" ];
 
@@ -85,6 +84,7 @@ in
       "nixos-config=/etc/nixos/configuration.nix"
     ];
   };
+
 
   # Needed for vscode
   programs.nix-ld.enable = true;
