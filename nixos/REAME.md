@@ -28,8 +28,6 @@ nix build .#images.rpi --impure
 
 
 ```bash
-
-
 # Troubleshooting
 systemctl status etcd.service flannel.service kube-apiserver.service kube-controller-manager.service kube-proxy.service kube-scheduler.service
 
@@ -100,7 +98,6 @@ kubectl --server=https://10.1.1.2:6443 --certificate-authority=/var/lib/cfssl/ca
 # Notes
 
 ```bash
-
 sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable
 sudo nix-channel --update
 sudo nixos-rebuild switch --flake .#rpi --impure --show-trace -I nixpkgs-unstable=https://nixos.org/channels/nixpkgs-unstable
