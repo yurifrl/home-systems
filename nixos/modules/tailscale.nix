@@ -1,4 +1,7 @@
 { pkgs, ... }:
+let
+  unstablePkgs = import <nixpkgs-unstable> { };
+in
 {
   # Tailscale user and group creation
   users = {
@@ -11,12 +14,13 @@
 
   environment.systemPackages = with pkgs; [
     jq
-    tailscale
+    unstablePkgs.tailscale
   ];
 
   # Tailscale service configuration
   services.tailscale = {
     enable = true;
+    package = unstablePkgs.tailscale;
   };
 
   systemd.services.tailscale-autoconnect = {
@@ -48,7 +52,7 @@
       fi
 
       # otherwise authenticate with tailscale
-      ${tailscale}/bin/tailscale up -authkey $(cat /run/keys/tailscale-token)
+      ${tailscale}/bin/tailscale up -authkey $(cat /etc/tailscale/auth.key)
     '';
   };
 }

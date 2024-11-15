@@ -2,11 +2,15 @@
 let
   # Import the unstable nixpkgs channel
   unstablePkgs = import <nixpkgs-unstable> { };
-  #
+  # My packages
   cowsayVersion = pkgs.callPackage ./packages/cowsay-version.nix { };
 in
 {
-  
+  # Import tailscale module
+  imports = [
+    ./modules/tailscale.nix
+  ];
+
   # System packages
   environment.systemPackages = with pkgs; [
     # Raspberry Pi packages
@@ -24,14 +28,11 @@ in
     nixfmt-rfc-style
     kubectl
     helm
-    # Unstable packages
-    # unstablePkgs.tailscale # https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/tailscale/default.nix
+    istioctl
     # custom packages
     cowsayVersion
     # hs
   ];
-
-  # services.tailscale.authKeyFile = "/etc/tailscale/auth.key";
 
   services.vscode-server.enable = true;
 
