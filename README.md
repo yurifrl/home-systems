@@ -2,6 +2,21 @@
 
 ## Quick Start
 
+```bash
+ssh nixos@100.70.133.100
+
+cd ...
+
+# Switch configuration on Pi
+sudo nixos-rebuild switch --flake .#rpi --impure --show-trace
+
+# Set up kubectl aliases and permissions
+alias k=kubectl
+set -gx KUBECONFIG /etc/rancher/k3s/k3s.yaml
+sudo chmod 644 /etc/rancher/k3s/k3s.yaml
+k get nodes
+```
+
 ### Initial Setup
 ```bash
 # Set up 1Password access
