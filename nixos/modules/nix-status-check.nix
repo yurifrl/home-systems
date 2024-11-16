@@ -30,5 +30,13 @@ in
     };
   };
 
-  networking.firewall.allowedTCPPorts = [ 9876 ];
+  # networking.firewall.allowedTCPPorts = [ 9876 ];
+
+  # # Only configure firewall if it's enabled
+  # networking.firewall = lib.mkIf config.networking.firewall.enable {
+  #   # Allow access from Tailscale network
+  #   interfaces."tailscale0" = {
+  #     allowedTCPPorts = [ 9876 ];  # Match the port above
+  #   };
+  # };
 }
