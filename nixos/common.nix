@@ -7,6 +7,7 @@ in
   # Import tailscale module
   imports = [
     ./modules/tailscale.nix
+    ./modules/nix-status-check.nix
   ];
 
   # System packages

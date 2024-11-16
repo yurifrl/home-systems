@@ -1,24 +1,34 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
+let
+  python-script = pkgs.writeText "simple-http-server.py" ''
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+
+    class SimpleHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b'Hello World v1.0.0')
+
+    server = HTTPServer(('0.0.0.0', 9876), SimpleHandler)
+    print('Starting server on port 9876...')
+    server.serve_forever()
+  '';
+in
 {
-  environment.systemPackages = with pkgs; [ busybox ];
-
   systemd.services.nix-status-check = {
-    description = "Static HTTP Server";
+    description = "Nix Status Check";
     after = [ "network.target" ];
     wantedBy = [ "multi-user.target" ];
+
     serviceConfig = {
-      ExecStart = "${pkgs.busybox}/bin/busybox httpd -f -p 8080 -h /tmp/static";
-      ExecStartPre = ''
-        ${pkgs.bash}/bin/bash -c '
-          ${pkgs.coreutils}/bin/mkdir -p /tmp/static
-          echo "2.0.0" > /tmp/static/index.html
-      '';
+      ExecStart = "${pkgs.python3}/bin/python3 ${python-script}";
       Restart = "always";
+      RestartSec = "10";
       User = "nobody";
-      Group = "nogroup";
     };
   };
 
-  networking.firewall.allowedTCPPorts = [ 8080 ];
+  networking.firewall.allowedTCPPorts = [ 9876 ];
 }
