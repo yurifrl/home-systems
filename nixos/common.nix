@@ -1,7 +1,5 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, pkgs-unstable, ... }:
 let
-  # Import the unstable nixpkgs channel
-  unstablePkgs = import <nixpkgs-unstable> { };
   # My packages
   cowsayVersion = pkgs.callPackage ./packages/cowsay-version.nix { };
 in
@@ -26,10 +24,11 @@ in
     git
     fish
     nixfmt-rfc-style
-    kubectl
     helm
     istioctl
-    # custom packages
+    # Unstable packages
+    pkgs-unstable.kubectl
+    # Custom packages
     cowsayVersion
     # hs
   ];

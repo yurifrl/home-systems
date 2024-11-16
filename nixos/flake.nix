@@ -2,6 +2,7 @@
   description = "NixOS configuration for Raspberry Pi and VirtualBox VM on Intel Mac";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     deploy-rs.url = "github:serokell/deploy-rs";
     nixos-hardware.url = "github:nixos/nixos-hardware";
     vscode-server.url = "github:nix-community/nixos-vscode-server";
@@ -11,6 +12,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-unstable,
       deploy-rs,
       home-manager,
       nixos-hardware,
@@ -22,6 +24,12 @@
       nixosConfigurations = {
         rpi = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
+          specialArgs = {
+            pkgs-unstable = import nixpkgs-unstable {
+              system = "aarch64-linux";
+              config.allowUnfree = true;
+            };
+          };
           modules = [
             "${nixpkgs}/nixos/modules/profiles/minimal.nix"
             nixos-hardware.nixosModules.raspberry-pi-4
