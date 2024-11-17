@@ -1,44 +1,59 @@
 { pkgs, lib, pkgs-unstable, ... }:
 let
-  # My packages
   cowsayVersion = pkgs.callPackage ./packages/cowsay-version.nix { };
 in
 {
-  # Import tailscale module
+  # Module imports (always first)
   imports = [
     ./modules/tailscale.nix
     ./modules/nix-status-check.nix
   ];
 
-  # System packages
+  # Package management (frequently updated)
   environment.systemPackages = with pkgs; [
-    # Raspberry Pi packages
-    libraspberrypi
+    # Raspberry Pi specific
+    libraspberrypi 
     raspberrypi-eeprom
-    # Basic packages
-    vim
-    neovim
-    curl
-    htop
-    jq
-    inetutils
-    git
-    fish
+    
+    # System utilities
+    vim neovim curl htop jq 
+    inetutils git fish 
     nixfmt-rfc-style
+
+    # Packages
     istioctl
-  ] ++ (with pkgs-unstable; [
-    # Unstable packages
-    kubectl
-    cloudflared
-    kubernetes-helm
-  ]) ++ [
+
     # Custom packages
-    cowsayVersion
-    # hs
-  ];
+    cowsayVersion 
+  ] ++ (with pkgs-unstable; [
+    # Kubernetes tools
+    kubectl kubernetes-helm cloudflared
+  ]);
 
-  services.vscode-server.enable = true;
+  # Shell configuration (frequently modified)
+  programs.fish = {
+    enable = true;
+    shellAliases = {
+      k = "kubectl";
+    };
+  };
 
+  # User management (occasionally updated)
+  users = {
+    groups.nixos = { };
+    extraUsers.nixos = {
+      isNormalUser = true;
+      group = "nixos";
+      openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAvaTuBhwuQHdjIP1k9YQk9YMqmGiOate19iXe6T4IL/"
+      ];
+    };
+    users.root.openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAvaTuBhwuQHdjIP1k9YQk9YMqmGiOate19iXe6T4IL/"
+    ];
+  };
+
+  # SSH configuration (occasional security updates)
   services.openssh = {
     enable = true;
     settings = {
@@ -49,31 +64,16 @@ in
     };
     extraConfig = "Compression no";
   };
-
-  # SSH authorized keys for user 'nixos'
-  users.extraUsers.nixos = {
-    isNormalUser = true;
-    group = "nixos";
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAvaTuBhwuQHdjIP1k9YQk9YMqmGiOate19iXe6T4IL/"
-    ];
-    # shell = pkgs.fish; 
-  };
-  # programs.fish.enable = true;
-
-  users.users.root.openssh.authorizedKeys.keys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAvaTuBhwuQHdjIP1k9YQk9YMqmGiOate19iXe6T4IL/"
-  ];
-
-  users.groups.nixos = { };
-
   environment.etc."ssh/ssh_config".text = ''
     Host *
         StrictHostKeyChecking no
   '';
-  # Systemd service configuration for OpenSSH
   systemd.services.sshd.wantedBy = lib.mkOverride 40 [ "multi-user.target" ];
 
+  # Additional services (rarely changed)
+  services.vscode-server.enable = true;
+
+  # Security configuration (rarely changed)
   security.sudo = {
     enable = true;
     wheelNeedsPassword = false;
@@ -82,34 +82,21 @@ in
     '';
   };
 
+  # Nix configuration (rarely changed)
   nix = {
     extraOptions = ''
       experimental-features = nix-command flakes
     '';
-
     nixPath = [
       "nixpkgs=https://nixos.org/channels/nixpkgs-unstable"
       "nixos-config=/etc/nixos/configuration.nix"
     ];
   };
-
-
-  # Needed for vscode
   programs.nix-ld.enable = true;
 
+  # Base system configuration (rarely changed)
   console.keyMap = "us";
   time.timeZone = "America/Los_Angeles";
-
-  # Set vim as default editor
-  environment.variables.EDITOR = "vim";
-
   system.stateVersion = "24.05";
-
-  # Enable fish shell
-  programs.fish = {
-    enable = true;
-    shellAliases = {
-      k = "kubectl";
-    };
-  };
+  environment.variables.EDITOR = "vim";
 }
