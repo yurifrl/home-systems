@@ -98,4 +98,20 @@ in
   time.timeZone = "America/Los_Angeles";
 
   system.stateVersion = "24.05";
+
+  # Install fish shell
+  environment.shells = with pkgs; [ fish ];
+
+  # Set fish as default shell for all users
+  users.defaultUserShell = pkgs.fish;
+
+  # Optional: Install some useful fish plugins/tools
+  programs.fish = {
+    enable = true;
+    vendor = {
+      completions.enable = true;
+      config.enable = true;
+      functions.enable = true;
+    };
+  };
 }
