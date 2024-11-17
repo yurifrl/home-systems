@@ -18,6 +18,12 @@
     role = "server";
     extraFlags = [
       "--disable=traefik"
+      "--flannel-backend=host-gw"
+      "--tls-san=192.168.68.100"
+      "--bind-address=192.168.68.100"
+      "--advertise-address=192.168.68.100"
+      "--node-ip=192.168.68.100"
+      "--cluster-init"
     ];
   };
 

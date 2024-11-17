@@ -25,10 +25,13 @@ in
     git
     fish
     nixfmt-rfc-style
-    helm
     istioctl
+  ] ++ (with pkgs-unstable; [
     # Unstable packages
-    pkgs-unstable.kubectl
+    kubectl
+    cloudflared
+    kubernetes-helm
+  ]) ++ [
     # Custom packages
     cowsayVersion
     # hs
@@ -97,21 +100,16 @@ in
   console.keyMap = "us";
   time.timeZone = "America/Los_Angeles";
 
+  # Set vim as default editor
+  environment.variables.EDITOR = "vim";
+
   system.stateVersion = "24.05";
 
-  # Install fish shell
-  environment.shells = with pkgs; [ fish ];
-
-  # Set fish as default shell for all users
-  users.defaultUserShell = pkgs.fish;
-
-  # Optional: Install some useful fish plugins/tools
+  # Enable fish shell
   programs.fish = {
     enable = true;
-    vendor = {
-      completions.enable = true;
-      config.enable = true;
-      functions.enable = true;
+    shellAliases = {
+      k = "kubectl";
     };
   };
 }
