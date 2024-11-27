@@ -1,7 +1,7 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ./cluster-bootstrap.nix
+    ./argo-setup.nix
   ];
   networking = {
     nameservers = [

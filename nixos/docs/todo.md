@@ -15,3 +15,5 @@
   - [NixOps with flakes - Help - NixOS Discourse](https://discourse.nixos.org/t/nixops-with-flakes/13306/6)
   -  [Practical Nix flake anatomy: a guided tour of flake.nix | Vladimir Timofeenko's blog](https://vtimofeenko.com/posts/practical-nix-flake-anatomy-a-guided-tour-of-flake.nix/)
   -  [Flake does not provide attribute - Help - NixOS Discourse](https://discourse.nixos.org/t/flake-does-not-provide-attribute/32156/2)
+
+## Tech debt

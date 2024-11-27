@@ -1,45 +1,52 @@
-
 # Troubleshooting
 
-
+## Initial Setup
 ```bash
-journalctl -u etcd.service
-journalctl -u flannel.service
-journalctl -u kube-apiserver.service
-journalctl -u kube-controller-manager.service
-journalctl -u kube-proxy.service
-journalctl -u kube-scheduler.service
+# Set up kubectl aliases and permissions
+alias k=kubectl
+set -gx KUBECONFIG /etc/rancher/k3s/k3s.yaml
+sudo chmod 644 /etc/rancher/k3s/k3s.yaml
+k get nodes
+```
 
+## Service Status and Logs
+```bash
+# Check service statuses
 systemctl status etcd.service
 systemctl status flannel.service
 systemctl status kube-apiserver.service
 systemctl status kube-controller-manager.service
 systemctl status kube-proxy.service
 systemctl status kube-scheduler.service
+systemctl status kubelet.service
+systemctl status cni-dhcp.service
 
+# View individual service logs
+journalctl -u etcd.service
+journalctl -u flannel.service
+journalctl -u kube-apiserver.service
+journalctl -u kube-controller-manager.service
+journalctl -u kube-proxy.service
+journalctl -u kube-scheduler.service
+journalctl -u kubelet.service
 
-# Kubeadam
-systemctl status kubelet
-systemctl status kubeadm
-systemctl status kube-apiserver
-systemctl status kube-controller-manager
-systemctl status cni-dhcp
-
-
-journalctl -u kube-apiserver --no-pager
-journalctl -u kube-controller-manager --no-pager
-journalctl -u kubelet --no-pager
-journalctl -u kubeadm --no-pager
-
-
-
+# View all Kubernetes-related logs at once
 sudo journalctl -u etcd.service \
--u flannel.service -u kube-apiserver.service -u kube-controller-manager.service -u kube-proxy.service -u kube-scheduler.service
+-u flannel.service \
+-u kube-apiserver.service \
+-u kube-controller-manager.service \
+-u kube-proxy.service \
+-u kube-scheduler.service
 
+# Clean kubernetes directories if needed
+rm -rf /var/lib/kubernetes/ /var/lib/etcd/ /var/lib/cfssl/ /var/lib/kubelet/ \
+/var/lib/kubernetes/secrets/ /etc/kube-flannel/ /etc/kubernetes/
 
-rm -rf /var/lib/kubernetes/ /var/lib/etcd/ /var/lib/cfssl/ /var/lib/kubelet/ /var/lib/kubernetes/secrets/ /etc/kube-flannel/ /etc/kubernetes/
-
-kubectl --server=https://10.1.1.2:6443 --certificate-authority=/var/lib/cfssl/ca.crt --client-certificate=/var/lib/cfssl/admin.crt --client-key=/var/lib/cfssl/admin.key get nodes
+# Test API server connection
+kubectl --server=https://10.1.1.2:6443 \
+--certificate-authority=/var/lib/cfssl/ca.crt \
+--client-certificate=/var/lib/cfssl/admin.crt \
+--client-key=/var/lib/cfssl/admin.key get nodes
 ```
 
 # References
