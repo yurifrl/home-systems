@@ -1,7 +1,19 @@
 server:
   ingress:
     enabled: true
+    controller: generic
+    hostname: argocd.homey.cloud
+    annotations:
+      kubernetes.io/ingress.class: istio
+      external-dns.alpha.kubernetes.io/target: argocd.homey.cloud
+      kubernetes.io/tls-acme: "true"
+    tls:
+      - hosts:
+          - argocd.homey.cloud
+        secretName: argocd-server-tls
+    path: /
+    pathType: Prefix
   config:
     params:
-      server.insecure: true
+      server.insecure: false
       users.anonymous.enabled: true
