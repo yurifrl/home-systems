@@ -53,13 +53,13 @@
     groups.tailscale = { };
   };
 
-  networking = {
-    nameservers = [ "100.100.100.100" ];  # Tailscale MagicDNS
-    search = [ "tailcecc0.ts.net" ];      # Your tailnet domain
-    firewall = {
-      interfaces."tailscale0" = {
-        allowedTCPPorts = [ 80 443 ];         # Allow HTTP traffic
-      };
-    };
-  };
+  # networking = {
+  #   nameservers = [ "100.100.100.100" ];  # Tailscale MagicDNS
+  #   search = [ "tailcecc0.ts.net" ];      # Your tailnet domain
+  #   firewall = {
+  #     interfaces."tailscale0" = {
+  #       allowedTCPPorts = [ 80 443 ];         # Allow HTTP traffic
+  #     };
+  #   };
+  # };
 }
