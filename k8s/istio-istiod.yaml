@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-istiod
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  source:
+    repoURL: https://istio-release.storage.googleapis.com/charts
+    targetRevision: 1.23.0 
+    chart: istiod
+    helm:
+      valuesObject:
+        pilot:
+          cni:
+            enabled: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  ignoreDifferences:
+    - kind: ValidatingWebhookConfiguration
+      jsonPointers:
+        - "/webhooks/0/failurePolicy"
