@@ -64,15 +64,20 @@
     ];
     environment = {
       KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-      WATCH_DIR = "/home/k8s";  # Adjust this path as needed
+      WATCH_DIR = "/home/nixos/k8s";
     };
     script = ''
       echo "Starting cluster-bootstrap service..."
       mkdir -p $WATCH_DIR
+      
+      # Initial apply of all kubernetes manifests
+      echo "Performing initial apply of kubernetes manifests..."
+      kubectl apply -f $WATCH_DIR
+      
       echo "Watching directory: $WATCH_DIR"
       while true; do
         echo "Waiting for changes in $WATCH_DIR..."
-        inotifywait -r -e modify,create,delete,move $WATCH_DIR
+        inotifywait -r -e modify,create,delete,move --include '\.yaml$' $WATCH_DIR
         echo "Change detected in k8s directory, applying changes..."
         kubectl apply -f $WATCH_DIR
         echo "Changes applied successfully."
