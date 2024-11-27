@@ -9,7 +9,14 @@
       "8.8.4.4"
     ];
     firewall.enable = false;
-    interfaces.eth0.useDHCP = true;
+    interfaces.eth0 = {
+      useDHCP = false;
+      ipv4.addresses = [{
+        address = "192.168.68.100";
+        prefixLength = 24;
+      }];
+    };
+    defaultGateway = "192.168.68.1";
     hostName = "nixos-1";
   };
 
