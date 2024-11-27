@@ -23,13 +23,18 @@ fi
 # Delete existing secret if it exists
 kubectl delete secret -n cloudflare-tunnel generic cloudflare-tunnel-secret --ignore-not-found
 
-# Create the secret with the exact format
+# Create the secret with stringData format
 kubectl create secret -n cloudflare-tunnel generic cloudflare-tunnel-secret \
-    --from-literal=credentials.json="{
-      \"AccountTag\": \"$(jq -r .AccountTag $JSON_FILE)\",
-      \"TunnelID\": \"$(jq -r .TunnelID $JSON_FILE)\",
-      \"TunnelSecret\": \"$(jq -r .TunnelSecret $JSON_FILE)\"
-    }" \
-    --dry-run=client -o yaml | kubectl apply -f -
+    --from-file=credentials.json=/dev/stdin <<EOF | kubectl apply -f -
+{
+  "stringData": {
+    "credentials.json": {
+      "AccountTag": "$(jq -r .AccountTag $JSON_FILE)",
+      "TunnelID": "$(jq -r .TunnelID $JSON_FILE)",
+      "TunnelSecret": "$(jq -r .TunnelSecret $JSON_FILE)"
+    }
+  }
+}
+EOF
 
 echo "Secret created/updated successfully!" 
