@@ -1,6 +1,7 @@
 { config, pkgs, ... }:
 
 {
+  # This is for the main node only
   systemd.services.cluster-bootstrap = {
     description = "Bootstrap Kubernetes cluster with essential services";
     after = [ "k3s.service" ];
@@ -26,13 +27,14 @@
         helm repo update
       fi
 
-      # Install ArgoCD
-      if ! helm list -n argocd | grep -q "argo-cd"; then
-        echo "Installing Argo CD..."
+      # Install/Upgrade ArgoCD
+      if ! helm list -n argocd | grep -q "argocd"; then
+        echo "Installing/Upgrading Argo CD..."
 
-        helm install argo-cd argo-cd/argo-cd \
+        helm upgrade --install argocd argo-cd/argo-cd \
           --create-namespace \
           --namespace argocd \
+          --set server.ingress.enabled=true \
           --wait
       fi
 
