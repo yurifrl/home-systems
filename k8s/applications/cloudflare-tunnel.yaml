@@ -9,9 +9,10 @@ spec:
     chart: cloudflare-tunnel
     repoURL: https://cloudflare.github.io/helm-charts
     targetRevision: 0.3.2
-    values:
-      cloudflare:
-        secretName: cloudflare-tunnel-secret
+    helm:
+      valuesObject:
+        cloudflare:
+          secretName: cloudflare-tunnel-secret
   destination:
     server: https://kubernetes.default.svc
     namespace: cloudflare-tunnel
