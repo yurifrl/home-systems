@@ -1,8 +1,13 @@
 #!/bin/bash
 
+CLOUDFLARED_DIR="/home/nixos/.cloudflared"
+
 if [ $# -ne 1 ]; then
     echo "Usage: $0 <tunnel-id>"
-    echo "Example: $0 1b664006-2417-4072-877f-45697ffa642d"
+    echo "Available tunnel IDs:"
+    for file in "$CLOUDFLARED_DIR"/*.json; do
+        basename "$file" .json
+    done
     exit 1
 fi
 
