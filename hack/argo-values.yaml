@@ -1,0 +1,7 @@
+server:
+  ingress:
+    enabled: true
+  config:
+    params:
+      server.insecure: true
+      users.anonymous.enabled: true

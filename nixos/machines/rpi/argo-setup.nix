@@ -3,15 +3,14 @@
 let
   k3sConfig = "/etc/rancher/k3s/k3s.yaml";
   applicationsPath = "/home/nixos/home-systems/k8s/applications.yaml";
-  argoValues = ''
-    server:
-      ingress:
-        enabled: true
-  '';
+  argoValuesPath = "/home/nixos/home-systems/hack/argo-values.yaml";
 in
 {
   systemd.services.argo-setup = {
     description = "Bootstrap Kubernetes cluster with essential services";
+    # To restart this service and apply new values:
+    # 1. Delete the argocd release: kubectl delete namespace argocd
+    # 2. Restart the service: sudo systemctl restart argo-setup
     after = [ "k3s.service" ];
     wantedBy = [ "multi-user.target" ];
     path = with pkgs; [
@@ -28,6 +27,10 @@ in
         sleep 5
       done
 
+      # Print argo-values.yaml contents
+      echo "Current argo-values.yaml contents:"
+      cat ${argoValuesPath} | sed 's/^/  /'
+
       # Add helm repos
       if ! helm repo list | grep -q "argo-cd"; then
         echo "Adding Argo CD helm repository..."
@@ -35,32 +38,14 @@ in
         helm repo update
       fi
 
-      # Create values.yaml from literal
-      cat > /tmp/argocd-values.yaml <<EOF
-      ${argoValues}
-      EOF
+      echo "Installing/Upgrading Argo CD..."
+      helm upgrade --install argocd argo-cd/argo-cd \
+        --create-namespace \
+        --namespace argocd \
+        --values ${argoValuesPath} \
+        --wait
 
-      # Install/Upgrade ArgoCD
-      if ! helm list -n argocd | grep -q "argocd"; then
-        echo "Installing/Upgrading Argo CD..."
-        helm upgrade --install argocd argo-cd/argo-cd \
-          --create-namespace \
-          --namespace argocd \
-          --values /tmp/argocd-values.yaml \
-          --wait
-      fi
-
-      # Create public repository reference
-      if ! kubectl get secret home-systems-repo -n argocd; then
-        echo "Creating public repository reference..."
-        kubectl create secret generic home-systems-repo \
-          --namespace argocd \
-          --from-literal=url=https://github.com/yurifrl/home-systems \
-          --from-literal=type=git || {
-            echo "Failed to create repository reference"
-            exit 1
-          }
-      fi
+      # TODO: Find a way to register private repos
 
       # Apply root application manifest
       echo "Applying root application manifest..."
