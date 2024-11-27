@@ -40,7 +40,7 @@
       fi
 
       # otherwise authenticate with tailscale and accept DNS
-      ${tailscale}/bin/tailscale up -authkey $(cat /etc/tailscale/auth.key) --accept-dns
+      ${tailscale}/bin/tailscale up -authkey $(cat /etc/tailscale/auth.key) --accept-dns --accept-routes
     '';
   };
 
