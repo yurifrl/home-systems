@@ -39,8 +39,8 @@
         exit 0
       fi
 
-      # otherwise authenticate with tailscale
-      ${tailscale}/bin/tailscale up -authkey $(cat /etc/tailscale/auth.key)
+      # otherwise authenticate with tailscale and accept DNS
+      ${tailscale}/bin/tailscale up -authkey $(cat /etc/tailscale/auth.key) --accept-dns
     '';
   };
 
