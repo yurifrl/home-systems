@@ -7,10 +7,14 @@ spec:
   hosts:
   - argocd.homey.cloud
   gateways:
-  - istio-system/test-gateway
+  - istio-system/public
   http:
-  - route:
+  - match:
+    - uri:
+        prefix: "/"
+    route:
     - destination:
         host: argocd-server.argocd.svc.cluster.local
         port:
           number: 80
+    timeout: 300s
