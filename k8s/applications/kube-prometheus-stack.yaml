@@ -13,7 +13,13 @@ spec:
       valuesObject:
         grafana:
           enabled: true
-          adminPassword: foo
+          grafana.ini:
+            auth:
+              disable_login_form: true
+              disable_signout_menu: true
+            security:
+              admin_user: ""
+              admin_password: ""
         alertmanager:
           enabled: true
         loki:
@@ -27,9 +33,8 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true 
-    # There is a problem/bug when creating the prometheus crd
-    # https://github.com/prometheus-community/helm-charts/issues/1500
-    # but, it seem that by doing this argo is not able to create roles
-    # the workaround is some creative applying, enabling and disabling the replace flag
+      # There is a problem/bug when creating the prometheus crd
+      # https://github.com/prometheus-community/helm-charts/issues/1500
+      # but, it seem that by doing this argo is not able to create roles
+      # the workaround is some creative applying, enabling and disabling the replace flag
       - ServerSideApply=true
-      - CreateNamespace=true
