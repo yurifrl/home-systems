@@ -27,3 +27,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true 
+    # There is a problem/bug when creating the prometheus crd
+    # https://github.com/prometheus-community/helm-charts/issues/1500
+    # but, it seem that by doing this argo is not able to create roles
+    # the workaround is some creative applying, enabling and disabling the replace flag
+      - ServerSideApply=true
+      - CreateNamespace=true
