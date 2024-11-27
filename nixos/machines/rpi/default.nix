@@ -27,10 +27,11 @@
     extraFlags = [
       "--disable=traefik"
       "--flannel-backend=host-gw"
-      # Add Tailscale IP to tls-san
+      # Static IP address for the k3s server node
+      # Using 192.168.68.100 as a reserved static IP in the local network
+      # This ensures stable networking for the k3s control plane
       "--tls-san=192.168.68.100"
-      # Bind to all interfaces (0.0.0.0) to allow access via Tailscale
-      "--bind-address=0.0.0.0"
+      "--bind-address=192.168.68.100"
       "--advertise-address=192.168.68.100"
       "--node-ip=192.168.68.100"
       "--cluster-init"
