@@ -2,7 +2,8 @@
 
 {
   # This is for the main node only
-  systemd.services.cluster-bootstrap = {
+  # This argo will be used to install everything else from a source like github.com/
+  systemd.services.custer-argo = {
     description = "Bootstrap Kubernetes cluster with essential services";
     after = [ "k3s.service" ];
     wantedBy = [ "multi-user.target" ];
@@ -50,5 +51,34 @@
       Restart = "on-failure";
       RestartSec = "30s";
     };
+  };
+
+  # This is for bootstraped things that are to be installed via argo
+  # This will be used to install things like cert-manager, istio, etc.
+  systemd.services.cluster-bootstrap = {
+    description = "Watch k8s directory for changes and apply";
+    wantedBy = [ "multi-user.target" ];
+    path = with pkgs; [
+      inotify-tools
+      kubectl
+    ];
+    environment = {
+      KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+      WATCH_DIR = "/home/k8s";  # Adjust this path as needed
+    };
+    script = ''
+      mkdir -p $WATCH_DIR
+      while true; do
+        inotifywait -r -e modify,create,delete,move $WATCH_DIR
+        echo "Change detected in k8s directory, applying changes..."
+        kubectl apply -f $WATCH_DIR
+      done
+    '';
+    serviceConfig = {
+      Type = "simple";
+      Restart = "always";
+      RestartSec = "10s";
+    };
+    after = [ "cluster-argo.service" ];
   };
 } 
