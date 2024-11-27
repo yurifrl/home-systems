@@ -56,10 +56,9 @@
   # This is for bootstraped things that are to be installed via argo
   # This will be used to install things like cert-manager, istio, etc.
   systemd.services.cluster-bootstrap = {
-    description = "Watch k8s directory for changes and apply";
+    description = "Apply root application manifest once and retry on failure";
     wantedBy = [ "multi-user.target" ];
     path = with pkgs; [
-      inotify-tools
       kubectl
     ];
     environment = {
@@ -67,26 +66,19 @@
       WATCH_DIR = "/home/nixos/home-systems/k8s";
     };
     script = ''
-      echo "Starting cluster-bootstrap service..."
-      mkdir -p $WATCH_DIR
-      
-      # Initial apply of all kubernetes manifests
-      echo "Performing initial apply of kubernetes manifests..."
-      kubectl apply -f $WATCH_DIR
-      
-      echo "Watching directory: $WATCH_DIR"
-      while true; do
-        echo "Waiting for changes in $WATCH_DIR..."
-        inotifywait -r -e modify,create,delete,move --include '\.yaml$' $WATCH_DIR
-        echo "Change detected in k8s directory, applying changes..."
-        kubectl apply -f $WATCH_DIR
-        echo "Changes applied successfully."
-      done
+      echo "Applying root application manifest..."
+      if kubectl apply -f $WATCH_DIR/applications.yaml; then
+        echo "Root application applied successfully."
+      else
+        echo "Failed to apply root application. Exiting with failure."
+        exit 1
+      fi
     '';
     serviceConfig = {
-      Type = "simple";
-      Restart = "always";
-      RestartSec = "10s";
+      Type = "oneshot";
+      RemainAfterExit = true;
+      Restart = "on-failure";
+      RestartSec = "30s";
     };
     after = [ "argo-setup.service" ];
   };

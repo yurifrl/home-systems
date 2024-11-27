@@ -35,6 +35,7 @@
       "--advertise-address=192.168.68.100"
       "--node-ip=192.168.68.100"
       "--cluster-init"
+      "--write-kubeconfig-mode=644"
     ];
   };
 
