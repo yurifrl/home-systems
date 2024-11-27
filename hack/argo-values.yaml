@@ -14,4 +14,4 @@ server:
         mode: SIMPLE
         credentialName: argocd-tls-secret
       hosts:
-        - "argocd.homey.cloud"
+        - argocd.homey.cloud
