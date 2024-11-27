@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 CLOUDFLARED_DIR="/home/nixos/.cloudflared"
 
