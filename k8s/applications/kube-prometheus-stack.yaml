@@ -17,9 +17,6 @@ spec:
             auth:
               disable_login_form: true
               disable_signout_menu: true
-            security:
-              admin_user: ""
-              admin_password: ""
         alertmanager:
           enabled: true
         loki:
