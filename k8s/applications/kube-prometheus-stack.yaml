@@ -16,6 +16,8 @@ spec:
           adminPassword: foo
         alertmanager:
           enabled: true
+        loki:
+          enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
