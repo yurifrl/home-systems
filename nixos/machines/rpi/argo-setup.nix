@@ -3,7 +3,7 @@
 let
   k3sConfig = "/etc/rancher/k3s/k3s.yaml";
   applicationsPath = "/home/nixos/home-systems/k8s/applications.yaml";
-  argoValuesPath = "/home/nixos/home-systems/hack/argo-values.yaml";
+  argoValuesPath = "/home/nixos/home-systems/k8s/values/argo.yaml";
 in
 {
   systemd.services.argo-setup = {
