@@ -27,8 +27,8 @@ in
         sleep 5
       done
 
-      # Print argo-values.yaml contents
-      echo "Current argo-values.yaml contents:"
+      # Print values argo.yaml contents
+      echo "Current argo values.yaml contents:"
       cat ${argoValuesPath} | sed 's/^/  /'
 
       # Add helm repos
