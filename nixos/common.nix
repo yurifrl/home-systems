@@ -35,7 +35,7 @@ in
     enable = true;
     shellAliases = {
       k = "kubectl";
-      snixos = "cd /home/nixos/home-systems/nixos && sudo nixos-rebuild switch --flake .#rpi --impure --show-trace";
+      snixos = "cd /home/nixos/home-systems/nixos && git pull origin main && sudo nixos-rebuild switch --flake .#rpi --impure --show-trace";
     };
   };
 
