@@ -1,6 +1,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./cluster-bootstrap.nix
   ];
   networking = {
     nameservers = [
