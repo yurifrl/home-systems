@@ -14,9 +14,10 @@ spec:
         grafana:
           enabled: true
           grafana.ini:
-            auth:
-              disable_login_form: true
-              disable_signout_menu: true
+            auth.anonymous:
+              enabled: true
+              org_name: Main Org.
+              org_role: Viewer
         alertmanager:
           enabled: true
         loki:
