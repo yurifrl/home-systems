@@ -3,7 +3,7 @@
 {
   # This is for the main node only
   # This argo will be used to install everything else from a source like github.com/
-  systemd.services.custer-argo = {
+  systemd.services.argo-setup = {
     description = "Bootstrap Kubernetes cluster with essential services";
     after = [ "k3s.service" ];
     wantedBy = [ "multi-user.target" ];
@@ -67,11 +67,15 @@
       WATCH_DIR = "/home/k8s";  # Adjust this path as needed
     };
     script = ''
+      echo "Starting cluster-bootstrap service..."
       mkdir -p $WATCH_DIR
+      echo "Watching directory: $WATCH_DIR"
       while true; do
+        echo "Waiting for changes in $WATCH_DIR..."
         inotifywait -r -e modify,create,delete,move $WATCH_DIR
         echo "Change detected in k8s directory, applying changes..."
         kubectl apply -f $WATCH_DIR
+        echo "Changes applied successfully."
       done
     '';
     serviceConfig = {
@@ -79,6 +83,6 @@
       Restart = "always";
       RestartSec = "10s";
     };
-    after = [ "cluster-argo.service" ];
+    after = [ "argo-setup.service" ];
   };
 } 
