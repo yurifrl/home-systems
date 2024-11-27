@@ -11,7 +11,7 @@ spec:
     targetRevision: 0.3.2
     values:
       cloudflare:
-        secretName: tunnel-secret
+        secretName: cloudflare-tunnel-secret
   destination:
     server: https://kubernetes.default.svc
     namespace: cloudflare-tunnel
