@@ -5,13 +5,3 @@ server:
     params:
       server.insecure: true
       users.anonymous.enabled: true
-  servers:
-    - port:
-        number: 443
-        name: https
-        protocol: HTTPS
-      tls:
-        mode: SIMPLE
-        credentialName: argocd-tls-secret
-      hosts:
-        - argocd.homey.cloud
