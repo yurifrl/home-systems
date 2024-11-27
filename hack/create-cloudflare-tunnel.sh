@@ -20,8 +20,11 @@ if [ ! -f "$JSON_FILE" ]; then
     exit 1
 fi
 
+# Delete existing secret if it exists
+kubectl delete secret -n cloudflare-tunnel generic cloudflare-tunnel-secret --ignore-not-found
+
 # Create the secret with the exact format
-kubectl create secret generic cloudflare-tunnel-credentials \
+kubectl create secret -n cloudflare-tunnel generic cloudflare-tunnel-secret \
     --from-literal=credentials.json="{
       \"AccountTag\": \"$(jq -r .AccountTag $JSON_FILE)\",
       \"TunnelID\": \"$(jq -r .TunnelID $JSON_FILE)\",
