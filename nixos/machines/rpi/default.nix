@@ -31,7 +31,7 @@
       # Using 192.168.68.100 as a reserved static IP in the local network
       # This ensures stable networking for the k3s control plane
       "--tls-san=192.168.68.100"
-      "--bind-address=192.168.68.100"
+      "--bind-address=0.0.0.0"
       "--advertise-address=192.168.68.100"
       "--node-ip=192.168.68.100"
       "--cluster-init"

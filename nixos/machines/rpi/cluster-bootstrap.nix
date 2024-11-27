@@ -64,7 +64,7 @@
     ];
     environment = {
       KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-      WATCH_DIR = "/home/nixos/k8s";
+      WATCH_DIR = "/home/nixos/home-systems/k8s";
     };
     script = ''
       echo "Starting cluster-bootstrap service..."
