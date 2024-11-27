@@ -12,7 +12,7 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - "homey.cloud"
+        - homey.cloud
         - "*.homey.cloud"
 
 

@@ -1,6 +1,13 @@
 server:
+  # disable TLS and enable anonymous access 
+  config:
+    params:
+      server.insecure: false
+      users.anonymous.enabled: true
+
+  # disable ingress
   ingress:
-    enabled: true
+    enabled: false
     controller: generic
     hostname: argocd.homey.cloud
     annotations:
@@ -13,7 +20,3 @@ server:
         secretName: argocd-server-tls
     path: /
     pathType: Prefix
-  config:
-    params:
-      server.insecure: false
-      users.anonymous.enabled: true

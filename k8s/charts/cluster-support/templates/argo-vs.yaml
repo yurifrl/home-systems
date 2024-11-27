@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
 spec:
   hosts:
-    - "argocd.homey.cloud"
+    - argocd.homey.cloud
   gateways:
     - istio-system/cloudflare
   http:
@@ -22,7 +22,7 @@ metadata:
   namespace: argocd
 spec:
   hosts:
-    - "argocd.tailcecc0.ts.net"
+    - argocd.tailcecc0.ts.net
   gateways:
     - istio-system/tailscale
   http:
