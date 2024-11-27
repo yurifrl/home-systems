@@ -42,11 +42,9 @@ sudo nix-channel --update
 
 # Setup Manual steps
 
-```
-cloudflared tunnel login
-cloudflared tunnel create nixos-1
-kubectl -n cloudflare-tunnel create secret generic cloudflare-tunnel-secret --from-file=credentials.json=/home/nixos/.cloudflared/...  
+- create-cloudflare-tunnel.sh
 
+```
 # Set up 1Password access
 op item get "Home Server" --fields "private key" --reveal > secrets/id_ed25519
 
