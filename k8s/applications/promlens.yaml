@@ -6,17 +6,18 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://grafana.github.io/helm-charts
+    repoURL: https://christianhuth.github.io/helm-charts
     chart: promlens
     targetRevision: "*"
     helm:
       valuesObject: {}
   destination:
     server: https://kubernetes.default.svc
-    namespace: promlens
+    namespace: monitoring
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true 
+      - CreateNamespace=true
+      - ServerSideApply=true
