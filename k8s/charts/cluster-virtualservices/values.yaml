@@ -78,3 +78,11 @@ virtualServices:
     destination:
       host: helm-examples-hello-world.helm-examples.svc.cluster.local
       port: 80
+
+  pyrra:
+    namespace: monitoring
+    host: pyrra.syscd.live
+    gateway: istio-system/public
+    destination:
+      host: pyrra-api.monitoring.svc.cluster.local
+      port: 9099
