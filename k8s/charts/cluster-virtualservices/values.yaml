@@ -52,7 +52,7 @@ virtualServices:
     host: promlens.syscd.tech
     gateway: istio-system/private
     destination:
-      host: promlens.monitoring.svc.cluster.local
+      host: promlens.promlens.svc.cluster.local
       port: 8080
 
   prometheus:
