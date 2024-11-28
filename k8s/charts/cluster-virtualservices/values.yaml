@@ -48,7 +48,7 @@ virtualServices:
       port: 20001
 
   promlens:
-    namespace: monitoring
+    namespace: promlens
     host: promlens.syscd.tech
     gateway: istio-system/private
     destination:
@@ -80,7 +80,7 @@ virtualServices:
       port: 80
 
   pyrra:
-    namespace: monitoring
+    namespace: pyrra
     host: pyrra.syscd.live
     gateway: istio-system/public
     destination:
