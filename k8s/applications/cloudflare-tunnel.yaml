@@ -14,6 +14,9 @@ spec:
         cloudflare:
           secretName: cloudflare-tunnel-secret
           tunnelName: nixos-1
+          ingress:
+            - hostname: "*.homey.cloud"
+              service: http://istio-gateway.istio-system.svc.cluster.local:80
   destination:
     server: https://kubernetes.default.svc
     namespace: cloudflare-tunnel
@@ -28,3 +31,4 @@ spec:
 # cloudflared tunnel login
 # cloudflared tunnel create nixos-1
 # kubectl -n cloudflare-tunnel create secret generic cloudflare-tunnel-secret --from-file=credentials.json=/home/nixos/.cloudflared/...  
+
