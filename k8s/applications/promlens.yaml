@@ -14,7 +14,7 @@ spec:
         config:
           grafana:
             enabled: true
-            url: grafana.monitoring.svc.cluster.local
+            url: http://grafana.monitoring.svc.cluster.local
             existingSecret: promlens-secret
   destination:
     server: https://kubernetes.default.svc
