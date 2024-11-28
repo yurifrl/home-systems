@@ -13,9 +13,9 @@ spec:
       valuesObject:
         image:
           tag: latest
-        # config:
-        #   variables:
-        #     TAILSCALE_ADVERTISE_ROUTES: "192.168.68.0/24"
+        config:
+          variables:
+            TAILSCALE_ADVERTISE_ROUTES: "10.42.0.0/16,10.43.0.0/16"
   destination:
     server: https://kubernetes.default.svc
     namespace: tailscale
