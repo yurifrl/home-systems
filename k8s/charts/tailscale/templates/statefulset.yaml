@@ -20,7 +20,6 @@ spec:
 {{ with .Values.podLabels }}{{ toYaml . | indent 8 }}{{ end }}
       annotations:
         checksum/configMap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        checksum/secret: {{ include (print $.Template.BasePath "/externalsecrets.yaml") . | sha256sum }}
         {{- include "app.annotations" . | indent 8 }}
 {{ with .Values.podAnnotations }}{{ toYaml . | indent 8 }}{{ end }}
     spec:
