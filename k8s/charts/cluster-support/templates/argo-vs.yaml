@@ -7,7 +7,24 @@ spec:
   hosts:
     - argocd.homey.cloud
   gateways:
-    - istio-system/cloudflare-gateway
+    - istio-system/private-gateway
+  http:
+    - route:
+        - destination:
+            host: argocd-server.argocd.svc.cluster.local
+            port:
+              number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: argocd-cloudflare
+  namespace: argocd
+spec:
+  hosts:
+    - public-argocd.homey.cloud
+  gateways:
+    - istio-system/public-gateway
   http:
     - route:
         - destination:
