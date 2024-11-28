@@ -1,8 +1,11 @@
+# Tailscale domain
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: public-gateway
+  name: syscd-xyz-vpn
   namespace: istio-system
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "*.syscd.xyz"
 spec:
   selector:
     istio: gateway
@@ -12,15 +15,15 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - "*.homey.cloud"
+        - "*.syscd.xyz"
       tls:
-        httpsRedirect: true
+        httpsRedirect: false
     - port:
         number: 443
         name: https
         protocol: HTTPS
       hosts:
-        - "*.homey.cloud"
+        - "*.syscd.xyz"
       tls:
         mode: SIMPLE
         credentialName: argocd-server-tls

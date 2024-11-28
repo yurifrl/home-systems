@@ -71,3 +71,4 @@ k -n external-dns create secret generic cloudflare-api-token --from-literal=toke
 
 - [ ] Use ingress
 - [ ] Https
+- [ ] Transfer domain to cloudflare https://www.melodylee.tech/website-development-blog/transfer-domain-godaddy-to-cloudflare

@@ -1,13 +1,13 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: argocd-private
+  name: argocd-live
   namespace: argocd
 spec:
   hosts:
-    - argocd.homey.cloud
+    - argocd.syscd.live
   gateways:
-    - istio-system/private-gateway
+    - istio-system/syscd-live-tunnel
   http:
     - route:
         - destination:
@@ -18,13 +18,30 @@ spec:
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: argocd-public
+  name: argocd-tech
   namespace: argocd
 spec:
   hosts:
-    - public-argocd.homey.cloud
+    - argocd.syscd.tech
   gateways:
-    - istio-system/public-gateway
+    - istio-system/syscd-tech-vpn
+  http:
+    - route:
+        - destination:
+            host: argocd-server.argocd.svc.cluster.local
+            port:
+              number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: argocd-xyz
+  namespace: argocd
+spec:
+  hosts:
+    - argocd.syscd.xyz
+  gateways:
+    - istio-system/syscd-xyz-vpn
   http:
     - route:
         - destination:

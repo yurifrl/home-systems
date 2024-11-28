@@ -1,10 +1,11 @@
+# Argo tunnel domain
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: private-gateway
+  name: syscd-tech-vpn
   namespace: istio-system
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: "*.homey.cloud"
+    external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
 spec:
   selector:
     istio: gateway
@@ -14,15 +15,15 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - "*.homey.cloud"
+        - "*.syscd.tech"
       tls:
-        httpsRedirect: false
+        httpsRedirect: true
     - port:
         number: 443
         name: https
         protocol: HTTPS
       hosts:
-        - "*.homey.cloud"
+        - "*.syscd.tech"
       tls:
         mode: SIMPLE
         credentialName: argocd-server-tls
