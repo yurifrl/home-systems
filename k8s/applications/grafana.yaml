@@ -55,10 +55,6 @@ spec:
 
         dashboards:
           default:
-            pyrra:
-              gnetId: null
-              datasource: Nixos-1 Prometheus
-              configMapName: pyrra
             pyrra-list:
               gnetId: null
               datasource: Nixos-1 Prometheus
