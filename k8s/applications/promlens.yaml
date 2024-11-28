@@ -12,9 +12,11 @@ spec:
     helm:
       valuesObject:
         config:
+          web:
+            defaultPrometheusUrl: http://prometheus.syscd.tech
           grafana:
             enabled: true
-            url: http://grafana.monitoring.svc.cluster.local
+            url: http://grafana.syscd.tech
             existingSecret: promlens-secret
   destination:
     server: https://kubernetes.default.svc
