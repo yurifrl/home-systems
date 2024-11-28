@@ -1,38 +1,38 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: kube-prometheus-stack
-#   namespace: argocd
-# spec:
-#   project: default
-#   source:
-#     repoURL: https://prometheus-community.github.io/helm-charts
-#     chart: kube-prometheus-stack
-#     targetRevision: "*"
-#     helm:
-#       valuesObject:
-#         grafana:
-#           enabled: true
-#           grafana.ini:
-#             auth.anonymous:
-#               enabled: true
-#               org_name: Main Org.
-#               org_role: Viewer
-#         alertmanager:
-#           enabled: true
-#         loki:
-#           enabled: true
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: monitoring
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-#     syncOptions:
-#       - CreateNamespace=true 
-#       # There is a problem/bug when creating the prometheus crd
-#       # https://github.com/prometheus-community/helm-charts/issues/1500
-#       # but, it seem that by doing this argo is not able to create roles
-#       # the workaround is some creative applying, enabling and disabling the replace flag
-#       - ServerSideApply=true
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: "*"
+    helm:
+      valuesObject:
+        grafana:
+          enabled: true
+          grafana.ini:
+            auth.anonymous:
+              enabled: true
+              org_name: Main Org.
+              org_role: Viewer
+        alertmanager:
+          enabled: true
+        loki:
+          enabled: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true 
+      # There is a problem/bug when creating the prometheus crd
+      # https://github.com/prometheus-community/helm-charts/issues/1500
+      # but, it seem that by doing this argo is not able to create roles
+      # the workaround is some creative applying, enabling and disabling the replace flag
+      - ServerSideApply=true
