@@ -1,9 +1,15 @@
+# to apply this, you need to be on argo machine, make sure this is in the correct path, git pull
 server:
   ingress:
     enabled: false
   insecure: true
   extraArgs:
     - --insecure
+  admin:
+    enabled: true
+    passwordSecret:
+      name: argocd-secret
+      key: admin.password
 
 configs:
   params:
