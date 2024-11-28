@@ -13,6 +13,7 @@ spec:
       valuesObject:
         config:
           grafana:
+            enabled: true
             existingSecret: promlens-secret
   destination:
     server: https://kubernetes.default.svc
