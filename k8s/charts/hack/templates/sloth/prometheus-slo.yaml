@@ -14,9 +14,9 @@ spec:
       description: SLO based on successful API server request responses
       sli:
         events:
-          errorQuery: |
-            sum(rate(apiserver_request_total{code=~5.*}[{{.window}}]))
-          totalQuery: |
+          errorQuery: >
+            sum(rate(apiserver_request_total{code=~"5.*"}[{{.window}}]))
+          totalQuery: >
             sum(rate(apiserver_request_total[{{.window}}]))
       alerting:
         name: KubernetesAPIServerHighErrorRate
