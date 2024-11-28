@@ -65,3 +65,9 @@ k -n external-dns create secret generic cloudflare-api-token --from-literal=toke
 - https://sloth.dev
 - https://pyrra.dev
 - https://grafana.wikimedia.org/dashboards/f/SLOs/slos
+
+
+# TODO
+
+- [ ] Use ingress
+- [ ] Https
