@@ -16,9 +16,9 @@ spec:
       sli:
         events:
           errorQuery: |
-            sum(rate(apiserver_request_total{code=~"5..|4..",job="apiserver"}[5m]))
+            sum(rate(apiserver_request_total{code=~"5..|4..",job="apiserver"}[{{.window}}]))
           totalQuery: |
-            sum(rate(apiserver_request_total{job="apiserver"}[5m]))
+            sum(rate(apiserver_request_total{job="apiserver"}[{{.window}}]))
       alerting:
         name: MyServiceHighErrorRate
         labels:
