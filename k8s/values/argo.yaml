@@ -1,9 +1,4 @@
 server:
   ingress:
     enabled: false
-  extraArgs:
-    - --insecure
-
-configs:
-  params:
-    server.insecure: true
+  insecure: true
