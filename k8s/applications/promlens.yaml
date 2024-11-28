@@ -11,10 +11,9 @@ spec:
     targetRevision: "*"
     helm:
       valuesObject:
-        config:
-          datasources:
-            - name: "Prometheus"
-              url: "http://prometheus-operated:9090"
+        auth:
+          enabled: true
+          existingSecret: promlens-secret
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
