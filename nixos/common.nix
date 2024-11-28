@@ -36,7 +36,7 @@ in
     shellAliases = {
       k = "kubectl";
       snixos = "cd /home/nixos/home-systems/nixos && git pull origin main && sudo nixos-rebuild switch --flake .#rpi --impure --show-trace";
-      argo-restart = "cd /home/nixos/home-systems/nixos && git pull origin main & sudo systemctl restart argo-setup & sudo journalctl -u argo-setup.service -f"
+      argo-restart = "cd /home/nixos/home-systems/nixos && git pull origin main & sudo systemctl restart argo-setup & sudo journalctl -u argo-setup.service -f";
     };
   };
 
