@@ -5,32 +5,58 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://kubernetes-sigs.github.io/external-dns/
-    chart: external-dns
-    targetRevision: "*"
-    helm:
-      valuesObject:
-        provider: cloudflare
-        env:
-          - name: CF_API_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: cloudflare-api-token
-                key: token
-        txtOwnerId: k8s
-        policy: sync
-        domainFilters:
-          - syscd.tech
-          - syscd.xyz
-          - syscd.live
-        interval: 1m
-        sources:
-          - istio-gateway
-          - istio-virtualservice
-        namespace: istio-system
-        istioIngressGateways:
-          - istio-system/istio-gateway
+  sources:
+    # Cloudflare
+    - repoURL: https://kubernetes-sigs.github.io/external-dns/
+      chart: external-dns
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          provider: cloudflare
+          env:
+            - name: CF_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-api-token
+                  key: token
+          txtOwnerId: k8s-live
+          policy: sync
+          domainFilters:
+            - syscd.live
+          interval: 1m
+          sources:
+            - istio-gateway
+            - istio-virtualservice
+          namespace: istio-system
+          istioIngressGateways:
+            - istio-system/istio-gateway
+          extraArgs:
+            - --cloudflare-proxied
+    # Non cloudflare
+    - repoURL: https://kubernetes-sigs.github.io/external-dns/
+      chart: external-dns
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          provider: cloudflare
+          env:
+            - name: CF_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-api-token
+                  key: token
+          txtOwnerId: k8s
+          policy: sync
+          domainFilters:
+            - syscd.tech
+            - syscd.xyz
+          interval: 1m
+          sources:
+            - istio-gateway
+            - istio-virtualservice
+          namespace: istio-system
+          istioIngressGateways:
+            - istio-system/istio-gateway
   destination:
     server: https://kubernetes.default.svc
     namespace: external-dns
