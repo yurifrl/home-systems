@@ -14,8 +14,18 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - homey.cloud
         - "*.homey.cloud"
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - "*.homey.cloud"
+      tls:
+        mode: SIMPLE
+        credentialName: argocd-server-tls
 
 
 

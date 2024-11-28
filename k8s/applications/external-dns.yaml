@@ -23,8 +23,6 @@ spec:
         domainFilters:
           - homey.cloud
         interval: 1m
-        txtPrefix: internal
-        serviceTypeFilter: ClusterIP
         sources:
           - istio-gateway
           - istio-virtualservice
