@@ -23,6 +23,8 @@ spec:
         domainFilters:
           - homey.cloud
         interval: 1m
+        cloudflare:
+          proxied: true
         sources:
           - istio-gateway
           - istio-virtualservice
