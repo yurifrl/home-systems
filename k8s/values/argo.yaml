@@ -3,8 +3,14 @@
 server:
   ingress:
     enabled: false
+  insecure: true
+  extraArgs:
+    - --insecure
   admin:
     enabled: true
     passwordSecret:
       name: argocd-secret
       key: admin.password
+configs:
+  params:
+    server.insecure: true
