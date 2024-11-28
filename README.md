@@ -50,3 +50,9 @@ op item get "Home Server" --fields "private key" --reveal > secrets/id_ed25519
 
 # Copy your id_ed25519 to the pi and clone this repo
 ```
+
+# SLOS
+
+- https://sloth.dev
+- https://pyrra.dev
+- https://grafana.wikimedia.org/dashboards/f/SLOs/slos
