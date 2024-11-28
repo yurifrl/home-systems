@@ -14,20 +14,3 @@ spec:
             host: argocd-server.argocd.svc.cluster.local
             port:
               number: 80
----
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: argocd-tailscale
-  namespace: argocd
-spec:
-  hosts:
-    - argocd.tailcecc0.ts.net
-  gateways:
-    - istio-system/tailscale
-  http:
-    - route:
-        - destination:
-            host: argocd-server.argocd.svc.cluster.local
-            port:
-              number: 80

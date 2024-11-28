@@ -55,6 +55,9 @@ op item get "Home Server" --fields "private key" --reveal > secrets/id_ed25519
 
 k -n tailscale delete secret tailscale-auth 
 k -n tailscale create secret generic tailscale-auth --from-literal=auth-key='tskey-auth-xxxxx'
+
+# External DNS
+k -n external-dns create secret generic cloudflare-api-token --from-literal=token='your-cloudflare-api-token'
 ```
 
 # SLOS
