@@ -10,7 +10,11 @@ spec:
     chart: promlens
     targetRevision: "*"
     helm:
-      valuesObject: {}
+      valuesObject:
+        config:
+          datasources:
+            - name: "Prometheus"
+              url: "http://prometheus-operated:9090"
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
