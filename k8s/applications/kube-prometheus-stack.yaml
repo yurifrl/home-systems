@@ -12,10 +12,7 @@ spec:
     helm:
       valuesObject:
         grafana:
-          enabled: true
-          grafana.ini:
-            auth.anonymous:
-              enabled: true
+          enabled: false
         alertmanager:
           enabled: true
         loki:
