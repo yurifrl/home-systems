@@ -49,6 +49,12 @@ kubectl -n cloudflare-tunnel create secret generic cloudflare-tunnel-secret --fr
 op item get "Home Server" --fields "private key" --reveal > secrets/id_ed25519
 
 # Copy your id_ed25519 to the pi and clone this repo
+
+
+# Tailscale
+
+k -n tailscale delete secret tailscale-auth 
+k -n tailscale create secret generic tailscale-auth --from-literal=auth-key='tskey-auth-xxxxx'
 ```
 
 # SLOS

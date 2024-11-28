@@ -13,9 +13,9 @@ spec:
       valuesObject:
         image:
           tag: latest
-        config:
-          variables:
-            TAILSCALE_ADVERTISE_ROUTES: "192.168.68.0/24"
+        # config:
+        #   variables:
+        #     TAILSCALE_ADVERTISE_ROUTES: "192.168.68.0/24"
   destination:
     server: https://kubernetes.default.svc
     namespace: tailscale
@@ -27,4 +27,5 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true 
 
+# k -n tailscale delete secret tailscale-auth 
 # k -n tailscale create secret generic tailscale-auth --from-literal=auth-key='tskey-auth-xxxxx'
