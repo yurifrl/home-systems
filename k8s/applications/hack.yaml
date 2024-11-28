@@ -1,23 +1,21 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: sloth
+  name: hack
   namespace: argocd
 spec:
   project: default
   source:
-    repoURL: https://slok.github.io/sloth
-    chart: sloth
-    targetRevision: "*"
-    helm:
-      valuesObject: {}
+    repoURL: https://github.com/yurifrl/home-systems.git
+    targetRevision: HEAD
+    path: k8s/charts/hack
   destination:
     server: https://kubernetes.default.svc
-    namespace: sloth
+    namespace: hack
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true 
+      - ServerSideApply=true
