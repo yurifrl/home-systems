@@ -21,3 +21,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true 
+
+# https://sloth.dev

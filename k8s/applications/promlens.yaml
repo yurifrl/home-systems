@@ -1,23 +1,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: pyrra
+  name: promlens
   namespace: argocd
 spec:
   project: default
   source:
-    repoURL: https://rlex.github.io/helm-charts
-    chart: pyrra
+    repoURL: https://grafana.github.io/helm-charts
+    chart: promlens
     targetRevision: "*"
     helm:
       valuesObject: {}
   destination:
     server: https://kubernetes.default.svc
-    namespace: pyrra
+    namespace: promlens
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true 
+      - CreateNamespace=true 

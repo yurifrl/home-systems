@@ -43,3 +43,5 @@ spec:
       # but, it seem that by doing this argo is not able to create roles
       # the workaround is some creative applying, enabling and disabling the replace flag
       - ServerSideApply=true
+
+# k -n monitoring get secrets kube-prometheus-stack-grafana -ojsonpath="{.data.admin-password}" | base64 -d | pbcopy
