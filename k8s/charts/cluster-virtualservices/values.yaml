@@ -2,7 +2,7 @@ virtualServices:
   argocd-live:
     namespace: argocd
     host: argocd.syscd.live
-    gateway: istio-system/syscd-live-tunnel
+    gateway: istio-system/public
     destination:
       host: argocd-server.argocd.svc.cluster.local
       port: 80
@@ -10,7 +10,7 @@ virtualServices:
   argocd-tech:
     namespace: argocd
     host: argocd.syscd.tech
-    gateway: istio-system/syscd-tech-vpn
+    gateway: istio-system/private
     destination:
       host: argocd-server.argocd.svc.cluster.local
       port: 80
@@ -18,7 +18,7 @@ virtualServices:
   argocd-xyz:
     namespace: argocd
     host: argocd.syscd.xyz
-    gateway: istio-system/syscd-xyz-vpn
+    gateway: istio-system/private
     destination:
       host: argocd-server.argocd.svc.cluster.local
       port: 80
@@ -26,7 +26,7 @@ virtualServices:
   loki-stack:
     namespace: monitoring
     host: loki.syscd.tech
-    gateway: istio-system/syscd-tech-vpn
+    gateway: istio-system/private
     destination:
       host: loki-stack.monitoring.svc.cluster.local
       port: 3100
@@ -34,7 +34,7 @@ virtualServices:
   grafana:
     namespace: monitoring
     host: grafana.syscd.live
-    gateway: istio-system/syscd-live-tunnel
+    gateway: istio-system/public
     destination:
       host: kube-prometheus-stack-grafana.monitoring.svc.cluster.local
       port: 80
@@ -42,7 +42,7 @@ virtualServices:
   kiali:
     namespace: istio-system
     host: kiali.syscd.tech
-    gateway: istio-system/syscd-tech-vpn
+    gateway: istio-system/private
     destination:
       host: kiali.istio-system.svc.cluster.local
       port: 20001
@@ -50,7 +50,7 @@ virtualServices:
   promlens:
     namespace: monitoring
     host: promlens.syscd.tech
-    gateway: istio-system/syscd-tech-vpn
+    gateway: istio-system/private
     destination:
       host: promlens.monitoring.svc.cluster.local
       port: 8080
@@ -58,7 +58,7 @@ virtualServices:
   prometheus:
     namespace: monitoring
     host: prometheus.syscd.tech
-    gateway: istio-system/syscd-tech-vpn
+    gateway: istio-system/private
     destination:
       host: kube-prometheus-stack-prometheus.monitoring.svc.cluster.local
       port: 9090
@@ -66,7 +66,7 @@ virtualServices:
   helm-examples-live:
     namespace: helm-examples
     host: example.syscd.live
-    gateway: istio-system/syscd-live-tunnel
+    gateway: istio-system/public
     destination:
       host: helm-examples-hello-world.helm-examples.svc.cluster.local
       port: 80
@@ -74,7 +74,7 @@ virtualServices:
   helm-examples-tech:
     namespace: helm-examples
     host: example.syscd.tech
-    gateway: istio-system/syscd-tech-vpn
+    gateway: istio-system/private
     destination:
       host: helm-examples-hello-world.helm-examples.svc.cluster.local
       port: 80

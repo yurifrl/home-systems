@@ -2,10 +2,10 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: syscd-tech-vpn
+  name: private
   namespace: istio-system
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
+    external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech,*.syscd.xyz"
 spec:
   selector:
     istio: gateway
@@ -16,14 +16,15 @@ spec:
         protocol: HTTP
       hosts:
         - "*.syscd.tech"
+        - "*.syscd.xyz"
       tls:
         httpsRedirect: false
-    # - port:
-    #     number: 443
-    #     name: https
-    #     protocol: HTTPS
-    #   hosts:
-    #     - "*.syscd.tech"
-    #   tls:
-    #     mode: SIMPLE
-    #     credentialName: argocd-server-tls
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - "*.syscd.tech"
+      tls:
+        mode: SIMPLE
+        credentialName: argocd-server-tls
