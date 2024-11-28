@@ -22,35 +22,6 @@ spec:
             enabled: true
             org_role: Viewer
         
-        # Configure datasources
-        datasources:
-          datasources.yaml:
-            apiVersion: 1
-            datasources:
-              - name: Nixos-1 Prometheus
-                type: prometheus
-                url: http://kube-prometheus-stack-prometheus:9090
-                access: proxy
-                isDefault: true
-              - name: Nixos-1 Loki
-                type: loki
-                url: http://kube-prometheus-stack-loki:3100
-                access: proxy
-                jsonData:
-                  maxLines: 1000
-        
-
-        dashboards:
-          default:
-            pyrra-list:
-              gnetId: null
-              datasource: Nixos-1 Prometheus
-              configMapName: pyrra-list
-            pyrra-detail:
-              gnetId: null
-              datasource: Nixos-1 Prometheus
-              configMapName: pyrra-detail
-        
         # Service configuration
         service:
           type: ClusterIP
