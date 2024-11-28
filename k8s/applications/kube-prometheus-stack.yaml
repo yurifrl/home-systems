@@ -13,6 +13,10 @@ spec:
       valuesObject:
         grafana:
           enabled: true
+          admin:
+            existingSecret: "grafana-credentials"
+            userKey: userKey
+            passwordKey: passwordKey
           grafana.ini:
             auth.anonymous:
               enabled: true
