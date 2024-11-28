@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://christianhuth.github.io/helm-charts
+    repoURL: https://charts.christianhuth.de
     chart: promlens
     targetRevision: "*"
     helm:
