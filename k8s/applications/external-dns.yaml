@@ -11,6 +11,7 @@ spec:
       chart: external-dns
       targetRevision: "*"
       helm:
+        releaseName: external-dns-cloudflare
         valuesObject:
           provider: cloudflare
           env:
@@ -37,6 +38,7 @@ spec:
       chart: external-dns
       targetRevision: "*"
       helm:
+        releaseName: external-dns-vpn
         valuesObject:
           provider: cloudflare
           env:
