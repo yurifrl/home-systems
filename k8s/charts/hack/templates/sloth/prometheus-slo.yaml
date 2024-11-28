@@ -9,7 +9,7 @@ spec:
     owner: sre-team
     tier: "0"
   slos:
-    - name: apiserver-availability
+    - name: sloth-slo-apiserver
       objective: 99.95
       description: SLO based on successful API server request responses
       sli:
