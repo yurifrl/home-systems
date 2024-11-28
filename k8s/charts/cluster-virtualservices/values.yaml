@@ -65,7 +65,7 @@ virtualServices:
 
   helm-examples:
     namespace: helm-examples
-    host: helm-examples.syscd.live
+    host: example.syscd.live
     gateway: istio-system/syscd-live-tunnel
     destination:
       host: helm-examples-hello-world.helm-examples.svc.cluster.local
