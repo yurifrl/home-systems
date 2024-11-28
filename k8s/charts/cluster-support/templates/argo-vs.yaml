@@ -9,7 +9,10 @@ spec:
   gateways:
     - istio-system/cloudflare-gateway
   http:
-    - route:
+    - match:
+        - uri:
+            prefix: "/"
+      route:
         - destination:
             host: argocd-server.argocd.svc.cluster.local
             port:
