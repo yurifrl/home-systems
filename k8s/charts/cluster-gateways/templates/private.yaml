@@ -25,6 +25,7 @@ spec:
         protocol: HTTPS
       hosts:
         - "*.syscd.tech"
+        - "*.syscd.xyz"
       tls:
         mode: SIMPLE
         credentialName: argocd-server-tls
