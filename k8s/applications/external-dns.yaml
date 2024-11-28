@@ -26,9 +26,6 @@ spec:
         sources:
           - istio-gateway
           - istio-virtualservice
-        extraArgs:
-          - --cloudflare-proxied
-          - --cloudflare-dns-records-per-page=5000
         namespace: istio-system
         istioIngressGateways:
           - istio-system/istio-gateway
