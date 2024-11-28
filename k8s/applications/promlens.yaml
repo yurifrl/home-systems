@@ -17,7 +17,7 @@ spec:
             existingSecret: promlens-secret
   destination:
     server: https://kubernetes.default.svc
-    namespace: monitoring
+    namespace: promlens
   syncPolicy:
     automated:
       prune: true
