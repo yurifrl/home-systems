@@ -17,13 +17,13 @@ spec:
       hosts:
         - "*.syscd.tech"
       tls:
-        httpsRedirect: true
-    - port:
-        number: 443
-        name: https
-        protocol: HTTPS
-      hosts:
-        - "*.syscd.tech"
-      tls:
-        mode: SIMPLE
-        credentialName: argocd-server-tls
+        httpsRedirect: false
+    # - port:
+    #     number: 443
+    #     name: https
+    #     protocol: HTTPS
+    #   hosts:
+    #     - "*.syscd.tech"
+    #   tls:
+    #     mode: SIMPLE
+    #     credentialName: argocd-server-tls
