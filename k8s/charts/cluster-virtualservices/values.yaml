@@ -34,7 +34,7 @@ virtualServices:
   grafana:
     namespace: monitoring
     host: grafana.syscd.live
-    gateway: istio-system/syscd-live-vpn
+    gateway: istio-system/syscd-live-tunnel
     destination:
       host: kube-prometheus-stack-grafana.monitoring.svc.cluster.local
       port: 80
