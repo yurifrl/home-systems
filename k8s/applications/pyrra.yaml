@@ -17,8 +17,6 @@ spec:
         prometheusExternalUrl: "http://prometheus.syscd.tech"
         dashboards:
           enabled: true
-          # label: grafana_dashboard
-          # labelValue: 1
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
