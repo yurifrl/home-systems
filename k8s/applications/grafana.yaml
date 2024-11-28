@@ -39,6 +39,35 @@ spec:
                 jsonData:
                   maxLines: 1000
         
+        # Configure dashboard providers and dashboards
+        dashboardProviders:
+          dashboardproviders.yaml:
+            apiVersion: 1
+            providers:
+            - name: 'default'
+              orgId: 1
+              folder: ''
+              type: file
+              disableDeletion: false
+              editable: true
+              options:
+                path: /var/lib/grafana/dashboards/default
+
+        dashboards:
+          default:
+            pyrra:
+              gnetId: null
+              datasource: Nixos-1 Prometheus
+              configMapName: pyrra
+            pyrra-list:
+              gnetId: null
+              datasource: Nixos-1 Prometheus
+              configMapName: pyrra-list
+            pyrra-detail:
+              gnetId: null
+              datasource: Nixos-1 Prometheus
+              configMapName: pyrra-detail
+        
         # Service configuration
         service:
           type: ClusterIP
