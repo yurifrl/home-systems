@@ -7,6 +7,7 @@ spec:
   project: default
   sources:
     # Cloudflare
+    # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true" should work, it does not
     - repoURL: https://kubernetes-sigs.github.io/external-dns/
       chart: external-dns
       targetRevision: "*"
