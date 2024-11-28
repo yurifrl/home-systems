@@ -23,6 +23,12 @@ spec:
         domainFilters:
           - "homey.cloud"
         interval: "1m"
+        sources:
+          - istio-gateway
+          - istio-virtualservice
+        namespace: istio-system
+        istioIngressGateways:
+          - istio-system/istio-gateway
   destination:
     server: https://kubernetes.default.svc
     namespace: external-dns
