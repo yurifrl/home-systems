@@ -6,19 +6,16 @@ metadata:
 spec:
   project: default
   source:
-    chart: tailscale-relay
-    repoURL: https://charts.visonneau.fr
-    targetRevision: "*"
+    repoURL: https://github.com/yurifrl/home-systems.git
+    targetRevision: HEAD
+    path: charts/tailscale
     helm:
       valuesObject:
+        image:
+          tag: latest
         config:
           variables:
             TAILSCALE_ADVERTISE_ROUTES: "192.168.68.0/24"
-            TAILSCALE_AUTH_KEY:
-              valueFrom:
-                secretKeyRef:
-                  name: tailscale-auth
-                  key: auth-key
   destination:
     server: https://kubernetes.default.svc
     namespace: tailscale
@@ -29,4 +26,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true 
+
 # k -n tailscale create secret generic tailscale-auth --from-literal=auth-key='tskey-auth-xxxxx'
