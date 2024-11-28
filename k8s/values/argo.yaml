@@ -2,7 +2,7 @@ server:
   # disable TLS and enable anonymous access 
   config:
     params:
-      server.insecure: false
+      server.insecure: true
       users.anonymous.enabled: true
 
   # disable ingress
