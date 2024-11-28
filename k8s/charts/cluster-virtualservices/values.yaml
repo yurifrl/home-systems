@@ -36,7 +36,7 @@ virtualServices:
     host: grafana.syscd.live
     gateway: istio-system/public
     destination:
-      host: kube-prometheus-stack-grafana.monitoring.svc.cluster.local
+      host: grafana.monitoring.svc.cluster.local
       port: 80
 
   grafana-tech:
@@ -44,7 +44,7 @@ virtualServices:
     host: grafana.syscd.tech
     gateway: istio-system/private
     destination:
-      host: kube-prometheus-stack-grafana.monitoring.svc.cluster.local
+      host: grafana.monitoring.svc.cluster.local
       port: 80
 
   kiali:

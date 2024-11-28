@@ -1,5 +1,7 @@
 # Home Systems
 
+
+
 ## Quick Start
 
 ```bash
@@ -22,6 +24,20 @@ op item get "Home Server" --fields "private key" --reveal > secrets/id_ed25519
 # Add unstable channel
 sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable
 sudo nix-channel --update
+```
+
+## Setup
+
+```bash
+# Need api server local access kubectl
+# Copy and setup, Change server to https://nixos-1:6443
+scp root@nixos-1:/etc/rancher/k3s/k3s.yaml ~/.kube/k3s.yaml
+
+# Create secrets
+./k8s/hack/secrets.sh
+
+# ensure argo is setup
+sudo systemctl restart argo-setup & sudo journalctl -u argo-setup.service -f
 ```
 
 ## References

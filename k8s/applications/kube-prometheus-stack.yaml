@@ -12,7 +12,7 @@ spec:
     helm:
       valuesObject:
         grafana:
-          enabled: true
+          enabled: false
           admin:
             existingSecret: "grafana-credentials"
             userKey: userKey
