@@ -1,50 +1,21 @@
+{{- range $name, $vs := .Values.virtualServices }}
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: argocd-live
-  namespace: argocd
+  name: {{ $name }}
+  namespace: {{ $vs.namespace }}
 spec:
   hosts:
-    - argocd.syscd.live
+    - {{ $vs.host }}
   gateways:
-    - istio-system/syscd-live-tunnel
+    - {{ $vs.gateway }}
   http:
     - route:
         - destination:
-            host: argocd-server.argocd.svc.cluster.local
+            host: {{ $vs.destination.host }}
             port:
-              number: 80
+              number: {{ $vs.destination.port }}
+{{- if not (last $vs) }}
 ---
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: argocd-tech
-  namespace: argocd
-spec:
-  hosts:
-    - argocd.syscd.tech
-  gateways:
-    - istio-system/syscd-tech-vpn
-  http:
-    - route:
-        - destination:
-            host: argocd-server.argocd.svc.cluster.local
-            port:
-              number: 80
----
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: argocd-xyz
-  namespace: argocd
-spec:
-  hosts:
-    - argocd.syscd.xyz
-  gateways:
-    - istio-system/syscd-xyz-vpn
-  http:
-    - route:
-        - destination:
-            host: argocd-server.argocd.svc.cluster.local
-            port:
-              number: 80
+{{- end }}
+{{- end }}
