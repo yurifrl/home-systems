@@ -1,0 +1,24 @@
+virtualServices:
+  argocd-live:
+    namespace: argocd
+    host: argocd.syscd.live
+    gateway: istio-system/syscd-live-tunnel
+    destination:
+      host: argocd-server.argocd.svc.cluster.local
+      port: 80
+  
+  argocd-tech:
+    namespace: argocd
+    host: argocd.syscd.tech
+    gateway: istio-system/syscd-tech-vpn
+    destination:
+      host: argocd-server.argocd.svc.cluster.local
+      port: 80
+  
+  argocd-xyz:
+    namespace: argocd
+    host: argocd.syscd.xyz
+    gateway: istio-system/syscd-xyz-vpn
+    destination:
+      host: argocd-server.argocd.svc.cluster.local
+      port: 80 
