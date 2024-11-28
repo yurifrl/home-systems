@@ -7,7 +7,7 @@ spec:
   hosts:
     - argocd.homey.cloud
   gateways:
-    - istio-system/cloudflare
+    - istio-system/cloudflare-gateway
   http:
     - route:
         - destination:

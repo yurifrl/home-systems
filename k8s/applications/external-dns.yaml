@@ -18,11 +18,13 @@ spec:
               secretKeyRef:
                 name: cloudflare-api-token
                 key: token
-        txtOwnerId: "k8s"
+        txtOwnerId: k8s
         policy: sync
         domainFilters:
-          - "homey.cloud"
-        interval: "1m"
+          - homey.cloud
+        interval: 1m
+        txtPrefix: internal
+        serviceTypeFilter: ClusterIP
         sources:
           - istio-gateway
           - istio-virtualservice
