@@ -11,9 +11,9 @@ spec:
     targetRevision: "*"
     helm:
       valuesObject:
-        auth:
-          enabled: true
-          existingSecret: promlens-secret
+        config:
+          grafana:
+            existingSecret: promlens-secret
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
