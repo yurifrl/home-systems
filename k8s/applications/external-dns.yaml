@@ -21,7 +21,8 @@ spec:
         txtOwnerId: k8s
         policy: sync
         domainFilters:
-          - homey.cloud
+          - syscd.tech
+          - syscd.xyz
         interval: 1m
         sources:
           - istio-gateway

@@ -20,8 +20,6 @@ spec:
               service: http://argocd-server.argocd.svc.cluster.local:80
             - hostname: "*.syscd.live"
               service: http://istio-gateway.istio-system.svc.cluster.local:80
-
-            
   destination:
     server: https://kubernetes.default.svc
     namespace: cloudflare-tunnel
