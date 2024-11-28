@@ -13,20 +13,8 @@ spec:
         number: 80
         name: http
         protocol: HTTP
+      tls:
+        httpsRedirect: false
       hosts:
         - "*.homey.cloud"
-      # tls:
-      #   httpsRedirect: false
-    # - port:
-    #     number: 443
-    #     name: https
-    #     protocol: HTTPS
-    #   hosts:
-    #     - "*.homey.cloud"
-    #   tls:
-    #     mode: SIMPLE
-    #     credentialName: argocd-server-tls
-
-
-
 
