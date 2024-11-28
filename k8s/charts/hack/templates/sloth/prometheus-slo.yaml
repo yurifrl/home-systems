@@ -1,36 +1,38 @@
+# This example shows the same example as getting-started.yml but using Sloth Kubernetes CRD.
+# It will generate the Prometheus rules in a Kubernetes prometheus-operator PrometheusRules CRD.
+#
+# `sloth generate -i ./examples/k8s-getting-started.yml`
+#
 apiVersion: sloth.slok.dev/v1
 kind: PrometheusServiceLevel
 metadata:
-  name: sloth-slo-apiserver
+  name: sloth-slo-my-service
   namespace: monitoring
 spec:
-  service: "kubernetes-apiserver"
+  service: "myservice"
   labels:
-    owner: "sre-team"
-    tier: "0"
+    owner: "myteam"
+    repo: "myorg/myservice"
+    tier: "2"
   slos:
-    - name: "apiserver-availability"
-      objective: 99.95
-      description: "SLO based on successful API server request responses"
+    - name: "requests-availability"
+      objective: 99.9
+      description: "Common SLO based on availability for HTTP request responses."
       sli:
         events:
-          errorQuery: |
-            sum(rate(apiserver_request_total{code=~"5.*"}[{{.window}}]))
-          totalQuery: |
-            sum(rate(apiserver_request_total[{{.window}}]))
+          errorQuery: sum(rate(http_request_duration_seconds_count{job="myservice",code=~"(5..|429)"}[{{.window}}]))
+          totalQuery: sum(rate(http_request_duration_seconds_count{job="myservice"}[{{.window}}]))
       alerting:
-        name: KubernetesAPIServerHighErrorRate
+        name: MyServiceHighErrorRate
         labels:
           category: "availability"
-          component: "apiserver"
         annotations:
-          summary: "High error rate on Kubernetes API server responses"
-          description: "Kubernetes API server is experiencing elevated error rates"
+          summary: "High error rate on 'myservice' requests responses"
         pageAlert:
           labels:
-            severity: critical
-            team: sre
+            severity: pageteam
+            routing_key: myteam
         ticketAlert:
           labels:
-            severity: warning
-            slack_channel: "#sre-alerts"
+            severity: "slack"
+            slack_channel: "#alerts-myteam"
