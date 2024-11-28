@@ -7,3 +7,4 @@ secrets
 vendor/
 .DS_Store
 result-*
+hack/secrets.sh

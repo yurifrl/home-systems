@@ -40,7 +40,7 @@
       fi
 
       # otherwise authenticate with tailscale and accept DNS
-      ${tailscale}/bin/tailscale up -authkey $(cat /etc/tailscale/auth.key) --accept-dns --accept-routes
+      ${tailscale}/bin/tailscale up -authkey $(cat /etc/tailscale/auth.key)
     '';
   };
 
@@ -52,14 +52,4 @@
     };
     groups.tailscale = { };
   };
-
-  # networking = {
-  #   nameservers = [ "100.100.100.100" ];  # Tailscale MagicDNS
-  #   search = [ "tailcecc0.ts.net" ];      # Your tailnet domain
-  #   firewall = {
-  #     interfaces."tailscale0" = {
-  #       allowedTCPPorts = [ 80 443 ];         # Allow HTTP traffic
-  #     };
-  #   };
-  # };
 }
