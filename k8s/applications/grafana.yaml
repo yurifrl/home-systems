@@ -35,13 +35,14 @@ spec:
             cpu: 100m
             memory: 128Mi
             
-        dashboards:
-          enabled: true
-          label: grafana-dashboard
-          labelValue: 1
-          searchNamespace: monitoring  # namespace where your ConfigMaps are
-          provider:
-            foldersFromFilesStructure: true
+        sidecar:
+          dashboards:
+            enabled: true
+            # label: "grafana-dashboard"
+            # labelValue: "1"
+            # searchNamespace: monitoring  # namespace where your ConfigMaps are
+            # provider:
+            #   foldersFromFilesStructure: true
         
   destination:
     server: https://kubernetes.default.svc
