@@ -1,5 +1,3 @@
-# https://github.com/cloudflare/helm-charts/tree/main/charts/cloudflare-tunnel
-# ./hack/create-cloudflare-tunnel.sh <tunnel-id>
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -26,6 +24,7 @@ spec:
     syncOptions:
       - CreateNamespace=true 
 
+# https://github.com/cloudflare/helm-charts/tree/main/charts/cloudflare-tunnel
 # cloudflared tunnel login
 # cloudflared tunnel create nixos-1
 # kubectl -n cloudflare-tunnel create secret generic cloudflare-tunnel-secret --from-file=credentials.json=/home/nixos/.cloudflared/...  
