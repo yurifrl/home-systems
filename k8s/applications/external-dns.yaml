@@ -23,6 +23,7 @@ spec:
         domainFilters:
           - syscd.tech
           - syscd.xyz
+          - syscd.live
         interval: 1m
         sources:
           - istio-gateway
