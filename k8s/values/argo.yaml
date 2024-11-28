@@ -1,22 +1,3 @@
 server:
-  # disable TLS and enable anonymous access 
-  config:
-    params:
-      server.insecure: true
-      users.anonymous.enabled: true
-
-  # disable ingress
   ingress:
     enabled: false
-    controller: generic
-    hostname: argocd.homey.cloud
-    annotations:
-      kubernetes.io/ingress.class: istio
-      external-dns.alpha.kubernetes.io/target: argocd.homey.cloud
-      kubernetes.io/tls-acme: "true"
-    tls:
-      - hosts:
-          - argocd.homey.cloud
-        secretName: argocd-server-tls
-    path: /
-    pathType: Prefix
