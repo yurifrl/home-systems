@@ -61,4 +61,12 @@ virtualServices:
     gateway: istio-system/syscd-tech-vpn
     destination:
       host: kube-prometheus-stack-prometheus.monitoring.svc.cluster.local
-      port: 9090 
+      port: 9090
+
+  helm-examples:
+    namespace: helm-examples
+    host: helm-examples.syscd.live
+    gateway: istio-system/syscd-live-tunnel
+    destination:
+      host: helm-examples-hello-world.helm-examples.svc.cluster.local
+      port: 80

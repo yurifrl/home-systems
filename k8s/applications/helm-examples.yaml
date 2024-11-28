@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-examples
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://helm.github.io/examples
+    chart: hello-world
+    targetRevision: "*"
+    helm:
+      valuesObject: {}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-examples
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true 
