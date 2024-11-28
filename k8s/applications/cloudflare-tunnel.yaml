@@ -16,7 +16,7 @@ spec:
           secretName: cloudflare-tunnel-secret
           tunnelName: nixos-1
           ingress:
-            - hostname: "*.public.homey.cloud"
+            - hostname: "*.homey.cloud"
               service: http://argocd-server.argocd.svc.cluster.local:80
   destination:
     server: https://kubernetes.default.svc
