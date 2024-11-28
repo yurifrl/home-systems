@@ -84,5 +84,5 @@ virtualServices:
     host: pyrra.syscd.live
     gateway: istio-system/public
     destination:
-      host: pyrra-api.monitoring.svc.cluster.local
+      host: pyrra.pyrra.svc.cluster.local
       port: 9099
