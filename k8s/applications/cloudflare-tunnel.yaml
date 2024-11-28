@@ -16,8 +16,12 @@ spec:
           secretName: cloudflare-tunnel-secret
           tunnelName: nixos-1
           ingress:
-            - hostname: "*.syscd.live"
+            - hostname: "argocd.syscd.live"
               service: http://argocd-server.argocd.svc.cluster.local:80
+            - hostname: "*.syscd.live"
+              service: http://istio-gateway.istio-system.svc.cluster.local:80
+
+            
   destination:
     server: https://kubernetes.default.svc
     namespace: cloudflare-tunnel
