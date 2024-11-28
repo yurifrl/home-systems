@@ -21,4 +21,44 @@ virtualServices:
     gateway: istio-system/syscd-xyz-vpn
     destination:
       host: argocd-server.argocd.svc.cluster.local
-      port: 80 
+      port: 80
+
+  loki-stack:
+    namespace: monitoring
+    host: loki.syscd.tech
+    gateway: istio-system/syscd-tech-vpn
+    destination:
+      host: loki-stack.monitoring.svc.cluster.local
+      port: 3100
+
+  grafana:
+    namespace: monitoring
+    host: grafana.syscd.tech
+    gateway: istio-system/syscd-tech-vpn
+    destination:
+      host: kube-prometheus-stack-grafana.monitoring.svc.cluster.local
+      port: 80
+
+  kiali:
+    namespace: istio-system
+    host: kiali.syscd.tech
+    gateway: istio-system/syscd-tech-vpn
+    destination:
+      host: kiali.istio-system.svc.cluster.local
+      port: 20001
+
+  promlens:
+    namespace: monitoring
+    host: promlens.syscd.tech
+    gateway: istio-system/syscd-tech-vpn
+    destination:
+      host: promlens.monitoring.svc.cluster.local
+      port: 8080
+
+  prometheus:
+    namespace: monitoring
+    host: prometheus.syscd.tech
+    gateway: istio-system/syscd-tech-vpn
+    destination:
+      host: kube-prometheus-stack-prometheus.monitoring.svc.cluster.local
+      port: 9090 
