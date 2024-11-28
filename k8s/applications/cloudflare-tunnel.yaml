@@ -18,6 +18,7 @@ spec:
           ingress:
             - hostname: "*.homey.cloud"
               service: http://argocd-server.argocd.svc.cluster.local:80
+            - service: http_status:404
   destination:
     server: https://kubernetes.default.svc
     namespace: cloudflare-tunnel
