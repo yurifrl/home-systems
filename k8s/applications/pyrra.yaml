@@ -10,10 +10,18 @@ spec:
     chart: pyrra
     targetRevision: "*"
     helm:
-      valuesObject: {}
+      valuesObject:
+        extraKubernetesArgs:
+          - --generic-rules
+        prometheusUrl: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
+        prometheusExternalUrl: "http://prometheus.syscd.tech"
+        dashboards:
+          enabled: true
+          # label: "grafana_dashboard"
+          # labelValue: "1"
   destination:
     server: https://kubernetes.default.svc
-    namespace: pyrra
+    namespace: monitoring
   syncPolicy:
     automated:
       prune: true
