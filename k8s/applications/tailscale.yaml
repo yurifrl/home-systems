@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/yurifrl/home-systems.git
     targetRevision: HEAD
-    path: charts/tailscale
+    path: k8s/charts/tailscale
     helm:
       valuesObject:
         image:
