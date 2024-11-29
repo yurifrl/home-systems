@@ -11,12 +11,12 @@ spec:
     targetRevision: "*"
     helm:
       valuesObject:
-        grafana:
-          enabled: false
         alertmanager:
           enabled: true
+        grafana:
+          enabled: false
         loki:
-          enabled: true
+          enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
