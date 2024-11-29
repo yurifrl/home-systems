@@ -14,9 +14,9 @@ spec:
         alertmanager:
           enabled: true
         grafana:
-          enabled: false
+          enabled: true
         loki:
-          enabled: false
+          enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
