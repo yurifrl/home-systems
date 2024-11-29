@@ -11,19 +11,60 @@ spec:
     targetRevision: "*"
     helm:
       valuesObject:
+        prometheus:
+          prometheusSpec:
+            # Service Monitors
+            serviceMonitorSelectorNilUsesHelmValues: false
+            serviceMonitorSelector: {} 
+            serviceMonitorNamespaceSelector: {}
+            
+            # Pod Monitors
+            podMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelector: {}
+            podMonitorNamespaceSelector: {}
+            
+            # Probe Monitors
+            probeSelectorNilUsesHelmValues: false
+            probeSelector: {}
+            probeNamespaceSelector: {}
+            
+            # Additional Scrape Configs
+            enableAdditionalScrapeConfigs: true
+            
+            # Enable all features
+            enableFeatures:
+            - "exemplar-storage"
+            
+            # Increase retention if needed
+            retention: 30d
+            
+            # Enable remote write if needed
+            # remoteWrite: []
+            
+            # Scrape configs for annotation-based discovery
+            additionalScrapeConfigs:
+              - job_name: 'kubernetes-pods-annotations'
+                kubernetes_sd_configs:
+                  - role: pod
+                relabel_configs:
+                  - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                    action: keep
+                    regex: true
+                  - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                    action: replace
+                    target_label: __metrics_path__
+                    regex: (.+)
+                  - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                    action: replace
+                    regex: ([^:]+)(?::\d+)?;(\d+)
+                    replacement: $1:$2
+                    target_label: __address__
         alertmanager:
           enabled: true
         grafana:
           enabled: false
           forceDeployDashboards: true
           defaultDashboardsEnabled: true
-        # prometheus:
-        #   prometheusSpec:
-        #     ruleSelectorNilUsesHelmValues: false
-        #     ruleNamespaceSelector: {}
-        #     ruleSelector:
-        #       matchLabels:
-        #         role: alert-rules
         loki:
           enabled: false
   destination:
