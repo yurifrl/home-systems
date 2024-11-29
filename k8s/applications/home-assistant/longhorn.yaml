@@ -19,12 +19,7 @@ spec:
     repoURL: https://charts.longhorn.io
     chart: longhorn
     targetRevision: "*"
-    # helm:
-    #   valuesObject:
-    #     persistence:
-    #       defaultClass: true
-    #     defaultSettings:
-    #       defaultReplicaCount: 1
-    #     tolerations:
-    #       - key: "arm"
-    #         operator: "Exists"
+    helm:
+      valuesObject:
+        preUpgradeChecker:
+          jobEnabled: false
