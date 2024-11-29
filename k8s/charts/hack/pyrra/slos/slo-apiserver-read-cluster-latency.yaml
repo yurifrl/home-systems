@@ -17,3 +17,5 @@ spec:
         metric: apiserver_request_sli_duration_seconds_count{component="apiserver",scope=~"cluster|",verb=~"LIST|GET"}
   target: "99"
   window: 2w
+
+

@@ -1,0 +1,199 @@
+# Istio Agent Certificate Expiry
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: istio-agent-cert-expiry
+  namespace: monitoring
+spec:
+  description: Ensure Istio agent certificates do not expire within critical windows.
+  indicator:
+    ratio:
+      errors:
+        metric: istio_agent_cert_expiry_seconds{le="3600"} # Certificates with less than 1-hour expiry
+      total:
+        metric: istio_agent_cert_expiry_seconds
+  target: "99.9"
+  window: 30d
+---
+# CPU Throttling
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: container-cpu-throttling
+  namespace: monitoring
+spec:
+  description: Ensure container CPU throttling stays within acceptable limits.
+  indicator:
+    ratio:
+      errors:
+        metric: container_cpu_cfs_throttled_periods_total
+      total:
+        metric: container_cpu_cfs_periods_total
+  target: "99"
+  window: 30d
+---
+# CoreDNS Cache Efficiency
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: coredns-cache-efficiency
+  namespace: monitoring
+spec:
+  description: Ensure CoreDNS resolves DNS queries efficiently using its cache.
+  indicator:
+    ratio:
+      errors:
+        metric: coredns_cache_misses_total
+      total:
+        metric: coredns_cache_requests_total
+  target: "99.9"
+  window: 30d
+---
+# Envoy Cluster Retry Success
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: envoy-cluster-retry-success
+  namespace: monitoring
+spec:
+  description: Ensure Envoy cluster retries are mostly successful.
+  indicator:
+    ratio:
+      errors:
+        metric: envoy_cluster_upstream_rq_retry_limit_exceeded
+      total:
+        metric: envoy_cluster_upstream_rq_retry
+  target: "98"
+  window: 30d
+---
+# Node Disk I/O Latency
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: node-disk-io-latency
+  namespace: monitoring
+spec:
+  description: Ensure node disk I/O latency remains low.
+  indicator:
+    latency:
+      success:
+        metric: node_disk_io_time_weighted_seconds_total
+      total:
+        metric: node_disk_io_now
+  target: "99.9"
+  window: 7d
+---
+# Kubelet Pod Start SLI
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: kubelet-pod-start-sli
+  namespace: monitoring
+spec:
+  description: Ensure pods start successfully within expected durations.
+  indicator:
+    latency:
+      success:
+        metric: kubelet_pod_start_total_duration_seconds_count
+      total:
+        metric: kubelet_pod_start_total_duration_seconds_bucket
+  target: "99"
+  window: 7d
+---
+# Istio Agent Outgoing Latency
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: istio-agent-outgoing-latency
+  namespace: monitoring
+spec:
+  description: Ensure outgoing requests from Istio agents have low latency.
+  indicator:
+    latency:
+      success:
+        metric: istio_agent_outgoing_latency_bucket
+      total:
+        metric: istio_agent_num_outgoing_requests
+  target: "99.9"
+  window: 30d
+---
+# Scheduler Pod Preemption Success
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: scheduler-pod-preemption
+  namespace: monitoring
+spec:
+  description: Ensure scheduler preemption attempts are successful.
+  indicator:
+    ratio:
+      errors:
+        metric: scheduler_preemption_attempts_total
+      total:
+        metric: scheduler_queue_incoming_pods_total
+  target: "99"
+  window: 30d
+---
+# Alertmanager Silences Creation Success
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: alertmanager-silences-creation
+  namespace: monitoring
+spec:
+  description: Ensure silences are successfully created in Alertmanager.
+  indicator:
+    ratio:
+      errors:
+        metric: alertmanager_silences_query_errors_total
+      total:
+        metric: alertmanager_silences_queries_total
+  target: "99.9"
+  window: 7d
+---
+# Prometheus Kubernetes SD Events
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: prometheus-kubernetes-sd-events
+  namespace: monitoring
+spec:
+  description: Ensure Prometheus handles Kubernetes Service Discovery events successfully.
+  indicator:
+    ratio:
+      errors:
+        metric: prometheus_sd_kubernetes_failures_total
+      total:
+        metric: prometheus_sd_kubernetes_events_total
+  target: "99.9"
+  window: 30d

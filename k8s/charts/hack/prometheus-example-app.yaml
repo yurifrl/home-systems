@@ -27,8 +27,6 @@ spec:
         ports:
         - name: web
           containerPort: 8080
-
-
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
