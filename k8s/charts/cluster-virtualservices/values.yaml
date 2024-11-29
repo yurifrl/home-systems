@@ -23,30 +23,6 @@ virtualServices:
       host: argocd-server.argocd.svc.cluster.local
       port: 80
 
-  loki-stack:
-    namespace: monitoring
-    host: loki.syscd.tech
-    gateway: istio-system/private
-    destination:
-      host: loki-stack.monitoring.svc.cluster.local
-      port: 3100
-
-  grafana:
-    namespace: monitoring
-    host: grafana.syscd.live
-    gateway: istio-system/public
-    destination:
-      host: grafana.monitoring.svc.cluster.local
-      port: 80
-
-  grafana-tech:
-    namespace: monitoring
-    host: grafana.syscd.tech
-    gateway: istio-system/private
-    destination:
-      host: grafana.monitoring.svc.cluster.local
-      port: 80
-
   kiali:
     namespace: istio-system
     host: kiali.syscd.tech
@@ -62,14 +38,6 @@ virtualServices:
     destination:
       host: promlens.promlens.svc.cluster.local
       port: 8080
-
-  prometheus:
-    namespace: monitoring
-    host: prometheus.syscd.tech
-    gateway: istio-system/private
-    destination:
-      host: kube-prometheus-stack-prometheus.monitoring.svc.cluster.local
-      port: 9090
 
   helm-examples-live:
     namespace: helm-examples
@@ -134,3 +102,19 @@ virtualServices:
     destination:
       host: homer.homer.svc.cluster.local
       port: 8080
+
+  prometheus:
+    namespace: monitoring
+    host: prometheus.syscd.tech
+    gateway: istio-system/private
+    destination:
+      host: kube-prometheus-stack-prometheus.monitoring.svc.cluster.local
+      port: 9090
+
+  grafana:
+    namespace: monitoring
+    host: grafana.syscd.live
+    gateway: istio-system/public
+    destination:
+      host: grafana.monitoring.svc.cluster.local
+      port: 80
