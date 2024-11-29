@@ -7,71 +7,72 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://k8s-at-home.com/charts
+    repoURL: https://helm-hass.halton.dev
     chart: home-assistant
-    targetRevision: 10.1.0
+    targetRevision: 2.1.1
     helm:
       valuesObject:
         env:
           TZ: "America/Sao_Paulo"
         hostNetwork: true
-        probes:
-          liveness:
-            enabled: false
-          readiness:
-            enabled: false
-          startup:
-            enabled: true
-        persistence:
-          config:
-            enabled: true
-            storageClass: "longhorn"
-            accessMode: ReadWriteOnce
-            size: "10Gi"
-            annotations:
-              recurring-job-group.longhorn.io/default: enabled
-        addons:
-          codeserver:
-            enabled: true
-            image:
-              repository: codercom/code-server
-              tag: 3.12.0
-            workingDir: "/config"
-            args:
-              - --user-data-dir
-              - "/config/.vscode"
-              - --auth
-              - "none"
-            volumeMounts:
-              - name: config
-                mountPath: /config
-        tolerations:
-          - key: "arm"
-            operator: "Exists"
+        # probes:
+        #   liveness:
+        #     enabled: false
+        #   readiness:
+        #     enabled: false
+        #   startup:
+        #     enabled: true
+        # persistence:
+        #   config:
+        #     enabled: true
+        #     storageClass: "longhorn"
+        #     accessMode: ReadWriteOnce
+        #     size: "10Gi"
+        #     annotations:
+        #       recurring-job-group.longhorn.io/default: enabled
+        codeserver:
+          enabled: true
+          # image:
+          #   repository: codercom/code-server
+          #   tag: latest
+          # workingDir: "/config"
+          # args:
+          #   - --user-data-dir
+          #   - "/config/.vscode"
+          #   - --auth
+          #   - "none"
+          # volumeMounts:
+          #   - name: config
+          #     mountPath: /config
+        # tolerations:
+        #   - key: "arm"
+        #     operator: "Exists"
         resources:
           limits:
             memory: 2500Mi
           requests:
             cpu: 100m
             memory: 1000Mi
-        postgresql:
-          enabled: true
-          postgresqlUsername: home-assistant
-          postgresqlDatabase: home-assistant
-          persistence:
-            enabled: true
-            storageClass: "longhorn"
-            annotations:
-              recurring-job-group.longhorn.io/default: enabled
-          volumePermissions:
-            enabled: true
-            image:
-              repository: bitnami/minideb
-              tag: buster-arm64
-          image:
-            registry: docker.io
-            repository: postgres
-            tag: 12
+        # postgresql:
+        #   enabled: true
+        #   auth:
+        #     username: home-assistant
+        #     database: home-assistant
+        #   primary:
+        #     persistence:
+        #       enabled: true
+        #       storageClass: "longhorn"
+        #       annotations:
+        #         recurring-job-group.longhorn.io/default: enabled
+        #     image:
+        #       registry: docker.io
+        #       repository: postgres
+        #       tag: 12
+        #     volumePermissions:
+        #       enabled: true
+        #       image:
+        #         repository: bitnami/minideb
+        #         tag: buster-arm64
   destination:
     server: https://kubernetes.default.svc
     namespace: home-assistant
