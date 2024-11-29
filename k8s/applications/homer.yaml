@@ -27,7 +27,7 @@ spec:
             memory: 500Mi
         configmap:
           enabled: true
-          config: |
+          config:
             title: "Home Server"
             subtitle: "Dashboard"
             links:
