@@ -6,6 +6,7 @@ server:
   insecure: true
   extraArgs:
     - --insecure
+    - --disable-auth
   admin:
     enabled: true
     passwordSecret:
@@ -15,3 +16,4 @@ configs:
   params:
     server.insecure: true
     exec.enabled: true
+    server.disable.auth: true
