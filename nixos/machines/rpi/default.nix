@@ -42,4 +42,7 @@
   environment.variables = {
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
   };
+
+  # Prevent automatic mounting of USB drives
+  services.udisks2.enable = false;
 }
