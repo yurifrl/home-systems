@@ -4,7 +4,7 @@ metadata:
   labels:
     prometheus: k8s
     role: alert-rules
-  name: coredns-response-errors
+  name: pyrra-coredns-response-errors
   namespace: monitoring
 spec:
   description: ""

@@ -4,7 +4,7 @@ metadata:
   labels:
     prometheus: k8s
     role: alert-rules
-  name: apiserver-read-cluster-latency
+  name: pyrra-apiserver-read-cluster-latency
   namespace: monitoring
 spec:
   description: ""

@@ -4,7 +4,7 @@ metadata:
   labels:
     prometheus: k8s
     role: alert-rules
-  name: prometheus-operator-reconcile-errors
+  name: pyrra-prometheus-operator-reconcile-errors
   namespace: monitoring
 spec:
   description: ""

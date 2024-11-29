@@ -17,6 +17,13 @@ spec:
       containers:
       - name: prometheus-example-app
         image: quay.io/brancz/prometheus-example-app:v0.3.0
+        resources:
+          limits:
+            cpu: "200m"
+            memory: "128Mi"
+          requests:
+            cpu: "100m"
+            memory: "64Mi"
         ports:
         - name: web
           containerPort: 8080

@@ -4,7 +4,7 @@ metadata:
   labels:
     prometheus: k8s
     role: alert-rules
-  name: prometheus-rule-evaluation-failures
+  name: pyrra-prometheus-rule-evaluation-failures
   namespace: monitoring
 spec:
   description: Rule and alerting rules are being evaluated every few seconds. This needs to work for recording rules to be created and most importantly for alerts to be evaluated.
