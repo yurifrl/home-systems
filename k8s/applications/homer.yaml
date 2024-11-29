@@ -6,9 +6,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://k8s-at-home.github.io/charts
+    repoURL: https://djjudas21.github.io/charts/
     chart: homer
-    targetRevision: 6.0.1
+    targetRevision: "*"
     helm:
       valuesObject:
         env:
