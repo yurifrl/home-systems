@@ -4,7 +4,6 @@ metadata:
   name: argocd-metrics
   namespace: argocd
   labels:
-    release: prometheus-operator
     app.kubernetes.io/name: argocd-metrics
 spec:
   selector:
@@ -19,7 +18,6 @@ metadata:
   name: argocd-server-metrics
   namespace: argocd
   labels:
-    release: prometheus-operator
     app.kubernetes.io/name: argocd-server-metrics
 spec:
   selector:
@@ -34,7 +32,6 @@ metadata:
   name: argocd-repo-server-metrics
   namespace: argocd
   labels:
-    release: prometheus-operator
     app.kubernetes.io/name: argocd-repo-server
 spec:
   selector:
@@ -49,7 +46,6 @@ metadata:
   name: argocd-applicationset-controller-metrics
   namespace: argocd
   labels:
-    release: prometheus-operator
     app.kubernetes.io/name: argocd-applicationset-controller
 spec:
   selector:
@@ -64,7 +60,6 @@ metadata:
   name: argocd-dex-server
   namespace: argocd
   labels:
-    release: prometheus-operator
     app.kubernetes.io/name: argocd-dex-server
 spec:
   selector:
@@ -79,7 +74,6 @@ metadata:
   name: argocd-redis-haproxy-metrics
   namespace: argocd
   labels:
-    release: prometheus-operator
     app.kubernetes.io/name: argocd-redis-ha-haproxy
 spec:
   selector:
@@ -92,16 +86,12 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: argocd-notifications-controller
-  namespace: monitoring
+  namespace: argocd
   labels:
-    release: prometheus-operator
     app.kubernetes.io/name: argocd-notifications-controller-metrics
 spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: argocd-notifications-controller-metrics
-  namespaceSelector:
-    matchNames:
-    - argocd
   endpoints:
     - port: metrics

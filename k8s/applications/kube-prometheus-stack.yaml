@@ -23,9 +23,7 @@ spec:
             # Scrape Config Selectors
             # Service Monitors
             serviceMonitorSelectorNilUsesHelmValues: false
-            serviceMonitorSelector:
-              matchLabels:
-                release: prometheus-operator
+            serviceMonitorSelector: {} 
             serviceMonitorNamespaceSelector: {}
             
             # Pod Monitors
