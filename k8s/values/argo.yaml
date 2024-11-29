@@ -7,13 +7,63 @@ server:
   extraArgs:
     - --insecure
     - --disable-auth
+    - --metrics-application-labels=*
+    - --metrics-application-conditions=*
+    - --metrics-application-fields=*
+    - --metrics-application-status=*
+    - --metrics-application-sync=*
+    - --metrics-application-health=*
+    - --metrics-application-resource=*
+    - --metrics-application-project=*
+    - --metrics-application-cluster=*
+    - --metrics-application-repo=*
+    - --metrics-application-namespace=*
   admin:
     enabled: true
     passwordSecret:
       name: argocd-secret
       key: admin.password
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+controller:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+applicationSet:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+notifications:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+repo:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+redis:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
 configs:
   params:
     server.insecure: true
     exec.enabled: true
     server.disable.auth: true
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
