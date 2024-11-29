@@ -2,6 +2,7 @@
   imports = [
     ./hardware-configuration.nix
     ./argo-setup.nix
+    ../../modules/kubernetes.nix
   ];
   networking = {
     nameservers = [

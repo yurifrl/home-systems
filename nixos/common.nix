@@ -22,10 +22,6 @@ in
 
     # Packages
     istioctl
-
-    # Rook Ceph needs lvm2
-    lvm2
-
     # Custom packages
     cowsayVersion 
   ] ++ (with pkgs-unstable; [
