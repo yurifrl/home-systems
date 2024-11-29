@@ -24,8 +24,6 @@ serviceAccount:
   name: ""
   annotations: {}
 
-podAnnotations: {}
-
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 65532
@@ -45,21 +43,6 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-
-# Metrics configuration
-metrics:
-  port: 8080
-  path: /metrics
-
-# Health probe configuration
-healthProbe:
-  port: 8081
 
 # Leader election configuration
 leaderElection:

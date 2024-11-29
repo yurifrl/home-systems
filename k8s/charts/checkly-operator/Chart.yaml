@@ -3,7 +3,7 @@ name: checkly-operator
 description: A Kubernetes operator for managing Checkly monitoring resources
 type: application
 version: 0.1.0
-appVersion: "1.0.0"
+appVersion: 1.7.0
 
 maintainers:
   - name: Checkly
