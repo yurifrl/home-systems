@@ -23,6 +23,9 @@ in
     # Packages
     istioctl
 
+    # Rook Ceph needs llvm
+    llvm
+
     # Custom packages
     cowsayVersion 
   ] ++ (with pkgs-unstable; [
