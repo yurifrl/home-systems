@@ -2,7 +2,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: my-coredns-cache-efficiency-showcase
-  namespace: monitoring
   labels:
     prometheus: example
     role: alert-rules
