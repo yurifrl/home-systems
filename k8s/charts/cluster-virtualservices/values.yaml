@@ -69,7 +69,7 @@ virtualServices:
     gateway: istio-system/public
     destination:
       host: home-assistant.home-assistant.svc.cluster.local
-      port: 8123
+      port: 8080
 
   vscode:
     namespace: home-assistant
