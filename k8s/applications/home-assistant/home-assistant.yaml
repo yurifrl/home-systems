@@ -7,68 +7,11 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://andrenarchy.github.io/helm-charts
+    repoURL: http://pajikos.github.io/home-assistant-helm-chart/
     chart: home-assistant
     targetRevision: "*"
     helm:
-      valuesObject:
-        env:
-          TZ: "America/Sao_Paulo"
-        hostNetwork: true
-        probes:
-          liveness:
-            enabled: false
-          readiness:
-            enabled: false
-          startup:
-            enabled: true
-        # persistence:
-        #   config:
-        #     enabled: true
-        #     storageClass: "longhorn"
-        #     accessMode: ReadWriteOnce
-        #     size: "10Gi"
-        #     annotations:
-        #       recurring-job-group.longhorn.io/default: enabled
-        
-        
-                  
-        addons:
-          codeserver:
-            enabled: true
-            args:
-              - --auth
-              - none
-              - --user-data-dir
-              - /data/config/.vscode
-            volumeMounts:
-            - name: config
-              mountPath: /data/config
-
-        # tolerations:
-        #   - key: "arm"
-        #     operator: "Exists"
-        resources:
-          limits:
-            memory: 2500Mi
-          requests:
-            cpu: 100m
-            memory: 1000Mi
-        postgresql:
-          enabled: true
-          postgresqlUsername: home-assistant
-          postgresqlDatabase: home-assistant
-          # persistence:
-          #   enabled: false
-          #   storageClass: "longhorn"
-          #   annotations:
-          #     recurring-job-group.longhorn.io/default: enabled
-          # volumePermissions:
-          #   enabled: true
-          #   image:
-          #     repository: bitnami/minideb
-          #     tag: buster-arm64
-
+      valuesObject: {}
   destination:
     server: https://kubernetes.default.svc
     namespace: home-assistant
