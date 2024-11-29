@@ -21,6 +21,8 @@ spec:
     targetRevision: "*"
     helm:
       valuesObject:
+        # Will not use but it will generate the config https://github.com/pajikos/home-assistant-helm-chart/blob/43198feb6173c5d3cb9a082e2115d60e3d3f99aa/charts/home-assistant/values.yaml#L181
+        ingress: true
         # Configuration for Home Assistant
         configuration:
           # Enable or disable the configuration setup for Home Assistant
