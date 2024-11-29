@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: probee
+  namespace: argocd
+spec:
+  project: default
+  source:
+    chart: httpbin
+    repoURL: https://matheusfm.dev/charts
+    targetRevision: 0.1.1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: probee
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

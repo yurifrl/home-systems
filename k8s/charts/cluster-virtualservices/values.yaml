@@ -142,3 +142,11 @@ virtualServices:
     destination:
       host: longhorn-frontend.longhorn-system.svc.cluster.local
       port: 80
+
+  probee:
+    namespace: probee
+    host: probee.syscd.live
+    gateway: istio-system/public
+    destination:
+      host: httpbin.probee.svc.cluster.local
+      port: 8080
