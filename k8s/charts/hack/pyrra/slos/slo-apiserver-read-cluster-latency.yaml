@@ -4,6 +4,7 @@ metadata:
   labels:
     prometheus: k8s
     role: alert-rules
+    severity: critical
   name: pyrra-apiserver-read-cluster-latency
   namespace: monitoring
 spec:
