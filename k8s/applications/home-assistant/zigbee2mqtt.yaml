@@ -50,7 +50,7 @@ spec:
           privileged: true
   destination:
     server: https://kubernetes.default.svc
-    namespace: home-assistant
+    namespace: zigbee2mqtt
   syncPolicy:
     automated:
       prune: true
