@@ -118,3 +118,11 @@ virtualServices:
     destination:
       host: grafana.monitoring.svc.cluster.local
       port: 80
+
+  grafana-tech:
+    namespace: monitoring
+    host: grafana.syscd.tech
+    gateway: istio-system/private
+    destination:
+      host: grafana.monitoring.svc.cluster.local
+      port: 80
