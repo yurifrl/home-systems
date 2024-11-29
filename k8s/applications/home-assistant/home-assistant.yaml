@@ -31,10 +31,4 @@ spec:
           # List of trusted proxies in the format of CIDR notation in a case of using a reverse proxy
           # Here is the list of the most common private IP ranges, use your list of possible trusted proxies, usually, it's the IP of the reverse proxy
           trusted_proxies:
-            - 10.0.0.0/8
-            - 172.16.0.0/12
-            - 192.168.0.0/16
-            - 127.0.0.0/8
-            - 192.168.68.100/32
-            - 192.168.68.0/24
             - 10.42.0.45/32
