@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: argocd-metrics
-  namespace: argo
+  namespace: argocd
   labels:
     release: prometheus-operator
     app.kubernetes.io/name: argocd-metrics
@@ -17,7 +17,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: argocd-server-metrics
-  namespace: argo
+  namespace: argocd
   labels:
     release: prometheus-operator
     app.kubernetes.io/name: argocd-server-metrics
@@ -32,7 +32,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: argocd-repo-server-metrics
-  namespace: argo
+  namespace: argocd
   labels:
     release: prometheus-operator
     app.kubernetes.io/name: argocd-repo-server
@@ -47,7 +47,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: argocd-applicationset-controller-metrics
-  namespace: argo
+  namespace: argocd
   labels:
     release: prometheus-operator
     app.kubernetes.io/name: argocd-applicationset-controller
@@ -62,7 +62,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: argocd-dex-server
-  namespace: argo
+  namespace: argocd
   labels:
     release: prometheus-operator
     app.kubernetes.io/name: argocd-dex-server
@@ -77,7 +77,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: argocd-redis-haproxy-metrics
-  namespace: argo
+  namespace: argocd
   labels:
     release: prometheus-operator
     app.kubernetes.io/name: argocd-redis-ha-haproxy
