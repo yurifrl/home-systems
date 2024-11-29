@@ -8,16 +8,11 @@ server:
     - --insecure
     - --disable-auth
     - --metrics-application-labels=*
+    - --metrics-application-labels=*
     - --metrics-application-conditions=*
-    - --metrics-application-fields=*
-    - --metrics-application-status=*
-    - --metrics-application-sync=*
-    - --metrics-application-health=*
-    - --metrics-application-resource=*
-    - --metrics-application-project=*
-    - --metrics-application-cluster=*
-    - --metrics-application-repo=*
-    - --metrics-application-namespace=*
+    - --metrics-application-conditions=*
+    - --metrics-cache-expiration=24h0m0s
+   
   admin:
     enabled: true
     passwordSecret:
