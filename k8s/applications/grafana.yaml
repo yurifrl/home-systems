@@ -5,6 +5,15 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true 
   source:
     repoURL: https://grafana.github.io/helm-charts
     chart: grafana
@@ -55,13 +64,3 @@ spec:
                 access: proxy
                 jsonData:
                   maxLines: 1000
-        
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true 

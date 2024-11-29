@@ -6,6 +6,15 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: zigbee2mqtt
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
   source:
     repoURL: https://k8s-at-home.com/charts/
     chart: zigbee2mqtt
@@ -48,12 +57,3 @@ spec:
             hostPathType: CharDevice
         securityContext:
           privileged: true
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: zigbee2mqtt
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true

@@ -5,6 +5,15 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true 
   source:
     repoURL: https://kiali.org/helm-charts
     chart: kiali-server
@@ -16,12 +25,3 @@ spec:
         external_services:
           prometheus:
             url: http://kube-prometheus-stack-prometheus.monitoring:9090
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: istio-system
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true 

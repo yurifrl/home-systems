@@ -6,6 +6,15 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: node-red
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
   source:
     repoURL: https://k8s-at-home.com/charts
     chart: node-red
@@ -46,12 +55,3 @@ spec:
             cpu: 500m
           limits:
             memory: 1000Mi
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: node-red
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true

@@ -5,10 +5,6 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/yurifrl/home-systems.git
-    targetRevision: HEAD
-    path: k8s/charts/cluster-gateways
   destination:
     server: https://kubernetes.default.svc
     namespace: istio-system
@@ -18,3 +14,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true 
+  source:
+    repoURL: https://github.com/yurifrl/home-systems.git
+    targetRevision: HEAD
+    path: k8s/charts/cluster-gateways

@@ -5,6 +5,16 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tailscale
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true 
   source:
     repoURL: https://github.com/yurifrl/home-systems.git
     targetRevision: HEAD
@@ -16,16 +26,6 @@ spec:
         config:
           variables:
             TAILSCALE_ADVERTISE_ROUTES: "10.43.0.0/16"
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: tailscale
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true 
 
 # k -n tailscale delete secret tailscale-auth 
 # k -n tailscale create secret generic tailscale-auth --from-literal=auth-key='tskey-auth-xxxxx'

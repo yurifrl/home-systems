@@ -5,13 +5,6 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/yurifrl/home-systems.git
-    targetRevision: HEAD
-    path: k8s/charts/cluster-virtualservices
-    helm:
-      valueFiles:
-        - values.yaml
   syncPolicy:
     automated:
       prune: true
@@ -21,3 +14,10 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: istio-system
+  source:
+    repoURL: https://github.com/yurifrl/home-systems.git
+    targetRevision: HEAD
+    path: k8s/charts/cluster-virtualservices
+    helm:
+      valueFiles:
+        - values.yaml

@@ -5,6 +5,15 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true 
   source:
     repoURL: https://grafana.github.io/helm-charts
     chart: loki-stack
@@ -17,12 +26,3 @@ spec:
           enabled: true
         grafana:
           enabled: false # We already have Grafana from kube-prometheus-stack
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true 

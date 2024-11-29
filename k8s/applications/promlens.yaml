@@ -5,6 +5,16 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: promlens
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
   source:
     repoURL: https://charts.christianhuth.de
     chart: promlens
@@ -18,13 +28,3 @@ spec:
             enabled: true
             url: http://grafana.syscd.tech
             existingSecret: promlens-secret
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: promlens
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true

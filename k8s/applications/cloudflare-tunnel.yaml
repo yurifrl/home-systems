@@ -5,6 +5,15 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cloudflare-tunnel
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true 
   source:
     chart: cloudflare-tunnel
     repoURL: https://cloudflare.github.io/helm-charts
@@ -20,15 +29,6 @@ spec:
               service: http://argocd-server.argocd.svc.cluster.local:80
             - hostname: "*.syscd.live"
               service: http://istio-gateway.istio-system.svc.cluster.local:80
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: cloudflare-tunnel
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true 
 
 # https://github.com/cloudflare/helm-charts/tree/main/charts/cloudflare-tunnel
 # cloudflared tunnel login

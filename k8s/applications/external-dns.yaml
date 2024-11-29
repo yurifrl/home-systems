@@ -5,6 +5,15 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: external-dns
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
   sources:
     # Cloudflare
     # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true" should work, it does not
@@ -60,14 +69,4 @@ spec:
           namespace: istio-system
           istioIngressGateways:
             - istio-system/istio-gateway
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: external-dns
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-
 # k -n external-dns create secret generic cloudflare-api-token --from-literal=token='your-cloudflare-api-token'

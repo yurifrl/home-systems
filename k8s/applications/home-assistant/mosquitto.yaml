@@ -6,14 +6,6 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://naps.github.io/helm-charts
-    chart: mosquitto
-    targetRevision: "*"
-    helm:
-      valuesObject:
-        env:
-          TZ: "America/Sao_Paulo"
   destination:
     server: https://kubernetes.default.svc
     namespace: mosquitto
@@ -23,3 +15,11 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+  source:
+    repoURL: https://naps.github.io/helm-charts
+    chart: mosquitto
+    targetRevision: "*"
+    helm:
+      valuesObject:
+        env:
+          TZ: "America/Sao_Paulo"

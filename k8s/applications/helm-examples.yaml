@@ -5,12 +5,6 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://helm.github.io/examples
-    chart: hello-world
-    targetRevision: "*"
-    helm:
-      valuesObject: {}
   destination:
     server: https://kubernetes.default.svc
     namespace: helm-examples
@@ -20,3 +14,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true 
+  source:
+    repoURL: https://helm.github.io/examples
+    chart: hello-world
+    targetRevision: "*"
+    helm:
+      valuesObject: {}

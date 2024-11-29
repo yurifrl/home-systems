@@ -5,6 +5,20 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true 
+      # There is a problem/bug when creating the prometheus crd
+      # https://github.com/prometheus-community/helm-charts/issues/1500
+      # but, it seem that by doing this argo is not able to create roles
+      # the workaround is some creative applying, enabling and disabling the replace flag
+      - ServerSideApply=true
   source:
     repoURL: https://prometheus-community.github.io/helm-charts
     chart: kube-prometheus-stack
@@ -75,19 +89,4 @@ spec:
           defaultDashboardsEnabled: true
         loki:
           enabled: false
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true 
-      # There is a problem/bug when creating the prometheus crd
-      # https://github.com/prometheus-community/helm-charts/issues/1500
-      # but, it seem that by doing this argo is not able to create roles
-      # the workaround is some creative applying, enabling and disabling the replace flag
-      - ServerSideApply=true
-
 # k -n monitoring get secrets kube-prometheus-stack-grafana -ojsonpath="{.data.admin-password}" | base64 -d | pbcopy

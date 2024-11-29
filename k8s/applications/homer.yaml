@@ -5,6 +5,15 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: homer
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
   source:
     repoURL: https://djjudas21.github.io/charts/
     chart: homer
@@ -109,12 +118,3 @@ spec:
                         icon: "fab fa-github"
                         url: "https://github.com/yurifrl/k8s"
                         target: "_blank"
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: homer
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true

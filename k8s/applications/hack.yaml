@@ -5,12 +5,6 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/yurifrl/home-systems.git
-    targetRevision: HEAD
-    path: k8s/charts/hack
-    directory:
-      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: hack
@@ -21,3 +15,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+  source:
+    repoURL: https://github.com/yurifrl/home-systems.git
+    targetRevision: HEAD
+    path: k8s/charts/hack
+    directory:
+      recurse: true

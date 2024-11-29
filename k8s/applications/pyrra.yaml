@@ -5,6 +5,16 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true 
   source:
     repoURL: https://rlex.github.io/helm-charts
     chart: pyrra
@@ -17,13 +27,3 @@ spec:
         prometheusExternalUrl: "http://prometheus.syscd.tech"
         dashboards:
           enabled: true
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true 
