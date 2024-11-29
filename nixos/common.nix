@@ -23,8 +23,8 @@ in
     # Packages
     istioctl
 
-    # Rook Ceph needs llvm
-    llvm
+    # Rook Ceph needs lvm2
+    lvm2
 
     # Custom packages
     cowsayVersion 
