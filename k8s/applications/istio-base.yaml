@@ -10,7 +10,7 @@ spec:
     namespace: istio-system
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: 1.23.0 
+    targetRevision: 1.23.0
     chart: base
   syncPolicy:
     automated:

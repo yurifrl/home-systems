@@ -4,14 +4,19 @@ server:
   ingress:
     enabled: false
   insecure: true
+  configs:
+    params:
+      server.insecure: true
+      exec.enabled: true
+      server.disable.auth: true
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+
   extraArgs:
     - --insecure
     - --disable-auth
-    - --metrics-application-labels=*
-    - --metrics-application-labels=*
-    - --metrics-application-conditions=*
-    - --metrics-application-conditions=*
-    - --metrics-cache-expiration=24h0m0s
    
   admin:
     enabled: true
@@ -48,16 +53,6 @@ repo:
       enabled: true
 
 redis:
-  metrics:
-    enabled: true
-    serviceMonitor:
-      enabled: true
-
-configs:
-  params:
-    server.insecure: true
-    exec.enabled: true
-    server.disable.auth: true
   metrics:
     enabled: true
     serviceMonitor:
