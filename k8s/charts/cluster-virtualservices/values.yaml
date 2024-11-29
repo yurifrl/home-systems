@@ -134,3 +134,11 @@ virtualServices:
     destination:
       host: loki.monitoring.svc.cluster.local
       port: 3100
+
+  longhorn:
+    namespace: longhorn-system
+    host: longhorn.syscd.tech
+    gateway: istio-system/private
+    destination:
+      host: longhorn-frontend.longhorn-system.svc.cluster.local
+      port: 80

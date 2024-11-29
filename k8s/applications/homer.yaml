@@ -118,3 +118,9 @@ spec:
                         icon: "fab fa-github"
                         url: "https://github.com/yurifrl/k8s"
                         target: "_blank"
+                        
+                      - name: "Longhorn"
+                        icon: "fas fa-hdd"
+                        tag: "storage"
+                        url: "http://longhorn.syscd.tech"
+                        target: "_blank"
