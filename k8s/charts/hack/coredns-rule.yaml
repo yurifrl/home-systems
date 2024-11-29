@@ -2,8 +2,9 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: my-coredns-cache-efficiency-showcase
+  namespace: monitoring
   labels:
-    prometheus: k8s
+    prometheus: example
     role: alert-rules
 spec:
   groups:
@@ -11,8 +12,7 @@ spec:
       rules:
         # Immediate Burn Rate Alert (Critical - 5-Minute Window)
         - alert: CoreDNSBurnRateCriticalShortTerm
-          expr: |
-            coredns_cache_requests:burnrate5m > 14.4
+          expr: coredns_cache_requests:burnrate5m > 14.4
           for: 2m
           labels:
             severity: critical
@@ -23,14 +23,13 @@ spec:
             summary: "Critical: Immediate burn rate violation detected"
             description: >
               CoreDNS error budget is being consumed too quickly over a short 5-minute window.
-              Burn rate: {{ printf "%.2f" coredns_cache_requests:burnrate5m }}.
+              Burn rate: {{ printf "%.2f" $value }}.
               Immediate action required.
             runbook: "https://example.com/runbook/coredns-cache-burnrate"
 
         # Medium-Term Burn Rate Alert (Warning - 30-Minute Window)
         - alert: CoreDNSBurnRateWarningMediumTerm
-          expr: |
-            coredns_cache_requests:burnrate30m > 6
+          expr: coredns_cache_requests:burnrate30m > 6
           for: 15m
           labels:
             severity: warning
@@ -41,14 +40,13 @@ spec:
             summary: "Warning: Burn rate medium-term threshold exceeded"
             description: >
               CoreDNS error budget is being consumed at an elevated rate over a 30-minute window.
-              Burn rate: {{ printf "%.2f" coredns_cache_requests:burnrate30m }}.
+              Burn rate: {{ printf "%.2f" $value }}.
               Review and monitor the situation.
             runbook: "https://example.com/runbook/coredns-cache-burnrate"
 
         # Long-Term SLO Violation (Warning - 30-Day Efficiency Degradation)
         - alert: CoreDNSCacheEfficiencyLongTermWarning
-          expr: |
-            (1 - (coredns_cache_misses:increase30d / coredns_cache_requests:increase30d)) < 0.9995
+          expr: (1 - (coredns_cache_misses:increase30d / coredns_cache_requests:increase30d)) < 0.9995
           for: 1h
           labels:
             severity: warning
@@ -59,14 +57,13 @@ spec:
             summary: "Warning: CoreDNS long-term cache efficiency degrading"
             description: >
               CoreDNS cache efficiency has dropped below the SLO threshold of 99.95% over the past 30 days.
-              Current efficiency: {{ printf "%.2f" (1 - (coredns_cache_misses:increase30d / coredns_cache_requests:increase30d)) }}.
+              Current efficiency: {{ printf "%.2f" $value }}.
               Investigate potential systemic issues.
             runbook: "https://example.com/runbook/coredns-slo-efficiency"
 
         # Critical Long-Term SLO Violation (99.9% Target Breach)
         - alert: CoreDNSCacheEfficiencyLongTermCritical
-          expr: |
-            (1 - (coredns_cache_misses:increase30d / coredns_cache_requests:increase30d)) < 0.999
+          expr: (1 - (coredns_cache_misses:increase30d / coredns_cache_requests:increase30d)) < 0.999
           for: 30m
           labels:
             severity: critical
@@ -77,25 +74,6 @@ spec:
             summary: "Critical: CoreDNS long-term cache efficiency breached"
             description: >
               CoreDNS cache efficiency has dropped below the critical SLO threshold of 99.9% over the past 30 days.
-              Current efficiency: {{ printf "%.2f" (1 - (coredns_cache_misses:increase30d / coredns_cache_requests:increase30d)) }}.
+              Current efficiency: {{ printf "%.2f" $value }}.
               Immediate investigation required.
             runbook: "https://example.com/runbook/coredns-slo-efficiency"
-
-        # Informational Alert: Persistent Low Efficiency (Last 6 Hours)
-        - alert: CoreDNSCacheEfficiencyInfoPersistentLow
-          expr: |
-            (1 - (sum(rate(coredns_cache_misses_total[6h])) 
-                 / sum(rate(coredns_cache_requests_total[6h])))) < 0.995
-          for: 1h
-          labels:
-            severity: info
-            team: sre
-            service: coredns
-            category: informational
-          annotations:
-            summary: "Info: Persistent low cache efficiency observed"
-            description: >
-              CoreDNS cache efficiency has been persistently low (below 99.5%) over the past 6 hours.
-              Current efficiency: {{ printf "%.2f" (1 - (sum(rate(coredns_cache_misses_total[6h])) / sum(rate(coredns_cache_requests_total[6h])))) }}.
-              Consider reviewing recent changes or incidents.
-            runbook: "https://example.com/runbook/coredns-cache-persistent-low"
