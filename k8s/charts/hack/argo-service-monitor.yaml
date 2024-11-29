@@ -5,6 +5,7 @@ metadata:
   namespace: monitoring
   labels:
     release: prometheus-operator
+    app.kubernetes.io/name: argocd-metrics
 spec:
   selector:
     matchLabels:
@@ -19,6 +20,7 @@ metadata:
   namespace: monitoring
   labels:
     release: prometheus-operator
+    app.kubernetes.io/name: argocd-server-metrics
 spec:
   selector:
     matchLabels:
@@ -33,6 +35,7 @@ metadata:
   namespace: monitoring
   labels:
     release: prometheus-operator
+    app.kubernetes.io/name: argocd-repo-server
 spec:
   selector:
     matchLabels:
@@ -47,6 +50,7 @@ metadata:
   namespace: monitoring
   labels:
     release: prometheus-operator
+    app.kubernetes.io/name: argocd-applicationset-controller
 spec:
   selector:
     matchLabels:
@@ -61,6 +65,7 @@ metadata:
   namespace: monitoring
   labels:
     release: prometheus-operator
+    app.kubernetes.io/name: argocd-dex-server
 spec:
   selector:
     matchLabels:
@@ -75,6 +80,7 @@ metadata:
   namespace: monitoring
   labels:
     release: prometheus-operator
+    app.kubernetes.io/name: argocd-redis-ha-haproxy
 spec:
   selector:
     matchLabels:
@@ -89,6 +95,7 @@ metadata:
   namespace: monitoring
   labels:
     release: prometheus-operator
+    app.kubernetes.io/name: argocd-notifications-controller-metrics
 spec:
   selector:
     matchLabels:
