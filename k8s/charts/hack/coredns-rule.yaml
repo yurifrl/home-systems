@@ -2,6 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: my-coredns-cache-efficiency-showcase
+  namespace: monitoring
   labels:
     prometheus: example
     role: alert-rules
@@ -9,7 +10,13 @@ spec:
   groups:
     - name: my-coredns-slo-alerts
       rules:
-        # Immediate Burn Rate Alert (Critical - 5-Minute Window)
+        
+        # **CoreDNSBurnRateCriticalShortTerm**:
+        # - This alert is like monitoring how much water you consume in a desert trip.
+        # - Imagine your total water (Error Budget) is 10 liters to last for 100 km.
+        # - You can drink a small amount of water each day, but if you drink too much too quickly, you’ll run out.
+        # - This alert fires when CoreDNS is consuming its error budget (like drinking water) too quickly over a 5-minute window.
+        # - **Immediate action required** to prevent running out of error budget (water).
         - alert: CoreDNSBurnRateCriticalShortTerm
           expr: coredns_cache_requests:burnrate5m > 14.4
           for: 2m
@@ -26,7 +33,11 @@ spec:
               Immediate action required.
             runbook: "https://example.com/runbook/coredns-cache-burnrate"
 
-        # Medium-Term Burn Rate Alert (Warning - 30-Minute Window)
+        # **CoreDNSBurnRateWarningMediumTerm**:
+        # - Continuing the desert analogy, this alert checks if you are consuming water faster than allowed, but over a longer period (30 minutes).
+        # - If you drink too much in the first few hours of your trip, you might run out of water sooner.
+        # - This alert helps to identify when CoreDNS is burning its error budget faster than allowed over a 30-minute period.
+        # - **Review and monitor** the situation to avoid issues in the long run.
         - alert: CoreDNSBurnRateWarningMediumTerm
           expr: coredns_cache_requests:burnrate30m > 6
           for: 15m
@@ -43,7 +54,11 @@ spec:
               Review and monitor the situation.
             runbook: "https://example.com/runbook/coredns-cache-burnrate"
 
-        # Long-Term SLO Violation (Warning - 30-Day Efficiency Degradation)
+        # **CoreDNSCacheEfficiencyLongTermWarning**:
+        # - Here, we're looking at CoreDNS’ long-term cache efficiency, just like if you were in the desert for several days.
+        # - If you're consuming your water (Error Budget) too quickly, you may not last the full trip (SLO).
+        # - If your cache efficiency stays below 99.95% for 30 days, it’s like using up more resources (water) than expected.
+        # - **Investigate potential systemic issues** that might be causing this inefficiency.
         - alert: CoreDNSCacheEfficiencyLongTermWarning
           expr: (1 - (coredns_cache_misses:increase30d / coredns_cache_requests:increase30d)) < 0.9995
           for: 1h
@@ -60,7 +75,11 @@ spec:
               Investigate potential systemic issues.
             runbook: "https://example.com/runbook/coredns-slo-efficiency"
 
-        # Critical Long-Term SLO Violation (99.9% Target Breach)
+        # **CoreDNSCacheEfficiencyLongTermCritical**:
+        # - In this case, CoreDNS cache efficiency has dropped below 99.9% over 30 days, which is critical.
+        # - This is like running out of water on a desert trip because you drank too much in the early days.
+        # - It signals that you're burning through your error budget too quickly in the long run.
+        # - **Immediate investigation required** to correct this and avoid exceeding the critical SLO threshold.
         - alert: CoreDNSCacheEfficiencyLongTermCritical
           expr: (1 - (coredns_cache_misses:increase30d / coredns_cache_requests:increase30d)) < 0.999
           for: 30m
@@ -76,3 +95,24 @@ spec:
               Current efficiency: {{ printf "%.2f" $value }}.
               Immediate investigation required.
             runbook: "https://example.com/runbook/coredns-slo-efficiency"
+
+        # **CoreDNSCacheEfficiencyInfoPersistentLow**:
+        # - This is an informational alert for persistent low cache efficiency over a 6-hour period.
+        # - It’s like noticing that you’ve been consuming water faster than you should in the desert over several hours.
+        # - This alert helps identify when efficiency issues have been ongoing, even though they haven't yet become critical.
+        # - **Review recent changes or incidents** to understand why efficiency is low and if it can be improved.
+        - alert: CoreDNSCacheEfficiencyInfoPersistentLow
+          expr: (1 - (sum(rate(coredns_cache_misses_total[6h])) / sum(rate(coredns_cache_requests_total[6h])))) < 0.995
+          for: 1h
+          labels:
+            severity: info
+            team: sre
+            service: coredns
+            category: informational
+          annotations:
+            summary: "Info: Persistent low cache efficiency observed"
+            description: >
+              CoreDNS cache efficiency has been persistently low (below 99.5%) over the past 6 hours.
+              Current efficiency: {{ printf "%.2f" $value }}.
+              Consider reviewing recent changes or incidents.
+            runbook: "https://example.com/runbook/coredns-cache-persistent-low"

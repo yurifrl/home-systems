@@ -187,3 +187,23 @@ spec:
         metric: prometheus_sd_kubernetes_events_total
   target: "99.9"
   window: 30d
+---
+# CPU Throttling per Pod
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: pod-cpu-throttling
+  namespace: monitoring
+spec:
+  description: Ensure container CPU throttling stays within acceptable limits for each pod.
+  indicator:
+    ratio:
+      errors:
+        metric: container_cpu_cfs_throttled_periods_total{pod=~".*"} # CPU throttled periods per pod
+      total:
+        metric: container_cpu_cfs_periods_total{pod=~".*"} # Total CPU periods for each pod
+  target: "99"
+  window: 30d
