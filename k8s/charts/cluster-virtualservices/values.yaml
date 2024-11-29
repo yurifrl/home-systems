@@ -126,3 +126,11 @@ virtualServices:
     destination:
       host: grafana.monitoring.svc.cluster.local
       port: 80
+
+  loki:
+    namespace: monitoring
+    host: loki.syscd.tech
+    gateway: istio-system/private
+    destination:
+      host: loki.monitoring.svc.cluster.local
+      port: 3100
