@@ -28,6 +28,16 @@ spec:
             probeSelector: {}
             probeNamespaceSelector: {}
             
+            # Rule Selectors
+            ruleSelectorNilUsesHelmValues: false
+            ruleSelector: {}
+            ruleNamespaceSelector: {}
+            
+            # Scrape Config Selectors
+            scrapeConfigSelectorNilUsesHelmValues: false
+            scrapeConfigSelector: {}
+            scrapeConfigNamespaceSelector: {}
+            
             # Additional Scrape Configs
             enableAdditionalScrapeConfigs: true
             
