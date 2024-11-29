@@ -1,0 +1,12 @@
+apiVersion: v2
+name: checkly-operator
+description: A Kubernetes operator for managing Checkly monitoring resources
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+maintainers:
+  - name: Checkly
+    url: https://github.com/checkly/checkly-operator
+
+dependencies: [] 
