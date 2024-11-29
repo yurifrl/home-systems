@@ -21,6 +21,7 @@ spec:
     targetRevision: "*"
     helm:
       valuesObject:
+        # Configuration for Home Assistant
         configuration:
           # Enable or disable the configuration setup for Home Assistant
           enabled: true
@@ -34,3 +35,5 @@ spec:
             - 172.16.0.0/12
             - 192.168.0.0/16
             - 127.0.0.0/8
+            - 192.168.68.100/32
+            - 192.168.68.0/24
