@@ -13,6 +13,14 @@ spec:
       valuesObject:
         prometheus:
           prometheusSpec:
+            # Enable all features
+            enableFeatures:
+            - "exemplar-storage"
+            
+            # Increase retention if needed
+            retention: 30d
+
+            # Scrape Config Selectors
             # Service Monitors
             serviceMonitorSelectorNilUsesHelmValues: false
             serviceMonitorSelector: {} 
@@ -40,16 +48,6 @@ spec:
             
             # Additional Scrape Configs
             enableAdditionalScrapeConfigs: true
-            
-            # Enable all features
-            enableFeatures:
-            - "exemplar-storage"
-            
-            # Increase retention if needed
-            retention: 30d
-            
-            # Enable remote write if needed
-            # remoteWrite: []
             
             # Scrape configs for annotation-based discovery
             additionalScrapeConfigs:
