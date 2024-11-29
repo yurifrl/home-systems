@@ -1,1 +1,52 @@
-
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rook-ceph
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rook-ceph
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  source:
+    chart: rook-ceph
+    repoURL: https://charts.rook.io/release
+    targetRevision: "*"  # Use the latest stable version
+    helm:
+      valuesObeject:
+        csi:
+          # NixOS-specific volume mounts for kernel modules
+          csiCephFSPluginVolume:
+            - name: kernel-modules
+              hostPath:
+                path: /run/current-system/kernel-modules/lib/modules
+            - name: nix-store
+              hostPath:
+                path: /nix
+          csiCephFSPluginVolumeMount:
+            - name: kernel-modules
+              mountPath: /lib/modules
+              readOnly: true
+            - name: nix-store
+              mountPath: /nix
+              readOnly: true
+          csiRBDPluginVolume:
+            - name: kernel-modules
+              hostPath:
+                path: /run/current-system/kernel-modules/lib/modules
+            - name: nix-store
+              hostPath:
+                path: /nix
+          csiRBDPluginVolumeMount:
+            - name: kernel-modules
+              mountPath: /lib/modules
+              readOnly: true
+            - name: nix-store
+              mountPath: /nix
+              readOnly: true
