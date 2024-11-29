@@ -196,7 +196,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
   name: pod-cpu-throttling
-  namespace: monitoring
 spec:
   description: Ensure container CPU throttling stays within acceptable limits for each pod.
   indicator:
