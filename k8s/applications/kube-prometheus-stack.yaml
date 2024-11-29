@@ -17,13 +17,13 @@ spec:
           enabled: false
           forceDeployDashboards: true
           defaultDashboardsEnabled: true
-        prometheus:
-          prometheusSpec:
-            ruleSelectorNilUsesHelmValues: false
-            ruleNamespaceSelector: {}
-            ruleSelector:
-              matchLabels:
-                role: alert-rules
+        # prometheus:
+        #   prometheusSpec:
+        #     ruleSelectorNilUsesHelmValues: false
+        #     ruleNamespaceSelector: {}
+        #     ruleSelector:
+        #       matchLabels:
+        #         role: alert-rules
         loki:
           enabled: false
   destination:
