@@ -96,35 +96,35 @@ virtualServices:
       port: 9099
 
   home-assistant:
-    namespace: default
+    namespace: home-assistant
     host: home-assistant.syscd.live
     gateway: istio-system/public
     destination:
-      host: home-assistant.default.svc.cluster.local
+      host: home-assistant.home-assistant.svc.cluster.local
       port: 8123
 
   vscode:
-    namespace: default
+    namespace: home-assistant
     host: vscode.syscd.live
     gateway: istio-system/public
     destination:
-      host: home-assistant-codeserver.default.svc.cluster.local
+      host: home-assistant-codeserver.home-assistant.svc.cluster.local
       port: 12321
 
   zigbee2mqtt:
-    namespace: default
+    namespace: zigbee2mqtt
     host: zigbee2mqtt.syscd.live
     gateway: istio-system/public
     destination:
-      host: zigbee2mqtt.default.svc.cluster.local
+      host: zigbee2mqtt.zigbee2mqtt.svc.cluster.local
       port: 8080
 
   node-red:
-    namespace: default
+    namespace: node-red
     host: node-red.syscd.live
     gateway: istio-system/public
     destination:
-      host: node-red.default.svc.cluster.local
+      host: node-red.node-red.svc.cluster.local
       port: 1880
 
   homer:
