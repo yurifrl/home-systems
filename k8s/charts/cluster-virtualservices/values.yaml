@@ -148,5 +148,5 @@ virtualServices:
     host: probee.syscd.live
     gateway: istio-system/public
     destination:
-      host: httpbin.probee.svc.cluster.local
+      host: probee-httpbin.probee.svc.cluster.local
       port: 8080
