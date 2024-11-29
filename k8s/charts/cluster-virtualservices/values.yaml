@@ -73,7 +73,7 @@ virtualServices:
 
   vscode:
     namespace: home-assistant
-    host: vscode.syscd.live
+    host: ha-vscode.syscd.live
     gateway: istio-system/public
     destination:
       host: home-assistant-codeserver.home-assistant.svc.cluster.local
