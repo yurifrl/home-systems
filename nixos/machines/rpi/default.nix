@@ -42,4 +42,15 @@
   environment.variables = {
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
   };
+
+    # This will prevent automatic mounting of newly attached disks
+  services.udisks2.enable = false;
+
+  # If you want to create a raw partition during system initialization
+  boot.initrd.postDeviceCommands = ''
+    # Replace /dev/sdX with your actual device
+    # This creates a single primary partition using the entire disk
+    parted -s /dev/sdX -- mklabel gpt
+    parted -s /dev/sdX -- mkpart primary 0% 100%
+  '';
 }
