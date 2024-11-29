@@ -7,9 +7,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://helm-hass.halton.dev
+    repoURL: http://pajikos.github.io/home-assistant-helm-chart
     chart: home-assistant
-    targetRevision: 2.1.1
+    targetRevision: "*"
     helm:
       valuesObject:
         env:

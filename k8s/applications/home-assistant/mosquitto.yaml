@@ -7,9 +7,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://k8s-at-home.com/charts
+    repoURL: https://naps.github.io/helm-charts
     chart: mosquitto
-    targetRevision: 4.0.1
+    targetRevision: "*"
     helm:
       valuesObject:
         env:
