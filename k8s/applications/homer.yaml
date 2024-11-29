@@ -81,13 +81,13 @@ spec:
                       - name: "Prometheus"
                         icon: "fas fa-fire"
                         tag: "monitoring"
-                        url: "https://prometheus.syscd.tech"
+                        url: "http://prometheus.syscd.tech"
                         target: "_blank"
                       
                       - name: "Kiali"
                         icon: "fas fa-project-diagram"
                         tag: "monitoring"
-                        url: "https://kiali.syscd.tech"
+                        url: "http://kiali.syscd.tech"
                         target: "_blank"
                       
                       - name: "Pyrra"
