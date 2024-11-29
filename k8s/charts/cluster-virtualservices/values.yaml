@@ -60,7 +60,7 @@ virtualServices:
     host: pyrra.syscd.live
     gateway: istio-system/public
     destination:
-      host: pyrra.pyrra.svc.cluster.local
+      host: pyrra.monitoring.svc.cluster.local
       port: 9099
 
   home-assistant:

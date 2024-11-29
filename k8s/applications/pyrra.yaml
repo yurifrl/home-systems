@@ -19,7 +19,7 @@ spec:
           enabled: true
   destination:
     server: https://kubernetes.default.svc
-    namespace: pyrra
+    namespace: monitoring
   syncPolicy:
     automated:
       prune: true

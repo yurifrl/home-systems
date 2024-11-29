@@ -6,7 +6,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
   name: istio-agent-cert-expiry
-  namespace: monitoring
 spec:
   description: Ensure Istio agent certificates do not expire within critical windows.
   indicator:
@@ -26,7 +25,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
   name: container-cpu-throttling
-  namespace: monitoring
 spec:
   description: Ensure container CPU throttling stays within acceptable limits.
   indicator:
@@ -46,7 +44,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
   name: coredns-cache-efficiency
-  namespace: monitoring
 spec:
   description: Ensure CoreDNS resolves DNS queries efficiently using its cache.
   indicator:
@@ -66,7 +63,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
   name: envoy-cluster-retry-success
-  namespace: monitoring
 spec:
   description: Ensure Envoy cluster retries are mostly successful.
   indicator:
@@ -86,7 +82,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
   name: node-disk-io-latency
-  namespace: monitoring
 spec:
   description: Ensure node disk I/O latency remains low.
   indicator:
@@ -106,7 +101,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
   name: kubelet-pod-start-sli
-  namespace: monitoring
 spec:
   description: Ensure pods start successfully within expected durations.
   indicator:
@@ -126,7 +120,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
   name: istio-agent-outgoing-latency
-  namespace: monitoring
 spec:
   description: Ensure outgoing requests from Istio agents have low latency.
   indicator:
@@ -146,7 +139,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
   name: scheduler-pod-preemption
-  namespace: monitoring
 spec:
   description: Ensure scheduler preemption attempts are successful.
   indicator:
@@ -166,7 +158,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
   name: alertmanager-silences-creation
-  namespace: monitoring
 spec:
   description: Ensure silences are successfully created in Alertmanager.
   indicator:
@@ -186,7 +177,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
   name: prometheus-kubernetes-sd-events
-  namespace: monitoring
 spec:
   description: Ensure Prometheus handles Kubernetes Service Discovery events successfully.
   indicator:
