@@ -63,11 +63,11 @@ spec:
           #   storageClass: "longhorn"
           #   annotations:
           #     recurring-job-group.longhorn.io/default: enabled
-          volumePermissions:
-            enabled: true
-            image:
-              repository: bitnami/minideb
-              tag: buster-arm64
+          # volumePermissions:
+          #   enabled: true
+          #   image:
+          #     repository: bitnami/minideb
+          #     tag: buster-arm64
 
   destination:
     server: https://kubernetes.default.svc
