@@ -1,0 +1,119 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homer
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://k8s-at-home.github.io/charts
+    chart: homer
+    targetRevision: 6.0.1
+    helm:
+      valuesObject:
+        env:
+          TZ: "America/Sao_Paulo"
+        tolerations:
+          - key: "arm"
+            operator: "Exists"
+        ingress:
+          main:
+            enabled: true
+            hosts:
+              - host: "homer.${SECRET_DOMAIN}"
+                paths:
+                  - path: /
+                    pathType: Prefix
+        resources:
+          requests:
+            memory: 350Mi
+            cpu: 25m
+          limits:
+            memory: 500Mi
+        configmap:
+          enabled: true
+          config: |
+            title: "Home Server"
+            subtitle: "Dashboard"
+            links:
+              - name: "github"
+                icon: "fab fa-github"
+                url: "https://github.com/yurifrl/k8s"
+                target: "_blank"
+            services:
+              - name: "Applications"
+                icon: "fas fa-cloud"
+                items:
+                  - name: "Home Assistant"
+                    icon: "fas fa-home"
+                    tag: "home-automation"
+                    url: "https://home-assistant.syscd.live"
+                    target: "_blank"
+                  
+                  - name: "Node-RED"
+                    icon: "fas fa-project-diagram"
+                    tag: "automation"
+                    url: "https://node-red.syscd.live"
+                    target: "_blank"
+                  
+                  - name: "Zigbee2MQTT"
+                    icon: "fas fa-broadcast-tower"
+                    tag: "iot"
+                    url: "https://zigbee2mqtt.syscd.live"
+                    target: "_blank"
+                  
+                  - name: "VS Code Server"
+                    icon: "fas fa-code"
+                    tag: "development"
+                    url: "https://vscode.syscd.live"
+                    target: "_blank"
+
+              - name: "Monitoring"
+                icon: "fas fa-chart-line"
+                items:
+                  - name: "Grafana"
+                    icon: "fas fa-chart-area"
+                    tag: "monitoring"
+                    url: "https://grafana.syscd.live"
+                    target: "_blank"
+                  
+                  - name: "Prometheus"
+                    icon: "fas fa-fire"
+                    tag: "monitoring"
+                    url: "https://prometheus.syscd.tech"
+                    target: "_blank"
+                  
+                  - name: "Kiali"
+                    icon: "fas fa-project-diagram"
+                    tag: "monitoring"
+                    url: "https://kiali.syscd.tech"
+                    target: "_blank"
+                  
+                  - name: "Pyrra"
+                    icon: "fas fa-chart-pie"
+                    tag: "monitoring"
+                    url: "https://pyrra.syscd.live"
+                    target: "_blank"
+
+              - name: "Infrastructure"
+                icon: "fas fa-server"
+                items:
+                  - name: "ArgoCD"
+                    icon: "fas fa-code-branch"
+                    tag: "gitops"
+                    url: "https://argocd.syscd.live"
+                    target: "_blank"
+                  
+                  - name: "GitHub"
+                    icon: "fab fa-github"
+                    url: "https://github.com/yurifrl/k8s"
+                    target: "_blank"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: homer
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

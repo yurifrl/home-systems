@@ -94,3 +94,43 @@ virtualServices:
     destination:
       host: pyrra.pyrra.svc.cluster.local
       port: 9099
+
+  home-assistant:
+    namespace: default
+    host: home-assistant.syscd.live
+    gateway: istio-system/public
+    destination:
+      host: home-assistant.default.svc.cluster.local
+      port: 8123
+
+  vscode:
+    namespace: default
+    host: vscode.syscd.live
+    gateway: istio-system/public
+    destination:
+      host: home-assistant-codeserver.default.svc.cluster.local
+      port: 12321
+
+  zigbee2mqtt:
+    namespace: default
+    host: zigbee2mqtt.syscd.live
+    gateway: istio-system/public
+    destination:
+      host: zigbee2mqtt.default.svc.cluster.local
+      port: 8080
+
+  node-red:
+    namespace: default
+    host: node-red.syscd.live
+    gateway: istio-system/public
+    destination:
+      host: node-red.default.svc.cluster.local
+      port: 1880
+
+  homer:
+    namespace: homer
+    host: homer.syscd.live
+    gateway: istio-system/public
+    destination:
+      host: homer.homer.svc.cluster.local
+      port: 8080
