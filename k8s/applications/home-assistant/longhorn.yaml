@@ -21,5 +21,9 @@ spec:
     targetRevision: "*"
     helm:
       valuesObject:
+        metrics:
+          serviceMonitor:
+            # -- Setting that allows the creation of a [Prometheus Operator](https://prometheus-operator.dev/) ServiceMonitor resource for Longhorn Manager components.
+            enabled: true
         preUpgradeChecker:
           jobEnabled: false
