@@ -15,6 +15,7 @@ spec:
           enabled: true
         grafana:
           enabled: false
+          defaultDashboardsEnabled: true
         loki:
           enabled: false
   destination:
