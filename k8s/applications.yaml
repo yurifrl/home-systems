@@ -9,8 +9,6 @@ spec:
     repoURL: https://github.com/yurifrl/home-systems.git
     targetRevision: HEAD
     path: k8s/applications
-    directory:
-      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
@@ -22,3 +20,4 @@ spec:
       - CreateNamespace=true
       - PruneLast=true
       - ApplyOutOfSyncOnly=true
+      - Directory.Recurse=true
