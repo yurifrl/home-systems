@@ -1,22 +1,25 @@
 { stdenv, bash, util-linux, e2fsprogs, udev, findutils, gnugrep, coreutils, writeShellScriptBin }:
 
 let
-  # Define disk layouts
-  diskLayouts = {
-    "USB_SanDisk_3.2Gen1_04016ae56ccfac4811a0010dddda218064618aee1065dfdc49eb60ee9f9161eba17a00000000000000000000ef6dbef8ff077b1867558107ab286235-0:0" = ''
-      label: gpt
-      unit: sectors
+  # Define disk layouts as a list instead of an attribute set
+  diskLayouts = [
+    {
+      name = "USB_SanDisk_3.2Gen1_04016ae56ccfac4811a0010dddda218064618aee1065dfdc49eb60ee9f9161eba17a00000000000000000000ef6dbef8ff077b1867558107ab286235-0:0";
+      content = ''
+        label: gpt
+        unit: sectors
 
-      /dev/sda1 : start=2048, size=2097152, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
-      /dev/sda2 : type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
-    '';
-  };
+        /dev/sda1 : start=2048, size=2097152, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
+        /dev/sda2 : type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
+      '';
+    }
+  ];
 
   # Create a temporary directory with the layout files
   createLayoutFiles = ''
     mkdir -p disks
-    ${builtins.concatStringsSep "\n" (builtins.mapAttrs (name: content: ''
-      echo '${content}' > disks/${name}.sfdisk
+    ${builtins.concatStringsSep "\n" (map (layout: ''
+      echo '${layout.content}' > disks/${layout.name}.sfdisk
     '') diskLayouts)}
   '';
 
@@ -79,8 +82,8 @@ let
 
     # Create layout files in specified directory
     mkdir -p "$SEARCH_DIR/disks"
-    ${builtins.concatStringsSep "\n" (builtins.mapAttrs (name: content: ''
-      echo '${content}' > "$SEARCH_DIR/disks/${name}.sfdisk"
+    ${builtins.concatStringsSep "\n" (map (layout: ''
+      echo '${layout.content}' > "$SEARCH_DIR/disks/${layout.name}.sfdisk"
     '') diskLayouts)}
 
     # List all available disks
