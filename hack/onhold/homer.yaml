@@ -105,6 +105,12 @@ spec:
                           url: "http://prometheus.syscd.live"
                           target: "_blank"
                         
+                        - name: "Alertmanager"
+                          icon: "fas fa-bell"
+                          tag: "monitoring"
+                          url: "http://alertmanager.syscd.live"
+                          target: "_blank"
+                        
                         - name: "Kiali"
                           icon: "fas fa-project-diagram"
                           tag: "monitoring"
