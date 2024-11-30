@@ -32,6 +32,10 @@ in
       echo "Current argo values.yaml contents:"
       cat ${argoValuesPath} | sed 's/^/  /'
 
+      echo "Will run: helm repo add argo-cd https://argoproj.github.io/argo-helm; helm repo update"
+      echo "and then: helm upgrade -n argocd --install argocd argo-cd/argo-cd -f ${argoValuesPath} --wait"
+      echo
+    
       # Add helm repos
       if ! helm repo list | grep -q "argo-cd"; then
         echo "Adding Argo CD helm repository..."

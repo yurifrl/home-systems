@@ -121,6 +121,12 @@ spec:
                     - name: "Infrastructure"
                       icon: "fas fa-server"
                       items:
+                        - name: "Ceph Dashboard"
+                          icon: "fas fa-database"
+                          tag: "storage"
+                          url: "https://ceph.local"
+                          target: "_blank"
+                        
                         - name: "ArgoCD"
                           icon: "fas fa-code-branch"
                           tag: "gitops"
