@@ -1,4 +1,4 @@
-{ stdenv, bash, util-linux, e2fsprogs, udev, findutils, gnugrep, coreutils, writeShellScriptBin }:
+{ stdenv, bash, util-linux, e2fsprogs, udev, findutils, gnugrep, coreutils, gnused, writeShellScriptBin }:
 
 let
   # Define disk layouts as a list instead of an attribute set
@@ -26,6 +26,12 @@ let
   script = ''
     #!/usr/bin/env bash
 
+    # Check for root privileges
+    if [ "$(id -u)" -ne 0 ]; then
+      echo "Error: This script must be run with sudo privileges"
+      exit 1
+    fi
+
     # Display help message
     show_help() {
       echo "Usage: disk-template -a [-d directory] [-h]"
@@ -36,13 +42,13 @@ let
       echo "  -h             Display this help message"
       echo ""
       echo "Available templates:"
-      if [ -d "$SEARCH_DIR" ]; then
+      if [ -d "$SEARCH_DIR" ] && [ "$(${findutils}/bin/find "$SEARCH_DIR" -name '*.sfdisk' -type f | wc -l)" -gt 0 ]; then
         echo "Templates in $SEARCH_DIR:"
         for template in "$SEARCH_DIR"/*.sfdisk; do
           if [ -f "$template" ]; then
             echo "  - $(${coreutils}/bin/basename "$template" .sfdisk)"
             echo "    Layout:"
-            ${coreutils}/bin/sed 's/^/      /' "$template"
+            ${gnused}/bin/sed 's/^/      /' "$template"
             echo ""
           fi
         done
@@ -159,6 +165,9 @@ let
     ${coreutils}/bin/sleep 2
 
     echo "----------------------------------------------------------------"
+    echo "Unmounting partition if mounted..."
+    ${util-linux}/bin/umount "/dev/''${DISK_NAME}1" 2>/dev/null || true
+
     echo "Formatting /dev/''${DISK_NAME}1..."
     ${e2fsprogs}/bin/mkfs.ext4 -F /dev/''${DISK_NAME}1
     echo "================================================================"
