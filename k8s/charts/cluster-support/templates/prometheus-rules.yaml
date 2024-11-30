@@ -1,0 +1,67 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: node-slos
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: node.rules
+      rules:
+      - alert: NodeCPUSaturation
+        expr: |
+          (
+            count(instance:node_cpu_utilisation:rate5m{job="node-exporter"} > 0.8)
+            /
+            count(instance:node_cpu_utilisation:rate5m{job="node-exporter"})
+          ) * 100 > 1
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "High CPU utilization across nodes"
+          description: "{{ printf \"%.2f\" $value }}% of nodes have CPU utilization above 80% for the past hour"
+
+      - alert: NodeMemorySaturation
+        expr: |
+          (
+            count(instance:node_memory_utilisation:ratio{job="node-exporter"} > 0.85)
+            /
+            count(instance:node_memory_utilisation:ratio{job="node-exporter"})
+          ) * 100 > 1
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "High memory utilization across nodes"
+          description: "{{ printf \"%.2f\" $value }}% of nodes have memory utilization above 85% for the past hour"
+
+      - alert: NodeDiskSaturation
+        expr: |
+          (
+            count(instance:node_filesystem_usage:ratio{job="node-exporter"} > 0.85)
+            /
+            count(instance:node_filesystem_usage:ratio{job="node-exporter"})
+          ) * 100 > 1
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "High disk utilization across nodes"
+          description: "{{ printf \"%.2f\" $value }}% of nodes have disk utilization above 85% for the past hour"
+
+      - alert: NodeLoadAverageHigh
+        expr: |
+          (
+            count(instance:node_load1_per_cpu:ratio{job="node-exporter"} > 2)
+            /
+            count(instance:node_load1_per_cpu:ratio{job="node-exporter"})
+          ) * 100 > 1
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "High load average across nodes"
+          description: "{{ printf \"%.2f\" $value }}% of nodes have load average per CPU above 2 for the past hour" 
