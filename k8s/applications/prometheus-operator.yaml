@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kube-prometheus-stack
+  name: prometheus-operator
   namespace: argocd
 spec:
   project: default
@@ -13,7 +13,7 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true 
+      - CreateNamespace=true
       - ServerSideApply=true
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
@@ -24,61 +24,35 @@ spec:
           virtualServices:
             - name: prometheus
               service:
-                name: kube-prometheus-stack-prometheus
+                name: prometheus-operator-prometheus
                 namespace: monitoring
                 port: 9090
 
     - repoURL: https://prometheus-community.github.io/helm-charts
-      chart: kube-prometheus-stack
+      chart: prometheus-operator
       targetRevision: "*"
       helm:
         valuesObject:
           prometheus:
             prometheusSpec:
               externalUrl: https://prometheus.syscd.live
-              alertmanagerConfig:
-                name: alertmanager-config
-              additionalAlertManagerConfigs:
-                - static_configs:
-                    - targets:
-                      - alertmanager.monitoring.svc.cluster.local:9093
-              # Enable all features
-              enableFeatures:
-              - "exemplar-storage"
-              
-              # Increase retention if needed
               retention: 30d
-
-              # Scrape Config Selectors
-              # Service Monitors
               serviceMonitorSelectorNilUsesHelmValues: false
-              serviceMonitorSelector: {} 
+              serviceMonitorSelector: {}
               serviceMonitorNamespaceSelector: {}
-              
-              # Pod Monitors
               podMonitorSelectorNilUsesHelmValues: false
               podMonitorSelector: {}
               podMonitorNamespaceSelector: {}
-              
-              # Probe Monitors
               probeSelectorNilUsesHelmValues: false
               probeSelector: {}
               probeNamespaceSelector: {}
-              
-              # Rule Selectors
               ruleSelectorNilUsesHelmValues: false
               ruleSelector: {}
               ruleNamespaceSelector: {}
-              
-              # Scrape Config Selectors
               scrapeConfigSelectorNilUsesHelmValues: false
               scrapeConfigSelector: {}
               scrapeConfigNamespaceSelector: {}
-              
-              # Additional Scrape Configs
               enableAdditionalScrapeConfigs: true
-              
-              # Scrape configs for annotation-based discovery
               additionalScrapeConfigs:
                 - job_name: 'kubernetes-pods-annotations'
                   kubernetes_sd_configs:
@@ -96,12 +70,3 @@ spec:
                       regex: ([^:]+)(?::\d+)?;(\d+)
                       replacement: $1:$2
                       target_label: __address__
-          alertmanager:
-            enabled: false
-          grafana:
-            enabled: false
-            forceDeployDashboards: true
-            defaultDashboardsEnabled: true
-          loki:
-            enabled: false
-# k -n monitoring get secrets kube-prometheus-stack-grafana -ojsonpath="{.data.admin-password}" | base64 -d | pbcopy
