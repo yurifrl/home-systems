@@ -1,19 +1,47 @@
+# curl -X POST http://alertmanager.syscd.tech/-/reload -v   
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
   name: alertmanager-config
   namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
 spec:
   route:
-    groupBy: ['alertname', 'slo', 'severity']
+    groupBy:
+      - alertname
+      - severity
     groupWait: 30s
     groupInterval: 5m
-    repeatInterval: 4h
-    receiver: 'discord-critical'
+    repeatInterval: 1h
+    receiver: discord-critical
   receivers:
-    - name: 'discord-critical'
+    - name: discord-critical
       webhookConfigs:
         - urlSecret:
             name: alertmanager-discord
             key: webhook-url
-          sendResolved: true
+    - name: 'null'
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: test-alert
+  namespace: monitoring  # Replace with your Prometheus namespace
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: test-alert-group
+      rules:
+        - alert: TestAlert
+          expr: vector(1)  # Always triggers
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Test Alert is firing!"
+            description: "This is a test alert to verify the Alertmanager configuration."
