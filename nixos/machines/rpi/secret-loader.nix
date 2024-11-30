@@ -12,17 +12,12 @@ in
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
-      ExecStart = "${secretScriptPath}";
+      ExecStart = "${pkgs.bash}/bin/bash ${secretScriptPath}";
       # Ensure the script is executable
       ExecStartPre = "${pkgs.coreutils}/bin/chmod +x ${secretScriptPath}";
       # Run as a specific user, e.g., 'root' or another user
       User = "root";
-      # Optionally, specify a working directory
-      WorkingDirectory = "/etc/secrets";
-      
-      # Add bash to the service's path
-      Path = [ "${pkgs.bash}/bin" ];
-      
+
       # Add retry logic
       Restart = "on-failure";  # Only restart if the service exits with non-zero status
       RestartSec = "30s";
