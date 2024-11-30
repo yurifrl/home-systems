@@ -92,7 +92,7 @@ spec:
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: local0-0
+  name: local-pv-mon
 spec:
   storageClassName: local-storage
   capacity:
@@ -118,7 +118,7 @@ spec:
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: local0-1
+  name: local-pv-osd
 spec:
   storageClassName: local-storage
   capacity:
