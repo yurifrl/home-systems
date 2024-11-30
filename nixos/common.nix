@@ -18,7 +18,7 @@ in
     # System utilities
     vim neovim curl htop jq 
     inetutils git fish 
-    nixfmt-rfc-style
+    nixfmt-rfc-style parted
 
     # Packages
     istioctl
