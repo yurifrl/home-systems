@@ -7,7 +7,8 @@ in
 {
   systemd.services.secret-loader = {
     description = "Secret Loader Service";
-    after = [ "network.target" ];
+    after = [ "network.target" "k3s.service" ];
+    requires = [ "k3s.service" ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
