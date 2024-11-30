@@ -33,10 +33,8 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  # PV for mon must be a filesystem volume.
-  volumeMode: Filesystem
+  volumeMode: Block
   local:
-    # To use dm devices like logical volume, please replace `/dev/sdb` with their device names like `/dev/vg-name/lv-name`.
     path: /dev/sda
   nodeAffinity:
     required:

@@ -24,7 +24,7 @@ spec:
       repoURL: https://charts.rook.io/release
       targetRevision: "*"  # Use the latest stable version
       helm:
-        valuesObeject:
+        valuesObject:
           csi:
             # NixOS-specific volume mounts for kernel modules
             csiCephFSPluginVolume:
