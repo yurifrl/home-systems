@@ -41,6 +41,7 @@ spec:
           prometheus:
             prometheusSpec:
               externalUrl: https://prometheus.syscd.live
+              logLevel: debug
               # Configure Alertmanager endpoint
               alertingEndpoints:
                 - namespace: monitoring
