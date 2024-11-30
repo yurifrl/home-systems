@@ -38,7 +38,6 @@ spec:
           sources:
             - istio-gateway
             - istio-virtualservice
-          namespace: istio-system
           istioIngressGateways:
             - istio-system/istio-gateway
           extraArgs:
@@ -66,7 +65,6 @@ spec:
           sources:
             - istio-gateway
             - istio-virtualservice
-          namespace: istio-system
           istioIngressGateways:
             - istio-system/istio-gateway
 # k -n external-dns create secret generic cloudflare-api-token --from-literal=token='your-cloudflare-api-token'
