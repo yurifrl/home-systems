@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: argo-dashboard
   namespace: monitoring
+  labels:
+    grafana_dashboard: "1" 
 data:
   argo-dashboard.json: |
     {{ .Files.Get "dashboards/argo-dashboard.json" | nindent 4 }}
