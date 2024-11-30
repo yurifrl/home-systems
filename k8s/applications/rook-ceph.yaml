@@ -74,14 +74,14 @@ spec:
               - name: nix-store
                 mountPath: /nix
                 readOnly: true
-          cluster:
-            storage:
-              useAllDevices: false
-              useAllNodes: false
-              nodes:
-                - name: "nixos-1"  # Must match your node name
-                  devices:
-                    - name: "sda"
+          # cluster:
+          #   storage:
+          #     useAllDevices: false
+          #     useAllNodes: false
+          #     nodes:
+          #       - name: "nixos-1"  # Must match your node name
+          #         devices:
+          #           - name: "sda"
 ---
 # https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph-cluster/values.yaml
 apiVersion: argoproj.io/v1alpha1
