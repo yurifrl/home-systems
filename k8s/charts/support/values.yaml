@@ -6,6 +6,16 @@ persistentVolumeClaims: []
   #   storage: 1Gi
   #   storageClassName: local-storage
 
+# Persistent Volumes configuration
+persistentVolumes: []
+  # - name: volume-name                 # Name of the persistent volume
+  #   size: 1Gi                        # Storage capacity (e.g., 1Gi, 500Mi)
+  #   accessMode: ReadWriteOnce        # Access mode (default: ReadWriteOnce)
+  #   reclaimPolicy: Delete           # Volume reclaim policy (default: Delete)
+  #   storageClass: local-storage     # Storage class name
+  #   path: /mnt/data                 # Local path on the node
+  #   nodeName: worker-node-1         # Kubernetes node name where volume exists
+
 # Virtual Services configuration
 virtualServices: []
   # - name: grafana                     # Name of the virtual service
