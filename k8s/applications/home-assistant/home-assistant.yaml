@@ -22,11 +22,11 @@ spec:
       helm:
         valuesObject:
           persistentVolumeClaims:
-            - name: home-assistant-config
-              accessModes:
-                - ReadWriteOnce
-              storage: 10Gi
-              storageClassName: local-storage
+            # - name: home-assistant-config
+            #   accessModes:
+            #     - ReadWriteOnce
+            #   storage: 10Gi
+            #   storageClassName: local-storage
           virtualServices:
             - name: home-assistant
               host: home-assistant.syscd.live
@@ -49,19 +49,11 @@ spec:
           addons:
             codeserver:
               enabled: true
-              volumeMounts:
-                - name: config
-                  mountPath: /config
-              volumes:
-                - name: config
-                  persistentVolumeClaim:
-                    claimName: home-assistant-config
           persistence:
             enabled: true
             accessMode: ReadWriteOnce
-            size: 10Gi
+            size: 1Gi
             storageClass: local-storage
-            existingClaim: home-assistant-config
           configuration:
             enabled: true
             forceInit: true
