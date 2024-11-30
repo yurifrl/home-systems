@@ -40,6 +40,7 @@ spec:
         valuesObject:
           prometheus:
             prometheusSpec:
+              externalUrl: https://prometheus.syscd.live
               # Enable all features
               enableFeatures:
               - "exemplar-storage"
@@ -94,6 +95,9 @@ spec:
                       regex: ([^:]+)(?::\d+)?;(\d+)
                       replacement: $1:$2
                       target_label: __address__
+          alertmanager:
+            alertmanagerSpec:
+              externalUrl: https://alertmanager.syscd.live
           grafana:
             enabled: false
             forceDeployDashboards: true
