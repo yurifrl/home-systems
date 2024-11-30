@@ -93,20 +93,21 @@ spec:
     size: 1
     requireSafeReplicaSize: false
 ---
+# For the monitor (Filesystem mode)
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: local-pv-sda
+  name: local-pv-mon
 spec:
   capacity:
-    storage: 28Gi  # Your SanDisk size
-  volumeMode: Block  # Important for Ceph
+    storage: 2Gi
+  volumeMode: Filesystem  # Monitor needs Filesystem
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: local-storage
   local:
-    path: /dev/sda
+    path: /dev/sda1  # First partition
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -114,4 +115,29 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - nixos-1  # Replace with your node name
+                - nixos-1
+
+---
+# For the OSD (Block mode)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-pv-osd
+spec:
+  capacity:
+    storage: 26Gi  # Remaining space
+  volumeMode: Block
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /dev/sda2  # Second partition
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - nixos-1
