@@ -1,0 +1,19 @@
+# Persistent Volume Claims configuration
+persistentVolumeClaims: []
+  # - name: claim-name
+  #   accessModes:
+  #     - ReadWriteOnce
+  #   storage: 1Gi
+  #   storageClassName: local-storage
+
+# Virtual Services configuration
+virtualServices: []
+  # - name: grafana                     # Name of the virtual service
+  #   host: grafana.example.com        # External hostname
+  #   service:
+  #     name: grafana-service          # Internal k8s service name
+  #     namespace: monitoring          # Service namespace
+  #     port: 80                       # Service port
+
+# Global settings
+global: {}

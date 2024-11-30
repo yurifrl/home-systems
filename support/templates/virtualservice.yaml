@@ -1,0 +1,23 @@
+{{- range .Values.virtualServices }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ .name }}
+  namespace: {{ .namespace | default $.Release.Namespace }}
+spec:
+  hosts:
+    - {{ .host }}
+  gateways:
+    {{- if hasSuffix "live" .host }}
+    - public
+    {{- else }}
+    - private
+    {{- end }}
+  http:
+    - route:
+        - destination:
+            host: {{ .service.name }}.{{ .service.namespace | default $.Release.Namespace }}.svc.cluster.local
+            port:
+              number: {{ .service.port }}
+---
+{{- end }}

@@ -14,107 +14,121 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-  source:
-    repoURL: https://djjudas21.github.io/charts/
-    chart: homer
-    targetRevision: "*"
-    helm:
-      valuesObject:
-        env:
-          TZ: "America/Sao_Paulo"
-        tolerations:
-          - key: "arm"
-            operator: "Exists"
-        ingress:
-          main:
-            enabled: false
-        resources:
-          requests:
-            memory: 350Mi
-            cpu: 25m
-          limits:
-            memory: 500Mi
+  sources:
+    - repoURL: 'https://github.com/yurifrl/k8s.git'
+      targetRevision: HEAD
+      ref: support
+      path: support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: homer
+              host: homer.syscd.live
+              service:
+                name: homer
+                namespace: homer
+                port: 8080
 
-        configmap:
-          config:
-            # -- Store homer configuration as a ConfigMap
-            enabled: true
-            # -- Homer configuration. See [image documentation](https://github.com/bastienwirtz/homer/blob/main/docs/configuration.md) for more information.
-            # @default -- See values.yaml
-            data:
-              config.yml: |
-                title: "Home Server"
-                subtitle: "Dashboard"
-                links:
-                  - name: "github"
-                    icon: "fab fa-github"
-                    url: "https://github.com/yurifrl/k8s"
-                    target: "_blank"
-                services:
-                  - name: "Applications"
-                    icon: "fas fa-cloud"
-                    items:
-                      - name: "Home Assistant"
-                        icon: "fas fa-home"
-                        tag: "home-automation"
-                        url: "https://home-assistant.syscd.live"
-                        target: "_blank"
-                      
-                      - name: "Node-RED"
-                        icon: "fas fa-project-diagram"
-                        tag: "automation"
-                        url: "https://node-red.syscd.live"
-                        target: "_blank"
-                      
-                      - name: "Zigbee2MQTT"
-                        icon: "fas fa-broadcast-tower"
-                        tag: "iot"
-                        url: "https://zigbee2mqtt.syscd.live"
-                        target: "_blank"
-                      
-                      - name: "VS Code Server"
-                        icon: "fas fa-code"
-                        tag: "development"
-                        url: "https://ha-vscode.syscd.live"
-                        target: "_blank"
+    - repoURL: https://djjudas21.github.io/charts/
+      chart: homer
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          env:
+            TZ: "America/Sao_Paulo"
+          tolerations:
+            - key: "arm"
+              operator: "Exists"
+          ingress:
+            main:
+              enabled: false
+          resources:
+            requests:
+              memory: 350Mi
+              cpu: 25m
+            limits:
+              memory: 500Mi
 
-                  - name: "Monitoring"
-                    icon: "fas fa-chart-line"
-                    items:
-                      - name: "Grafana"
-                        icon: "fas fa-chart-area"
-                        tag: "monitoring"
-                        url: "https://grafana.syscd.live"
-                        target: "_blank"
-                      
-                      - name: "Prometheus"
-                        icon: "fas fa-fire"
-                        tag: "monitoring"
-                        url: "http://prometheus.syscd.tech"
-                        target: "_blank"
-                      
-                      - name: "Kiali"
-                        icon: "fas fa-project-diagram"
-                        tag: "monitoring"
-                        url: "http://kiali.syscd.tech"
-                        target: "_blank"
-                      
-                      - name: "Pyrra"
-                        icon: "fas fa-chart-pie"
-                        tag: "monitoring"
-                        url: "https://pyrra.syscd.live"
-                        target: "_blank"
+          configmap:
+            config:
+              # -- Store homer configuration as a ConfigMap
+              enabled: true
+              # -- Homer configuration. See [image documentation](https://github.com/bastienwirtz/homer/blob/main/docs/configuration.md) for more information.
+              # @default -- See values.yaml
+              data:
+                config.yml: |
+                  title: "Home Server"
+                  subtitle: "Dashboard"
+                  links:
+                    - name: "github"
+                      icon: "fab fa-github"
+                      url: "https://github.com/yurifrl/k8s"
+                      target: "_blank"
+                  services:
+                    - name: "Applications"
+                      icon: "fas fa-cloud"
+                      items:
+                        - name: "Home Assistant"
+                          icon: "fas fa-home"
+                          tag: "home-automation"
+                          url: "https://home-assistant.syscd.live"
+                          target: "_blank"
+                        
+                        - name: "Node-RED"
+                          icon: "fas fa-project-diagram"
+                          tag: "automation"
+                          url: "https://node-red.syscd.live"
+                          target: "_blank"
+                        
+                        - name: "Zigbee2MQTT"
+                          icon: "fas fa-broadcast-tower"
+                          tag: "iot"
+                          url: "https://zigbee2mqtt.syscd.live"
+                          target: "_blank"
+                        
+                        - name: "VS Code Server"
+                          icon: "fas fa-code"
+                          tag: "development"
+                          url: "https://ha-vscode.syscd.live"
+                          target: "_blank"
 
-                  - name: "Infrastructure"
-                    icon: "fas fa-server"
-                    items:
-                      - name: "ArgoCD"
-                        icon: "fas fa-code-branch"
-                        tag: "gitops"
-                        url: "https://argocd.syscd.live"
-                        target: "_blank"
-                      
-                      - name: "GitHub"
-                        icon: "fab fa-github"
-                        url: "https://github.com/yurifrl/k8s"
-                        target: "_blank"
+                    - name: "Monitoring"
+                      icon: "fas fa-chart-line"
+                      items:
+                        - name: "Grafana"
+                          icon: "fas fa-chart-area"
+                          tag: "monitoring"
+                          url: "https://grafana.syscd.live"
+                          target: "_blank"
+                        
+                        - name: "Prometheus"
+                          icon: "fas fa-fire"
+                          tag: "monitoring"
+                          url: "http://prometheus.syscd.tech"
+                          target: "_blank"
+                        
+                        - name: "Kiali"
+                          icon: "fas fa-project-diagram"
+                          tag: "monitoring"
+                          url: "http://kiali.syscd.tech"
+                          target: "_blank"
+                        
+                        - name: "Pyrra"
+                          icon: "fas fa-chart-pie"
+                          tag: "monitoring"
+                          url: "https://pyrra.syscd.live"
+                          target: "_blank"
+
+                    - name: "Infrastructure"
+                      icon: "fas fa-server"
+                      items:
+                        - name: "ArgoCD"
+                          icon: "fas fa-code-branch"
+                          tag: "gitops"
+                          url: "https://argocd.syscd.live"
+                          target: "_blank"
+                        
+                        - name: "GitHub"
+                          icon: "fab fa-github"
+                          url: "https://github.com/yurifrl/k8s"
+                          target: "_blank"
