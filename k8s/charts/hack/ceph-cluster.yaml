@@ -19,10 +19,17 @@ spec:
     - name: "nixos-1"  # Must match your node name
       devices:
       - name: "sda"
+    pool:
+      failureDomain: host
+      replicated:
+        size: 1
   crashCollector:
     disable: true
-
----
+  csi:
+    enableRbdDriver: true
+    enableCephfsDriver: false
+    provisionerTolerations:
+      - operator: Exists
 
 ---
 # First create the StorageClass
@@ -90,3 +97,14 @@ spec:
   - name: data
     persistentVolumeClaim:
       claimName: demo-rook-pvc
+---
+# Add CephBlockPool definition
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+  name: replicapool
+  namespace: rook-ceph
+spec:
+  failureDomain: host
+  replicated:
+    size: 1
