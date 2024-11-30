@@ -197,8 +197,8 @@ let
     echo ""
 
     # Prompt for confirmation
-    read -p "Are you sure you want to proceed? (yes/no) " answer
-    if [ "$answer" != "yes" ]; then
+    read -p "Are you sure you want to proceed? (y/n) " answer
+    if [ "$answer" != "y" ]; then
         echo "Aborted."
         exit 1
     fi
