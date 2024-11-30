@@ -57,9 +57,11 @@ spec:
                   persistentVolumeClaim:
                     claimName: home-assistant-config
           persistence:
-            config:
-              enabled: true
-              existingClaim: home-assistant-config
+            enabled: true
+            accessMode: ReadWriteOnce
+            size: 10Gi
+            storageClass: local-storage
+            existingClaim: home-assistant-config
           configuration:
             enabled: true
             forceInit: true

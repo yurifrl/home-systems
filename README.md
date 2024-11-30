@@ -49,7 +49,6 @@ sudo systemctl restart argo-setup & sudo journalctl -u argo-setup.service -f
 
 ### Additional Resources
 - [BMC API Documentation](https://docs.turingpi.com/docs/turing-pi2-bmc-api#flash--firmware)
-- [Storage Options](https://docs.turingpi.com/docs/turing-pi2-kubernetes-cluster-storage#option-2-the-longhorn)
 - [Multicast DNS](https://en.wikipedia.org/wiki/Multicast_DNS)
 - [Zero-configuration networking](https://en.wikipedia.org/wiki/Zero-configuration_networking#DNS-SD)
 
