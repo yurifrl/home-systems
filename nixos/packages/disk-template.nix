@@ -17,13 +17,52 @@ let
 
   # Create a temporary directory with the layout files
   createLayoutFiles = ''
-    mkdir -p disks
+    # Create temporary directory for disk layouts
+    TEMP_DIR=$(mktemp -d)
+    
+    # Copy built-in layouts
     ${builtins.concatStringsSep "\n" (map (layout: ''
-      echo '${layout.content}' > disks/${layout.name}.sfdisk
+      echo '${layout.content}' > "$TEMP_DIR/${layout.name}.sfdisk"
     '') diskLayouts)}
+    
+    # If user specified a directory, copy its .sfdisk files
+    if [ -n "$1" ]; then
+      cp "$1"/*.sfdisk "$TEMP_DIR/" 2>/dev/null || true
+    fi
   '';
 
-  script = ''
+  showCommands = ''
+    echo "Manual Command Reference:"
+    echo "------------------------"
+    echo "1. List all disks:"
+    echo "   lsblk -d -o NAME,SIZE,MODEL,SERIAL"
+    echo ""
+    echo "2. Get disk info (replace sdX with your disk):"
+    echo "   sudo udevadm info --query=property --name=/dev/sdX"
+    echo ""
+    echo "3. Show current partition layout:"
+    echo "   sudo fdisk -l /dev/sdX"
+    echo ""
+    echo "4. Wipe filesystem signatures:"
+    echo "   sudo wipefs -a /dev/sdX"
+    echo ""
+    echo "5. Apply partition template (replace TEMPLATE.sfdisk with your template file):"
+    echo "   sudo sfdisk --force /dev/sdX < TEMPLATE.sfdisk"
+    echo ""
+    echo "6. Unmount partition:"
+    echo "   sudo umount /dev/sdX1"
+    echo ""
+    echo "7. Format partition as ext4:"
+    echo "   sudo mkfs.ext4 -F /dev/sdX1"
+    echo ""
+    echo "8. Find disk templates:"
+    echo "   find /path/to/templates -name '*.sfdisk' -type f"
+    echo ""
+    echo "Note: Replace 'sdX' with your actual disk name (e.g., 'sda')"
+    exit 0
+  '';
+
+  mainScript = ''
     #!/usr/bin/env bash
 
     # Check if script is running with sudo
@@ -34,22 +73,22 @@ let
 
     # Display help message
     show_help() {
-      echo "Usage: disk-template -a [-d directory] [-h] [-l]"
+      echo "Usage: disk-template -a [-d directory] [-h] [-t]"
       echo ""
       echo "Options:"
       echo "  -a             Apply disk template (required to run)"
       echo "  -d directory   Specify directory to search for disk templates (default: /etc/disk-templates)"
       echo "  -h             Display this help message"
-      echo "  -d             List manual commands for troubleshooting"
+      echo "  -t             List manual commands for troubleshooting"
       echo ""
       echo "Available templates:"
       
       # Check if directory exists and contains .sfdisk files
-      if [ -d "$SEARCH_DIR" ]; then
-        template_count=$(${findutils}/bin/find "$SEARCH_DIR" -name "*.sfdisk" -type f | wc -l)
+      if [ -d "$TEMP_DIR" ]; then
+        template_count=$(${findutils}/bin/find "$TEMP_DIR" -name "*.sfdisk" -type f | wc -l)
         if [ "$template_count" -gt 0 ]; then
-          echo "Templates in $SEARCH_DIR:"
-          for template in "$SEARCH_DIR"/*.sfdisk; do
+          echo "Templates in $TEMP_DIR:"
+          for template in "$TEMP_DIR"/*.sfdisk; do
             if [ -f "$template" ]; then
               echo "  - $(${coreutils}/bin/basename "$template" .sfdisk)"
               echo "    Layout:"
@@ -58,31 +97,31 @@ let
             fi
           done
         else
-          echo "  No templates found in $SEARCH_DIR"
+          echo "  No templates found in $TEMP_DIR"
         fi
       else
-        echo "  Directory $SEARCH_DIR does not exist"
+        echo "  Directory $TEMP_DIR does not exist"
       fi
       exit 0
     }
 
     # Parse command line arguments
-    SEARCH_DIR="."
+    USER_DIR=""
     APPLY=0
 
-    while getopts "ad:hd" opt; do
+    while getopts "ad:ht" opt; do
       case $opt in
         a)
           APPLY=1
           ;;
         d)
-          SEARCH_DIR="$OPTARG"
+          USER_DIR="$OPTARG"
           ;;
         h)
           show_help
           ;;
-        d)
-          show_commands
+        t)
+          ${showCommands}
           ;;
         \?)
           echo "Invalid option: -$OPTARG" >&2
@@ -97,11 +136,9 @@ let
       show_help
     fi
 
-    # Create layout files in specified directory
-    mkdir -p "$SEARCH_DIR/disks"
-    ${builtins.concatStringsSep "\n" (map (layout: ''
-      echo '${layout.content}' > "$SEARCH_DIR/disks/${layout.name}.sfdisk"
-    '') diskLayouts)}
+    # Create layout files in temporary directory
+    echo "Creating layout files..."
+    ${createLayoutFiles} "$USER_DIR"
 
     # List all available disks
     echo "=== Available Disks ==="
@@ -120,13 +157,17 @@ let
     DISK_SERIAL=$(echo "$DISK_INFO" | ${coreutils}/bin/tr -s ' ' | ${coreutils}/bin/cut -d' ' -f2)
 
     # Look for existing layout file that matches this disk
-    LAYOUT_FILE=$(${findutils}/bin/find "$SEARCH_DIR/disks" -name "*.sfdisk" -type f | ${gnugrep}/bin/grep -F "$DISK_SERIAL")
+    LAYOUT_FILE=""
+    if [ -n "$DISK_SERIAL" ]; then
+      LAYOUT_FILE=$(${findutils}/bin/find "$TEMP_DIR" -name "*.sfdisk" -type f | ${gnugrep}/bin/grep -F "$DISK_SERIAL" || true)
+    fi
 
-    if [ ! -f "$LAYOUT_FILE" ]; then
+    if [ -z "$LAYOUT_FILE" ]; then
         echo "No layout file found for this disk"
         echo "Current disk info:"
         echo "Model: $(echo "$DISK_INFO" | ${coreutils}/bin/tr -s ' ' | ${coreutils}/bin/cut -d' ' -f3-)"
         echo "Serial: $DISK_SERIAL"
+        echo "Searched in: $TEMP_DIR"
         exit 1
     fi
 
@@ -184,38 +225,6 @@ let
     echo "Formatting /dev/''${DISK_NAME}1..."
     ${e2fsprogs}/bin/mkfs.ext4 -F /dev/''${DISK_NAME}1
     echo "================================================================"
-
-    # Display commands for manual troubleshooting
-    show_commands() {
-      echo "Manual Command Reference:"
-      echo "------------------------"
-      echo "1. List all disks:"
-      echo "   lsblk -d -o NAME,SIZE,MODEL,SERIAL"
-      echo ""
-      echo "2. Get disk info (replace sdX with your disk):"
-      echo "   sudo udevadm info --query=property --name=/dev/sdX"
-      echo ""
-      echo "3. Show current partition layout:"
-      echo "   sudo fdisk -l /dev/sdX"
-      echo ""
-      echo "4. Wipe filesystem signatures:"
-      echo "   sudo wipefs -a /dev/sdX"
-      echo ""
-      echo "5. Apply partition template (replace TEMPLATE.sfdisk with your template file):"
-      echo "   sudo sfdisk --force /dev/sdX < TEMPLATE.sfdisk"
-      echo ""
-      echo "6. Unmount partition:"
-      echo "   sudo umount /dev/sdX1"
-      echo ""
-      echo "7. Format partition as ext4:"
-      echo "   sudo mkfs.ext4 -F /dev/sdX1"
-      echo ""
-      echo "8. Find disk templates:"
-      echo "   find /path/to/templates -name '*.sfdisk' -type f"
-      echo ""
-      echo "Note: Replace 'sdX' with your actual disk name (e.g., 'sda')"
-      exit 0
-    }
   '';
 in
-writeShellScriptBin "disk-template" script 
+writeShellScriptBin "disk-template" mainScript 
