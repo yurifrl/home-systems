@@ -118,7 +118,7 @@ spec:
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: local-pv-osd
+  name: local-pv-osdwh
 spec:
   storageClassName: local-storage
   capacity:
