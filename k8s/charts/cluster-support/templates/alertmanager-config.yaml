@@ -6,7 +6,7 @@ metadata:
 spec:
   route:
     receiver: 'discord-warnings'
-    groupBy: ['alertname', 'job', 'slo']
+    groupBy: ['alertname', 'slo']
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 4h
@@ -19,10 +19,10 @@ spec:
         groupInterval: 1m
         repeatInterval: 1h
       - matchers:
-          - name: severity
-            value: "warning"
+          - name: slo
+            value: "cluster-cpu-utilization"
         receiver: 'discord-warnings'
-        
+
   receivers:
     - name: 'discord-critical'
       webhookConfigs:
