@@ -29,6 +29,3 @@ spec:
       kind: "*"
       managedFieldsManagers:
         - argocd-application-controller
-  dependencies:
-    - name: istiod
-      namespace: istio-system
