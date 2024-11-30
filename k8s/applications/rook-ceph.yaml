@@ -1,6 +1,30 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: rook-ceph-support
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rook-ceph-support
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/rook-ceph-support
+      directory:
+        recurse: true
+---
+# https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   name: rook-ceph
   namespace: argocd
 spec:
@@ -62,13 +86,13 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: rook-ceph-support
+  name: rook-ceph-cluster
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: rook-ceph-support
+    namespace: rook-ceph
   syncPolicy:
     automated:
       prune: true
@@ -76,9 +100,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/rook-ceph-support
-      directory:
-        recurse: true
-  
+    - chart: rook-ceph-cluster
+      repoURL: https://charts.rook.io/release
+      targetRevision: "*"  # Use the latest stable version
+      helm:
+        valuesObject:
+          operatorNamespace: rook-ceph
