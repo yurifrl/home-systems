@@ -12,7 +12,8 @@ spec:
     repeatInterval: 4h
     routes:
       - matchers:
-          - severity = "critical"
+          - name: severity
+            value: "critical"
         receiver: 'discord-critical'
         groupWait: 10s
         groupInterval: 1m
@@ -31,10 +32,6 @@ spec:
             key: webhook-url
           sendResolved: true
   inhibitRules:
-    - sourceMatchers:
-        - severity = "critical"
-      targetMatchers:
-        - severity = "warning"
-      equal:
+    - equal:
         - alertname
         - namespace
