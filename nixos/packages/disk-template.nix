@@ -1,4 +1,4 @@
-{ stdenv, bash, util-linux, e2fsprogs, udev, findutils, gnugrep, coreutils, gnused, writeShellScriptBin }:
+{ stdenv, bash, util-linux, e2fsprogs, systemd, findutils, gnugrep, coreutils, gnused, writeShellScriptBin }:
 
 let
   # Define disk layouts as a list instead of an attribute set
@@ -26,9 +26,9 @@ let
   script = ''
     #!/usr/bin/env bash
 
-    # Check for root privileges
-    if [ "$(id -u)" -ne 0 ]; then
-      echo "Error: This script must be run with sudo privileges"
+    # Check if script is running with sudo
+    if [ "$EUID" -ne 0 ]; then
+      echo "Error: This script must be run with sudo"
       exit 1
     fi
 
@@ -116,7 +116,7 @@ let
     fi
 
     # Get the full disk info
-    DISK_INFO=$(${udev}/bin/udevadm info --query=property --name=/dev/''${DISK_NAME})
+    DISK_INFO=$(${systemd}/bin/udevadm info --query=property --name=/dev/''${DISK_NAME})
 
     # Look for existing layout file that matches this disk
     LAYOUT_FILE=$(${findutils}/bin/find "$SEARCH_DIR/disks" -name "*.sfdisk" -type f | ${gnugrep}/bin/grep -F "$(echo "$DISK_INFO" | ${gnugrep}/bin/grep ID_SERIAL= | cut -d= -f2)")
