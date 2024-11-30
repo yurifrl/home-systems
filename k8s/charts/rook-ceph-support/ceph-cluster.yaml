@@ -89,22 +89,20 @@ spec:
     requireSafeReplicaSize: false
 
 ---
-kind: PersistentVolume
+# PV for Monitor (needs Filesystem mode)
 apiVersion: v1
+kind: PersistentVolume
 metadata:
-  name: local0-0
+  name: local-pv-mon
 spec:
   storageClassName: local-storage
   capacity:
-    storage: 2Gi
+    storage: 2Gi  # Must match or exceed mon request
+  volumeMode: Filesystem  # Important for monitor!
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  # PV for mon must be a filesystem volume.
-  volumeMode: Filesystem
   local:
-    # To use dm devices like logical volume, please replace `/dev/sdb` with their device names like `/dev/vg-name/lv-name`.
-    path: /dev/vdb
+    path: /dev/sda1
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -112,24 +110,22 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - nixos-1
+                - nixos-1  # Must match your node name exactly
 
 ---
-kind: PersistentVolume
+# PV for OSD (needs Block mode)
 apiVersion: v1
+kind: PersistentVolume
 metadata:
-  name: local0-1
+  name: local-pv-osd
 spec:
   storageClassName: local-storage
   capacity:
-    storage: 26Gi
+    storage: 26Gi  # Must match or exceed OSD request
+  volumeMode: Block  # Important for OSD!
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  # PV for mon must be a filesystem volume.
-  volumeMode: Block
   local:
-    # To use dm devices like logical volume, please replace `/dev/sdb` with their device names like `/dev/vg-name/lv-name`.
     path: /dev/sda2
   nodeAffinity:
     required:
