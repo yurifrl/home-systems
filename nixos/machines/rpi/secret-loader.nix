@@ -12,6 +12,10 @@ in
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      TimeoutStartSec = "0";
+
       ExecStart = "${pkgs.bash}/bin/bash ${secretScriptPath}";
       # Ensure the script is executable
       ExecStartPre = "${pkgs.coreutils}/bin/chmod +x ${secretScriptPath}";
