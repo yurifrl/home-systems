@@ -115,16 +115,18 @@ let
         exit 1
     fi
 
-    # Get the full disk info
-    DISK_INFO=$(${systemd}/bin/udevadm info --query=property --name=/dev/''${DISK_NAME})
+    # Get the full disk info (replacing udevadm)
+    DISK_INFO=$(${util-linux}/bin/lsblk -o NAME,SERIAL,MODEL /dev/''${DISK_NAME} | ${gnused}/bin/sed 1d)
+    DISK_SERIAL=$(echo "$DISK_INFO" | ${coreutils}/bin/tr -s ' ' | ${coreutils}/bin/cut -d' ' -f2)
 
     # Look for existing layout file that matches this disk
-    LAYOUT_FILE=$(${findutils}/bin/find "$SEARCH_DIR/disks" -name "*.sfdisk" -type f | ${gnugrep}/bin/grep -F "$(echo "$DISK_INFO" | ${gnugrep}/bin/grep ID_SERIAL= | cut -d= -f2)")
+    LAYOUT_FILE=$(${findutils}/bin/find "$SEARCH_DIR/disks" -name "*.sfdisk" -type f | ${gnugrep}/bin/grep -F "$DISK_SERIAL")
 
     if [ ! -f "$LAYOUT_FILE" ]; then
         echo "No layout file found for this disk"
         echo "Current disk info:"
-        echo "$DISK_INFO" | ${gnugrep}/bin/grep -E "ID_SERIAL=|ID_MODEL="
+        echo "Model: $(echo "$DISK_INFO" | ${coreutils}/bin/tr -s ' ' | ${coreutils}/bin/cut -d' ' -f3-)"
+        echo "Serial: $DISK_SERIAL"
         exit 1
     fi
 
@@ -133,8 +135,8 @@ let
     echo "                     === Disk Information ===                     "
     echo "================================================================"
     echo "Device: /dev/''${DISK_NAME}"
-    echo "Model: $(echo "$DISK_INFO" | ${gnugrep}/bin/grep ID_MODEL= | cut -d= -f2)"
-    echo "Serial: $(echo "$DISK_INFO" | ${gnugrep}/bin/grep ID_SERIAL= | cut -d= -f2)"
+    echo "Model: $(echo "$DISK_INFO" | ${coreutils}/bin/tr -s ' ' | ${coreutils}/bin/cut -d' ' -f3-)"
+    echo "Serial: $DISK_SERIAL"
     echo "Layout file: $LAYOUT_FILE"
     echo "----------------------------------------------------------------"
     echo ""
