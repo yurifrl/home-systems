@@ -54,6 +54,6 @@ spec:
     - name: http
       port: 80
       targetPort: 8080
-      nodePort: 3004
+      nodePort: 30004
   selector:
     app.kubernetes.io/name: promlens
