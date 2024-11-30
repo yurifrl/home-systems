@@ -18,3 +18,24 @@ spec:
         metric: node_cpu_seconds_total{mode!="idle"}
       total:
         metric: node_cpu_seconds_total
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: pod-cpu-throttling
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    pyrra.dev/severity: warning
+    severity: warning
+spec:
+  target: "99"
+  window: 1w
+  description: "Alerts when pods are being throttled due to CPU limits"
+  indicator:
+    ratio:
+      errors:
+        metric: rate(container_cpu_cfs_throttled_seconds_total[5m])
+      total:
+        metric: rate(container_cpu_usage_seconds_total[5m])

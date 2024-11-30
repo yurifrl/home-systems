@@ -18,6 +18,11 @@ spec:
         groupWait: 10s
         groupInterval: 1m
         repeatInterval: 1h
+      - matchers:
+          - name: severity
+            value: "warning"
+        receiver: 'discord-warnings'
+        
   receivers:
     - name: 'discord-critical'
       webhookConfigs:
