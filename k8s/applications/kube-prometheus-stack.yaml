@@ -36,6 +36,12 @@ spec:
           prometheus:
             prometheusSpec:
               externalUrl: https://prometheus.syscd.live
+              alertmanagerConfig:
+                name: alertmanager-config
+              additionalAlertManagerConfigs:
+                - static_configs:
+                    - targets:
+                      - alertmanager.monitoring.svc.cluster.local:9093
               # Enable all features
               enableFeatures:
               - "exemplar-storage"
@@ -91,8 +97,6 @@ spec:
                       replacement: $1:$2
                       target_label: __address__
           alertmanager:
-            alertmanagerSpec:
-              externalUrl: https://alertmanager.syscd.live
             enabled: false
           grafana:
             enabled: false
