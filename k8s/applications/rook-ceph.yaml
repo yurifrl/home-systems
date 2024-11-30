@@ -58,8 +58,27 @@ spec:
         valuesObject:
           operatorNamespace: rook-ceph
           cephClusterSpec:
+            dataDirHostPath: /var/lib/rook
             mon:
               count: 1
+              allowMultiplePerNode: true
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: local-storage
+                  resources:
+                    requests:
+                      storage: 2Gi
+            mgr:
+              count: 1
+            dashboard:
+              enabled: true
+            storage:
+              useAllNodes: false
+              useAllDevices: false
+              nodes:
+                - name: "nixos-1"
+                  devices:
+                    - name: "sda2"
     - chart: rook-ceph
       repoURL: https://charts.rook.io/release
       targetRevision: "*"
@@ -95,11 +114,3 @@ spec:
               - name: nix-store
                 mountPath: /nix
                 readOnly: true
-          # cluster:
-          #   storage:
-          #     useAllDevices: false
-          #     useAllNodes: false
-          #     nodes:
-          #       - name: "nixos-1"  # Must match your node name
-          #         devices:
-          #           - name: "sda"
