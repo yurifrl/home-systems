@@ -12,23 +12,24 @@ if [ -z "$DISK_NAME" ]; then
     exit 1
 fi
 
-# Get the disk's identifier
-DISK_ID=$(sudo udevadm info --query=property --name=/dev/${DISK_NAME} | grep ID_SERIAL_SHORT= | cut -d= -f2)
-MODEL=$(sudo udevadm info --query=property --name=/dev/${DISK_NAME} | grep ID_MODEL= | cut -d= -f2)
-LAYOUT_FILE="disks/${MODEL}_${DISK_ID}.layout"
+# Get the full disk info
+DISK_INFO=$(sudo udevadm info --query=property --name=/dev/${DISK_NAME})
 
-# Check if layout file exists
+# Look for existing layout file that matches this disk
+LAYOUT_FILE=$(find disks -name "*.layout" -type f | grep -F "$(echo "$DISK_INFO" | grep ID_SERIAL= | cut -d= -f2)")
+
 if [ ! -f "$LAYOUT_FILE" ]; then
-    echo "No layout file found for this disk: $LAYOUT_FILE"
-    echo "Current disk ID: ${MODEL}_${DISK_ID}"
+    echo "No layout file found for this disk"
+    echo "Current disk info:"
+    echo "$DISK_INFO" | grep -E "ID_SERIAL=|ID_MODEL="
     exit 1
 fi
 
 # Display disk information
 echo "=== Disk Information ==="
 echo "Device: /dev/${DISK_NAME}"
-echo "Model: $MODEL"
-echo "Serial: $DISK_ID"
+echo "Model: $(echo "$DISK_INFO" | grep ID_MODEL= | cut -d= -f2)"
+echo "Serial: $(echo "$DISK_INFO" | grep ID_SERIAL= | cut -d= -f2)"
 echo "Layout file: $LAYOUT_FILE"
 echo ""
 echo "Current partition layout:"
