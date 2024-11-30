@@ -1,0 +1,92 @@
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  name: rook-ceph
+  namespace: rook-ceph
+spec:
+  dataDirHostPath: /var/lib/rook
+  mon:
+    count: 1
+    allowMultiplePerNode: true
+  mgr:
+    count: 1
+  dashboard:
+    enabled: true
+  storage:
+    useAllDevices: false
+    useAllNodes: false
+    nodes:
+    - name: "nixos-1"  # Must match your node name
+      devices:
+      - name: "sda"
+  crashCollector:
+    disable: true
+
+---
+
+---
+# First create the StorageClass
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: rook-ceph-block
+provisioner: rook-ceph.rbd.csi.ceph.com
+parameters:
+  clusterID: rook-ceph
+  pool: replicapool
+  imageFormat: "2"
+  imageFeatures: layering
+  csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
+  csi.storage.k8s.io/provisioner-secret-namespace: rook-ceph
+  csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
+  csi.storage.k8s.io/node-stage-secret-namespace: rook-ceph
+  csi.storage.k8s.io/fstype: ext4
+---
+# Create a PVC using the StorageClass
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: demo-rook-pvc
+  namespace: hack
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: rook-ceph-block
+---
+# Create a Pod that uses the PVC
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-rook-writer
+  namespace: hack
+spec:
+  containers:
+  - name: writer
+    image: busybox
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "100m"
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+    command: ["/bin/sh", "-c"]
+    args:
+    - |
+      counter=1
+      while true; do
+        echo "Write #$counter at $(date)" >> /data/log.txt
+        cat /data/log.txt
+        counter=$((counter + 1))
+        sleep 5
+      done
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: demo-rook-pvc

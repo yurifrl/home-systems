@@ -50,3 +50,11 @@ spec:
             - name: nix-store
               mountPath: /nix
               readOnly: true
+        cluster:
+          storage:
+            useAllDevices: false
+            useAllNodes: false
+            nodes:
+              - name: "nixos-1"  # Must match your node name
+                devices:
+                  - name: "sda"
