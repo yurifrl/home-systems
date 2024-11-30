@@ -43,18 +43,25 @@ let
       echo "  -l             List manual commands for troubleshooting"
       echo ""
       echo "Available templates:"
-      if [ -d "$SEARCH_DIR" ] && [ "$(${findutils}/bin/find "$SEARCH_DIR" -name '*.sfdisk' -type f | wc -l)" -gt 0 ]; then
-        echo "Templates in $SEARCH_DIR:"
-        for template in "$SEARCH_DIR"/*.sfdisk; do
-          if [ -f "$template" ]; then
-            echo "  - $(${coreutils}/bin/basename "$template" .sfdisk)"
-            echo "    Layout:"
-            ${gnused}/bin/sed 's/^/      /' "$template"
-            echo ""
-          fi
-        done
+      
+      # Check if directory exists and contains .sfdisk files
+      if [ -d "$SEARCH_DIR" ]; then
+        template_count=$(${findutils}/bin/find "$SEARCH_DIR" -name "*.sfdisk" -type f | wc -l)
+        if [ "$template_count" -gt 0 ]; then
+          echo "Templates in $SEARCH_DIR:"
+          for template in "$SEARCH_DIR"/*.sfdisk; do
+            if [ -f "$template" ]; then
+              echo "  - $(${coreutils}/bin/basename "$template" .sfdisk)"
+              echo "    Layout:"
+              ${gnused}/bin/sed 's/^/      /' "$template"
+              echo ""
+            fi
+          done
+        else
+          echo "  No templates found in $SEARCH_DIR"
+        fi
       else
-        echo "  No templates found in $SEARCH_DIR"
+        echo "  Directory $SEARCH_DIR does not exist"
       fi
       exit 0
     }
