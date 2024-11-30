@@ -1,3 +1,4 @@
+# nix-build -E '(import <nixpkgs> {}).callPackage ./cowsay-version.nix {}'  
 { writeShellScriptBin, cowsay }:
 
 let
