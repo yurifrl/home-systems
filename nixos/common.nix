@@ -17,7 +17,7 @@ in
     raspberrypi-eeprom
     
     # System utilities
-    vim neovim curl htop jq 
+    vim neovim curl htop btop jq 
     inetutils git fish 
     nixfmt-rfc-style parted
 
