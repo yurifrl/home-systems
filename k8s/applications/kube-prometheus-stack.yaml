@@ -41,6 +41,12 @@ spec:
           prometheus:
             prometheusSpec:
               externalUrl: https://prometheus.syscd.live
+              # Configure Alertmanager endpoint
+              alertingEndpoints:
+                - namespace: monitoring
+                  name: alertmanager
+                  port: 9093
+                  apiVersion: v2
               # Enable all features
               enableFeatures:
               - "exemplar-storage"
