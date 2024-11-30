@@ -62,6 +62,39 @@ let
     exit 0
   '';
 
+  showHelp = ''
+    echo "Usage: disk-template -a [-d directory] [-h] [-t]"
+    echo ""
+    echo "Options:"
+    echo "  -a             Apply disk template (required to run)"
+    echo "  -d directory   Specify directory to search for disk templates (default: /etc/disk-templates)"
+    echo "  -h             Display this help message"
+    echo "  -t             List manual commands for troubleshooting"
+    echo ""
+    echo "Available templates:"
+    
+    # Check if directory exists and contains .sfdisk files
+    if [ -d "$TEMP_DIR" ]; then
+      template_count=$(${findutils}/bin/find "$TEMP_DIR" -name "*.sfdisk" -type f | wc -l)
+      if [ "$template_count" -gt 0 ]; then
+        echo "Templates in $TEMP_DIR:"
+        for template in "$TEMP_DIR"/*.sfdisk; do
+          if [ -f "$template" ]; then
+            echo "  - $(${coreutils}/bin/basename "$template" .sfdisk)"
+            echo "    Layout:"
+            ${gnused}/bin/sed 's/^/      /' "$template"
+            echo ""
+          fi
+        done
+      else
+        echo "  No templates found in $TEMP_DIR"
+      fi
+    else
+      echo "  Directory $TEMP_DIR does not exist"
+    fi
+    exit 0
+  '';
+
   mainScript = ''
     #!/usr/bin/env bash
 
@@ -70,40 +103,6 @@ let
       echo "Error: This script must be run with sudo"
       exit 1
     fi
-
-    # Display help message
-    show_help() {
-      echo "Usage: disk-template -a [-d directory] [-h] [-t]"
-      echo ""
-      echo "Options:"
-      echo "  -a             Apply disk template (required to run)"
-      echo "  -d directory   Specify directory to search for disk templates (default: /etc/disk-templates)"
-      echo "  -h             Display this help message"
-      echo "  -t             List manual commands for troubleshooting"
-      echo ""
-      echo "Available templates:"
-      
-      # Check if directory exists and contains .sfdisk files
-      if [ -d "$TEMP_DIR" ]; then
-        template_count=$(${findutils}/bin/find "$TEMP_DIR" -name "*.sfdisk" -type f | wc -l)
-        if [ "$template_count" -gt 0 ]; then
-          echo "Templates in $TEMP_DIR:"
-          for template in "$TEMP_DIR"/*.sfdisk; do
-            if [ -f "$template" ]; then
-              echo "  - $(${coreutils}/bin/basename "$template" .sfdisk)"
-              echo "    Layout:"
-              ${gnused}/bin/sed 's/^/      /' "$template"
-              echo ""
-            fi
-          done
-        else
-          echo "  No templates found in $TEMP_DIR"
-        fi
-      else
-        echo "  Directory $TEMP_DIR does not exist"
-      fi
-      exit 0
-    }
 
     # Parse command line arguments
     USER_DIR=""
@@ -118,7 +117,7 @@ let
           USER_DIR="$OPTARG"
           ;;
         h)
-          show_help
+          ${showHelp}
           ;;
         t)
           ${showCommands}
