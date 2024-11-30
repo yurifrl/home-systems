@@ -40,7 +40,7 @@ let
       echo "  -a             Apply disk template (required to run)"
       echo "  -d directory   Specify directory to search for disk templates (default: /etc/disk-templates)"
       echo "  -h             Display this help message"
-      echo "  -l             List manual commands for troubleshooting"
+      echo "  -d             List manual commands for troubleshooting"
       echo ""
       echo "Available templates:"
       
@@ -70,7 +70,7 @@ let
     SEARCH_DIR="."
     APPLY=0
 
-    while getopts "ad:hl" opt; do
+    while getopts "ad:hd" opt; do
       case $opt in
         a)
           APPLY=1
@@ -81,7 +81,7 @@ let
         h)
           show_help
           ;;
-        l)
+        d)
           show_commands
           ;;
         \?)
