@@ -5,7 +5,7 @@ metadata:
   namespace: monitoring
 spec:
   route:
-    groupBy: ['job']
+    groupBy: ['alertname', 'slo', 'severity']
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 4h
