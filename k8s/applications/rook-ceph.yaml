@@ -53,16 +53,16 @@ spec:
                 port: 7000
     - chart: rook-ceph-cluster
       repoURL: https://charts.rook.io/release
-      targetRevision: "*"  # Use the latest stable version
+      targetRevision: "*"
       helm:
         valuesObject:
           operatorNamespace: rook-ceph
           cephClusterSpec:
-            dashboard:
-              enabled: true
+            mon:
+              count: 1
     - chart: rook-ceph
       repoURL: https://charts.rook.io/release
-      targetRevision: "*"  # Use the latest stable version
+      targetRevision: "*"
       helm:
         valuesObject:
           csi:
