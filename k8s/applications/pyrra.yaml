@@ -35,7 +35,6 @@ spec:
         valuesObject:
           extraKubernetesArgs:
             - --generic-rules
-          prometheusUrl: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
-          prometheusExternalUrl: "http://prometheus.syscd.tech"
+          prometheusUrl: "http://prometheus.syscd.tech"
           dashboards:
             enabled: true
