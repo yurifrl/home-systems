@@ -6,6 +6,8 @@ metadata:
   labels:
     prometheus: k8s
     role: alert-rules
+    pyrra.dev/severity: critical
+    severity: critical
 spec:
   target: "99"
   window: 2w
