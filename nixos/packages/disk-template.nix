@@ -34,12 +34,13 @@ let
 
     # Display help message
     show_help() {
-      echo "Usage: disk-template -a [-d directory] [-h]"
+      echo "Usage: disk-template -a [-d directory] [-h] [-l]"
       echo ""
       echo "Options:"
       echo "  -a             Apply disk template (required to run)"
       echo "  -d directory   Specify directory to search for disk templates (default: /etc/disk-templates)"
       echo "  -h             Display this help message"
+      echo "  -l             List manual commands for troubleshooting"
       echo ""
       echo "Available templates:"
       if [ -d "$SEARCH_DIR" ] && [ "$(${findutils}/bin/find "$SEARCH_DIR" -name '*.sfdisk' -type f | wc -l)" -gt 0 ]; then
@@ -62,7 +63,7 @@ let
     SEARCH_DIR="."
     APPLY=0
 
-    while getopts "ad:h" opt; do
+    while getopts "ad:hl" opt; do
       case $opt in
         a)
           APPLY=1
@@ -72,6 +73,9 @@ let
           ;;
         h)
           show_help
+          ;;
+        l)
+          show_commands
           ;;
         \?)
           echo "Invalid option: -$OPTARG" >&2
@@ -171,6 +175,38 @@ let
     echo "Formatting /dev/''${DISK_NAME}1..."
     ${e2fsprogs}/bin/mkfs.ext4 -F /dev/''${DISK_NAME}1
     echo "================================================================"
+
+    # Display commands for manual troubleshooting
+    show_commands() {
+      echo "Manual Command Reference:"
+      echo "------------------------"
+      echo "1. List all disks:"
+      echo "   lsblk -d -o NAME,SIZE,MODEL,SERIAL"
+      echo ""
+      echo "2. Get disk info (replace sdX with your disk):"
+      echo "   sudo udevadm info --query=property --name=/dev/sdX"
+      echo ""
+      echo "3. Show current partition layout:"
+      echo "   sudo fdisk -l /dev/sdX"
+      echo ""
+      echo "4. Wipe filesystem signatures:"
+      echo "   sudo wipefs -a /dev/sdX"
+      echo ""
+      echo "5. Apply partition template (replace TEMPLATE.sfdisk with your template file):"
+      echo "   sudo sfdisk --force /dev/sdX < TEMPLATE.sfdisk"
+      echo ""
+      echo "6. Unmount partition:"
+      echo "   sudo umount /dev/sdX1"
+      echo ""
+      echo "7. Format partition as ext4:"
+      echo "   sudo mkfs.ext4 -F /dev/sdX1"
+      echo ""
+      echo "8. Find disk templates:"
+      echo "   find /path/to/templates -name '*.sfdisk' -type f"
+      echo ""
+      echo "Note: Replace 'sdX' with your actual disk name (e.g., 'sda')"
+      exit 0
+    }
   '';
 in
 writeShellScriptBin "disk-template" script 
