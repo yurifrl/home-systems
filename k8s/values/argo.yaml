@@ -10,6 +10,27 @@
 #
 # helm repo add argo-cd https://argoproj.github.io/argo-helm; helm repo update
 # helm upgrade -n argocd --install argocd argo-cd/argo-cd -f k8s/values/argo.yaml --wait
+global:
+  addPrometheusAnnotations: true
+
+controller:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+dex:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+redis:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
 server:
   ingress:
     enabled: false
@@ -19,11 +40,7 @@ server:
       server.insecure: true
       exec.enabled: true
       server.disable.auth: true
-    metrics:
-      enabled: true
-      serviceMonitor:
-        enabled: true
-
+  
   extraArgs:
     - --insecure
     - --disable-auth
@@ -33,30 +50,26 @@ server:
     passwordSecret:
       name: argocd-secret
       key: admin.password
-  metrics:
-    enabled: true
-    serviceMonitor:
-      enabled: true
-## Application controller
-controller:
-  metrics:
-    enabled: true
-    serviceMonitor:
-      enabled: true
-      # ... existing configuration ...
 
-## ApplicationSet controller
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+repoServer:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
 applicationSet:
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
-      # ... existing configuration ...
 
-## Notifications controller
 notifications:
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
-      # ... existing configuration ...
