@@ -47,9 +47,24 @@ if [ "$answer" != "yes" ]; then
     exit 1
 fi
 
-# Proceed with partitioning
+# Create a temporary layout file with explicit start positions
+TMP_LAYOUT=$(mktemp)
+{
+    echo "label: gpt"
+    echo "device: /dev/${DISK_NAME}"
+    echo "unit: sectors"
+    echo "sector-size: 512"
+    echo ""
+    echo "/dev/${DISK_NAME}1 : start=2048, size=4194304, type=83"
+    echo "/dev/${DISK_NAME}2 : start=4196352, size=54525952, type=83"
+} > "$TMP_LAYOUT"
+
+# Proceed with partitioning using the temporary layout
 echo "Proceeding with partitioning..."
-sudo sfdisk --force /dev/${DISK_NAME} < "$LAYOUT_FILE"
+sudo sfdisk --force /dev/${DISK_NAME} < "$TMP_LAYOUT"
+
+# Clean up
+rm "$TMP_LAYOUT"
 
 # Wait a moment for the kernel to register the new partitions
 sleep 2
