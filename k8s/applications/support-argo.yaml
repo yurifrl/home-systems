@@ -22,19 +22,6 @@ spec:
         valuesObject:
           virtualServices:
             - name: argocd
-              host: argocd.syscd.live
-              service:
-                name: argocd-server
-                namespace: argocd
-                port: 80
-            - name: argocd-tech
-              host: argocd.syscd.tech
-              service:
-                name: argocd-server
-                namespace: argocd
-                port: 80
-            - name: argocd-xyz
-              host: argocd.syscd.xyz
               service:
                 name: argocd-server
                 namespace: argocd

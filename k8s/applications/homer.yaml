@@ -22,7 +22,6 @@ spec:
         valuesObject:
           virtualServices:
             - name: homer
-              host: homer.syscd.live
               service:
                 name: homer
                 namespace: homer
