@@ -224,6 +224,19 @@ let
     echo "Formatting /dev/''${DISK_NAME}1..."
     ${e2fsprogs}/bin/mkfs.ext4 -F /dev/''${DISK_NAME}1
     echo "================================================================"
+
+    echo "================================================================"
+    echo "                     === Final Disk State ===                     "
+    echo "================================================================"
+    echo "Partition table:"
+    echo "----------------------------------------------------------------"
+    ${util-linux}/bin/fdisk -l /dev/''${DISK_NAME}
+    echo ""
+    echo "Filesystem details:"
+    echo "----------------------------------------------------------------"
+    ${util-linux}/bin/lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT /dev/''${DISK_NAME}
+    echo "================================================================"
+    echo "Partitioning complete!"
   '';
 in
 writeShellScriptBin "disk-template" mainScript 
