@@ -21,6 +21,12 @@ spec:
       path: k8s/charts/support
       helm:
         valuesObject:
+          persistentVolumeClaims:
+            - name: home-assistant-config
+              accessModes:
+                - ReadWriteOnce
+              storage: 10Gi
+              storageClassName: local-storage
           virtualServices:
             - name: home-assistant
               host: home-assistant.syscd.live
@@ -43,6 +49,17 @@ spec:
           addons:
             codeserver:
               enabled: true
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+              volumes:
+                - name: config
+                  persistentVolumeClaim:
+                    claimName: home-assistant-config
+          persistence:
+            config:
+              enabled: true
+              existingClaim: home-assistant-config
           configuration:
             enabled: true
             forceInit: true
