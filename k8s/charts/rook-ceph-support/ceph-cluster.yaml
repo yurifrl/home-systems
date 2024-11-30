@@ -21,7 +21,7 @@ spec:
         storageClassName: local-storage
         resources:
           requests:
-            storage: 10Gi
+            storage: 1Gi
   mgr:
     count: 1
     modules:
@@ -38,11 +38,6 @@ spec:
   skipUpgradeChecks: false
   continueUpgradeAfterChecksEvenIfNotHealthy: false
   storage:
-    useAllDevices: false
-    devices:
-      - name: "/dev/sda"
-        config:
-          osdsPerDevice: "1"
     storageClassDeviceSets:
       - name: set1
         count: 3
@@ -92,22 +87,24 @@ spec:
   replicated:
     size: 1
     requireSafeReplicaSize: false
+
 ---
-# For the monitor (Filesystem mode)
-apiVersion: v1
 kind: PersistentVolume
+apiVersion: v1
 metadata:
-  name: local-pv-mon
+  name: local0-0
 spec:
+  storageClassName: local-storage
   capacity:
     storage: 2Gi
-  volumeMode: Filesystem  # Monitor needs Filesystem
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: local-storage
+  # PV for mon must be a filesystem volume.
+  volumeMode: Filesystem
   local:
-    path: /dev/sda1  # First partition
+    # To use dm devices like logical volume, please replace `/dev/sdb` with their device names like `/dev/vg-name/lv-name`.
+    path: /dev/vdb
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -118,21 +115,22 @@ spec:
                 - nixos-1
 
 ---
-# For the OSD (Block mode)
-apiVersion: v1
 kind: PersistentVolume
+apiVersion: v1
 metadata:
-  name: local-pv-osd
+  name: local0-1
 spec:
+  storageClassName: local-storage
   capacity:
-    storage: 26Gi  # Remaining space
-  volumeMode: Block
+    storage: 26Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: local-storage
+  # PV for mon must be a filesystem volume.
+  volumeMode: Block
   local:
-    path: /dev/sda2  # Second partition
+    # To use dm devices like logical volume, please replace `/dev/sdb` with their device names like `/dev/vg-name/lv-name`.
+    path: /dev/sda2
   nodeAffinity:
     required:
       nodeSelectorTerms:
