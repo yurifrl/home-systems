@@ -27,11 +27,6 @@ spec:
                 name: kube-prometheus-stack-prometheus
                 namespace: monitoring
                 port: 9090
-            - name: alertmanager
-              service:
-                name: kube-prometheus-stack-alertmanager
-                namespace: monitoring
-                port: 9093
 
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: kube-prometheus-stack
