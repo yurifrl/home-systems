@@ -23,7 +23,6 @@ spec:
         valuesObject:
           virtualServices:
             - name: pyrra
-              host: pyrra.syscd.live
               service:
                 name: pyrra
                 namespace: monitoring

@@ -46,7 +46,6 @@
 #         valuesObject:
 #           virtualServices:
 #             - name: ceph-dashboard
-#               host: ceph.syscd.tech
 #               service:
 #                 name: rook-ceph-mgr-dashboard
 #                 namespace: rook-ceph

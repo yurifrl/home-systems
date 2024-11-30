@@ -26,11 +26,6 @@ spec:
                 name: grafana
                 namespace: monitoring
                 port: 80
-            - name: grafana-tech
-              service:
-                name: grafana
-                namespace: monitoring
-                port: 80
 
     - repoURL: https://grafana.github.io/helm-charts
       chart: grafana
