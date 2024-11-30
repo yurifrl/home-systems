@@ -23,8 +23,65 @@ let
   script = ''
     #!/usr/bin/env bash
 
-    # Create layout files in current directory
-    ${createLayoutFiles}
+    # Display help message
+    show_help() {
+      echo "Usage: disk-template -a [-d directory] [-h]"
+      echo ""
+      echo "Options:"
+      echo "  -a             Apply disk template (required to run)"
+      echo "  -d directory   Specify directory to search for disk templates (default: /etc/disk-templates)"
+      echo "  -h             Display this help message"
+      echo ""
+      echo "Available templates:"
+      if [ -d "$SEARCH_DIR" ]; then
+        echo "Templates in $SEARCH_DIR:"
+        for template in "$SEARCH_DIR"/*.sfdisk; do
+          if [ -f "$template" ]; then
+            echo "  - $(${coreutils}/bin/basename "$template" .sfdisk)"
+            echo "    Layout:"
+            ${coreutils}/bin/sed 's/^/      /' "$template"
+            echo ""
+          fi
+        done
+      else
+        echo "  No templates found in $SEARCH_DIR"
+      fi
+      exit 0
+    }
+
+    # Parse command line arguments
+    SEARCH_DIR="."
+    APPLY=0
+
+    while getopts "ad:h" opt; do
+      case $opt in
+        a)
+          APPLY=1
+          ;;
+        d)
+          SEARCH_DIR="$OPTARG"
+          ;;
+        h)
+          show_help
+          ;;
+        \?)
+          echo "Invalid option: -$OPTARG" >&2
+          echo "Use -h for help" >&2
+          exit 1
+          ;;
+      esac
+    done
+
+    # Show help if no arguments or -a not specified
+    if [ $APPLY -eq 0 ]; then
+      show_help
+    fi
+
+    # Create layout files in specified directory
+    mkdir -p "$SEARCH_DIR/disks"
+    ${builtins.concatStringsSep "\n" (builtins.mapAttrs (name: content: ''
+      echo '${content}' > "$SEARCH_DIR/disks/${name}.sfdisk"
+    '') diskLayouts)}
 
     # List all available disks
     echo "=== Available Disks ==="
@@ -42,7 +99,7 @@ let
     DISK_INFO=$(${udev}/bin/udevadm info --query=property --name=/dev/''${DISK_NAME})
 
     # Look for existing layout file that matches this disk
-    LAYOUT_FILE=$(${findutils}/bin/find disks -name "*.sfdisk" -type f | ${grep}/bin/grep -F "$(echo "$DISK_INFO" | ${grep}/bin/grep ID_SERIAL= | cut -d= -f2)")
+    LAYOUT_FILE=$(${findutils}/bin/find "$SEARCH_DIR/disks" -name "*.sfdisk" -type f | ${grep}/bin/grep -F "$(echo "$DISK_INFO" | ${grep}/bin/grep ID_SERIAL= | cut -d= -f2)")
 
     if [ ! -f "$LAYOUT_FILE" ]; then
         echo "No layout file found for this disk"
