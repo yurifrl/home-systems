@@ -1,6 +1,7 @@
 { pkgs, lib, pkgs-unstable, ... }:
 let
   cowsayVersion = pkgs.callPackage ./packages/cowsay-version.nix { };
+  diskTemplate = pkgs.callPackage ./packages/disk-template.nix { };
 in
 {
   # Module imports (always first)
@@ -24,6 +25,7 @@ in
     istioctl
     # Custom packages
     cowsayVersion 
+    diskTemplate
   ] ++ (with pkgs-unstable; [
     # Kubernetes tools
     kubectl kubernetes-helm cloudflared
