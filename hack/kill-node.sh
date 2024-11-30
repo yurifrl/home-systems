@@ -14,3 +14,7 @@ sudo rm -rf /etc/rancher/k3s
 sudo rm -rf /var/log/k3s.log
 
 echo "K3s has been stopped and purged of all state."
+
+sudo systemctl restart secret-loader 
+
+sudo systemctl restart argo-setup
