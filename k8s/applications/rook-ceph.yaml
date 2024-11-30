@@ -50,7 +50,7 @@ spec:
               service:
                 name: rook-ceph-mgr-dashboard
                 namespace: rook-ceph
-                port: 7000
+                port: 8443
     - chart: rook-ceph-cluster
       repoURL: https://charts.rook.io/release
       targetRevision: "*"
