@@ -1,104 +1,116 @@
-# apiVersion: ceph.rook.io/v1
-# kind: CephCluster
-# metadata:
-#   name: rook-ceph
-#   namespace: rook-ceph
-# spec:
-#   dataDirHostPath: /var/lib/rook
-#   mon:
-#     count: 1
-#     allowMultiplePerNode: true
-#   mgr:
-#     count: 1
-#   dashboard:
-#     enabled: true
-#   storage:
-#     useAllDevices: false
-#     useAllNodes: false
-#     nodes:
-#     - name: "nixos-1"
-#       devices:
-#       - name: "sda"
-#   crashCollector:
-#     disable: true
+#################################################################################################################
+# Define the settings for the rook-ceph cluster with common settings for a small test cluster.
+# All nodes with available raw devices will be used for the Ceph cluster. One node is sufficient
+# in this example.
 
-# ---
-# # 2. Create the CephBlockPool - defines how data is stored and replicated
-# apiVersion: ceph.rook.io/v1
-# kind: CephBlockPool
-# metadata:
-#   name: replicapool
-#   namespace: rook-ceph
-# spec:
-#   failureDomain: host
-#   replicated:
-#     size: 1
-
-# ---
-# # 3. Create the StorageClass - makes Ceph available to Kubernetes for PVCs
-# apiVersion: storage.k8s.io/v1
-# kind: StorageClass
-# metadata:
-#   name: rook-ceph-block
-# provisioner: rook-ceph.rbd.csi.ceph.com
-# parameters:
-#   clusterID: rook-ceph
-#   pool: replicapool
-#   imageFormat: "2"
-#   imageFeatures: layering
-#   csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
-#   csi.storage.k8s.io/provisioner-secret-namespace: rook-ceph
-#   csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
-#   csi.storage.k8s.io/node-stage-secret-namespace: rook-ceph
-#   csi.storage.k8s.io/fstype: ext4
-
-# ---
-# # 4. Create a demo PVC using the StorageClass (optional)
-# apiVersion: v1
-# kind: PersistentVolumeClaim
-# metadata:
-#   name: demo-rook-pvc
-#   namespace: hack
-# spec:
-#   accessModes:
-#     - ReadWriteOnce
-#   resources:
-#     requests:
-#       storage: 1Gi
-#   storageClassName: rook-ceph-block
-
-# ---
-# # 5. Create a demo Pod that uses the PVC (optional)
-# apiVersion: v1
-# kind: Pod
-# metadata:
-#   name: demo-rook-writer
-#   namespace: hack
-# spec:
-#   containers:
-#   - name: writer
-#     image: busybox
-#     resources:
-#       limits:
-#         memory: "128Mi"
-#         cpu: "100m"
-#       requests:
-#         memory: "64Mi"
-#         cpu: "50m"
-#     command: ["/bin/sh", "-c"]
-#     args:
-#     - |
-#       counter=1
-#       while true; do
-#         echo "Write #$counter at $(date)" >> /data/log.txt
-#         cat /data/log.txt
-#         counter=$((counter + 1))
-#         sleep 5
-#       done
-#     volumeMounts:
-#     - name: data
-#       mountPath: /data
-#   volumes:
-#   - name: data
-#     persistentVolumeClaim:
-#       claimName: demo-rook-pvc
+# For example, to create the cluster:
+#   kubectl create -f crds.yaml -f common.yaml -f operator.yaml
+#   kubectl create -f cluster-test.yaml
+#################################################################################################################
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  name: my-cluster
+  namespace: rook-ceph # namespace:cluster
+spec:
+  dataDirHostPath: /var/lib/rook
+  cephVersion:
+    image: quay.io/ceph/ceph:v19
+    allowUnsupported: true
+  mon:
+    count: 1
+    allowMultiplePerNode: true
+  mgr:
+    count: 1
+    allowMultiplePerNode: true
+    modules:
+      - name: rook
+        enabled: true
+  dashboard:
+    enabled: true
+  crashCollector:
+    disable: true
+  storage:
+    useAllNodes: true
+    useAllDevices: true
+    allowDeviceClassUpdate: true
+    allowOsdCrushWeightUpdate: false
+    #deviceFilter:
+    #config:
+    #  deviceClass: testclass
+  monitoring:
+    enabled: false
+  healthCheck:
+    daemonHealth:
+      mon:
+        interval: 45s
+        timeout: 600s
+  priorityClassNames:
+    all: system-node-critical
+    mgr: system-cluster-critical
+  disruptionManagement:
+    managePodBudgets: true
+  cephConfig:
+    global:
+      osd_pool_default_size: "1"
+      mon_warn_on_pool_no_redundancy: "false"
+      bdev_flock_retry: "20"
+      bluefs_buffered_io: "false"
+      mon_data_avail_warn: "10"
+---
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+  name: builtin-mgr
+  namespace: rook-ceph # namespace:cluster
+spec:
+  name: .mgr
+  replicated:
+    size: 1
+    requireSafeReplicaSize: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ceph-pvc
+  namespace: rook-ceph
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: rook-ceph-block
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: volume-writer
+  namespace: rook-ceph
+spec:
+  containers:
+  - name: writer
+    image: busybox
+    command: ["/bin/sh", "-c"]
+    args:
+    - |
+      counter=1
+      while true; do
+        echo "Line $counter: $(date)" >> /data/output.txt
+        counter=$((counter + 1))
+        sleep 5
+      done
+    resources:
+      requests:
+        memory: 100Mi
+        cpu: 100m
+      limits:
+        memory: 100Mi
+        cpu: 100m
+    volumeMounts:
+    - name: data-volume
+      mountPath: /data
+  volumes:
+  - name: data-volume
+    persistentVolumeClaim:
+      claimName: ceph-pvc
