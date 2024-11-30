@@ -49,5 +49,15 @@ fi
 
 # Proceed with partitioning
 echo "Proceeding with partitioning..."
-sudo sfdisk /dev/${DISK_NAME} --wipe=always < "$LAYOUT_FILE"
-sudo mkfs.ext4 /dev/${DISK_NAME}1
+sudo sfdisk --force /dev/${DISK_NAME} < "$LAYOUT_FILE"
+
+# Wait a moment for the kernel to register the new partitions
+sleep 2
+
+# Format only if partition exists
+if [ -b "/dev/${DISK_NAME}1" ]; then
+    sudo mkfs.ext4 /dev/${DISK_NAME}1
+else
+    echo "Error: Partition /dev/${DISK_NAME}1 was not created"
+    exit 1
+fi
