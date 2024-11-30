@@ -1,4 +1,3 @@
----
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
@@ -14,9 +13,9 @@ spec:
   indicator:
     ratio:
       errors:
-        metric: 1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) by (instance) > 0.85
+        metric: node_cpu_seconds_total{mode!="idle"}
       total:
-        metric: 1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) by (instance) > 0
+        metric: node_cpu_seconds_total
 ---
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
