@@ -20,10 +20,10 @@ in
       WorkingDirectory = "/etc/secrets";
       
       # Add retry logic
-      Restart = "always";
+      Restart = "on-failure";  # Only restart if the service exits with non-zero status
       RestartSec = "30s";
-      StartLimitIntervalSec = "0"; # Disable the start limit interval
-      StartLimitBurst = "0";       # Disable the start limit burst
+      StartLimitIntervalSec = "0";
+      StartLimitBurst = "0";
     };
 
     # Restart the service on failure
