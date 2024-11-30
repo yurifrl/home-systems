@@ -92,3 +92,26 @@ spec:
   replicated:
     size: 1
     requireSafeReplicaSize: false
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-pv-sda
+spec:
+  capacity:
+    storage: 28Gi  # Your SanDisk size
+  volumeMode: Block  # Important for Ceph
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /dev/sda
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - nixos-1  # Replace with your node name
