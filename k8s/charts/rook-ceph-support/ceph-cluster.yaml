@@ -183,8 +183,8 @@ spec:
         args:
           - |
             while true; do
-              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Version $VERSION - Pod: $POD_NAME - Node: $NODE_NAME - IP: $POD_IP - Log entry" >> /logs/app.log
-              echo "Wrote log entry"
+              log_entry="[$(date '+%Y-%m-%d %H:%M:%S')] Version $VERSION - Pod: $POD_NAME - Node: $NODE_NAME - IP: $POD_IP - Log entry"
+              echo "$log_entry" | tee -a /logs/app.log
               sleep 1
             done
         volumeMounts:
