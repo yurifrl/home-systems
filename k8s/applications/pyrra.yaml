@@ -42,5 +42,5 @@ spec:
             enabled: true
           prometheusRule:
             enabled: true
-          dashboards:
+          validatingWebhookConfiguration:
             enabled: true
