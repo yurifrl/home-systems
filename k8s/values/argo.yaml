@@ -7,6 +7,9 @@
 #
 # sudo systemctl status argo-setup
 # sudo systemctl restart argo-setup & sudo journalctl -u argo-setup.service -f 
+#
+# helm repo add argo-cd https://argoproj.github.io/argo-helm; helm repo update
+# helm upgrade -n argocd --install argocd argo-cd/argo-cd -f k8s/values/argo.yaml --wait
 server:
   ingress:
     enabled: false
