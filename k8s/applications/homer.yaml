@@ -124,7 +124,7 @@ spec:
                         - name: "Ceph Dashboard"
                           icon: "fas fa-database"
                           tag: "storage"
-                          url: "https://ceph.syscr.tech"
+                          url: "https://ceph.syscd.tech"
                           target: "_blank"
                         
                         - name: "ArgoCD"
