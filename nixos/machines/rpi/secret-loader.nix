@@ -15,7 +15,9 @@ in
     systemd.services.secret-loader = {
       description = "Secret Loader Service";
       after = [ "network.target" ];
+      before = [ "argo-setup.service" ];
       wantedBy = [ "multi-user.target" ];
+      requiredBy = [ "argo-setup.service" ];
 
       serviceConfig = {
         ExecStart = "${secretScriptPath}";
