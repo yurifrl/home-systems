@@ -2,6 +2,7 @@
   imports = [
     ./hardware-configuration.nix
     ./argo-setup.nix
+    ./secret-loader.nix
     ../../modules/kubernetes.nix
   ];
   networking = {
