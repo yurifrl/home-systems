@@ -29,7 +29,6 @@ spec:
                 namespace: zigbee2mqtt
                 port: 8080
 
-
     - repoURL: https://andrenarchy.github.io/helm-charts/
       chart: zigbee2mqtt
       targetRevision: 9.20.0

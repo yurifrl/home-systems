@@ -1,20 +1,19 @@
-{{- if .Values.persistentVolumes }}
-{{- range .Values.persistentVolumes }}
----
+{{- range .Values.persistentVolumes | default (list) }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ .name }}
+  name: {{ .name | default "local0-0" }}
+  namespace: {{ $.Release.Namespace }}
 spec:
+  storageClassName: {{ .storageClass | default "local-storage" }}
   capacity:
-    storage: {{ .size }}
-  volumeMode: Filesystem
+    storage: {{ .size | default "10Gi" }}
   accessModes:
     - {{ .accessMode | default "ReadWriteOnce" }}
-  persistentVolumeReclaimPolicy: {{ .reclaimPolicy | default "Delete" }}
-  storageClassName: {{ .storageClass }}
+  persistentVolumeReclaimPolicy: {{ .reclaimPolicy | default "Retain" }}
+  volumeMode: Filesystem
   local:
-    path: {{ .path }}
+    path: {{ .path | default "/dev/sda" }}
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -22,6 +21,6 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - {{ .nodeName }}
-{{- end }}
+                - {{ .nodeName | default "nixos-1" }}
+---
 {{- end }}

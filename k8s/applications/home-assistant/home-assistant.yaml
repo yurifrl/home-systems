@@ -34,12 +34,6 @@ spec:
                 name: home-assistant-codeserver
                 namespace: home-assistant
                 port: 12321
-          persistentVolumes:
-            - name: home-assistant-pv
-              size: 1Gi
-              storageClass: local-storage
-              path: /mnt/data/home-assistant
-              nodeName: YOUR_NODE_NAME
 
     - repoURL: http://pajikos.github.io/home-assistant-helm-chart/
       chart: home-assistant

@@ -5,29 +5,6 @@ metadata:
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
 ---
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: local0-0
-spec:
-  storageClassName: local-storage
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  volumeMode: Filesystem
-  local:
-    path: /dev/sda
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-                - nixos-1
----
 apiVersion: ceph.rook.io/v1
 kind: CephCluster
 metadata:
@@ -61,6 +38,11 @@ spec:
   skipUpgradeChecks: false
   continueUpgradeAfterChecksEvenIfNotHealthy: false
   storage:
+    useAllDevices: false
+    devices:
+      - name: "/dev/sda"
+        config:
+          osdsPerDevice: "1"
     storageClassDeviceSets:
       - name: set1
         count: 3
