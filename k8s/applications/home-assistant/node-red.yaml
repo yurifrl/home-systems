@@ -29,41 +29,12 @@ spec:
                 namespace: node-red
                 port: 1880
 
-    - repoURL: https://k8s-at-home.com/charts
+    - repoURL: https://schwarzit.github.io/node-red-chart
+      targetRevision: "*"
       chart: node-red
-      targetRevision: 9.0.1
       helm:
         valuesObject:
-          image:
-            repository: nodered/node-red
-          env:
-            TZ: "America/Sao_Paulo"
-            FLOWS: "flows.json"
-            NODE_RED_ENABLE_PROJECTS: "true"
-            NODE_RED_ENABLE_SAFE_MODE: "false"
           persistence:
-            data:
-              enabled: true
-              mountPath: /data
-              storageClass: local-storage
-              accessMode: ReadWriteOnce
-              size: "5Gi"
-          initContainers:
-            update-volume-permission:
-              name: update-volume-permission
-              image: busybox
-              command: ["sh", "-c", "chown -R 1000:1000 /data"]
-              volumeMounts:
-                - name: data
-                  mountPath: /data
-              securityContext:
-                runAsUser: 0
-          tolerations:
-            - key: "arm"
-              operator: "Exists"
-          resources:
-            requests:
-              memory: 1000Mi
-              cpu: 500m
-            limits:
-              memory: 1000Mi
+            enabled: true
+            size: 1Gi
+            accessMode: ReadWriteOnce
