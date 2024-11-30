@@ -21,12 +21,6 @@ spec:
       path: k8s/charts/support
       helm:
         valuesObject:
-          persistentVolumeClaims:
-            - name: node-red-data
-              accessModes:
-                - ReadWriteOnce
-              storage: 1Gi
-              storageClassName: local-storage
           virtualServices:
             - name: node-red
               host: node-red.syscd.live
@@ -42,7 +36,6 @@ spec:
         valuesObject:
           image:
             repository: nodered/node-red
-            tag: latest-12
           env:
             TZ: "America/Sao_Paulo"
             FLOWS: "flows.json"
@@ -51,8 +44,10 @@ spec:
           persistence:
             data:
               enabled: true
-              existingClaim: node-red-data
               mountPath: /data
+              storageClass: local-storage
+              accessMode: ReadWriteOnce
+              size: "5Gi"
           initContainers:
             update-volume-permission:
               name: update-volume-permission

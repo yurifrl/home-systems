@@ -21,12 +21,6 @@ spec:
       path: k8s/charts/support
       helm:
         valuesObject:
-          persistentVolumeClaims:
-            - name: zigbee2mqtt-config
-              accessModes:
-                - ReadWriteOnce
-              storage: 1Gi
-              storageClassName: local-storage
           virtualServices:
             - name: zigbee2mqtt
               host: zigbee2mqtt.syscd.live
@@ -65,7 +59,9 @@ spec:
           persistence:
             config:
               enabled: true
-              existingClaim: zigbee2mqtt-config
+              storageClass: local-storage
+              accessMode: ReadWriteOnce
+              size: 1Gi
               mountPath: "/data"
             usb:
               enabled: true

@@ -21,12 +21,6 @@ spec:
       path: k8s/charts/support
       helm:
         valuesObject:
-          persistentVolumeClaims:
-            # - name: home-assistant-config
-            #   accessModes:
-            #     - ReadWriteOnce
-            #   storage: 10Gi
-            #   storageClassName: local-storage
           virtualServices:
             - name: home-assistant
               host: home-assistant.syscd.live
