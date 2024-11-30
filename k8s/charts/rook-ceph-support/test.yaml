@@ -30,6 +30,13 @@ spec:
       containers:
       - name: logger
         image: busybox
+        resources:
+          limits:
+            cpu: "200m"
+            memory: "128Mi"
+          requests:
+            cpu: "100m"
+            memory: "64Mi"
         env:
         - name: VERSION
           value: "1"
