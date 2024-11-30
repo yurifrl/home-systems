@@ -1,78 +1,22 @@
-apiVersion: pyrra.dev/v1alpha1
-kind: ServiceLevelObjective
-metadata:
-  labels:
-    prometheus: k8s
-    role: alert-rules
-  name: node-cpu-saturation
-  namespace: monitoring
-spec:
-  description: "CPU utilization is consistently high across nodes"
-  indicator:
-    ratio:
-      errors:
-        metric: node_cpu_utilisation:rate5m{job="node-exporter"} > 0.8
-      total:
-        metric: node_cpu_utilisation:rate5m{job="node-exporter"}
-  target: "99"
-  window: 7d
 ---
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
+  name: cluster-cpu-utilization
+  namespace: monitoring
   labels:
     prometheus: k8s
     role: alert-rules
-  name: node-memory-saturation
-  namespace: monitoring
 spec:
-  description: "Memory usage is approaching system limits"
-  indicator:
-    ratio:
-      errors:
-        metric: node_memory_utilisation:ratio{job="node-exporter"} > 0.85
-      total:
-        metric: node_memory_utilisation:ratio{job="node-exporter"}
-  target: "99"
-  window: 7d
----
-apiVersion: pyrra.dev/v1alpha1
-kind: ServiceLevelObjective
-metadata:
-  labels:
-    prometheus: k8s
-    role: alert-rules
-  name: node-disk-saturation
-  namespace: monitoring
-spec:
-  description: "Disk usage is approaching capacity"
-  indicator:
-    ratio:
-      errors:
-        metric: node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} < 0.1
-      total:
-        metric: node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"}
   target: "99"
   window: 2w
----
-apiVersion: pyrra.dev/v1alpha1
-kind: ServiceLevelObjective
-metadata:
-  labels:
-    prometheus: k8s
-    role: alert-rules
-  name: node-load-average
-  namespace: monitoring
-spec:
-  description: "System load average is too high relative to CPU cores"
+  description: "Alerts when CPU utilization is consistently high across cluster nodes"
   indicator:
     ratio:
       errors:
-        metric: node_load1 > (count without (cpu, mode) (node_cpu_seconds_total{mode="idle"}) * 0.8)
+        metric: 1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) by (instance) > 0.85
       total:
-        metric: node_load1
-  target: "99"
-  window: 2w
+        metric: 1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) by (instance) > 0
 ---
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
