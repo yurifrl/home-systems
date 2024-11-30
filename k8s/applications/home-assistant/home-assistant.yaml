@@ -1,69 +1,69 @@
-# https://github.com/k8s-home-lab/helm-charts 
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: home-assistant
-  namespace: argocd
-spec:
-  project: default
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: home-assistant
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-  sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: home-assistant
-              host: home-assistant.syscd.live
-              service:
-                name: home-assistant
-                namespace: home-assistant
-                port: 8080
-            - name: vscode
-              host: ha-vscode.syscd.live
-              service:
-                name: home-assistant-codeserver
-                namespace: home-assistant
-                port: 12321
+# # https://github.com/k8s-home-lab/helm-charts 
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: home-assistant
+#   namespace: argocd
+# spec:
+#   project: default
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: home-assistant
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true
+#   sources:
+#     - repoURL: https://github.com/yurifrl/home-systems.git
+#       targetRevision: HEAD
+#       path: k8s/charts/support
+#       helm:
+#         valuesObject:
+#           virtualServices:
+#             - name: home-assistant
+#               host: home-assistant.syscd.live
+#               service:
+#                 name: home-assistant
+#                 namespace: home-assistant
+#                 port: 8080
+#             - name: vscode
+#               host: ha-vscode.syscd.live
+#               service:
+#                 name: home-assistant-codeserver
+#                 namespace: home-assistant
+#                 port: 12321
 
-    - repoURL: http://pajikos.github.io/home-assistant-helm-chart/
-      chart: home-assistant
-      targetRevision: "*"
-      helm:
-        valuesObject:
-          addons:
-            codeserver:
-              enabled: true
-          # persistence:
-          #   enabled: true
-          #   accessMode: ReadWriteOnce
-          #   size: 1Gi
-          #   storageClass: local-storage
-          configuration:
-            enabled: true
-            forceInit: true
-            templateConfig: |-
-              # Loads default set of integrations. Do not remove.
-              default_config:
+#     - repoURL: http://pajikos.github.io/home-assistant-helm-chart/
+#       chart: home-assistant
+#       targetRevision: "*"
+#       helm:
+#         valuesObject:
+#           addons:
+#             codeserver:
+#               enabled: true
+#           # persistence:
+#           #   enabled: true
+#           #   accessMode: ReadWriteOnce
+#           #   size: 1Gi
+#           #   storageClass: local-storage
+#           configuration:
+#             enabled: true
+#             forceInit: true
+#             templateConfig: |-
+#               # Loads default set of integrations. Do not remove.
+#               default_config:
 
-              http:
-                use_x_forwarded_for: true
-                trusted_proxies:
-                  - 0.0.0.0/0
-                  - ::/0
-              # Load frontend themes from the themes folder
-              frontend:
-                themes: !include_dir_merge_named themes
+#               http:
+#                 use_x_forwarded_for: true
+#                 trusted_proxies:
+#                   - 0.0.0.0/0
+#                   - ::/0
+#               # Load frontend themes from the themes folder
+#               frontend:
+#                 themes: !include_dir_merge_named themes
 
-              automation: !include automations.yaml
-              script: !include scripts.yaml
-              scene: !include scenes.yaml
+#               automation: !include automations.yaml
+#               script: !include scripts.yaml
+#               scene: !include scenes.yaml
