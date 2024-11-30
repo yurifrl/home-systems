@@ -72,9 +72,9 @@ spec:
   indicator:
     ratio:
       errors:
-        metric: instance:node_load1_per_cpu:ratio{job="node-exporter"} > 2
+        metric: http_requests_total{code=~"5.."}
       total:
-        metric: instance:node_load1_per_cpu:ratio{job="node-exporter"}
+        metric: http_requests_total{}
   target: "99"
   window: 1h
 ---
@@ -86,7 +86,6 @@ metadata:
   labels:
     prometheus: k8s
     role: alert-rules
-    pyrra.dev/team: operations # Any labels prefixed with 'pyrra.dev/' will be propagated as Prometheus labels, while stripping the prefix.
 spec:
   target: "99"
   window: 2w
