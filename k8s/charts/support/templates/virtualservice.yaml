@@ -9,9 +9,9 @@ spec:
     - {{ .host }}
   gateways:
     {{- if hasSuffix "live" .host }}
-    - public
+    - istio-system/public
     {{- else }}
-    - private
+    - istio-system/private
     {{- end }}
   http:
     - route:
