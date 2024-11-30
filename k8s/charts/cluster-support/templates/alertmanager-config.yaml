@@ -1,28 +1,28 @@
-# curl -X POST http://alertmanager.syscd.tech/-/reload -v   
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: AlertmanagerConfig
-metadata:
-  name: alertmanager-config
-  namespace: monitoring
-  labels:
-    prometheus: k8s
-    role: alert-rules
-spec:
-  route:
-    groupBy:
-      - alertname
-      - severity
-    groupWait: 30s
-    groupInterval: 5m
-    repeatInterval: 1h
-    receiver: discord-critical
-  receivers:
-    - name: discord-critical
-      webhookConfigs:
-        - urlSecret:
-            name: alertmanager-discord
-            key: webhook-url
-    - name: 'null'
+# # curl -X POST http://alertmanager.syscd.tech/-/reload -v   
+# apiVersion: monitoring.coreos.com/v1alpha1
+# kind: AlertmanagerConfig
+# metadata:
+#   name: alertmanager-config
+#   namespace: monitoring
+#   labels:
+#     prometheus: k8s
+#     role: alert-rules
+# spec:
+#   route:
+#     groupBy:
+#       - alertname
+#       - severity
+#     groupWait: 30s
+#     groupInterval: 5m
+#     repeatInterval: 1h
+#     receiver: discord-critical
+#   receivers:
+#     - name: discord-critical
+#       webhookConfigs:
+#         - urlSecret:
+#             name: alertmanager-discord
+#             key: webhook-url
+#     - name: 'null'
 
 ---
 apiVersion: monitoring.coreos.com/v1
