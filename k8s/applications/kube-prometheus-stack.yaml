@@ -23,13 +23,11 @@ spec:
         valuesObject:
           virtualServices:
             - name: prometheus
-              host: prometheus.syscd.tech
               service:
                 name: kube-prometheus-stack-prometheus
                 namespace: monitoring
                 port: 9090
             - name: alertmanager
-              host: alertmanager.syscd.tech
               service:
                 name: kube-prometheus-stack-alertmanager
                 namespace: monitoring

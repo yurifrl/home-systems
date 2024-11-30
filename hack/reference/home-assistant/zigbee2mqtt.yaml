@@ -23,7 +23,6 @@ spec:
         valuesObject:
           virtualServices:
             - name: zigbee2mqtt
-              host: zigbee2mqtt.syscd.live
               service:
                 name: zigbee2mqtt
                 namespace: zigbee2mqtt

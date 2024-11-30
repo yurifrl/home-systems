@@ -22,7 +22,6 @@ spec:
         valuesObject:
           virtualServices:
             - name: kiali
-              host: kiali.syscd.tech
               service:
                 name: kiali
                 namespace: istio-system

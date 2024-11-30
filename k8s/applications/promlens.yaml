@@ -23,7 +23,6 @@ spec:
         valuesObject:
           virtualServices:
             - name: promlens
-              host: promlens.syscd.tech
               service:
                 name: promlens
                 namespace: promlens

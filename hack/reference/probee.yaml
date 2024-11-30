@@ -22,7 +22,6 @@ spec:
         valuesObject:
           virtualServices:
             - name: probee
-              host: probee.syscd.live
               service:
                 name: probee-httpbin
                 namespace: probee

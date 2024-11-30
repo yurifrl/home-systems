@@ -22,13 +22,11 @@ spec:
         valuesObject:
           virtualServices:
             - name: grafana
-              host: grafana.syscd.live
               service:
                 name: grafana
                 namespace: monitoring
                 port: 80
             - name: grafana-tech
-              host: grafana.syscd.tech
               service:
                 name: grafana
                 namespace: monitoring

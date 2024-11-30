@@ -23,13 +23,11 @@ spec:
         valuesObject:
           virtualServices:
             - name: home-assistant
-              host: home-assistant.syscd.live
               service:
                 name: home-assistant
                 namespace: home-assistant
                 port: 8080
             - name: vscode
-              host: ha-vscode.syscd.live
               service:
                 name: home-assistant-codeserver
                 namespace: home-assistant

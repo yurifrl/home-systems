@@ -103,13 +103,13 @@ spec:
                         - name: "Prometheus"
                           icon: "fas fa-fire"
                           tag: "monitoring"
-                          url: "http://prometheus.syscd.tech"
+                          url: "http://prometheus.syscd.live"
                           target: "_blank"
                         
                         - name: "Kiali"
                           icon: "fas fa-project-diagram"
                           tag: "monitoring"
-                          url: "http://kiali.syscd.tech"
+                          url: "http://kiali.syscd.live"
                           target: "_blank"
                         
                         - name: "Pyrra"
@@ -121,7 +121,7 @@ spec:
                         - name: "Alertmanager"
                           icon: "fas fa-bell"
                           tag: "monitoring"
-                          url: "https://alertmanager.syscd.tech"
+                          url: "https://alertmanager.syscd.live"
                           target: "_blank"
 
                     - name: "Infrastructure"
@@ -130,7 +130,7 @@ spec:
                         - name: "Ceph Dashboard"
                           icon: "fas fa-database"
                           tag: "storage"
-                          url: "https://ceph.syscd.tech"
+                          url: "https://ceph.syscd.live"
                           target: "_blank"
                         
                         - name: "ArgoCD"

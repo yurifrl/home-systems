@@ -18,12 +18,22 @@ persistentVolumes: []
 
 # Virtual Services configuration
 virtualServices: []
-  # - name: grafana                     # Name of the virtual service
-  #   host: grafana.example.com        # External hostname
+  # - name: grafana                    # Name of the virtual service
   #   service:
   #     name: grafana-service          # Internal k8s service name
   #     namespace: monitoring          # Service namespace
   #     port: 80                       # Service port
+  #   domains:                         # Control which domains to create (defaults: xyz=true, tech=false, live=false)
+  #     xyz: true                      # Create private .syscd.xyz domain
+  #     tech: false                    # Create private .syscd.tech domain (includes .xyz alias)
+  #     live: false                    # Create public .syscd.live domain
+
+# Default values for virtualServices domains
+virtualServicesDefaults:
+  domains:
+    xyz: true
+    tech: true
+    live: true
 
 # Global settings
 global: {}

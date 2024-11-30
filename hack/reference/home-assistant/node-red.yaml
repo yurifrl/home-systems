@@ -23,7 +23,6 @@ spec:
         valuesObject:
           virtualServices:
             - name: node-red
-              host: node-red.syscd.live
               service:
                 name: node-red
                 namespace: node-red
