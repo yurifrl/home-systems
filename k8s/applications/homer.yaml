@@ -15,9 +15,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
-    - repoURL: 'https://github.com/yurifrl/k8s.git'
+    - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
-      path: support
+      path: k8s/charts/support
       helm:
         valuesObject:
           virtualServices:

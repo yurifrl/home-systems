@@ -18,7 +18,7 @@ spec:
     - repoURL: 'https://github.com/yurifrl/k8s.git'
       targetRevision: HEAD
       ref: support
-      path: support
+      path: k8s/charts/support
       helm:
         valuesObject:
           virtualServices:
