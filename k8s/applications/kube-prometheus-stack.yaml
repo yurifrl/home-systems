@@ -44,9 +44,12 @@ spec:
               # Configure Alertmanager endpoint
               alertingEndpoints:
                 - namespace: monitoring
-                  name: alertmanager
+                  name: alertmanager-operated
                   port: 9093
+                  pathPrefix: /
                   apiVersion: v2
+                  timeout: 10s
+                
               # Enable all features
               enableFeatures:
               - "exemplar-storage"
