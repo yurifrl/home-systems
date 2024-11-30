@@ -1,6 +1,7 @@
 { config, lib, pkgs, ... }:
 
 let
+  k3sConfig = "/etc/rancher/k3s/k3s.yaml";
   # Define the path to the script you want to execute
   secretScriptPath = "/etc/secrets/sync.sh";
 in
@@ -10,7 +11,12 @@ in
     after = [ "network.target" "k3s.service" ];
     requires = [ "k3s.service" ];
     wantedBy = [ "multi-user.target" ];
-
+    path = with pkgs; [
+      kubectl
+    ];
+    environment = {
+      KUBECONFIG = k3sConfig;
+    };
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = "yes";
