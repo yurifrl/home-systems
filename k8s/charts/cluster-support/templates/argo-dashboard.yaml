@@ -1,8 +1,0 @@
-# apiVersion: v1
-# kind: ConfigMap
-# metadata:
-#   name: argo-dashboard
-#   namespace: monitoring
-# data:
-#   argo-dashboard.json: |
-#     {{ .Files.Get "templates/dashboards/argo-dashboard.json" | indent 4 }} 
