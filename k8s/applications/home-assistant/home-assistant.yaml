@@ -43,11 +43,11 @@ spec:
           addons:
             codeserver:
               enabled: true
-          persistence:
-            enabled: true
-            accessMode: ReadWriteOnce
-            size: 1Gi
-            storageClass: local-storage
+          # persistence:
+          #   enabled: true
+          #   accessMode: ReadWriteOnce
+          #   size: 1Gi
+          #   storageClass: local-storage
           configuration:
             enabled: true
             forceInit: true
