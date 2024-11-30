@@ -35,6 +35,10 @@ spec:
     useAllDevices: true
     allowDeviceClassUpdate: true
     allowOsdCrushWeightUpdate: false
+  nodes:
+    - name: "nixos-1"
+      devices:
+      - name: "sda"
     #deviceFilter:
     #config:
     #  deviceClass: testclass
