@@ -14,79 +14,88 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true 
-      # There is a problem/bug when creating the prometheus crd
-      # https://github.com/prometheus-community/helm-charts/issues/1500
-      # but, it seem that by doing this argo is not able to create roles
-      # the workaround is some creative applying, enabling and disabling the replace flag
       - ServerSideApply=true
-  source:
-    repoURL: https://prometheus-community.github.io/helm-charts
-    chart: kube-prometheus-stack
-    targetRevision: "*"
-    helm:
-      valuesObject:
-        prometheus:
-          prometheusSpec:
-            # Enable all features
-            enableFeatures:
-            - "exemplar-storage"
-            
-            # Increase retention if needed
-            retention: 30d
+  sources:
+    - repoURL: 'https://github.com/yurifrl/k8s.git'
+      targetRevision: HEAD
+      path: support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: prometheus
+              host: prometheus.syscd.tech
+              service:
+                name: kube-prometheus-stack-prometheus
+                namespace: monitoring
+                port: 9090
 
-            # Scrape Config Selectors
-            # Service Monitors
-            serviceMonitorSelectorNilUsesHelmValues: false
-            serviceMonitorSelector: {} 
-            serviceMonitorNamespaceSelector: {}
-            
-            # Pod Monitors
-            podMonitorSelectorNilUsesHelmValues: false
-            podMonitorSelector: {}
-            podMonitorNamespaceSelector: {}
-            
-            # Probe Monitors
-            probeSelectorNilUsesHelmValues: false
-            probeSelector: {}
-            probeNamespaceSelector: {}
-            
-            # Rule Selectors
-            ruleSelectorNilUsesHelmValues: false
-            ruleSelector: {}
-            ruleNamespaceSelector: {}
-            
-            # Scrape Config Selectors
-            scrapeConfigSelectorNilUsesHelmValues: false
-            scrapeConfigSelector: {}
-            scrapeConfigNamespaceSelector: {}
-            
-            # Additional Scrape Configs
-            enableAdditionalScrapeConfigs: true
-            
-            # Scrape configs for annotation-based discovery
-            additionalScrapeConfigs:
-              - job_name: 'kubernetes-pods-annotations'
-                kubernetes_sd_configs:
-                  - role: pod
-                relabel_configs:
-                  - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-                    action: keep
-                    regex: true
-                  - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
-                    action: replace
-                    target_label: __metrics_path__
-                    regex: (.+)
-                  - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
-                    action: replace
-                    regex: ([^:]+)(?::\d+)?;(\d+)
-                    replacement: $1:$2
-                    target_label: __address__
-        alertmanager:
-          enabled: true
-        grafana:
-          enabled: false
-          forceDeployDashboards: true
-          defaultDashboardsEnabled: true
-        loki:
-          enabled: false
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          prometheus:
+            prometheusSpec:
+              # Enable all features
+              enableFeatures:
+              - "exemplar-storage"
+              
+              # Increase retention if needed
+              retention: 30d
+
+              # Scrape Config Selectors
+              # Service Monitors
+              serviceMonitorSelectorNilUsesHelmValues: false
+              serviceMonitorSelector: {} 
+              serviceMonitorNamespaceSelector: {}
+              
+              # Pod Monitors
+              podMonitorSelectorNilUsesHelmValues: false
+              podMonitorSelector: {}
+              podMonitorNamespaceSelector: {}
+              
+              # Probe Monitors
+              probeSelectorNilUsesHelmValues: false
+              probeSelector: {}
+              probeNamespaceSelector: {}
+              
+              # Rule Selectors
+              ruleSelectorNilUsesHelmValues: false
+              ruleSelector: {}
+              ruleNamespaceSelector: {}
+              
+              # Scrape Config Selectors
+              scrapeConfigSelectorNilUsesHelmValues: false
+              scrapeConfigSelector: {}
+              scrapeConfigNamespaceSelector: {}
+              
+              # Additional Scrape Configs
+              enableAdditionalScrapeConfigs: true
+              
+              # Scrape configs for annotation-based discovery
+              additionalScrapeConfigs:
+                - job_name: 'kubernetes-pods-annotations'
+                  kubernetes_sd_configs:
+                    - role: pod
+                  relabel_configs:
+                    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                      action: keep
+                      regex: true
+                    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                      action: replace
+                      target_label: __metrics_path__
+                      regex: (.+)
+                    - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                      action: replace
+                      regex: ([^:]+)(?::\d+)?;(\d+)
+                      replacement: $1:$2
+                      target_label: __address__
+          alertmanager:
+            enabled: true
+          grafana:
+            enabled: false
+            forceDeployDashboards: true
+            defaultDashboardsEnabled: true
+          loki:
+            enabled: false
 # k -n monitoring get secrets kube-prometheus-stack-grafana -ojsonpath="{.data.admin-password}" | base64 -d | pbcopy

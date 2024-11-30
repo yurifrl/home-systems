@@ -17,7 +17,6 @@ spec:
   sources:
     - repoURL: 'https://github.com/yurifrl/k8s.git'
       targetRevision: HEAD
-      ref: support
       path: support
       helm:
         valuesObject:

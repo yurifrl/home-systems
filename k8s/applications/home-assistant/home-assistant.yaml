@@ -15,35 +15,50 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-  source:
-    repoURL: http://pajikos.github.io/home-assistant-helm-chart/
-    chart: home-assistant
-    targetRevision: "*"
-    helm:
-      valuesObject:
-        addons:
-          codeserver:
+  sources:
+    - repoURL: 'https://github.com/yurifrl/k8s.git'
+      targetRevision: HEAD
+      ref: support
+      path: support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: home-assistant
+              host: home-assistant.syscd.live
+              service:
+                name: home-assistant
+                namespace: home-assistant
+                port: 8080
+            - name: vscode
+              host: ha-vscode.syscd.live
+              service:
+                name: home-assistant-codeserver
+                namespace: home-assistant
+                port: 12321
+
+    - repoURL: http://pajikos.github.io/home-assistant-helm-chart/
+      chart: home-assistant
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          addons:
+            codeserver:
+              enabled: true
+          configuration:
             enabled: true
-        # Configuration for Home Assistant
-        configuration:
-          # Enable or disable the configuration setup for Home Assistant
-          enabled: true
-          # Force init will merge the current configuration file with the default configuration on every start
-          # This is useful when you want to ensure that the configuration file is always up to date
-          forceInit: true
+            forceInit: true
+            templateConfig: |-
+              # Loads default set of integrations. Do not remove.
+              default_config:
 
-          templateConfig: |-
-            # Loads default set of integrations. Do not remove.
-            default_config:
+              http:
+                use_x_forwarded_for: true
+                trusted_proxies:
+                  - 10.42.0.45/32
+              # Load frontend themes from the themes folder
+              frontend:
+                themes: !include_dir_merge_named themes
 
-            http:
-              use_x_forwarded_for: true
-              trusted_proxies:
-                - 10.42.0.45/32
-            # Load frontend themes from the themes folder
-            frontend:
-              themes: !include_dir_merge_named themes
-
-            automation: !include automations.yaml
-            script: !include scripts.yaml
-            scene: !include scenes.yaml
+              automation: !include automations.yaml
+              script: !include scripts.yaml
+              scene: !include scenes.yaml

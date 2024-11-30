@@ -15,15 +15,28 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true 
-  source:
-    repoURL: https://rlex.github.io/helm-charts
-    chart: pyrra
-    targetRevision: "*"
-    helm:
-      valuesObject:
-        extraKubernetesArgs:
-          - --generic-rules
-        prometheusUrl: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
-        prometheusExternalUrl: "http://prometheus.syscd.tech"
-        dashboards:
-          enabled: true
+  sources:
+    - repoURL: 'https://github.com/yurifrl/k8s.git'
+      targetRevision: HEAD
+      path: support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: pyrra
+              host: pyrra.syscd.live
+              service:
+                name: pyrra
+                namespace: monitoring
+                port: 9099
+
+    - repoURL: https://rlex.github.io/helm-charts
+      chart: pyrra
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          extraKubernetesArgs:
+            - --generic-rules
+          prometheusUrl: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
+          prometheusExternalUrl: "http://prometheus.syscd.tech"
+          dashboards:
+            enabled: true

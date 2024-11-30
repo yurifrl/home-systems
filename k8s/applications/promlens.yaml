@@ -15,16 +15,29 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-  source:
-    repoURL: https://charts.christianhuth.de
-    chart: promlens
-    targetRevision: "*"
-    helm:
-      valuesObject:
-        config:
-          web:
-            defaultPrometheusUrl: http://prometheus.syscd.tech
-          grafana:
-            enabled: true
-            url: http://grafana.syscd.tech
-            existingSecret: promlens-secret
+  sources:
+    - repoURL: 'https://github.com/yurifrl/k8s.git'
+      targetRevision: HEAD
+      path: support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: promlens
+              host: promlens.syscd.tech
+              service:
+                name: promlens
+                namespace: promlens
+                port: 8080
+
+    - repoURL: https://charts.christianhuth.de
+      chart: promlens
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          config:
+            web:
+              defaultPrometheusUrl: http://prometheus.syscd.tech
+            grafana:
+              enabled: true
+              url: http://grafana.syscd.tech
+              existingSecret: promlens-secret

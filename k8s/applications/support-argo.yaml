@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: support-argo
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: 'https://github.com/yurifrl/k8s.git'
+      targetRevision: HEAD
+      path: support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: argocd
+              host: argocd.syscd.live
+              service:
+                name: argocd-server
+                namespace: argocd
+                port: 80
+            - name: argocd-tech
+              host: argocd.syscd.tech
+              service:
+                name: argocd-server
+                namespace: argocd
+                port: 80
+            - name: argocd-xyz
+              host: argocd.syscd.xyz
+              service:
+                name: argocd-server
+                namespace: argocd
+                port: 80

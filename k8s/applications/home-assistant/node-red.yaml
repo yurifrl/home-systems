@@ -15,43 +15,57 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-  source:
-    repoURL: https://k8s-at-home.com/charts
-    chart: node-red
-    targetRevision: 9.0.1
-    helm:
-      valuesObject:
-        image:
-          repository: nodered/node-red
-          tag: latest-12
-        env:
-          TZ: "America/Sao_Paulo"
-          FLOWS: "flows.json"
-          NODE_RED_ENABLE_PROJECTS: "true"
-          NODE_RED_ENABLE_SAFE_MODE: "false"
-        persistence:
-          data:
-            enabled: true
-            mountPath: /data
-            storageClass: "longhorn"
-            accessMode: ReadWriteOnce
-            size: "5Gi"
-        initContainers:
-          update-volume-permission:
-            name: update-volume-permission
-            image: busybox
-            command: ["sh", "-c", "chown -R 1000:1000 /data"]
-            volumeMounts:
-              - name: data
-                mountPath: /data
-            securityContext:
-              runAsUser: 0
-        tolerations:
-          - key: "arm"
-            operator: "Exists"
-        resources:
-          requests:
-            memory: 1000Mi
-            cpu: 500m
-          limits:
-            memory: 1000Mi
+  sources:
+    - repoURL: 'https://github.com/yurifrl/k8s.git'
+      targetRevision: HEAD
+      ref: support
+      path: support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: node-red
+              host: node-red.syscd.live
+              service:
+                name: node-red
+                namespace: node-red
+                port: 1880
+
+    - repoURL: https://k8s-at-home.com/charts
+      chart: node-red
+      targetRevision: 9.0.1
+      helm:
+        valuesObject:
+          image:
+            repository: nodered/node-red
+            tag: latest-12
+          env:
+            TZ: "America/Sao_Paulo"
+            FLOWS: "flows.json"
+            NODE_RED_ENABLE_PROJECTS: "true"
+            NODE_RED_ENABLE_SAFE_MODE: "false"
+          persistence:
+            data:
+              enabled: true
+              mountPath: /data
+              storageClass: "longhorn"
+              accessMode: ReadWriteOnce
+              size: "5Gi"
+          initContainers:
+            update-volume-permission:
+              name: update-volume-permission
+              image: busybox
+              command: ["sh", "-c", "chown -R 1000:1000 /data"]
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+              securityContext:
+                runAsUser: 0
+          tolerations:
+            - key: "arm"
+              operator: "Exists"
+          resources:
+            requests:
+              memory: 1000Mi
+              cpu: 500m
+            limits:
+              memory: 1000Mi

@@ -14,14 +14,27 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true 
-  source:
-    repoURL: https://kiali.org/helm-charts
-    chart: kiali-server
-    targetRevision: "*"
-    helm:
-      valuesObject:
-        auth:
-          strategy: anonymous
-        external_services:
-          prometheus:
-            url: http://kube-prometheus-stack-prometheus.monitoring:9090
+  sources:
+    - repoURL: 'https://github.com/yurifrl/k8s.git'
+      targetRevision: HEAD
+      path: support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: kiali
+              host: kiali.syscd.tech
+              service:
+                name: kiali
+                namespace: istio-system
+                port: 20001
+
+    - repoURL: https://kiali.org/helm-charts
+      chart: kiali-server
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          auth:
+            strategy: anonymous
+          external_services:
+            prometheus:
+              url: http://kube-prometheus-stack-prometheus.monitoring:9090

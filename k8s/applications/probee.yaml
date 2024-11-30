@@ -5,10 +5,6 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    chart: httpbin
-    repoURL: https://matheusfm.dev/charts
-    targetRevision: 0.1.1
   destination:
     server: https://kubernetes.default.svc
     namespace: probee
@@ -18,3 +14,27 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+  sources:
+    - repoURL: 'https://github.com/yurifrl/k8s.git'
+      targetRevision: HEAD
+      path: support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: probee
+              host: probee.syscd.live
+              service:
+                name: probee-httpbin
+                namespace: probee
+                port: 80
+
+    - repoURL: https://matheusfm.dev/charts
+      chart: httpbin
+      targetRevision: 0.1.1
+      helm:
+        valuesObject:
+          ingress:
+            enabled: false
+          service:
+            type: ClusterIP
+            port: 80
