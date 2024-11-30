@@ -49,9 +49,9 @@ spec:
   indicator:
     ratio:
       errors:
-        metric: http_requests_total{code=~"5.."}
+        metric: node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} < 0.1
       total:
-        metric: http_requests_total{}
+        metric: node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"}
   target: "99"
   window: 2w
 ---
@@ -68,9 +68,9 @@ spec:
   indicator:
     ratio:
       errors:
-        metric: http_requests_total{code=~"5.."}
+        metric: node_load1 > (count without (cpu, mode) (node_cpu_seconds_total{mode="idle"}) * 0.8)
       total:
-        metric: http_requests_total{}
+        metric: node_load1
   target: "99"
   window: 2w
 ---
