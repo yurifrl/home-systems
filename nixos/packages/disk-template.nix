@@ -1,4 +1,4 @@
-{ stdenv, bash, util-linux, e2fsprogs, udev, findutils, grep, coreutils, writeShellScriptBin }:
+{ stdenv, bash, util-linux, e2fsprogs, udev, findutils, gnugrep, coreutils, writeShellScriptBin }:
 
 let
   # Define disk layouts
@@ -85,7 +85,7 @@ let
 
     # List all available disks
     echo "=== Available Disks ==="
-    ${util-linux}/bin/lsblk -d -o NAME,SIZE,MODEL,SERIAL | ${grep}/bin/grep -v "loop"
+    ${util-linux}/bin/lsblk -d -o NAME,SIZE,MODEL,SERIAL | ${gnugrep}/bin/grep -v "loop"
     echo ""
 
     # Prompt for disk selection
@@ -99,12 +99,12 @@ let
     DISK_INFO=$(${udev}/bin/udevadm info --query=property --name=/dev/''${DISK_NAME})
 
     # Look for existing layout file that matches this disk
-    LAYOUT_FILE=$(${findutils}/bin/find "$SEARCH_DIR/disks" -name "*.sfdisk" -type f | ${grep}/bin/grep -F "$(echo "$DISK_INFO" | ${grep}/bin/grep ID_SERIAL= | cut -d= -f2)")
+    LAYOUT_FILE=$(${findutils}/bin/find "$SEARCH_DIR/disks" -name "*.sfdisk" -type f | ${gnugrep}/bin/grep -F "$(echo "$DISK_INFO" | ${gnugrep}/bin/grep ID_SERIAL= | cut -d= -f2)")
 
     if [ ! -f "$LAYOUT_FILE" ]; then
         echo "No layout file found for this disk"
         echo "Current disk info:"
-        echo "$DISK_INFO" | ${grep}/bin/grep -E "ID_SERIAL=|ID_MODEL="
+        echo "$DISK_INFO" | ${gnugrep}/bin/grep -E "ID_SERIAL=|ID_MODEL="
         exit 1
     fi
 
@@ -113,8 +113,8 @@ let
     echo "                     === Disk Information ===                     "
     echo "================================================================"
     echo "Device: /dev/''${DISK_NAME}"
-    echo "Model: $(echo "$DISK_INFO" | ${grep}/bin/grep ID_MODEL= | cut -d= -f2)"
-    echo "Serial: $(echo "$DISK_INFO" | ${grep}/bin/grep ID_SERIAL= | cut -d= -f2)"
+    echo "Model: $(echo "$DISK_INFO" | ${gnugrep}/bin/grep ID_MODEL= | cut -d= -f2)"
+    echo "Serial: $(echo "$DISK_INFO" | ${gnugrep}/bin/grep ID_SERIAL= | cut -d= -f2)"
     echo "Layout file: $LAYOUT_FILE"
     echo "----------------------------------------------------------------"
     echo ""
