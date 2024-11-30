@@ -1,6 +1,0 @@
-label: gpt
-device: /dev/sda
-unit: sectors
-
-/dev/sda1 : size=4194304, type=83
-/dev/sda2 : size=54525952, type=83

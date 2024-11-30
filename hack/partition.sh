@@ -16,7 +16,7 @@ fi
 DISK_INFO=$(sudo udevadm info --query=property --name=/dev/${DISK_NAME})
 
 # Look for existing layout file that matches this disk
-LAYOUT_FILE=$(find disks -name "*.layout" -type f | grep -F "$(echo "$DISK_INFO" | grep ID_SERIAL= | cut -d= -f2)")
+LAYOUT_FILE=$(find disks -name "*.sfdisk" -type f | grep -F "$(echo "$DISK_INFO" | grep ID_SERIAL= | cut -d= -f2)")
 
 if [ ! -f "$LAYOUT_FILE" ]; then
     echo "No layout file found for this disk"
@@ -47,32 +47,16 @@ if [ "$answer" != "yes" ]; then
     exit 1
 fi
 
-# Create a temporary layout file with explicit start positions
-TMP_LAYOUT=$(mktemp)
-{
-    echo "label: gpt"
-    echo "device: /dev/${DISK_NAME}"
-    echo "unit: sectors"
-    echo "sector-size: 512"
-    echo ""
-    echo "/dev/${DISK_NAME}1 : start=2048, size=4194304, type=83"
-    echo "/dev/${DISK_NAME}2 : start=4196352, size=54525952, type=83"
-} > "$TMP_LAYOUT"
-
-# Proceed with partitioning using the temporary layout
+# Proceed with partitioning
 echo "Proceeding with partitioning..."
-sudo sfdisk --force /dev/${DISK_NAME} < "$TMP_LAYOUT"
+echo "Wiping existing filesystem signatures..."
+sudo wipefs -a /dev/${DISK_NAME}
 
-# Clean up
-rm "$TMP_LAYOUT"
+echo "Applying partition layout..."
+sudo sfdisk --force /dev/${DISK_NAME} < "$LAYOUT_FILE"
 
 # Wait a moment for the kernel to register the new partitions
 sleep 2
 
-# Format only if partition exists
-if [ -b "/dev/${DISK_NAME}1" ]; then
-    sudo mkfs.ext4 /dev/${DISK_NAME}1
-else
-    echo "Error: Partition /dev/${DISK_NAME}1 was not created"
-    exit 1
-fi
+echo "Formatting /dev/${DISK_NAME}1..."
+sudo mkfs.ext4 /dev/${DISK_NAME}1
