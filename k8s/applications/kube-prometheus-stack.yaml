@@ -28,6 +28,12 @@ spec:
                 name: kube-prometheus-stack-prometheus
                 namespace: monitoring
                 port: 9090
+            - name: alertmanager
+              host: alertmanager.syscd.tech
+              service:
+                name: kube-prometheus-stack-alertmanager
+                namespace: monitoring
+                port: 9093
 
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: kube-prometheus-stack
@@ -92,6 +98,64 @@ spec:
                       target_label: __address__
           alertmanager:
             enabled: true
+            config:
+              global:
+                resolve_timeout: 5m
+              
+              # Define receivers
+              receivers:
+                - name: 'discord-critical'
+                  webhook_configs:
+                    - url: '{{ .Values.global.alertmanager.discord.webhookUrl }}'
+                      send_resolved: true
+                      title: '🚨 [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+                      
+                - name: 'discord-warnings'
+                  webhook_configs:
+                    - url: '{{ .Values.global.alertmanager.discord.webhookUrl }}'
+                      send_resolved: true
+                      title: '⚠️ [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+              
+              # Define routing tree
+              route:
+                receiver: 'discord-warnings' # default receiver
+                group_by: ['alertname', 'job']
+                group_wait: 30s
+                group_interval: 5m
+                repeat_interval: 4h
+                
+                # Routing rules
+                routes:
+                  # Critical alerts
+                  - receiver: 'discord-critical'
+                    match:
+                      severity: critical
+                    group_wait: 10s
+                    group_interval: 1m
+                    repeat_interval: 1h
+                  
+                  # Warning alerts
+                  - receiver: 'discord-warnings'
+                    match:
+                      severity: warning
+                    group_wait: 30s
+                    group_interval: 5m
+                    repeat_interval: 4h
+              
+              # Inhibition rules
+              inhibit_rules:
+                - source_match:
+                    severity: 'critical'
+                  target_match:
+                    severity: 'warning'
+                  equal: ['alertname', 'namespace']
+            extraSecretMounts:
+              - name: discord-webhook
+                secretName: alertmanager-discord
+                mountPath: /etc/alertmanager/discord
+                readOnly: true
+            configmapReload:
+              enabled: true
           grafana:
             enabled: false
             forceDeployDashboards: true

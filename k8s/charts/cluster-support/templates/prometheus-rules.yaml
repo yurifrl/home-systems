@@ -22,7 +22,7 @@ spec:
           severity: critical
         annotations:
           summary: "High CPU utilization across nodes"
-          description: "{{ printf \"%.2f\" $value }}% of nodes have CPU utilization above 80% for the past hour"
+          description: "Nodes have CPU utilization above 80% for the past hour"
 
       - alert: NodeMemorySaturation
         expr: |
@@ -36,7 +36,7 @@ spec:
           severity: critical
         annotations:
           summary: "High memory utilization across nodes"
-          description: "{{ printf \"%.2f\" $value }}% of nodes have memory utilization above 85% for the past hour"
+          description: "Nodes have memory utilization above 85% for the past hour"
 
       - alert: NodeDiskSaturation
         expr: |
@@ -50,7 +50,7 @@ spec:
           severity: critical
         annotations:
           summary: "High disk utilization across nodes"
-          description: "{{ printf \"%.2f\" $value }}% of nodes have disk utilization above 85% for the past hour"
+          description: "Nodes have disk utilization above 85% for the past hour"
 
       - alert: NodeLoadAverageHigh
         expr: |
@@ -64,4 +64,4 @@ spec:
           severity: critical
         annotations:
           summary: "High load average across nodes"
-          description: "{{ printf \"%.2f\" $value }}% of nodes have load average per CPU above 2 for the past hour" 
+          description: "Nodes have load average per CPU above 2 for the past hour" 

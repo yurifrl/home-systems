@@ -117,6 +117,12 @@ spec:
                           tag: "monitoring"
                           url: "https://pyrra.syscd.live"
                           target: "_blank"
+                        
+                        - name: "Alertmanager"
+                          icon: "fas fa-bell"
+                          tag: "monitoring"
+                          url: "https://alertmanager.syscd.tech"
+                          target: "_blank"
 
                     - name: "Infrastructure"
                       icon: "fas fa-server"
