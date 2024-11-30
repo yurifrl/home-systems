@@ -5,4 +5,4 @@ metadata:
   namespace: monitoring
 data:
   argo-dashboard.json: |
-    {{ .Files.Get "templates/dashboards/argo-dashboard.json" | indent 4 }} 
+    {{- /* .Files.Get "templates/dashboards/argo-dashboard.json" | indent 4 */ -}} 
