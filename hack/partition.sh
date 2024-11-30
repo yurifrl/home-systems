@@ -1,8 +1,20 @@
 #!/usr/bin/env bash
 
+# List all available disks
+echo "=== Available Disks ==="
+lsblk -d -o NAME,SIZE,MODEL,SERIAL | grep -v "loop"
+echo ""
+
+# Prompt for disk selection
+read -p "Enter disk name to partition (e.g., sda): " DISK_NAME
+if [ -z "$DISK_NAME" ]; then
+    echo "No disk selected. Exiting."
+    exit 1
+fi
+
 # Get the disk's identifier
-DISK_ID=$(sudo udevadm info --query=property --name=/dev/sda | grep ID_SERIAL_SHORT= | cut -d= -f2)
-MODEL=$(sudo udevadm info --query=property --name=/dev/sda | grep ID_MODEL= | cut -d= -f2)
+DISK_ID=$(sudo udevadm info --query=property --name=/dev/${DISK_NAME} | grep ID_SERIAL_SHORT= | cut -d= -f2)
+MODEL=$(sudo udevadm info --query=property --name=/dev/${DISK_NAME} | grep ID_MODEL= | cut -d= -f2)
 LAYOUT_FILE="disks/${MODEL}_${DISK_ID}.layout"
 
 # Check if layout file exists
@@ -14,15 +26,15 @@ fi
 
 # Display disk information
 echo "=== Disk Information ==="
-echo "Device: /dev/sda"
+echo "Device: /dev/${DISK_NAME}"
 echo "Model: $MODEL"
 echo "Serial: $DISK_ID"
 echo "Layout file: $LAYOUT_FILE"
 echo ""
 echo "Current partition layout:"
-sudo fdisk -l /dev/sda
+sudo fdisk -l /dev/${DISK_NAME}
 echo ""
-echo "WARNING: This will ERASE ALL DATA on /dev/sda"
+echo "WARNING: This will ERASE ALL DATA on /dev/${DISK_NAME}"
 echo "Layout to be applied:"
 cat "$LAYOUT_FILE"
 echo ""
@@ -36,5 +48,5 @@ fi
 
 # Proceed with partitioning
 echo "Proceeding with partitioning..."
-sudo sfdisk /dev/sda --wipe=always < "$LAYOUT_FILE"
-sudo mkfs.ext4 /dev/sda1
+sudo sfdisk /dev/${DISK_NAME} --wipe=always < "$LAYOUT_FILE"
+sudo mkfs.ext4 /dev/${DISK_NAME}1
