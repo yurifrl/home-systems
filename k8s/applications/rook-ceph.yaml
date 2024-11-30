@@ -1,105 +1,105 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: rook-ceph-support
-#   namespace: argocd
-# spec:
-#   project: default
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: rook-ceph-support
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-#     syncOptions:
-#       - CreateNamespace=true
-#   sources:
-#     - repoURL: https://github.com/yurifrl/home-systems.git
-#       targetRevision: HEAD
-#       path: k8s/charts/rook-ceph-support
-#       directory:
-#         recurse: true
-# ---
-# # https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: rook-ceph
-#   namespace: argocd
-# spec:
-#   project: default
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: rook-ceph
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-#     syncOptions:
-#       - CreateNamespace=true
-#   sources:
-#     - repoURL: https://github.com/yurifrl/home-systems.git
-#       targetRevision: HEAD
-#       path: k8s/charts/support
-#       helm:
-#         valuesObject:
-#           virtualServices:
-#             - name: ceph-dashboard
-#               host: ceph.local
-#               service:
-#                 name: rook-ceph-mgr-dashboard
-#                 namespace: rook-ceph
-#                 port: 7000
-#     - chart: rook-ceph-cluster
-#       repoURL: https://charts.rook.io/release
-#       targetRevision: "*"  # Use the latest stable version
-#       helm:
-#         valuesObject:
-#           operatorNamespace: rook-ceph
-#           cephClusterSpec:
-#             dashboard:
-#               enabled: true
-#     - chart: rook-ceph
-#       repoURL: https://charts.rook.io/release
-#       targetRevision: "*"  # Use the latest stable version
-#       helm:
-#         valuesObject:
-#           csi:
-#             # NixOS-specific volume mounts for kernel modules
-#             csiCephFSPluginVolume:
-#               - name: kernel-modules
-#                 hostPath:
-#                   path: /run/current-system/kernel-modules/lib/modules
-#               - name: nix-store
-#                 hostPath:
-#                   path: /nix
-#             csiCephFSPluginVolumeMount:
-#               - name: kernel-modules
-#                 mountPath: /lib/modules
-#                 readOnly: true
-#               - name: nix-store
-#                 mountPath: /nix
-#                 readOnly: true
-#             csiRBDPluginVolume:
-#               - name: kernel-modules
-#                 hostPath:
-#                   path: /run/current-system/kernel-modules/lib/modules
-#               - name: nix-store
-#                 hostPath:
-#                   path: /nix
-#             csiRBDPluginVolumeMount:
-#               - name: kernel-modules
-#                 mountPath: /lib/modules
-#                 readOnly: true
-#               - name: nix-store
-#                 mountPath: /nix
-#                 readOnly: true
-#           # cluster:
-#           #   storage:
-#           #     useAllDevices: false
-#           #     useAllNodes: false
-#           #     nodes:
-#           #       - name: "nixos-1"  # Must match your node name
-#           #         devices:
-#           #           - name: "sda"
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rook-ceph-support
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rook-ceph-support
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/rook-ceph-support
+      directory:
+        recurse: true
+---
+# https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rook-ceph
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rook-ceph
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: ceph-dashboard
+              host: ceph.local
+              service:
+                name: rook-ceph-mgr-dashboard
+                namespace: rook-ceph
+                port: 7000
+    - chart: rook-ceph-cluster
+      repoURL: https://charts.rook.io/release
+      targetRevision: "*"  # Use the latest stable version
+      helm:
+        valuesObject:
+          operatorNamespace: rook-ceph
+          cephClusterSpec:
+            dashboard:
+              enabled: true
+    - chart: rook-ceph
+      repoURL: https://charts.rook.io/release
+      targetRevision: "*"  # Use the latest stable version
+      helm:
+        valuesObject:
+          csi:
+            # NixOS-specific volume mounts for kernel modules
+            csiCephFSPluginVolume:
+              - name: kernel-modules
+                hostPath:
+                  path: /run/current-system/kernel-modules/lib/modules
+              - name: nix-store
+                hostPath:
+                  path: /nix
+            csiCephFSPluginVolumeMount:
+              - name: kernel-modules
+                mountPath: /lib/modules
+                readOnly: true
+              - name: nix-store
+                mountPath: /nix
+                readOnly: true
+            csiRBDPluginVolume:
+              - name: kernel-modules
+                hostPath:
+                  path: /run/current-system/kernel-modules/lib/modules
+              - name: nix-store
+                hostPath:
+                  path: /nix
+            csiRBDPluginVolumeMount:
+              - name: kernel-modules
+                mountPath: /lib/modules
+                readOnly: true
+              - name: nix-store
+                mountPath: /nix
+                readOnly: true
+          # cluster:
+          #   storage:
+          #     useAllDevices: false
+          #     useAllNodes: false
+          #     nodes:
+          #       - name: "nixos-1"  # Must match your node name
+          #         devices:
+          #           - name: "sda"
