@@ -1,0 +1,63 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: zigbee2mqtt
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: zigbee2mqtt
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: zigbee2mqtt
+              host: zigbee2mqtt.syscd.live
+              service:
+                name: zigbee2mqtt
+                namespace: zigbee2mqtt
+                port: 8080
+
+    - repoURL: https://andrenarchy.github.io/helm-charts/
+      chart: zigbee2mqtt
+      targetRevision: 9.20.0
+      helm:
+        valuesObject:
+          image:
+            tag: 1.41.0
+
+          nodeSelector:
+            kubernetes.io/hostname: nixos-1
+
+          env:
+            TZ: "America/Sao_Paulo"
+
+          persistence:
+            data:
+              enabled: true
+              storageClass: local-storage
+              accessMode: ReadWriteOnce
+              size: 1Gi
+              mountPath: "/data"
+            usb:
+              enabled: true
+              type: hostPath
+              hostPath: /dev/serial/by-id/usb-Texas_Instruments_TI_CC2531_USB_CDC___0X00124B001CDD33E2-if00
+
+          config:
+            homeassistant: true
+            mqtt:
+              server: "mqtt://mosquitto"
+            serial:
+              port: /dev/serial/by-id/usb-Texas_Instruments_TI_CC2531_USB_CDC___0X00124B001CDD33E2-if00

@@ -1,0 +1,4 @@
+dashboards:
+  - argo
+  - kubernetes
+  - k3s

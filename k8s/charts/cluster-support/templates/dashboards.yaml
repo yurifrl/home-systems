@@ -1,0 +1,13 @@
+{{- range .Values.dashboards }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ . }}-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  {{ . }}.json: |
+    {{- $.Files.Get (printf "dashboards/%s.json" .) | nindent 4 }}
+{{- end }}

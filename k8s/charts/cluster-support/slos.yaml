@@ -1,0 +1,79 @@
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    severity: critical
+  name: node-cpu-saturation
+  namespace: monitoring
+spec:
+  description: "CPU utilization is consistently high across nodes"
+  indicator:
+    ratio:
+      errors:
+        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"} > 0.8
+      total:
+        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"}
+  target: "99"
+  window: 1h
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    severity: critical
+  name: node-memory-saturation
+  namespace: monitoring
+spec:
+  description: "Memory usage is approaching system limits"
+  indicator:
+    ratio:
+      errors:
+        metric: instance:node_memory_utilisation:ratio{job="node-exporter"} > 0.85
+      total:
+        metric: instance:node_memory_utilisation:ratio{job="node-exporter"}
+  target: "99"
+  window: 1h
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    severity: critical
+  name: node-disk-saturation
+  namespace: monitoring
+spec:
+  description: "Disk usage is approaching capacity"
+  indicator:
+    ratio:
+      errors:
+        metric: instance:node_filesystem_usage:ratio{job="node-exporter"} > 0.85
+      total:
+        metric: instance:node_filesystem_usage:ratio{job="node-exporter"}
+  target: "99"
+  window: 1h
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    severity: critical
+  name: node-load-average
+  namespace: monitoring
+spec:
+  description: "System load average is too high relative to CPU cores"
+  indicator:
+    ratio:
+      errors:
+        metric: instance:node_load1_per_cpu:ratio{job="node-exporter"} > 2
+      total:
+        metric: instance:node_load1_per_cpu:ratio{job="node-exporter"}
+  target: "99"
+  window: 1h
