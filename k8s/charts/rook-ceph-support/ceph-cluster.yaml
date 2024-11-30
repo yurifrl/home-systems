@@ -164,9 +164,8 @@ spec:
         args:
           - |
             while true; do
-              echo "[$(date)] Log entry" >> /logs/app.log
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Log entry" >> /logs/app.log
               echo "Wrote log entry"
-              sleep 5
             done
         volumeMounts:
           - name: log-storage
