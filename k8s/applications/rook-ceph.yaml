@@ -83,6 +83,7 @@ spec:
                   devices:
                     - name: "sda"
 ---
+# https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph-cluster/values.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -106,3 +107,6 @@ spec:
       helm:
         valuesObject:
           operatorNamespace: rook-ceph
+          cephClusterSpec:
+            dashboard:
+              enabled: true
