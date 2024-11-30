@@ -26,18 +26,29 @@ if [ ! -f "$LAYOUT_FILE" ]; then
 fi
 
 # Display disk information
-echo "=== Disk Information ==="
+echo "================================================================"
+echo "                     === Disk Information ===                     "
+echo "================================================================"
 echo "Device: /dev/${DISK_NAME}"
 echo "Model: $(echo "$DISK_INFO" | grep ID_MODEL= | cut -d= -f2)"
 echo "Serial: $(echo "$DISK_INFO" | grep ID_SERIAL= | cut -d= -f2)"
 echo "Layout file: $LAYOUT_FILE"
+echo "----------------------------------------------------------------"
 echo ""
+
 echo "Current partition layout:"
+echo "----------------------------------------------------------------"
 sudo fdisk -l /dev/${DISK_NAME}
+echo "----------------------------------------------------------------"
 echo ""
+
+echo "================================================================"
 echo "WARNING: This will ERASE ALL DATA on /dev/${DISK_NAME}"
+echo "================================================================"
 echo "Layout to be applied:"
+echo "----------------------------------------------------------------"
 cat "$LAYOUT_FILE"
+echo "----------------------------------------------------------------"
 echo ""
 
 # Prompt for confirmation
@@ -48,15 +59,20 @@ if [ "$answer" != "yes" ]; then
 fi
 
 # Proceed with partitioning
-echo "Proceeding with partitioning..."
+echo "================================================================"
+echo "                === Starting Partitioning Process ===            "
+echo "================================================================"
 echo "Wiping existing filesystem signatures..."
 sudo wipefs -a /dev/${DISK_NAME}
 
+echo "----------------------------------------------------------------"
 echo "Applying partition layout..."
 sudo sfdisk --force /dev/${DISK_NAME} < "$LAYOUT_FILE"
 
 # Wait a moment for the kernel to register the new partitions
 sleep 2
 
+echo "----------------------------------------------------------------"
 echo "Formatting /dev/${DISK_NAME}1..."
-sudo mkfs.ext4 /dev/${DISK_NAME}1
+sudo mkfs.ext4 -F /dev/${DISK_NAME}1
+echo "================================================================"
