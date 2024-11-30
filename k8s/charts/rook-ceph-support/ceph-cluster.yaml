@@ -168,9 +168,9 @@ spec:
               echo "Wrote log entry"
               sleep 5
             done
-        volumeDevices:
+        volumeMounts:
           - name: log-storage
-            devicePath: /dev/log-volume
+            mountPath: /logs
       volumes:
       - name: log-storage
         persistentVolumeClaim:
