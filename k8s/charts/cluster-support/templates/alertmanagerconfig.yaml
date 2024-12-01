@@ -1,42 +1,42 @@
-# https://devopscube.com/setup-prometheus-operator/
-# https://medium.com/@phil16terpasetheo/configure-alert-manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26
-#
-# curl -X POST http://alertmanager.syscd.tech/-/reload -v   
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: AlertmanagerConfig
-metadata:
-  name: alertmanager-config
-  namespace: monitoring
-  labels:
-    prometheus: k8s
-    role: alert-rules
-spec:
-  route:
-    receiver: discord
-    groupBy:
-      - alertname
-      - severity
-      - slo
-      - environment
-    groupWait: 30s
-    groupInterval: 5m
-    repeatInterval: 1h
-    routes:
-      - receiver: discord
-        matchers:
-          - name: severity
-            value: critical
-          - name: environment
-            value: production
-        continue: false
-  receivers:
-    - name: "discord"
-      discordConfigs:
-        - apiURL:
-            name: alertmanager-discord
-            key: webhook-url
-          message: |
-            {{`{{ .CommonLabels.alertname }}`}} {{`{{ .CommonLabels.severity }}`}} {{`{{ .CommonLabels.slo }}`}}
-          title: "{{`{{ .CommonLabels.alertname }}`}}"
-          sendResolved: true
-    - name: "null"
+# # https://devopscube.com/setup-prometheus-operator/
+# # https://medium.com/@phil16terpasetheo/configure-alert-manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26
+# #
+# # curl -X POST http://alertmanager.syscd.tech/-/reload -v   
+# apiVersion: monitoring.coreos.com/v1alpha1
+# kind: AlertmanagerConfig
+# metadata:
+#   name: alertmanager-config
+#   namespace: monitoring
+#   labels:
+#     prometheus: k8s
+#     role: alert-rules
+# spec:
+#   route:
+#     receiver: discord
+#     groupBy:
+#       - alertname
+#       - severity
+#       - slo
+#       - environment
+#     groupWait: 30s
+#     groupInterval: 5m
+#     repeatInterval: 1h
+#     routes:
+#       - receiver: discord
+#         matchers:
+#           - name: severity
+#             value: critical
+#           - name: environment
+#             value: production
+#         continue: false
+#   receivers:
+#     - name: "discord"
+#       discordConfigs:
+#         - apiURL:
+#             name: alertmanager-discord
+#             key: webhook-url
+#           message: |
+#             {{`{{ .CommonLabels.alertname }}`}} {{`{{ .CommonLabels.severity }}`}} {{`{{ .CommonLabels.slo }}`}}
+#           title: "{{`{{ .CommonLabels.alertname }}`}}"
+#           sendResolved: true
+#     - name: "null"
