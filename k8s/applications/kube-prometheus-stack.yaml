@@ -107,12 +107,25 @@ spec:
           alertmanager:
             alertmanagerSpec:
               externalUrl: https://alertmanager.syscd.live
-              # secrets:
-              #   - alertmanager-discord
-              alertmanagerConfigNamespaceSelector:
-              alertmanagerConfigSelector:
+              #
+              alertmanagerConfigNamespaceSelector: {}
+              alertmanagerConfigSelector: {}  
               alertmanagerConfigMatcherStrategy:
                 type: None
+              
+              alertmanagerConfiguration:
+                enabled: true
+
+
+
+            # alertmanagerSpec:
+            #   externalUrl: https://alertmanager.syscd.live
+            #   secrets:
+            #     - alertmanager-discord
+            #   alertmanagerConfigNamespaceSelector: {}
+            #   alertmanagerConfigSelector: {}  
+            #   alertmanagerConfigMatcherStrategy:
+            #     type: None
             # config:
             #   route:
             #     receiver: discord
@@ -129,11 +142,13 @@ spec:
             #       webhook_configs:
             #         - url_file: '/etc/alertmanager/secrets/alertmanager-discord/webhook-url'
             #           send_resolved: true
-                # - name: 'null'
+            #     - name: 'null'
           grafana:
             enabled: false
             forceDeployDashboards: true
             defaultDashboardsEnabled: true
           loki:
             enabled: false
+
+# https://medium.com/@phil16terpasetheo/configure-alert-manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26
 # k -n monitoring get secrets kube-prometheus-stack-grafana -ojsonpath="{.data.admin-password}" | base64 -d | pbcopy

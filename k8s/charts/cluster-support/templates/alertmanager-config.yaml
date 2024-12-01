@@ -10,42 +10,43 @@ metadata:
 spec:
   route:
     receiver: discord
-    groupBy: ['alertname', 'severity']
+    groupBy:
+      - alertname
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 1h
     routes:
       - receiver: 'discord'
         matchers:
-          - severity =~ ".+"
-      - receiver: 'null'
+          - name: alertname
+            value: TargetDown
+          - name: 'null'
   receivers:
     - name: 'discord'
       webhookConfigs:
-        # - urlSecret: '/etc/alertmanager/secrets/alertmanager-discord/webhook-url'
         - urlSecret:
             name: alertmanager-discord
             key: webhook-url
     - name: 'null'
 
----
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  name: test-alert
-  namespace: monitoring  # Replace with your Prometheus namespace
-  labels:
-    prometheus: k8s
-    role: alert-rules
-spec:
-  groups:
-    - name: test-alert-group
-      rules:
-        - alert: TestAlert
-          expr: vector(1)  # Always triggers
-          for: 1m
-          labels:
-            severity: critical
-          annotations:
-            summary: "Test Alert is firing!"
-            description: "This is a test alert to verify the Alertmanager configuration."
+# ---
+# apiVersion: monitoring.coreos.com/v1
+# kind: PrometheusRule
+# metadata:
+#   name: test-alert
+#   namespace: monitoring  # Replace with your Prometheus namespace
+#   labels:
+#     prometheus: k8s
+#     role: alert-rules
+# spec:
+#   groups:
+#     - name: test-alert-group
+#       rules:
+#         - alert: TestAlert
+#           expr: vector(1)  # Always triggers
+#           for: 1m
+#           labels:
+#             severity: critical
+#           annotations:
+#             summary: "Test Alert is firing!"
+#             description: "This is a test alert to verify the Alertmanager configuration."
