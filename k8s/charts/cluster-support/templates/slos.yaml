@@ -16,13 +16,9 @@ spec:
   indicator:
     ratio:
       errors:
-        metric: |
-          sum by (instance) (
-            (100 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
-          )
+        metric: container_cpu_cfs_throttled_periods_total
       total:
-        metric: |
-          node_cpu_seconds_total
+        metric: container_cpu_cfs_periods_total
 ---
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
