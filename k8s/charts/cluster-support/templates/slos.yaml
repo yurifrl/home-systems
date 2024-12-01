@@ -22,6 +22,27 @@ spec:
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
+  name: cluster-cpu-utilization-with9
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    pyrra.dev/severity: critical
+    pyrra.dev/environment: staging
+spec:
+  target: "99"
+  window: 2w
+  description: "Alerts when CPU utilization is consistently high across cluster nodes"
+  indicator:
+    ratio:
+      errors:
+        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"} > 0.9  # CPU utilization above 90%
+      total:
+        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
   name: pod-cpu-throttling
   namespace: monitoring
   labels:
@@ -36,6 +57,6 @@ spec:
   indicator:
     ratio:
       errors:
-        metric: container_cpu_cfs_throttled_periods_total
+        metric: container_cpu_cfs_throttled_periods_total{namespace!=""}  # Vector selector matching all namespaces
       total:
-        metric: container_cpu_cfs_periods_total
+        metric: container_cpu_cfs_periods_total{namespace!=""}  # Vector selector matching all namespaces
