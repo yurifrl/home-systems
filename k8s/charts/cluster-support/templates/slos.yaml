@@ -1,39 +1,43 @@
-# apiVersion: pyrra.dev/v1alpha1
-# kind: ServiceLevelObjective
-# metadata:
-#   name: cluster-cpu-utilization
-#   namespace: monitoring
-#   labels:
-#     prometheus: k8s
-#     role: alert-rules
-#     pyrra.dev/severity: critical
-# spec:
-#   target: "99"
-#   window: 2w
-#   description: "Alerts when CPU utilization is consistently high across cluster nodes"
-#   indicator:
-#     ratio:
-#       errors:
-#         metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"} > 0.9  # CPU utilization above 90%
-#       total:
-#         metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"}
-# ---
-# apiVersion: pyrra.dev/v1alpha1
-# kind: ServiceLevelObjective
-# metadata:
-#   name: pod-cpu-throttling
-#   namespace: monitoring
-#   labels:
-#     prometheus: k8s
-#     role: alert-rules
-#     pyrra.dev/severity: warning
-# spec:
-#   target: "99"
-#   window: 1w
-#   description: "Alerts when pods are being throttled due to CPU limits"
-#   indicator:
-#     ratio:
-#       errors:
-#         metric: container_cpu_cfs_throttled_periods_total
-#       total:
-#         metric: container_cpu_cfs_periods_total
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: cluster-cpu-utilization
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    pyrra.dev/severity: critical
+    pyrra.dev/runbook_url: https://github.com/sys-cd/syscd-docs/blob/main/runbooks/pod-cpu-throttling.md
+    pyrra.dev/environment: staging
+spec:
+  target: "99"
+  window: 2w
+  description: "Alerts when CPU utilization is consistently high across cluster nodes"
+  indicator:
+    ratio:
+      errors:
+        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"} > 0.9  # CPU utilization above 90%
+      total:
+        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: pod-cpu-throttling
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    pyrra.dev/severity: warning
+    pyrra.dev/runbook_url: https://github.com/sys-cd/syscd-docs/blob/main/runbooks/pod-cpu-throttling.md
+    pyrra.dev/environment: production
+spec:
+  target: "99"
+  window: 1w
+  description: "Alerts when pods are being throttled due to CPU limits"
+  indicator:
+    ratio:
+      errors:
+        metric: container_cpu_cfs_throttled_periods_total
+      total:
+        metric: container_cpu_cfs_periods_total
