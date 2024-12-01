@@ -1,0 +1,55 @@
+{{- range .Values.virtualServices }}
+{{- $domains := merge (.domains | default dict) $.Values.virtualServicesDefaults.domains -}}
+{{- $hostPrefix := .hostname | default .name -}}
+
+# Indicator Type: latency
+# Measures if requests are completing within the expected latency threshold (500ms)
+# Uses histogram buckets from probe_http_duration_seconds
+#
+{{- if or $domains.xyz $domains.tech }}
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: {{ .name }}-private-latency-slo
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    pyrra.dev/severity: critical
+    pyrra.dev/environment: production
+spec:
+  target: "99"  # 99% of requests should be under threshold
+  window: "7d"  # Weekly evaluation
+  description: "Ensure {{ .name }} private instances respond within 500ms for 99% of requests."
+  indicator:
+    latency:
+      success:
+        metric: probe_http_duration_seconds_bucket{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech)",le="0.5"}
+      total:
+        metric: probe_http_duration_seconds_count{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech)"}
+---
+{{- end }}
+{{- if $domains.live }}
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: {{ .name }}-public-latency-slo
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    pyrra.dev/severity: critical
+    pyrra.dev/environment: production
+spec:
+  target: "99"  # 99% of requests should be under threshold
+  window: "7d"  # Weekly evaluation
+  description: "Ensure {{ .name }} public instance https://{{ $hostPrefix }}.syscd.live responds within 500ms for 99% of requests."
+  indicator:
+    latency:
+      success:
+        metric: probe_http_duration_seconds_bucket{instance="https://{{ $hostPrefix }}.syscd.live",le="0.5"}
+      total:
+        metric: probe_http_duration_seconds_count{instance="https://{{ $hostPrefix }}.syscd.live"}
+---
+{{- end }}
+{{- end }}
