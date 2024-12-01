@@ -107,8 +107,20 @@ spec:
           alertmanager:
             alertmanagerSpec:
               externalUrl: https://alertmanager.syscd.live
-              secrets:
-                - alertmanager-discord
+              # secrets:
+              #   - alertmanager-discord
+              route:
+                group_by: [ "job" ]
+                group_wait: 30s
+                group_interval: 10s
+                repeat_interval: 10s
+                receiver: 'null'
+                routes:
+                  - match:
+                      alertname: Watchdog
+                      receiver: 'null'
+              receivers:
+                - name: 'null'
             # config:
             #   route:
             #     receiver: discord
