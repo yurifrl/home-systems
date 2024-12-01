@@ -31,6 +31,8 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
+          monitoring:
+            enabled: true
           dashboard:
             enabled: true
           cephClusterSpec:
