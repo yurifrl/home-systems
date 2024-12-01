@@ -76,7 +76,12 @@ spec:
               # Rule Selectors
               ruleSelectorNilUsesHelmValues: false
               ruleSelector:
-                
+                matchExpressions:
+                  - key: environment
+                    operator: In
+                      - production
+                      - staging
+                      - development
               ruleNamespaceSelector: {}
               
               # Scrape Config Selectors
@@ -105,9 +110,6 @@ spec:
                       regex: ([^:]+)(?::\d+)?;(\d+)
                       replacement: $1:$2
                       target_label: __address__
-                    - source_labels: [__meta_kubernetes_pod_label_service]
-                      regex: argood-dex-server
-                      action: drop
           grafana:
             enabled: false
             forceDeployDashboards: true
