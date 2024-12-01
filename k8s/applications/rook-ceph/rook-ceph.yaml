@@ -21,32 +21,65 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
+          monitoring:
+            enabled: true
+          crds:
+            enabled: true # NOTE: DO NOT CHANGE
           csi:
-            csiCephFSPluginVolume:
-              - name: kernel-modules
+            csiCephFSPluginVolume: 
+              - name: lib-modules
                 hostPath:
-                  path: /run/current-system/kernel-modules/lib/modules
-              - name: nix-store
+                  path: /run/current-system/kernel-modules/lib/modules/
+              - name: host-nix
                 hostPath:
                   path: /nix
             csiCephFSPluginVolumeMount:
-              - name: kernel-modules
-                mountPath: /lib/modules
-                readOnly: true
-              - name: nix-store
+              - name: host-nix
                 mountPath: /nix
                 readOnly: true
             csiRBDPluginVolume:
-              - name: kernel-modules
+              - name: lib-modules
                 hostPath:
-                  path: /run/current-system/kernel-modules/lib/modules
-              - name: nix-store
+                  path: /run/booted-system/kernel-modules/lib/modules/
+              - name: host-nix
                 hostPath:
                   path: /nix
-            csiRBDPluginVolumeMount:
-              - name: kernel-modules
-                mountPath: /lib/modules
-                readOnly: true
-              - name: nix-store
+            csiRBDPluginVolumeMount: 
+              - name: host-nix
                 mountPath: /nix
                 readOnly: true
+            enableCSIEncryption: false
+            addons:
+              enabled: true
+            serviceMonitor:
+              enabled: true
+          # csi:
+          #   csiCephFSPluginVolume:
+          #     - name: kernel-modules
+          #       hostPath:
+          #         path: /run/current-system/kernel-modules/lib/modules
+          #     - name: nix-store
+          #       hostPath:
+          #         path: /nix
+          #   csiCephFSPluginVolumeMount:
+          #     - name: kernel-modules
+          #       mountPath: /lib/modules
+          #       readOnly: true
+          #     - name: nix-store
+          #       mountPath: /nix
+          #       readOnly: true
+          #   csiRBDPluginVolume:
+          #     - name: kernel-modules
+          #       hostPath:
+          #         path: /run/current-system/kernel-modules/lib/modules
+          #     - name: nix-store
+          #       hostPath:
+          #         path: /nix
+          #   csiRBDPluginVolumeMount:
+          #     - name: kernel-modules
+          #       mountPath: /lib/modules
+          #       readOnly: true
+          #     - name: nix-store
+          #       mountPath: /nix
+          #       readOnly: true
+   

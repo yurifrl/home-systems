@@ -13,6 +13,6 @@
 
     # Install required packages
     environment.systemPackages = with pkgs; [
-    lvm2  # Required for Rook Ceph
+        lvm2  # Required for Rook Ceph
     ];
 }
