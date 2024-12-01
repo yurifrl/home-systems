@@ -126,34 +126,42 @@ spec:
             #   alertmanagerConfiguration:
             #     name: alertmanager-config
 
+            config:
+            route:
+              receiver: 'null'
+              group_by: ['alertname']
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 1h
+            receivers:
+              - name: 'null'
+              
+            # alertmanagerSpec:
+            #   externalUrl: https://alertmanager.syscd.live
+            #   secrets:
+            #     - alertmanager-discord
+            #   alertmanagerConfigNamespaceSelector: {}
+            #   alertmanagerConfigSelector: {}  
+            #   alertmanagerConfigMatcherStrategy:
+            #     type: None
+            # config:
+            #   route:
+            #     receiver: discord
+            #     group_by: ['alertname', 'severity',]
+            #     group_wait: 30s
+            #     group_interval: 5m
+            #     repeat_interval: 1h
+            #     routes:
+            #       - receiver: 'discord'
+            #         matchers:
+            #           - severity =~ ".+"
+            #   receivers:
+            #     - name: 'discord'
+            #       webhook_configs:
+            #         - url_file: '/etc/alertmanager/secrets/alertmanager-discord/webhook-url'
+            #           send_resolved: true
+            #     - name: 'null'
 
-
-            # # alertmanagerSpec:
-            # #   externalUrl: https://alertmanager.syscd.live
-            # #   secrets:
-            # #     - alertmanager-discord
-            # #   alertmanagerConfigNamespaceSelector: {}
-            # #   alertmanagerConfigSelector: {}  
-            # #   alertmanagerConfigMatcherStrategy:
-            # #     type: None
-            # # config:
-            # #   route:
-            # #     receiver: discord
-            # #     group_by: ['alertname', 'severity',]
-            # #     group_wait: 30s
-            # #     group_interval: 5m
-            # #     repeat_interval: 1h
-            # #     routes:
-            # #       - receiver: 'discord'
-            # #         matchers:
-            # #           - severity =~ ".+"
-            # #   receivers:
-            # #     - name: 'discord'
-            # #       webhook_configs:
-            # #         - url_file: '/etc/alertmanager/secrets/alertmanager-discord/webhook-url'
-            # #           send_resolved: true
-            # #     - name: 'null'
-
-
+# https://stackoverflow.com/questions/76669436/alertmanager-default-receivernull-is-not-replacing-with-the-routes-specified
 # https://medium.com/@phil16terpasetheo/configure-alert-manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26
 # k -n monitoring get secrets kube-prometheus-stack-grafana -ojsonpath="{.data.admin-password}" | base64 -d | pbcopy
