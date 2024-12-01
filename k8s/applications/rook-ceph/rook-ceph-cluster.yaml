@@ -31,6 +31,8 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
+          dashboard:
+            enabled: true
           cephClusterSpec:
             dataDirHostPath: /var/lib/rook
             mon:
