@@ -33,19 +33,17 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
-          alertmanager:
-            logLevel: debug
-            config:
-              route:
-                group_by: ['alertname', 'severity']
-                group_wait: 30s
-                group_interval: 5m
-                repeat_interval: 1h
-                receiver: 'discord-critical'
-              receivers:
-                - name: 'discord-critical'
-                  webhook_configs:
-                    - url_secret:
-                        name: alertmanager-discord
-                        key: webhook-url
-                - name: 'null'
+          config:
+            route:
+              group_by: ['alertname', 'severity']
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 1h
+              receiver: 'discord-critical'
+            receivers:
+              - name: 'discord-critical'
+                webhook_configs:
+                  - url_secret:
+                      name: alertmanager-discord
+                      key: webhook-url
+              - name: 'null'
