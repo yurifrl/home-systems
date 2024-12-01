@@ -22,7 +22,7 @@ spec:
           )
       total:
         metric: |
-          sum by (instance) (rate(node_cpu_seconds_total[5m]))
+          sum(node_cpu_seconds_total)
 ---
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
