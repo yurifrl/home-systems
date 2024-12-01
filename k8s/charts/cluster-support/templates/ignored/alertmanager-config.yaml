@@ -33,54 +33,6 @@ spec:
             Runbook: {{ .CommonAnnotations.runbook_url }}
           title: "{{ .CommonLabels.alertname }}"
           sendResolved: true
----
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  name: test-alert
-  namespace: monitoring  # Replace with your Prometheus namespace
-  labels:
-    prometheus: k8s
-    role: alert-rules
-spec:
-  groups:
-    - name: test-alert-group
-      rules:
-        - alert: TestAlert
-          expr: vector(1)  # Always triggers
-          for: 1m
-          labels:
-            severity: critical
-            slo: test-alert
-          annotations:
-            title: "Test Alert is firing!"
-            summary: "Test Alert is firing!"
-            description: "This is a test alert to verify the Alertmanager configuration."
-            runbook_url: "https://your-runbook-url.com/alerts/test-alert"
----
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  name: test-alert2
-  namespace: monitoring  # Replace with your Prometheus namespace
-  labels:
-    prometheus: k8s
-    role: alert-rules
-spec:
-  groups:
-    - name: test-alert-group
-      rules:
-        - alert: TestAlert
-          expr: vector(1)  # Always triggers
-          for: 1m
-          labels:
-            severity: critical
-            slo: test-alert
-          annotations:
-            title: "Test Alert is firing!"
-            summary: "Test Alert is firing!"
-            description: "This is a test alert to verify the Alertmanager configuration."
-            runbook_url: "https://your-runbook-url.com/alerts/test-alert"
 
 # https://devopscube.com/setup-prometheus-operator/
 # https://medium.com/@phil16terpasetheo/configure-alert-manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26
