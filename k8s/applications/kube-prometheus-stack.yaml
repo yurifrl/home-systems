@@ -107,8 +107,10 @@ spec:
           alertmanager:
             alertmanagerSpec:
               externalUrl: https://alertmanager.syscd.live
-              secrets:
-                - alertmanager-discord
+              volumesMounts:
+                - name: discord-webhook
+                  mountPath: /etc/alertmanager/secrets
+                  readOnly: true
             config:
               route:
                 group_by: ['alertname', 'severity']
