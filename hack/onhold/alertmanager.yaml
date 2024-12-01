@@ -46,8 +46,8 @@ spec:
                   - url_file: '/etc/alertmanager/secrets/webhook-url'
                     send_resolved: true
           extraSecretMounts:
-            - name: alertmanager-discord
+            - name: discord-webhook
               secretName: alertmanager-discord
               mountPath: /etc/alertmanager/secrets
-              subPath: webhook-url
               readOnly: true
+          
