@@ -1,14 +1,14 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: test-alert
+  name: test-alert-rules
   namespace: monitoring  # Replace with your Prometheus namespace
   labels:
     prometheus: k8s
     role: alert-rules
 spec:
   groups:
-    - name: test-alert-group
+    - name: test-alert-group.rules
       rules:
         - alert: TestAlert
           expr: vector(1)  # Always triggers
@@ -25,14 +25,14 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: test-alert2
+  name: test-alert2-rules
   namespace: monitoring  # Replace with your Prometheus namespace
   labels:
     prometheus: k8s
     role: alert-rules
 spec:
   groups:
-    - name: test-alert-group
+    - name: test-alert-group.rules
       rules:
         - alert: TestAlert
           expr: vector(1)  # Always triggers

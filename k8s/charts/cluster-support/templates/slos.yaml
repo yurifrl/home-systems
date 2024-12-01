@@ -8,7 +8,7 @@
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
-  name: slo-cpu-throttling
+  name: cpu-throttling-slo
   namespace: monitoring
   labels:
     prometheus: k8s
@@ -34,7 +34,7 @@ spec:
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
-  name: slo-cpu-saturation
+  name: cpu-saturation-slo
   namespace: monitoring
   labels:
     prometheus: k8s
