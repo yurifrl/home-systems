@@ -28,6 +28,7 @@ spec:
             value: critical
           - name: environment
             value: production
+        continue: false
   receivers:
     - name: "discord"
       discordConfigs:
