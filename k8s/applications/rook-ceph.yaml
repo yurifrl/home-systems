@@ -11,9 +11,16 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: true
+      selfHeal: false
     syncOptions:
       - CreateNamespace=true
+  ignoreDifferences:
+    - group: "*"
+      kind: "*"
+      jsonPointers:
+        - /spec
+      jqPathExpressions:
+        - .spec.template.spec
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
@@ -56,7 +63,6 @@ spec:
       helm:
         valuesObject:
           csi:
-            # NixOS-specific volume mounts for kernel modules
             csiCephFSPluginVolume:
               - name: kernel-modules
                 hostPath:
