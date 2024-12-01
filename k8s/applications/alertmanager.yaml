@@ -43,7 +43,8 @@ spec:
             receivers:
               - name: 'discord-critical'
                 webhook_configs:
-                  - url_secret:
-                      name: alertmanager-discord
-                      key: webhook-url
+                  - url:
+                      secret:
+                        name: alertmanager-discord
+                        key: webhook-url
               - name: 'null'
