@@ -45,3 +45,18 @@ spec:
             summary: "Test Alert is firing!"
             description: "This is a test alert to verify the Alertmanager configuration."
             runbook_url: "https://your-runbook-url.com/alerts/test-alert"
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cpu-saturation-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: cpu-saturation.rules
+      rules:
+        - record: bool:cpu_saturation:above_80
+          expr: (instance:node_cpu_utilisation:rate5m > 0.8) * 1
