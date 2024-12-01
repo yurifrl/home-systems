@@ -15,7 +15,7 @@ spec:
   indicator:
     ratio:
       errors:
-        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"} > 0.9  # CPU utilization above 90%
+        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"}  # CPU utilization above 90%
       total:
         metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"}
 ---

@@ -75,13 +75,14 @@ spec:
               
               # Rule Selectors
               ruleSelectorNilUsesHelmValues: false
-              ruleSelector:
-                matchExpressions:
-                  - key: environment
-                    operator: In
-                      - production
-                      - staging
-                      - development
+              # Hope here is to ignore the default rules
+              # ruleSelector:
+              #   matchExpressions:
+              #     - key: environment
+              #       operator: In
+              #         - production
+              #         - staging
+              #         - development
               ruleNamespaceSelector: {}
               
               # Scrape Config Selectors
