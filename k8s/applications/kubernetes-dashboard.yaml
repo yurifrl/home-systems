@@ -34,6 +34,10 @@ spec:
           extraArgs:
             - --enable-skip-login
             - --enable-insecure-login
+            - --token-ttl=0
+            - --enable-insecure-login-options
           protocolHttp: true
           service:
             type: ClusterIP
+          rbac:
+            clusterReadOnlyRole: true
