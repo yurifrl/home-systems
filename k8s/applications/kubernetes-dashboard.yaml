@@ -21,7 +21,7 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: kubernetes-dashboard
+            - name: k8s
               service:
                 name: kubernetes-dashboard
                 namespace: kubernetes-dashboard

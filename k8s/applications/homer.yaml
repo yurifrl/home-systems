@@ -146,5 +146,5 @@ spec:
                         - name: "Kubernetes Dashboard"
                           icon: "fas fa-dharmachakra"
                           tag: "kubernetes"
-                          url: "https://kubernetes-dashboard.syscd.live"
+                          url: "https://k8s.syscd.live"
                           target: "_blank"
