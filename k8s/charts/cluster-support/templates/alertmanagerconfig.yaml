@@ -1,3 +1,6 @@
+# https://devopscube.com/setup-prometheus-operator/
+# https://medium.com/@phil16terpasetheo/configure-alert-manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26
+#
 # curl -X POST http://alertmanager.syscd.tech/-/reload -v   
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
@@ -35,6 +38,4 @@ spec:
             Runbook: {{`{{ .CommonAnnotations.runbook_url }}`}}
           title: "{{`{{ .CommonLabels.alertname }}`}}"
           sendResolved: true
-
-# https://devopscube.com/setup-prometheus-operator/
-# https://medium.com/@phil16terpasetheo/configure-alert-manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26
+    - name: "null"
