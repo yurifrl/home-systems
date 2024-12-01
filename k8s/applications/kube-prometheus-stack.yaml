@@ -115,8 +115,6 @@ spec:
             enabled: false
             forceDeployDashboards: true
             defaultDashboardsEnabled: true
-          loki:
-            enabled: false   
           alertmanager:
             alertmanagerSpec:
               externalUrl: https://alertmanager.syscd.live

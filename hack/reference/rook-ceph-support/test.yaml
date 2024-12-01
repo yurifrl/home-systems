@@ -1,73 +1,73 @@
-# apiVersion: v1
-# kind: PersistentVolumeClaim
-# metadata:
-#   name: logger-claim
-#   namespace: rook-ceph
-# spec:
-#   accessModes:
-#     - ReadWriteOnce
-#   resources:
-#     requests:
-#       storage: 10m
-#   volumeMode: Filesystem
-#   storageClassName: local-storage
-# ---
-# apiVersion: apps/v1
-# kind: Deployment
-# metadata:
-#   name: logger
-#   namespace: rook-ceph
-# spec:
-#   replicas: 1
-#   selector:
-#     matchLabels:
-#       app: logger
-#   template:
-#     metadata:
-#       labels:
-#         app: logger
-#     spec:
-#       containers:
-#       - name: logger
-#         image: busybox
-#         resources:
-#           limits:
-#             cpu: "200m"
-#             memory: "128Mi"
-#           requests:
-#             cpu: "100m"
-#             memory: "64Mi"
-#         env:
-#         - name: VERSION
-#           value: "1"
-#         - name: POD_NAME
-#           valueFrom:
-#             fieldRef:
-#               fieldPath: metadata.name
-#         - name: POD_NAMESPACE
-#           valueFrom:
-#             fieldRef:
-#               fieldPath: metadata.namespace
-#         - name: POD_IP
-#           valueFrom:
-#             fieldRef:
-#               fieldPath: status.podIP
-#         - name: NODE_NAME
-#           valueFrom:
-#             fieldRef:
-#               fieldPath: spec.nodeName
-#         command: ["/bin/sh", "-c"]
-#         args:
-#           - |
-#             while true; do
-#               log_entry="[$(date '+%Y-%m-%d %H:%M:%S')] Version $VERSION - Pod: $POD_NAME - Node: $NODE_NAME - IP: $POD_IP - Log entry"
-#               echo "$log_entry" | tee -a /logs/app.log
-#               sleep 1
-#             done
-#         volumeMounts:
-#           - name: log-storage
-#             mountPath: /logs
-#       volumes:
-#       - name: log-storage
-#         persistentVolumeClaim:
-#           claimName: logger-claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logger-claim
+  namespace: rook-ceph
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10m
+  volumeMode: Filesystem
+  storageClassName: local-storage
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logger
+  namespace: rook-ceph
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logger
+  template:
+    metadata:
+      labels:
+        app: logger
+    spec:
+      containers:
+      - name: logger
+        image: busybox
+        resources:
+          limits:
+            cpu: "200m"
+            memory: "128Mi"
+          requests:
+            cpu: "100m"
+            memory: "64Mi"
+        env:
+        - name: VERSION
+          value: "1"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            while true; do
+              log_entry="[$(date '+%Y-%m-%d %H:%M:%S')] Version $VERSION - Pod: $POD_NAME - Node: $NODE_NAME - IP: $POD_IP - Log entry"
+              echo "$log_entry" | tee -a /logs/app.log
+              sleep 1
+            done
+        volumeMounts:
+          - name: log-storage
+            mountPath: /logs
+      volumes:
+      - name: log-storage
+        persistentVolumeClaim:
+          claimName: logger-claim
