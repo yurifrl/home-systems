@@ -108,8 +108,7 @@ spec:
             alertmanagerSpec:
               externalUrl: https://alertmanager.syscd.live
               secrets:
-                - name: discord-webhook
-                  key: webhook-url
+                - alertmanager-discord
             config:
               route:
                 group_by: ['alertname', 'severity']
