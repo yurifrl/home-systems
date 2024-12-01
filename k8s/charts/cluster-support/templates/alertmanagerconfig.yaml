@@ -17,6 +17,7 @@ spec:
       - alertname
       - severity
       - slo
+      - environment
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 1h
@@ -35,7 +36,6 @@ spec:
             key: webhook-url
           message: |
             {{`{{ .CommonLabels.alertname }}`}} {{`{{ .CommonLabels.severity }}`}} {{`{{ .CommonLabels.slo }}`}}
-            Runbook: {{`{{ .CommonAnnotations.runbook_url }}`}}
           title: "{{`{{ .CommonLabels.alertname }}`}}"
           sendResolved: true
     - name: "null"

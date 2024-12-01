@@ -15,7 +15,6 @@ metadata:
     role: alert-rules
     pyrra.dev/severity: critical
     pyrra.dev/environment: staging
-    pyrra.dev/alertname: CpuThrottling
 spec:
   target: "99"  # 99% availability
   window: "7d"
@@ -42,7 +41,6 @@ metadata:
     role: alert-rules
     pyrra.dev/severity: critical
     pyrra.dev/environment: staging
-    pyrra.dev/alertname: CpuSaturation
 spec:
   target: "95"  # 95% availability
   window: "7d"  # Monthly evaluation
