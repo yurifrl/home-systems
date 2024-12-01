@@ -114,7 +114,9 @@ spec:
             alertmanagerSpec:
               alertmanagerConfigNamespaceSelector: {}
               alertmanagerConfigSelector: {}
-            
+                         
+              alertmanagerConfiguration:
+                name: alertmanager-config
             # alertmanagerSpec:
             #   externalUrl: https://alertmanager.syscd.live
             #   #
@@ -122,9 +124,7 @@ spec:
             #   alertmanagerConfigSelector: {}  
             #   alertmanagerConfigMatcherStrategy:
             #     type: None
-              
-              alertmanagerConfiguration: {}
-                # name: alertmanager-config
+
 
             config:
               route:
