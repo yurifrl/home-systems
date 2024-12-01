@@ -14,13 +14,13 @@ spec:
       selfHeal: false
     syncOptions:
       - CreateNamespace=true
-  ignoreDifferences:
-    - group: "*"
-      kind: "*"
-      jsonPointers:
-        - /spec
-      jqPathExpressions:
-        - .spec.template.spec
+  # ignoreDifferences:
+  #   - group: "*"
+  #     kind: "*"
+  #     jsonPointers:
+  #       - /spec
+  #     jqPathExpressions:
+  #       - .spec.template.spec
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
