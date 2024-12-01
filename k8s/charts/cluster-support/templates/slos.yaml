@@ -7,7 +7,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
     pyrra.dev/severity: critical
-    pyrra.dev/runbook_url: https://github.com/sys-cd/syscd-docs/blob/main/runbooks/pod-cpu-throttling.md
     pyrra.dev/environment: staging
 spec:
   target: "99"
@@ -29,7 +28,6 @@ metadata:
     prometheus: k8s
     role: alert-rules
     pyrra.dev/severity: warning
-    pyrra.dev/runbook_url: https://github.com/sys-cd/syscd-docs/blob/main/runbooks/pod-cpu-throttling.md
     pyrra.dev/environment: production
 spec:
   target: "99"
