@@ -22,6 +22,8 @@ spec:
         matchers:
           - name: severity
             value: critical
+          - name: environment
+            value: production
   receivers:
     - name: "discord"
       discordConfigs:
