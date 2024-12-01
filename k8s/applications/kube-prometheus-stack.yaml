@@ -127,14 +127,18 @@ spec:
             #     name: alertmanager-config
 
             config:
-            route:
-              receiver: 'null'
-              group_by: ['alertname']
-              group_wait: 30s
-              group_interval: 5m
-              repeat_interval: 1h
-            receivers:
-              - name: 'null'
+              route:
+                group_by: ['alertname']
+                group_wait: 30s
+                group_interval: 5m
+                repeat_interval: 1h
+                receiver: 'user1'
+                routes:
+                  - match:
+                      alertname: Watchdog
+                      receiver: 'null'
+              receivers:
+                - name: 'null'
               
             # alertmanagerSpec:
             #   externalUrl: https://alertmanager.syscd.live
