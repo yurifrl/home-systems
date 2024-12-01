@@ -85,6 +85,7 @@ k -n external-dns create secret generic cloudflare-api-token --from-literal=toke
 # TODO
 
 - [ ] Use ingress
+- [ ] Filter alerts
 - [ ] Https
 - [ ] Transfer domain to cloudflare https://www.melodylee.tech/website-development-blog/transfer-domain-godaddy-to-cloudflare
 - [ ] Add state to prometheus

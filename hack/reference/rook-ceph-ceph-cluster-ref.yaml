@@ -39,17 +39,17 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: ceph-dashboard
-              service:
-                name: rook-ceph-mgr-dashboard
-                namespace: rook-ceph
-                port: 8443
+    # - repoURL: https://github.com/yurifrl/home-systems.git
+    #   targetRevision: HEAD
+    #   path: k8s/charts/support
+    #   helm:
+    #     valuesObject:
+    #       virtualServices:
+    #         - name: ceph-dashboard
+    #           service:
+    #             name: rook-ceph-mgr-dashboard
+    #             namespace: rook-ceph
+    #             port: 8443
     - chart: rook-ceph
       repoURL: https://charts.rook.io/release
       targetRevision: "*"
@@ -85,3 +85,29 @@ spec:
               - name: nix-store
                 mountPath: /nix
                 readOnly: true
+    - chart: rook-ceph-cluster
+      repoURL: https://charts.rook.io/release
+      targetRevision: "*"
+      helm:
+        valuesObject: {}
+          cephClusterSpec:
+            mon:
+              count: 1
+              allowMultiplePerNode: true
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: local-storage
+                  resources:
+                    requests:
+                      storage: 2Gi
+            mgr:
+              count: 1
+            dashboard:
+              enabled: true
+            storage:
+              useAllNodes: false
+              useAllDevices: false
+              nodes:
+                - name: "nixos-1"
+                  devices:
+                    - name: "sda2"
