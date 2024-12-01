@@ -104,51 +104,56 @@ spec:
                       regex: ([^:]+)(?::\d+)?;(\d+)
                       replacement: $1:$2
                       target_label: __address__
-          alertmanager:
-            alertmanagerSpec:
-              externalUrl: https://alertmanager.syscd.live
-              #
-              alertmanagerConfigNamespaceSelector: {}
-              alertmanagerConfigSelector: {}  
-              alertmanagerConfigMatcherStrategy:
-                type: None
-              
-              alertmanagerConfiguration:
-                name: alertmanager-config
-
-
-
-            # alertmanagerSpec:
-            #   externalUrl: https://alertmanager.syscd.live
-            #   secrets:
-            #     - alertmanager-discord
-            #   alertmanagerConfigNamespaceSelector: {}
-            #   alertmanagerConfigSelector: {}  
-            #   alertmanagerConfigMatcherStrategy:
-            #     type: None
-            # config:
-            #   route:
-            #     receiver: discord
-            #     group_by: ['alertname', 'severity',]
-            #     group_wait: 30s
-            #     group_interval: 5m
-            #     repeat_interval: 1h
-            #     routes:
-            #       - receiver: 'discord'
-            #         matchers:
-            #           - severity =~ ".+"
-            #   receivers:
-            #     - name: 'discord'
-            #       webhook_configs:
-            #         - url_file: '/etc/alertmanager/secrets/alertmanager-discord/webhook-url'
-            #           send_resolved: true
-            #     - name: 'null'
           grafana:
             enabled: false
             forceDeployDashboards: true
             defaultDashboardsEnabled: true
           loki:
-            enabled: false
+            enabled: false   
+          alertmanager:
+            alertmanagerSpec:
+              alertmanagerConfigNamespaceSelector: {}
+              alertmanagerConfigSelector: {}
+            
+            # alertmanagerSpec:
+            #   externalUrl: https://alertmanager.syscd.live
+            #   #
+            #   alertmanagerConfigNamespaceSelector: {}
+            #   alertmanagerConfigSelector: {}  
+            #   alertmanagerConfigMatcherStrategy:
+            #     type: None
+              
+            #   alertmanagerConfiguration:
+            #     name: alertmanager-config
+
+
+
+            # # alertmanagerSpec:
+            # #   externalUrl: https://alertmanager.syscd.live
+            # #   secrets:
+            # #     - alertmanager-discord
+            # #   alertmanagerConfigNamespaceSelector: {}
+            # #   alertmanagerConfigSelector: {}  
+            # #   alertmanagerConfigMatcherStrategy:
+            # #     type: None
+            # # config:
+            # #   route:
+            # #     receiver: discord
+            # #     group_by: ['alertname', 'severity',]
+            # #     group_wait: 30s
+            # #     group_interval: 5m
+            # #     repeat_interval: 1h
+            # #     routes:
+            # #       - receiver: 'discord'
+            # #         matchers:
+            # #           - severity =~ ".+"
+            # #   receivers:
+            # #     - name: 'discord'
+            # #       webhook_configs:
+            # #         - url_file: '/etc/alertmanager/secrets/alertmanager-discord/webhook-url'
+            # #           send_resolved: true
+            # #     - name: 'null'
+
 
 # https://medium.com/@phil16terpasetheo/configure-alert-manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26
 # k -n monitoring get secrets kube-prometheus-stack-grafana -ojsonpath="{.data.admin-password}" | base64 -d | pbcopy
