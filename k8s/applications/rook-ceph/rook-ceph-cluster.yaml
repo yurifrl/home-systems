@@ -14,13 +14,6 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-  ignoreDifferences:
-    - group: "*"
-      kind: "*"
-      jsonPointers:
-        - /spec
-      jqPathExpressions:
-        - .spec.template.spec
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
@@ -39,5 +32,8 @@ spec:
       helm:
         valuesObject:
           cephClusterSpec:
+            mon:
+              count: 1
+              allowMultiplePerNode: true
             dashboard:
               enabled: true
