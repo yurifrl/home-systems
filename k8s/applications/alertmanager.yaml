@@ -43,7 +43,7 @@ spec:
             receivers:
               - name: 'discord-critical'
                 webhook_configs:
-                  - url: ${DISCORD_WEBHOOK_URL}
+                  - url: "${DISCORD_WEBHOOK_URL}"
           extraEnv:
             - name: DISCORD_WEBHOOK_URL
               valueFrom:
