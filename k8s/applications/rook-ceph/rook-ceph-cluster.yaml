@@ -44,7 +44,7 @@ spec:
                       storage: 5Gi
             dashboard:
               enabled: true
-              port: 8443
+              port: 7000
             storage:
               useAllNodes: false
               useAllDevices: false
@@ -52,3 +52,33 @@ spec:
                 - name: nixos-1
                   devices:
                     - name: sda2
+# ---
+# apiVersion: storage.k8s.io/v1
+# kind: StorageClass
+# metadata:
+#   name: local-storage
+# provisioner: kubernetes.io/no-provisioner
+# volumeBindingMode: WaitForFirstConsumer
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: local-pv-mon
+# spec:
+#   storageClassName: local-storage
+#   capacity:
+#     storage: 5Gi
+#   accessModes:
+#     - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Retain
+#   volumeMode: Filesystem
+#   local:
+#     path: /dev/sda1
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#         - matchExpressions:
+#             - key: kubernetes.io/hostname
+#               operator: In
+#               values:
+#                 - nixos-1  # Replace with your node name 
