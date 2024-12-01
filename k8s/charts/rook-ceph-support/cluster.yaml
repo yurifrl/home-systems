@@ -54,7 +54,7 @@ metadata:
 spec:
   storageClassName: local-storage
   capacity:
-    storage: 500Mi
+    storage: 20Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
