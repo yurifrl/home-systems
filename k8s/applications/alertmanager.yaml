@@ -43,10 +43,11 @@ spec:
             receivers:
               - name: 'discord-critical'
                 webhook_configs:
-                  - url: "${DISCORD_WEBHOOK_URL}"
-          extraEnv:
-            - name: DISCORD_WEBHOOK_URL
-              valueFrom:
-                secretKeyRef:
-                  name: alertmanager-discord
-                  key: webhook-url
+                  - url_file: '/etc/alertmanager/secrets/webhook-url'
+                    send_resolved: true
+          extraSecretMounts:
+            - name: alertmanager-discord
+              secretName: alertmanager-discord
+              mountPath: /etc/alertmanager/secrets
+              subPath: webhook-url
+              readOnly: true
