@@ -16,22 +16,3 @@ spec:
         metric: prometheus_sd_kubernetes_http_request_total{job="prometheus-k8s"}
   target: "99"
   window: 2w
----
-apiVersion: pyrra.dev/v1alpha1
-kind: ServiceLevelObjective
-metadata:
-  name: cpu-saturation
-  namespace: monitoring
-  labels:
-    prometheus: k8s
-    role: alert-rules
-    pyrra.dev/severity: critical
-    pyrra.dev/environment: staging
-spec:
-  target: "95"  # 95% availability
-  window: "30d"  # Monthly evaluation
-  description: "Ensure CPU utilization stays below 80% for at least 95% of the time."
-  indicator:
-    bool_gauge:
-      metric: "bool:cpu_saturation:above_80"
-      grouping: ["instance"]  # Group by instance to monitor individual nodes
