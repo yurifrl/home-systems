@@ -71,35 +71,3 @@
 #       - name: log-storage
 #         persistentVolumeClaim:
 #           claimName: logger-claim
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: sample-pod
-  namespace: default
-  labels:
-    app: sample-app
-    argocd.argoproj.io/instance: rook-ceph-support
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: sample-app
-  template:
-    metadata:
-      labels:
-        app: sample-app
-        argocd.argoproj.io/instance: rook-ceph-support
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:latest
-          # resources:
-          #   limits:
-          #     cpu: "200m"
-          #     memory: "128Mi"
-          #   requests:
-          #     cpu: "100m"
-          #     memory: "64Mi"
-          ports:
-            - containerPort: 80
