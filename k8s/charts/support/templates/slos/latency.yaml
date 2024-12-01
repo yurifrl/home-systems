@@ -1,3 +1,12 @@
+{{- define "support.slo.labels" -}}
+prometheus: k8s
+role: alert-rules
+pyrra.dev/severity: critical
+pyrra.dev/environment: production
+pyrra.dev/app: {{ .app }}
+pyrra.dev/chart: support
+{{- end }}
+
 {{- range .Values.virtualServices }}
 {{- $domains := merge (.domains | default dict) $.Values.virtualServicesDefaults.domains -}}
 {{- $hostPrefix := .hostname | default .name -}}
@@ -12,11 +21,7 @@ kind: ServiceLevelObjective
 metadata:
   name: {{ .name }}-private-latency-slo
   namespace: monitoring
-  labels:
-    prometheus: k8s
-    role: alert-rules
-    pyrra.dev/severity: critical
-    pyrra.dev/environment: production
+  labels: {{- include "support.slo.labels" (dict "app" .name) | nindent 4 }}
 spec:
   target: "99"  # 99% of requests should be under threshold
   window: "7d"  # Weekly evaluation
@@ -35,11 +40,7 @@ kind: ServiceLevelObjective
 metadata:
   name: {{ .name }}-public-latency-slo
   namespace: monitoring
-  labels:
-    prometheus: k8s
-    role: alert-rules
-    pyrra.dev/severity: critical
-    pyrra.dev/environment: production
+  labels: {{- include "support.slo.labels" (dict "app" .name) | nindent 4 }}
 spec:
   target: "99"  # 99% of requests should be under threshold
   window: "7d"  # Weekly evaluation

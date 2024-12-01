@@ -7,11 +7,7 @@ kind: ServiceLevelObjective
 metadata:
   name: {{ .name }}-private-availability-slo
   namespace: monitoring
-  labels:
-    prometheus: k8s
-    role: alert-rules
-    pyrra.dev/severity: critical
-    pyrra.dev/environment: production
+  labels: {{- include "support.slo.labels" (dict "app" .name) | nindent 4 }}
 spec:
   target: "99.9"
   window: "7d"
@@ -29,11 +25,7 @@ kind: ServiceLevelObjective
 metadata:
   name: {{ .name }}-public-availability-slo
   namespace: monitoring
-  labels:
-    prometheus: k8s
-    role: alert-rules
-    pyrra.dev/severity: critical
-    pyrra.dev/environment: production
+  labels: {{- include "support.slo.labels" (dict "app" .name) | nindent 4 }}
 spec:
   target: "99.9"
   window: "7d"
