@@ -20,6 +20,8 @@ spec:
       path: k8s/charts/support
       helm:
         valuesObject:
+          slos:
+            enabled: true
           virtualServices:
             - name: argocd
               service:
