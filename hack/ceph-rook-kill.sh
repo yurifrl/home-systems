@@ -22,3 +22,8 @@ kubectl -n rook-ceph patch CephFilesystem ceph-filesystem-csi --type merge -p '{
 kubectl -n rook-ceph patch CephFilesystemSubVolumeGroup ceph-filesystem-csi --type merge -p '{"metadata":{"finalizers": []}}'
 kubectl -n rook-ceph patch cephobjectstore ceph-objectstore --type merge -p '{"metadata":{"finalizers": []}}'
 kubectl -n rook-ceph patch cephblockpool ceph-blockpool --type merge -p '{"metadata":{"finalizers": []}}'
+
+
+echo "Last resort: "
+kubectl proxy --port=8080
+curl -k -X DELETE http://127.0.0.1:8080/apis/ceph.rook.io/v1/namespaces/rook-ceph/cephblockpools/builtin-mgr

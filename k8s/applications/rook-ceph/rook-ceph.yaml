@@ -1,33 +1,3 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: rook-ceph-support
-  namespace: argocd
-spec:
-  project: default
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: rook-ceph-support
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: false
-    syncOptions:
-      - CreateNamespace=true
-  # ignoreDifferences:
-  #   - group: "*"
-  #     kind: "*"
-  #     jsonPointers:
-  #       - /spec
-  #     jqPathExpressions:
-  #       - .spec.template.spec
-  sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/rook-ceph-support
-      directory:
-        recurse: true
----
 # https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -46,17 +16,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: ceph-dashboard
-              service:
-                name: rook-ceph-mgr-dashboard
-                namespace: rook-ceph
-                port: 8443
     - chart: rook-ceph
       repoURL: https://charts.rook.io/release
       targetRevision: "*"
