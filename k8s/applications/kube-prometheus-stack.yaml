@@ -109,14 +109,14 @@ spec:
               externalUrl: https://alertmanager.syscd.live
               secrets:
                 - alertmanager-discord
-              volumes:
-                - name: alertmanager-discord
-                  secret:
-                    secretName: alertmanager-discord
-              volumeMounts:
-                - name: alertmanager-discord
-                  mountPath: /etc/alertmanager/secrets
-                  readOnly: true
+              # volumes:
+              #   - name: alertmanager-discord
+              #     secret:
+              #       secretName: alertmanager-discord
+              # volumeMounts:
+              #   - name: alertmanager-discord
+              #     mountPath: /etc/alertmanager/secrets
+              #     readOnly: true
             config:
               route:
                 group_by: ['alertname', 'severity']
