@@ -35,6 +35,8 @@ spec:
             enabled: true
           cephClusterSpec:
             dataDirHostPath: /var/lib/rook
+            mgr:
+              count: 1
             mon:
               count: 1
               allowMultiplePerNode: true
