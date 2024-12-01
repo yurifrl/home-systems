@@ -1,3 +1,4 @@
+# VectorSelector?
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
@@ -15,30 +16,13 @@ spec:
   indicator:
     ratio:
       errors:
-        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"}  # CPU utilization above 90%
+        metric: |
+          sum by (instance) (
+            (100 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+          )
       total:
-        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"}
----
-apiVersion: pyrra.dev/v1alpha1
-kind: ServiceLevelObjective
-metadata:
-  name: cluster-cpu-utilization-with9
-  namespace: monitoring
-  labels:
-    prometheus: k8s
-    role: alert-rules
-    pyrra.dev/severity: critical
-    pyrra.dev/environment: staging
-spec:
-  target: "99"
-  window: 2w
-  description: "Alerts when CPU utilization is consistently high across cluster nodes"
-  indicator:
-    ratio:
-      errors:
-        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"} > 0.9  # CPU utilization above 90%
-      total:
-        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"}
+        metric: |
+          sum by (instance) (rate(node_cpu_seconds_total[5m]))
 ---
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
