@@ -114,7 +114,7 @@ spec:
                 type: None
               
               alertmanagerConfiguration:
-                enabled: true
+                name: alertmanager-config
 
 
 

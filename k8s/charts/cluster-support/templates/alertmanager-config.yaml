@@ -20,7 +20,6 @@ spec:
         matchers:
           - name: alertname
             value: TargetDown
-          - name: 'null'
   receivers:
     - name: 'discord'
       webhookConfigs:
