@@ -142,3 +142,9 @@ spec:
                           icon: "fab fa-github"
                           url: "https://github.com/yurifrl/k8s"
                           target: "_blank"
+                        
+                        - name: "Kubernetes Dashboard"
+                          icon: "fas fa-dharmachakra"
+                          tag: "kubernetes"
+                          url: "https://dashboard.syscd.live"
+                          target: "_blank"
