@@ -111,22 +111,21 @@ spec:
                 - alertmanager-discord
             config:
               route:
-                receiver: 'discord-critical'
-                group_by: ['alertname', 'severity']
+                receiver: discord
+                group_by: ['alertname', 'severity',]
                 group_wait: 30s
                 group_interval: 5m
                 repeat_interval: 1h
                 routes:
-                  - receiver: 'discord-critical'
+                  - receiver: 'discord'
                     matchers:
-                      - severity =~ "critical|warning"
-                  # Everything else goes to 'null'
+                      - severity =~ ".+"
               receivers:
-                - name: 'discord-critical'
+                - name: 'discord'
                   webhook_configs:
                     - url_file: '/etc/alertmanager/secrets/alertmanager-discord/webhook-url'
                       send_resolved: true
-                - name: 'null'
+                # - name: 'null'
           grafana:
             enabled: false
             forceDeployDashboards: true
