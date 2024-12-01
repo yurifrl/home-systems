@@ -9,5 +9,5 @@ metadata:
     grafana_dashboard: "1"
 data:
   {{ . }}.json: |
-    {{- $.Files.Get (printf "dashboards/%s.json" .) | nindent 4 }}
+    {{- $.Files.Get (printf "templates/dashboards/%s.json" .) | nindent 4 }}
 {{- end }}
