@@ -32,6 +32,7 @@ spec:
       helm:
         values: |
           extraArgs:
+            - --auto-generate-certificates
             - --enable-skip-login
             - --enable-insecure-login
             - --token-ttl=0
