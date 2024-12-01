@@ -1,0 +1,47 @@
+{{- range .Values.virtualServices }}
+{{- $domains := merge (.domains | default dict) $.Values.virtualServicesDefaults.domains -}}
+{{- $hostPrefix := .hostname | default .name -}}
+{{- if or $domains.xyz $domains.tech }}
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: {{ .name }}-private-availability-slo
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    pyrra.dev/severity: critical
+    pyrra.dev/environment: production
+spec:
+  target: "99.9"
+  window: "7d"
+  description: "Ensure availability of {{ .name }} instances with 99.9% reliability."
+  indicator:
+    bool_gauge:
+      metric: |
+        probe_success{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech)"}
+      grouping: []
+---
+{{- end }}
+{{- if $domains.live }}
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: {{ .name }}-public-availability-slo
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    pyrra.dev/severity: critical
+    pyrra.dev/environment: production
+spec:
+  target: "99.9"
+  window: "7d"
+  description: "Ensure availability of {{ .name }} instance https://{{ $hostPrefix }}.syscd.live with 99.9% reliability."
+  indicator:
+    bool_gauge:
+      metric: probe_success{instance="https://{{ $hostPrefix }}.syscd.live"}
+      grouping: []
+---
+{{- end }}
+{{- end }} 
