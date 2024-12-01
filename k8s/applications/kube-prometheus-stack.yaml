@@ -123,8 +123,8 @@ spec:
             #   alertmanagerConfigMatcherStrategy:
             #     type: None
               
-              alertmanagerConfiguration:
-                name: alertmanager-config
+              alertmanagerConfiguration: {}
+                # name: alertmanager-config
 
             config:
               route:
