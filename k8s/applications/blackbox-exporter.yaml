@@ -1,0 +1,57 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: blackbox-exporter
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: prometheus-blackbox-exporter
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          config:
+            modules:
+              http_2xx:
+                prober: http
+                timeout: 5s
+                http:
+                  fail_if_not_ssl: true
+                  follow_redirects: true
+              http_2xx_long_timeout:
+                prober: http
+                timeout: 10s
+                http:
+                  fail_if_not_ssl: true
+                  follow_redirects: true
+              http_2xx_server_cloudflare:
+                prober: http
+                timeout: 5s
+                http:
+                  fail_if_not_ssl: true
+                  fail_if_header_not_matches:
+                    - header: server
+                      regexp: ".*(?i)cloudflare.*"
+                      allow_missing: false
+              http_2xx_test_basic_auth:
+                prober: http
+                timeout: 5s
+                http:
+                  basic_auth:
+                    username: postman
+                    password_file: /etc/secrets/http_2xx_test_basic_auth
+          extraSecretMounts:
+            - name: secret-files
+              mountPath: /etc/secrets/
+              secretName: blackbox-exporter

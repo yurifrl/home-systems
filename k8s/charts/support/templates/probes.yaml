@@ -1,0 +1,29 @@
+{{- range .Values.virtualServices }}
+{{- $domains := merge (.domains | default dict) $.Values.virtualServicesDefaults.domains -}}
+{{- $hostPrefix := .hostname | default .name -}}
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    probe: {{ .name }}
+spec:
+  interval: 30s
+  module: http_2xx
+  prober:
+    url: blackbox-exporter:9115
+  targets:
+    staticConfig:
+      static:
+        {{- if $domains.xyz }}
+        - https://{{ $hostPrefix }}.syscd.xyz
+        {{- end }}
+        {{- if $domains.tech }}
+        - https://{{ $hostPrefix }}.syscd.tech
+        {{- end }}
+        {{- if $domains.live }}
+        - https://{{ $hostPrefix }}.syscd.live
+        {{- end }}
+---
+{{- end }} 

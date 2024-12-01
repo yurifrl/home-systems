@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ .name | default "local0-0" }}
+  name: {{ .name }}
   namespace: {{ $.Release.Namespace }}
 spec:
   storageClassName: {{ .storageClass | default "local-storage" }}
