@@ -3,7 +3,7 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
   name: alertmanager-config
-  namespace: default
+  namespace: monitoring
   labels:
     prometheus: k8s
     role: alert-rules
@@ -12,30 +12,33 @@ spec:
     receiver: discord
     groupBy:
       - alertname
+      - severity
+      - slo
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 1h
+    continue: true
     routes:
       - receiver: 'discord'
-        matchers:
-          - name: alertname
-            value: TargetDown
         continue: true
+        matchers:
+          - name: severity
+            value: critical
   receivers:
     - name: 'discord'
       webhookConfigs:
         - urlSecret:
             name: alertmanager-discord
             key: webhook-url
-    - name: 'null'
 ---
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
   name: config-example
-  namespace: default
+  namespace: monitoring
   labels:
-    alertmanagerConfig: example
+    prometheus: k8s
+    role: alert-rules
 spec:
   route:
     groupBy: ['job']
@@ -43,6 +46,7 @@ spec:
     groupInterval: 5m
     repeatInterval: 12h
     receiver: 'webhook'
+    continue: true
   receivers:
   - name: 'webhook'
     webhookConfigs:
