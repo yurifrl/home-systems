@@ -6,7 +6,7 @@ metadata:
   labels:
     prometheus: k8s
     role: alert-rules
-    pyrra.dev/severity: critical  # Any labels prefixed with 'pyrra.dev/' will be propagated as Prometheus labels to the alerts, while stripping the prefix.
+    pyrra.dev/severity: critical
 spec:
   target: "99"
   window: 2w
@@ -14,9 +14,9 @@ spec:
   indicator:
     ratio:
       errors:
-        metric: node_cpu_seconds_total{mode!="idle"}
+        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"} > 0.9  # CPU utilization above 90%
       total:
-        metric: node_cpu_seconds_total
+        metric: instance:node_cpu_utilisation:rate5m{job="node-exporter"}
 ---
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective

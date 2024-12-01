@@ -17,62 +17,70 @@ spec:
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 1h
-    continue: true
     routes:
-      - receiver: 'discord'
-        continue: true
+      - receiver: discord
         matchers:
           - name: severity
             value: critical
   receivers:
-    - name: 'discord'
-      webhookConfigs:
-        - urlSecret:
+    - name: "discord"
+      discordConfigs:
+        - apiURL:
             name: alertmanager-discord
             key: webhook-url
+          message: |
+            {{ .CommonLabels.alertname }} {{ .CommonLabels.severity }} {{ .CommonLabels.slo }}
+            Runbook: {{ .CommonAnnotations.runbook_url }}
+          title: "{{ .CommonLabels.alertname }}"
+          sendResolved: true
 ---
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: AlertmanagerConfig
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
 metadata:
-  name: config-example
-  namespace: monitoring
+  name: test-alert
+  namespace: monitoring  # Replace with your Prometheus namespace
   labels:
     prometheus: k8s
     role: alert-rules
 spec:
-  route:
-    groupBy: ['job']
-    groupWait: 30s
-    groupInterval: 5m
-    repeatInterval: 12h
-    receiver: 'webhook'
-    continue: true
-  receivers:
-  - name: 'webhook'
-    webhookConfigs:
-    - url: 'http://example.com/'
-# ---
-# apiVersion: monitoring.coreos.com/v1
-# kind: PrometheusRule
-# metadata:
-#   name: test-alert
-#   namespace: monitoring  # Replace with your Prometheus namespace
-#   labels:
-#     prometheus: k8s
-#     role: alert-rules
-# spec:
-#   groups:
-#     - name: test-alert-group
-#       rules:
-#         - alert: TestAlert
-#           expr: vector(1)  # Always triggers
-#           for: 1m
-#           labels:
-#             severity: critical
-#           annotations:
-#             summary: "Test Alert is firing!"
-#             description: "This is a test alert to verify the Alertmanager configuration."
-
+  groups:
+    - name: test-alert-group
+      rules:
+        - alert: TestAlert
+          expr: vector(1)  # Always triggers
+          for: 1m
+          labels:
+            severity: critical
+            slo: test-alert
+          annotations:
+            title: "Test Alert is firing!"
+            summary: "Test Alert is firing!"
+            description: "This is a test alert to verify the Alertmanager configuration."
+            runbook_url: "https://your-runbook-url.com/alerts/test-alert"
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: test-alert2
+  namespace: monitoring  # Replace with your Prometheus namespace
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: test-alert-group
+      rules:
+        - alert: TestAlert
+          expr: vector(1)  # Always triggers
+          for: 1m
+          labels:
+            severity: critical
+            slo: test-alert
+          annotations:
+            title: "Test Alert is firing!"
+            summary: "Test Alert is firing!"
+            description: "This is a test alert to verify the Alertmanager configuration."
+            runbook_url: "https://your-runbook-url.com/alerts/test-alert"
 
 # https://devopscube.com/setup-prometheus-operator/
 # https://medium.com/@phil16terpasetheo/configure-alert-manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26
