@@ -1,8 +1,14 @@
-# VectorSelector?
+# [OK] VectorSelector
+# http_requests_total{job="frontend"}
+# 
+# [FAIL] No VectorSelector:
+# rate(http_requests_total[5m])  # This is a range vector.
+# sum(http_requests_total)       # This is an aggregated result.
+#
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
-  name: cluster-cpu-utilization
+  name: cpu-throttling
   namespace: monitoring
   labels:
     prometheus: k8s
@@ -10,33 +16,12 @@ metadata:
     pyrra.dev/severity: critical
     pyrra.dev/environment: staging
 spec:
-  target: "99"
-  window: 2w
-  description: "Alerts when CPU utilization is consistently high across cluster nodes"
+  target: "99"  # 99% availability
+  window: "7d"
+  description: "Minimize container CPU throttling across all nodes."
   indicator:
     ratio:
-      errors:
-        metric: container_cpu_cfs_throttled_periods_total
       total:
-        metric: container_cpu_cfs_periods_total
----
-apiVersion: pyrra.dev/v1alpha1
-kind: ServiceLevelObjective
-metadata:
-  name: pod-cpu-throttling
-  namespace: monitoring
-  labels:
-    prometheus: k8s
-    role: alert-rules
-    pyrra.dev/severity: warning
-    pyrra.dev/environment: production
-spec:
-  target: "99"
-  window: 1w
-  description: "Alerts when pods are being throttled due to CPU limits"
-  indicator:
-    ratio:
+        metric: "container_cpu_cfs_periods_total"
       errors:
-        metric: container_cpu_cfs_throttled_periods_total{namespace!=""}  # Vector selector matching all namespaces
-      total:
-        metric: container_cpu_cfs_periods_total{namespace!=""}  # Vector selector matching all namespaces
+        metric: "container_cpu_cfs_throttled_periods_total"
