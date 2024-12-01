@@ -39,3 +39,4 @@ spec:
             {{`{{ .CommonLabels.alertname }}`}} {{`{{ .CommonLabels.severity }}`}} {{`{{ .CommonLabels.slo }}`}}
           title: "{{`{{ .CommonLabels.alertname }}`}}"
           sendResolved: true
+    - name: "null"
