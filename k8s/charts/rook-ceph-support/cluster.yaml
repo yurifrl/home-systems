@@ -77,7 +77,7 @@ kind: CephBlockPool
 metadata:
   name: builtin-mgr
   namespace: rook-ceph # namespace:cluster
-  labels:
+  annotations:
     rook.io/force-deletion: "true" 
 spec:
   name: .mgr
@@ -91,7 +91,8 @@ kind: CephCluster
 metadata:
   name: my-cluster
   namespace: rook-ceph # namespace:cluster
-  labels:
+  annotations:
+    # https://rook.io/docs/rook/latest/Storage-Configuration/ceph-teardown/#force-delete-resources
     rook.io/force-deletion: "true"
 spec:
   # If there are multiple clusters, the directory must be unique for each cluster.
