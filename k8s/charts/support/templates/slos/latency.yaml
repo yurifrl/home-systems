@@ -1,12 +1,4 @@
-{{- define "support.slo.labels" -}}
-prometheus: k8s
-role: alert-rules
-pyrra.dev/severity: critical
-pyrra.dev/environment: production
-pyrra.dev/app: {{ .app }}
-pyrra.dev/chart: support
-{{- end }}
-
+{{- if .Values.slos.enabled }}
 {{- range .Values.virtualServices }}
 {{- $domains := merge (.domains | default dict) $.Values.virtualServicesDefaults.domains -}}
 {{- $hostPrefix := .hostname | default .name -}}
@@ -52,5 +44,6 @@ spec:
       total:
         metric: probe_http_duration_seconds_count{instance="https://{{ $hostPrefix }}.syscd.live"}
 ---
+{{- end }}
 {{- end }}
 {{- end }}

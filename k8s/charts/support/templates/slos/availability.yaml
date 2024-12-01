@@ -1,3 +1,4 @@
+{{- if .Values.slos.enabled }}
 {{- range .Values.virtualServices }}
 {{- $domains := merge (.domains | default dict) $.Values.virtualServicesDefaults.domains -}}
 {{- $hostPrefix := .hostname | default .name -}}
@@ -35,5 +36,6 @@ spec:
       metric: probe_success{instance="https://{{ $hostPrefix }}.syscd.live"}
       grouping: []
 ---
+{{- end }}
 {{- end }}
 {{- end }} 

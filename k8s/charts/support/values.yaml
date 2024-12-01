@@ -37,3 +37,7 @@ virtualServicesDefaults:
 
 # Global settings
 global: {}
+
+# SLO settings
+slos:
+  enabled: false
