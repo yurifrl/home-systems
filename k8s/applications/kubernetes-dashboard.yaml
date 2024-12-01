@@ -32,16 +32,5 @@ spec:
       helm:
         values: |
           extraArgs:
-            - --enable-skip-login
             - --enable-insecure-login
-            - --token-ttl=0
-            - --authentication-mode=basic
           protocolHttp: true
-          service:
-            type: ClusterIP
-          rbac:
-            clusterReadOnlyRole: true
-          extraSecrets:
-            - name: basic-auth
-              data:
-                auth: "admin:$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cKWE0" # password is 'admin'
