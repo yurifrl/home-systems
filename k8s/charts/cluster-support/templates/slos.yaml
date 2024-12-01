@@ -8,7 +8,7 @@
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
-  name: cpu-throttling
+  name: slo-cpu-throttling
   namespace: monitoring
   labels:
     prometheus: k8s
@@ -34,7 +34,7 @@ spec:
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
-  name: cpu-saturation
+  name: slo-cpu-saturation
   namespace: monitoring
   labels:
     prometheus: k8s
@@ -43,9 +43,23 @@ metadata:
     pyrra.dev/environment: staging
 spec:
   target: "95"  # 95% availability
-  window: "30d"  # Monthly evaluation
+  window: "7d"  # Monthly evaluation
   description: "Ensure CPU utilization stays below 80% for at least 95% of the time."
   indicator:
     bool_gauge:
       metric: "bool:cpu_saturation:above_80"
       grouping: ["instance"]  # Group by instance to monitor individual nodes
+
+
+# Indicator Types:
+#
+# bool_gauge:    Measures whether a boolean gauge is successful (1) or not (0)
+#
+# latency:       Measures if a certain percentage of requests are faster than
+#                the expected latency threshold
+#
+# latencyNative: Similar to latency but uses Prometheus native histograms
+#                for more efficient latency measurements
+#
+# ratio:         Measures the ratio of errors to total events
+#                (error budget consumption)
