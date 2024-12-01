@@ -32,9 +32,23 @@ spec:
       helm:
         valuesObject:
           cephClusterSpec:
+            dataDirHostPath: /var/lib/rook
             mon:
               count: 1
               allowMultiplePerNode: true
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: local-storage
+                  resources:
+                    requests:
+                      storage: 5Gi
             dashboard:
               enabled: true
               port: 8443
+            storage:
+              useAllNodes: false
+              useAllDevices: false
+              nodes:
+                - name: nixos-1
+                  devices:
+                    - name: sda2
