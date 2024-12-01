@@ -29,9 +29,9 @@ spec:
             name: alertmanager-discord
             key: webhook-url
           message: |
-            {{ .CommonLabels.alertname }} {{ .CommonLabels.severity }} {{ .CommonLabels.slo }}
-            Runbook: {{ .CommonAnnotations.runbook_url }}
-          title: "{{ .CommonLabels.alertname }}"
+            {{`{{ .CommonLabels.alertname }}`}} {{`{{ .CommonLabels.severity }}`}} {{`{{ .CommonLabels.slo }}`}}
+            Runbook: {{`{{ .CommonAnnotations.runbook_url }}`}}
+          title: "{{`{{ .CommonLabels.alertname }}`}}"
           sendResolved: true
 
 # https://devopscube.com/setup-prometheus-operator/
