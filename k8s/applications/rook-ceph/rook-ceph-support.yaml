@@ -21,7 +21,7 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: ceph-dashboard
+            - name: ceph
               service:
                 name: rook-ceph-mgr-dashboard
                 namespace: rook-ceph
