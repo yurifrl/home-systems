@@ -42,33 +42,43 @@ let
   '';
 
   showCommands = ''
-    echo "Manual Command Reference:"
+    # Prompt for disk selection
+    echo "=== Available Disks ==="
+    ${util-linux}/bin/lsblk -d -o NAME,SIZE,MODEL,SERIAL | ${gnugrep}/bin/grep -v "loop"
+    echo ""
+
+    read -p "Enter disk name to show commands for (e.g., sda): " DISK_NAME
+    if [ -z "$DISK_NAME" ]; then
+        echo "No disk selected. Exiting."
+        exit 1
+    fi
+
+    echo "Manual Command Reference for /dev/$DISK_NAME:"
     echo "------------------------"
     echo "1. List all disks:"
     echo "   lsblk -d -o NAME,SIZE,MODEL,SERIAL"
     echo ""
-    echo "2. Get disk info (replace sdX with your disk):"
-    echo "   sudo udevadm info --query=property --name=/dev/sdX"
+    echo "2. Get disk info:"
+    echo "   sudo udevadm info --query=property --name=/dev/$DISK_NAME"
     echo ""
     echo "3. Show current partition layout:"
-    echo "   sudo fdisk -l /dev/sdX"
+    echo "   sudo fdisk -l /dev/$DISK_NAME"
     echo ""
     echo "4. Wipe filesystem signatures:"
-    echo "   sudo wipefs -a /dev/sdX"
+    echo "   sudo wipefs -a /dev/$DISK_NAME"
     echo ""
     echo "5. Apply partition template (replace TEMPLATE.sfdisk with your template file):"
-    echo "   sudo sfdisk --force /dev/sdX < TEMPLATE.sfdisk"
+    echo "   sudo sfdisk --force /dev/$DISK_NAME < TEMPLATE.sfdisk"
     echo ""
     echo "6. Unmount partition:"
-    echo "   sudo umount /dev/sdX1"
+    echo "   sudo umount /dev/${DISK_NAME}1"
     echo ""
     echo "7. Format partition as ext4:"
-    echo "   sudo mkfs.ext4 -F /dev/sdX1"
+    echo "   sudo mkfs.ext4 -F /dev/${DISK_NAME}1"
     echo ""
     echo "8. Find disk templates:"
     echo "   find /path/to/templates -name '*.sfdisk' -type f"
     echo ""
-    echo "Note: Replace 'sdX' with your actual disk name (e.g., 'sda')"
     exit 0
   '';
 
