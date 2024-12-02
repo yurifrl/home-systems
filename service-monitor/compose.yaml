@@ -1,0 +1,33 @@
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    restart: always
+
+  uptime-shell:
+    build: .
+    restart: always
+
+  tailscale:
+    image: tailscale/tailscale:latest
+    volumes:
+      - tailscale:/var/lib/tailscale
+    privileged: true
+    env_file:
+      - secrets/secrets.env
+    environment:
+      - TS_HOSTNAME=service-monitor
+    restart: always
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --credentials-file /etc/cloudflared/config.json run 1b664006-2417-4072-877f-45697ffa642d
+    volumes:
+      - ./secrets/cloudflare.json:/etc/cloudflared/config.json
+    env_file:
+      - secrets/secrets.env
+
+    restart: always
+
+volumes:
+  tailscale:
+    name: tailscale

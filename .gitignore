@@ -9,4 +9,4 @@ vendor/
 result-*
 hack/secrets.sh
 hack/original_k8s/
-tailscale-auth.key
+uptime-bot/secrets
