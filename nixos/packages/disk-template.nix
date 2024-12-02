@@ -12,7 +12,7 @@ let
         /dev/sda1 : start=2048, size=2097152, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
         /dev/sda2 : type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
       '';
-    },
+    }
     {
       name = "Kingston_DataTraveler_3.0_408D5CBF5F0AE830A9150618-0:0";
       content = ''
@@ -58,25 +58,30 @@ let
     echo "1. List all disks:"
     echo "   lsblk -d -o NAME,SIZE,MODEL,SERIAL"
     echo ""
-    echo "2. Get disk info:"
-    echo "   sudo udevadm info --query=property --name=/dev/$DISK_NAME"
+    echo "2. Get disk info and serial (used for template matching):"
+    echo "   lsblk -o NAME,SERIAL,MODEL /dev/$DISK_NAME | sed 1d"
+    echo "   # Get just the serial:"
+    echo "   lsblk -o NAME,SERIAL,MODEL /dev/$DISK_NAME | sed 1d | tr -s ' ' | cut -d' ' -f2"
     echo ""
-    echo "3. Show current partition layout:"
+    echo "3. Find matching template file:"
+    echo "   find /path/to/templates -name \"*.sfdisk\" -type f | grep -F \"SERIAL_NUMBER\""
+    echo ""
+    echo "4. Show current partition layout:"
     echo "   sudo fdisk -l /dev/$DISK_NAME"
     echo ""
-    echo "4. Wipe filesystem signatures:"
+    echo "5. Wipe filesystem signatures:"
     echo "   sudo wipefs -a /dev/$DISK_NAME"
     echo ""
-    echo "5. Apply partition template (replace TEMPLATE.sfdisk with your template file):"
+    echo "6. Apply partition template (replace TEMPLATE.sfdisk with your template file):"
     echo "   sudo sfdisk --force /dev/$DISK_NAME < TEMPLATE.sfdisk"
     echo ""
-    echo "6. Unmount partition:"
+    echo "7. Unmount partition:"
     echo "   sudo umount /dev/${DISK_NAME}1"
     echo ""
-    echo "7. Format partition as ext4:"
+    echo "8. Format partition as ext4:"
     echo "   sudo mkfs.ext4 -F /dev/${DISK_NAME}1"
     echo ""
-    echo "8. Find disk templates:"
+    echo "9. Find disk templates:"
     echo "   find /path/to/templates -name '*.sfdisk' -type f"
     echo ""
     exit 0
@@ -186,9 +191,12 @@ let
         echo "Current disk info:"
         echo "Model: $(echo "$DISK_INFO" | ${coreutils}/bin/tr -s ' ' | ${coreutils}/bin/cut -d' ' -f3-)"
         echo "Diskname: $DISK_NAME"
-        echo "Diskifo: $DISK_INFO"
+        echo "Diskinfo: $DISK_INFO"
         echo "Serial: $DISK_SERIAL"
+        echo "Expected filename pattern: *${DISK_SERIAL}*.sfdisk"
         echo "Searched in: $TEMP_DIR"
+        echo "Available templates:"
+        ls -l "$TEMP_DIR"/*.sfdisk 2>/dev/null || echo "  No .sfdisk files found"
         exit 1
     fi
 
