@@ -193,7 +193,7 @@ let
         echo "Diskname: $DISK_NAME"
         echo "Diskinfo: $DISK_INFO"
         echo "Serial: $DISK_SERIAL"
-        echo "Expected filename pattern: *${DISK_SERIAL}*.sfdisk"
+        echo "Expected filename pattern: *''${DISK_SERIAL}*.sfdisk"
         echo "Searched in: $TEMP_DIR"
         echo "Available templates:"
         ls -l "$TEMP_DIR"/*.sfdisk 2>/dev/null || echo "  No .sfdisk files found"
