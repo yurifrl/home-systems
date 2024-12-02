@@ -12,6 +12,16 @@ let
         /dev/sda1 : start=2048, size=2097152, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
         /dev/sda2 : type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
       '';
+    },
+    {
+      name = "Kingston_DataTraveler_3.0_408D5CBF5F0AE830A9150618-0:0";
+      content = ''
+        label: gpt
+        unit: sectors
+
+        /dev/sdb1 : start=2048, size=31457280, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
+        /dev/sdb2 : type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
+      '';
     }
   ];
 
@@ -165,6 +175,8 @@ let
         echo "No layout file found for this disk"
         echo "Current disk info:"
         echo "Model: $(echo "$DISK_INFO" | ${coreutils}/bin/tr -s ' ' | ${coreutils}/bin/cut -d' ' -f3-)"
+        echo "Diskname: $DISK_NAME"
+        echo "Diskifo: $DISK_INFO"
         echo "Serial: $DISK_SERIAL"
         echo "Searched in: $TEMP_DIR"
         exit 1
