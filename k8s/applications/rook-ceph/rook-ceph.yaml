@@ -56,33 +56,3 @@ spec:
               enabled: true
             serviceMonitor:
               enabled: true
-          # csi:
-          #   csiCephFSPluginVolume:
-          #     - name: kernel-modules
-          #       hostPath:
-          #         path: /run/current-system/kernel-modules/lib/modules
-          #     - name: nix-store
-          #       hostPath:
-          #         path: /nix
-          #   csiCephFSPluginVolumeMount:
-          #     - name: kernel-modules
-          #       mountPath: /lib/modules
-          #       readOnly: true
-          #     - name: nix-store
-          #       mountPath: /nix
-          #       readOnly: true
-          #   csiRBDPluginVolume:
-          #     - name: kernel-modules
-          #       hostPath:
-          #         path: /run/current-system/kernel-modules/lib/modules
-          #     - name: nix-store
-          #       hostPath:
-          #         path: /nix
-          #   csiRBDPluginVolumeMount:
-          #     - name: kernel-modules
-          #       mountPath: /lib/modules
-          #       readOnly: true
-          #     - name: nix-store
-          #       mountPath: /nix
-          #       readOnly: true
-   
