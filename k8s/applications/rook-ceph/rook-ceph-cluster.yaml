@@ -48,7 +48,6 @@ spec:
               nodes:
                 - name: "nixos-1"
                   devices:
-                    - name: "/dev/sda1"
                     - name: "/dev/sda2"
                   config:
                     metadataDevice: "/dev/sda1"
