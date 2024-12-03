@@ -31,6 +31,8 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
+          toolbox:
+            enabled: true
           monitoring:
             enabled: true
             createPrometheusRules: true
