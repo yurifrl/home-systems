@@ -24,8 +24,6 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
-          monitoring:
-            enabled: true
           crds:
             enabled: true # NOTE: DO NOT CHANGE
           csi:
