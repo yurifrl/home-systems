@@ -35,9 +35,20 @@ spec:
             enabled: true
             createPrometheusRules: true
           cephClusterSpec:
+            dataDirHostPath: /var/lib/rook
             mon:
               count: 1
             mgr:
               count: 1
             dashboard:
               enabled: true
+            storage:
+              useAllNodes: false
+              useAllDevices: false
+              nodes:
+                - name: "nixos-1"
+                  devices:
+                    - name: "/dev/sda1"
+                    - name: "/dev/sda2"
+                  config:
+                    metadataDevice: "/dev/sda1"
