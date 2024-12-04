@@ -70,7 +70,12 @@ spec:
                       storage: 5Gi
             storage:
               useAllNodes: false
-              nodes: {}
+              nodes:
+                - name: "nixos-1"
+                  devices:
+                    - name: "/dev/sda2"
+                  config:
+                    metadataDevice: "/dev/sda1"
               storageClassDeviceSets:
                 - name: set1
                   count: 1
@@ -78,8 +83,8 @@ spec:
                   tuneDeviceClass: true
                   tuneFastDeviceClass: false
                   encrypted: false
-                  placement:
-                  preparePlacement:
+                  placement: {}
+                  preparePlacement: {}
                   volumeClaimTemplates:
                     - metadata:
                         name: data
