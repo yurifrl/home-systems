@@ -59,7 +59,4 @@ spec:
               nodes:
                 - name: ibnsina
                   devices:
-                    - name: /dev/sda1
-                - name: mill
-                  devices:
-                    - name: /dev/sd2
+                    - name: /dev/sda
