@@ -2,8 +2,8 @@ dashboards:
   - argo
   - kubernetes
   - k3s
-  - kubernetes-apacity-planning-limits.json
-  - kubernetes-pod-resource-overview.json
-  - kubernetes-pod.json
-  - kubernetes-resource-requests.json
-  - workload-Resource-recommendations-based-on-usage.json
+  - kubernetes-apacity-planning-limits # https://grafana.com/grafana/dashboards/13125-kubernetes-capacity-planning-limits/?
+  - kubernetes-pod-resource-overview # https://grafana.com/grafana/dashboards/15207-kubernetes-pod-resource-overview/?
+  - kubernetes-pod 
+  - kubernetes-resource-requests # https://grafana.com/grafana/dashboards/7187-kubernetes-resource-requests/?
+  - workload-Resource-recommendations-based-on-usage # https://grafana.com/grafana/dashboards/15154-workload-resource-recommendations-based-on-usage/?
