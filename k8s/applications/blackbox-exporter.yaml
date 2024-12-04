@@ -57,8 +57,8 @@ spec:
               secretName: blackbox-exporter
           resources:
             limits:
-              cpu: 200m
-              memory: 256Mi
-            requests:
-              cpu: 100m
+              cpu: 50m
               memory: 128Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
