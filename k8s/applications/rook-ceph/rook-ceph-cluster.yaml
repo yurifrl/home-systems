@@ -42,9 +42,22 @@ spec:
             enabled: true
             createPrometheusRules: true
           cephClusterSpec:
-            skipUpgradeChecks: false
-            continueUpgradeAfterChecksEvenIfNotHealthy: false
+            # If there are multiple clusters, the directory must be unique for each cluster.
             dataDirHostPath: /var/lib/rook
+            mon:
+              count: 1
+              allowMultiplePerNode: true
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: local-storage
+                  resources:
+                    requests:
+                      storage: 500Mi
+            mgr:
+              count: 1
+              modules:
+                - name: rook
+                  enabled: true
             dashboard:
               enabled: true
               ssl: false
@@ -53,28 +66,35 @@ spec:
             cephVersion:
               image: quay.io/ceph/ceph:v18
               allowUnsupported: false
-
-            mgr:
-              count: 1
-              modules:
-                - name: rook
-                  enabled: true   
-            mon:
-              count: 1
-              allowMultiplePerNode: true
-              volumeClaimTemplate:
-                spec:
-                  storageClassName: my-storage-class
-                  resources:
-                    requests:
-                      storage: 5Gi
+            skipUpgradeChecks: false
+            continueUpgradeAfterChecksEvenIfNotHealthy: false
             storage:
-              useAllNodes: false
-              nodes:
-                - name: "nixos-1"
-                  devices:
-                    - name: "/dev/sda2"
-              storageClassDeviceSets: []
+              storageClassDeviceSets:
+                - name: set1
+                  count: 1
+                  portable: false
+                  tuneDeviceClass: true
+                  tuneFastDeviceClass: false
+                  encrypted: false
+                  placement:
+                  preparePlacement:
+                  volumeClaimTemplates:
+                    - metadata:
+                        name: data
+                        # if you are looking at giving your OSD a different CRUSH device class than the one detected by Ceph
+                        # annotations:
+                        #   crushDeviceClass: hybrid
+                      spec:
+                        resources:
+                          requests:
+                            storage: 500Mi
+                        # IMPORTANT: Change the storage class depending on your environment
+                        storageClassName: local-storage
+                        volumeMode: Block
+                        accessModes:
+                          - ReadWriteOnce
+              # when onlyApplyOSDPlacement is false, will merge both placement.All() and storageClassDeviceSets.Placement
+              onlyApplyOSDPlacement: false
             priorityClassNames:
               mon: system-node-critical
               osd: system-node-critical
@@ -85,4 +105,4 @@ spec:
               pgHealthCheckTimeout: 0
             cephConfig:
               global:
-                mon_warn_on_pool_no_redundancy: "false"                    
+                mon_warn_on_pool_no_redundancy: "false"
