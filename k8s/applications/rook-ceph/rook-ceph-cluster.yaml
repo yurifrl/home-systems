@@ -43,8 +43,7 @@ spec:
             createPrometheusRules: true
           cephClusterSpec:
             annotations:
-              all:
-                rook.io/force-deletion: "true"
+              rook.io/force-deletion: "true"
             # If there are multiple clusters, the directory must be unique for each cluster.
             dataDirHostPath: /var/lib/rook
             mon:
