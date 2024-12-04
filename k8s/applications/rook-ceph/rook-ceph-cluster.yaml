@@ -52,11 +52,5 @@ spec:
             dashboard:
               enabled: true
             storage:
-              useAllNodes: false
-              useAllDevices: false
-              config:
-                metadataDevice: "/dev/sda1"
-              nodes:
-                - name: ibnsina
-                  devices:
-                    - name: /dev/sda
+              useAllNodes: true
+              useAllDevices: true
