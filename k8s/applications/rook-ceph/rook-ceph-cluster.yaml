@@ -56,10 +56,3 @@ spec:
               useAllDevices: true
             storageClass:
               name: local-storage2
-
-          cephBlockPools:
-            - name: ceph-blockpool
-              metadata:
-                annotations:
-                  rook.io/force-deletion: "true"
- 
