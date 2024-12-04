@@ -111,6 +111,13 @@ spec:
                       regex: ([^:]+)(?::\d+)?;(\d+)
                       replacement: $1:$2
                       target_label: __address__
+              resources:
+                limits:
+                  cpu: 1000m
+                  memory: 2Gi
+                requests:
+                  cpu: 500m
+                  memory: 1Gi
           grafana:
             enabled: false
             forceDeployDashboards: true
@@ -134,6 +141,13 @@ spec:
               # Alertmanager configuration.
               alertmanagerConfiguration:
                 name: alertmanager-config
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 256Mi
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
 
 # https://stackoverflow.com/questions/76669436/alertmanager-default-receivernull-is-not-replacing-with-the-routes-specified
 # https://medium.com/@phil16terpasetheo/configure-alert-manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26

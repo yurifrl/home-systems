@@ -40,3 +40,10 @@ spec:
               enabled: true
               url: http://grafana.syscd.tech
               existingSecret: promlens-secret
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi

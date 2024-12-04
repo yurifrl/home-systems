@@ -29,6 +29,13 @@ spec:
               service: http://argocd-server.argocd.svc.cluster.local:80
             - hostname: "*.syscd.live"
               service: http://istio-gateway.istio-system.svc.cluster.local:80
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
 
 # https://github.com/cloudflare/helm-charts/tree/main/charts/cloudflare-tunnel
 # cloudflared tunnel login

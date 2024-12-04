@@ -36,13 +36,13 @@ podAnnotations: {}
 
 ## Resources to allocate to the pods
 ##
-resources: {}
-#  limits:
-#    cpu: 50m
-#    memory: 64Mi
-#  requests:
-#    cpu: 50m
-#    memory: 64Mi
+resources:
+  limits:
+    cpu: 50m
+    memory: 64Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
 
 ## Liveness and Readiness probes
 ## (not currently configured as I need to figure out what's best to assess, not obvious at first sight)

@@ -42,6 +42,13 @@ spec:
             - istio-system/istio-gateway
           extraArgs:
             - --cloudflare-proxied
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
     # Non cloudflare
     - repoURL: https://kubernetes-sigs.github.io/external-dns/
       chart: external-dns
@@ -67,4 +74,11 @@ spec:
             - istio-virtualservice
           istioIngressGateways:
             - istio-system/istio-gateway
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
 # k -n external-dns create secret generic cloudflare-api-token --from-literal=token='your-cloudflare-api-token'
