@@ -1,7 +1,7 @@
 # https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml
-# https://github.com/annie444/k3s-cluster/blob/c62fb0f02e02b1e040705f04cdc25dc0bccc2c10/core/storage/rook-ceph/operator/helm-release.yaml#L28
-# https://github.com/Ramblurr/home-ops/blob/25630e0d62812a0730a38b1df81f08d431545ab4/k8s/prod/core/rook-ceph/rook-ceph/app/helmrelease.yaml#L56
 # https://github.com/search?q=csiCephFSPluginVolume+nix+language%3AYAML&type=code&l=YAML
+# https://github.com/annie444/k3s-cluster/blob/main/core/storage/rook-ceph/cluster/helm-release.yaml
+# https://github.com/Ramblurr/home-ops/blob/main/k8s/prod/core/rook-ceph/rook-ceph/app/helmrelease.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

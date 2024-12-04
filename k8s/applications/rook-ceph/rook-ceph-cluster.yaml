@@ -47,62 +47,19 @@ spec:
             mon:
               count: 1
               allowMultiplePerNode: true
-              volumeClaimTemplate:
-                spec:
-                  storageClassName: my-storage-class
-                  resources:
-                    requests:
-                      storage: 500Mi
             mgr:
               count: 1
-              modules:
-                - name: rook
-                  enabled: true
             dashboard:
               enabled: true
-              ssl: false
-            crashCollector:
-              disable: false
-            cephVersion:
-              image: quay.io/ceph/ceph:v18
-              allowUnsupported: false
-            skipUpgradeChecks: false
-            continueUpgradeAfterChecksEvenIfNotHealthy: false
             storage:
-              storageClassDeviceSets:
-                - name: set1
-                  count: 1
-                  portable: false
-                  tuneDeviceClass: true
-                  tuneFastDeviceClass: false
-                  encrypted: false
-                  placement:
-                  preparePlacement:
-                  volumeClaimTemplates:
-                    - metadata:
-                        name: data
-                        # if you are looking at giving your OSD a different CRUSH device class than the one detected by Ceph
-                        # annotations:
-                        #   crushDeviceClass: hybrid
-                      spec:
-                        resources:
-                          requests:
-                            storage: 500Mi
-                        # IMPORTANT: Change the storage class depending on your environment
-                        storageClassName: my-storage-class
-                        volumeMode: Block
-                        accessModes:
-                          - ReadWriteOnce
-              # when onlyApplyOSDPlacement is false, will merge both placement.All() and storageClassDeviceSets.Placement
-              onlyApplyOSDPlacement: false
-            priorityClassNames:
-              mon: system-node-critical
-              osd: system-node-critical
-              mgr: system-cluster-critical
-            disruptionManagement:
-              managePodBudgets: true
-              osdMaintenanceTimeout: 30
-              pgHealthCheckTimeout: 0
-            cephConfig:
-              global:
-                mon_warn_on_pool_no_redundancy: "false"
+              useAllNodes: false
+              useAllDevices: false
+              config:
+                metadataDevice: "/dev/sda1"
+              nodes:
+                - name: ibnsina
+                  devices:
+                    - name: /dev/sda1
+                - name: mill
+                  devices:
+                    - name: /dev/sd2
