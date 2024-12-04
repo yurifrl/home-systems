@@ -1,4 +1,4 @@
-apiVersion: slo.prometheus-operator.dev/v1alpha1
+apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
   name: istio-gateway-availability
@@ -8,7 +8,7 @@ metadata:
     role: alert-rules
 spec:
   description: Availability of the Istio Gateway
-  target: 99.9
+  target: "99.9"
   window: 30d
   indicator:
     ratio:
@@ -17,7 +17,7 @@ spec:
       total:
         metric: envoy_cluster_upstream_cx_total{cluster_name="BlackHoleCluster"}
 ---
-apiVersion: slo.prometheus-operator.dev/v1alpha1
+apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
   name: istiod-availability
@@ -27,7 +27,7 @@ metadata:
     role: alert-rules
 spec:
   description: Availability of Istiod control plane
-  target: 99.9
+  target: "99.9"
   window: 30d
   indicator:
     ratio:
@@ -36,7 +36,7 @@ spec:
       total:
         metric: pilot_xds_pushes_total
 ---
-apiVersion: slo.prometheus-operator.dev/v1alpha1
+apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
   name: istio-gateway-latency
@@ -46,7 +46,7 @@ metadata:
     role: alert-rules
 spec:
   description: Latency SLO for Istio Gateway
-  target: 99
+  target: "99"
   window: 30d
   indicator:
     latency:
