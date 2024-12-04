@@ -54,5 +54,3 @@ spec:
             storage:
               useAllNodes: true
               useAllDevices: true
-            storageClass:
-              name: local-storage2
