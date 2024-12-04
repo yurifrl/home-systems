@@ -49,7 +49,7 @@ spec:
               allowMultiplePerNode: true
               volumeClaimTemplate:
                 spec:
-                  storageClassName: local-storage
+                  storageClassName: my-storage-class
                   resources:
                     requests:
                       storage: 500Mi
@@ -89,7 +89,7 @@ spec:
                           requests:
                             storage: 500Mi
                         # IMPORTANT: Change the storage class depending on your environment
-                        storageClassName: local-storage
+                        storageClassName: my-storage-class
                         volumeMode: Block
                         accessModes:
                           - ReadWriteOnce
