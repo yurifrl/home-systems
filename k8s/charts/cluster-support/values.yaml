@@ -2,3 +2,8 @@ dashboards:
   - argo
   - kubernetes
   - k3s
+  - kubernetes-apacity-planning-limits.json
+  - kubernetes-pod-resource-overview.json
+  - kubernetes-pod.json
+  - kubernetes-resource-requests.json
+  - workload-Resource-recommendations-based-on-usage.json
