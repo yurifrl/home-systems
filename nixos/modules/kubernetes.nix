@@ -6,6 +6,8 @@
       "dm_snapshot" 
       "dm_mirror" 
       "dm_thin_pool"
+      "nfs"        # For NFS support
+      "nfs_v4"     # For NFSv4 support
     ];
 
     # Configure kernel parameters for RBD features
@@ -39,5 +41,14 @@
       serviceConfig = {
         MountFlags = "shared";
       };
+    };
+
+    # Storage services configuration
+    services = {
+      iscsi = {
+        enable = true;
+        name = "iqn.2024-01.org.nixos:01:${config.networking.hostName}";
+      };
+      nfs.server.enable = true;
     };
 }
