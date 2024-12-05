@@ -126,10 +126,10 @@ spec:
                     - name: "Infrastructure"
                       icon: "fas fa-server"
                       items:
-                        - name: "Ceph Dashboard"
-                          icon: "fas fa-database"
+                        - name: "Longhorn"
+                          icon: "fas fa-hard-drive"
                           tag: "storage"
-                          url: "https://ceph.syscd.live"
+                          url: "https://longhorn.syscd.live"
                           target: "_blank"
                         
                         - name: "ArgoCD"
