@@ -20,7 +20,7 @@ in
     vim neovim curl htop btop jq 
     inetutils git fish sysz argocd
     nixfmt-rfc-style parted
-    bash util-linux gnugrep gawk blkid lsblk
+    bash util-linux gnugrep gawk
 
     # Packages
     istioctl
