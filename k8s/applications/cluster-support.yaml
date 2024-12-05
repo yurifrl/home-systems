@@ -22,6 +22,6 @@ spec:
       valuesObject:
         features:
           istioGateways: true
-          # serviceLevelObjectives: true
-          # prometheusRules: true
-          # alertmanager: true
+          serviceLevelObjectives: false
+          prometheusRules: false
+          alertmanager: false
