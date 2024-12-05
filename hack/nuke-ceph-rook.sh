@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Prompt for confirmation
 read -p "Are you sure you want to force delete Ceph resources? This action cannot be undone. (y/n): " confirm
