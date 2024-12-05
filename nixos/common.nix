@@ -35,6 +35,7 @@ in
   programs.fish = {
     enable = true;
     shellAliases = {
+      x = "exit";
       s = "sysz";
       k = "kubectl";
       snixos = "cd /home/nixos/home-systems/nixos && git pull origin main && sudo nixos-rebuild switch --flake .#rpi --impure --show-trace";
