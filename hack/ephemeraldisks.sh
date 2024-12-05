@@ -14,8 +14,6 @@ fi
 
 # Define directories to manage
 DIRS=(
-    "/etc/rancher/k3s"
-    "/var/lib/rancher/k3s"
     "/var/lib/rook"
 )
 FILES=(

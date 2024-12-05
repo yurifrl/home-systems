@@ -38,6 +38,7 @@
       "--node-ip=192.168.68.100"
       "--cluster-init"
       "--write-kubeconfig-mode=644"
+      "--data-dir=/tmp/rancher/k3s"
     ];
   };
 
