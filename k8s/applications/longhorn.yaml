@@ -33,6 +33,8 @@ spec:
       targetRevision: "1.5.3"
       helm:
         valuesObject:
+          preUpgradeChecker:
+            jobEnabled: false
           defaultSettings:
             defaultDataPath: /var/lib/longhorn
             createDefaultDiskLabeledNodes: true
