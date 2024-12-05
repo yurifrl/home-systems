@@ -1,3 +1,7 @@
+# https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml
+# https://github.com/search?q=csiCephFSPluginVolume+nix+language%3AYAML&type=code&l=YAML
+# https://github.com/annie444/k3s-cluster/blob/main/core/storage/rook-ceph/cluster/helm-release.yaml
+# https://github.com/Ramblurr/home-ops/blob/main/k8s/prod/core/rook-ceph/rook-ceph/app/helmrelease.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -76,7 +80,6 @@ spec:
                 requests:
                   cpu: "125m"        # Halved from 250m
                   memory: "256Mi"    # Halved from 512Mi
-          
           cephFileSystems:
             - name: ceph-filesystem
               # see https://github.com/rook/rook/blob/master/Documentation/CRDs/Shared-Filesystem/ceph-filesystem-crd.md#filesystem-settings for available configuration
@@ -87,7 +90,7 @@ spec:
                 dataPools:
                   - failureDomain: host
                     replicated:
-                      size: 3
+                      size: 1
                     # Optional and highly recommended, 'data0' by default, see https://github.com/rook/rook/blob/master/Documentation/CRDs/Shared-Filesystem/ceph-filesystem-crd.md#pools
                     name: data0
                 metadataServer:
