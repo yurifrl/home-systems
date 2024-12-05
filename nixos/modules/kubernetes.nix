@@ -22,4 +22,22 @@
         createHome = true;
         uid = 900;
     };
+
+    # Longhorn requires nfs-utils and iscsi-initiator-utils
+    systemd.services.kubelet = {
+      path = [ 
+        pkgs.bash 
+        pkgs.iscsi-initiator-utils 
+        pkgs.nfs-utils
+        pkgs.util-linux
+        pkgs.gnugrep
+        pkgs.gawk
+      ];
+      serviceConfig = {
+        MountFlags = "shared";
+      };
+    };
+
+    # Enable required kernel modules for Longhorn
+    boot.kernelModules = [ "iscsi_tcp" "dm_snapshot" "dm_mirror" "dm_thin_pool" ];
 }

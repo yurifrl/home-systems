@@ -20,15 +20,12 @@ in
     vim neovim curl htop btop jq 
     inetutils git fish sysz argocd
     nixfmt-rfc-style parted
-    bash util-linux gnugrep gawk
 
     # Packages
     istioctl
     # Custom packages
     cowsayVersion 
     diskTemplate
-    openiscsi
-    nfs-utils
   ] ++ (with pkgs-unstable; [
     # Kubernetes tools
     kubectl kubernetes-helm cloudflared
