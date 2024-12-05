@@ -30,7 +30,7 @@
     systemd.services.kubelet = {
       path = [ 
         pkgs.bash 
-        pkgs.iscsi-initiator-utils 
+        pkgs.openiscsi 
         pkgs.nfs-utils
         pkgs.util-linux
         pkgs.gnugrep
