@@ -1,9 +1,12 @@
 { config, lib, pkgs, ... }:
 
 {
-    # TODO, test rebuilding and flashing ssd with it
-    # Enable required kernel modules for Ceph RBD
-    boot.kernelModules = [ "rbd" ];
+    boot.kernelModules = [ 
+      "iscsi_tcp"  # For Longhorn
+      "dm_snapshot" 
+      "dm_mirror" 
+      "dm_thin_pool"
+    ];
 
     # Configure kernel parameters for RBD features
     boot.kernel.sysctl = {
@@ -37,7 +40,4 @@
         MountFlags = "shared";
       };
     };
-
-    # Enable required kernel modules for Longhorn
-    boot.kernelModules = [ "iscsi_tcp" "dm_snapshot" "dm_mirror" "dm_thin_pool" ];
 }
