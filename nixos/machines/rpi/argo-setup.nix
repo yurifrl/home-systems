@@ -42,12 +42,14 @@ in
       helm repo update
 
       echo "Installing/Upgrading Argo CD..."
-      helm upgrade --install argocd argo-cd/argo-cd \
+      if ! helm upgrade --install argocd argo-cd/argo-cd \
         --create-namespace \
         --namespace argocd \
         --values ${argoValuesPath} \
         --atomic \
-        --wait
+        --wait; then
+        echo "Failed to install/upgrade Argo CD. Continuing with the script..."
+      fi
 
       # Wait for ArgoCD server to be ready
       echo "Waiting for ArgoCD server to be ready..."
@@ -66,6 +68,13 @@ in
         exit 1
       fi
       echo "Root application applied successfully."
+
+      # Print additional information
+      echo "Listing installed Helm releases in 'argocd' namespace..."
+      helm list -n argocd
+
+      echo "Listing ConfigMaps in 'argocd' namespace..."
+      kubectl get configmaps -n argocd
     '';
     serviceConfig = {
       Type = "oneshot";
