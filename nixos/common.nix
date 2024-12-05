@@ -18,7 +18,7 @@ in
     
     # System utilities
     vim neovim curl htop btop jq 
-    inetutils git fish sysz
+    inetutils git fish sysz argocd
     nixfmt-rfc-style parted
 
     # Packages
