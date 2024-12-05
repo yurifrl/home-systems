@@ -42,14 +42,20 @@ in
       helm repo update
 
       echo "Installing/Upgrading Argo CD..."
-      if ! helm upgrade --install argocd argo-cd/argo-cd \
+      helm upgrade --install argocd argo-cd/argo-cd \
         --create-namespace \
         --namespace argocd \
         --values ${argoValuesPath} \
         --atomic \
-        --wait; then
-        echo "Failed to install/upgrade Argo CD. Continuing with the script..."
+        --wait
+
+      # Apply root application manifest
+      echo "Applying root application manifest..."
+      if ! kubectl apply -f ${applicationsPath}; then
+        echo "Failed to apply root application"
+        exit 1
       fi
+      echo "Root application applied successfully."
 
       # Wait for ArgoCD server to be ready
       echo "Waiting for ArgoCD server to be ready..."
@@ -60,14 +66,6 @@ in
       echo "ArgoCD server is ready"
 
       # TODO: Find a way to register private repos
-
-      # Apply root application manifest
-      echo "Applying root application manifest..."
-      if ! kubectl apply -f ${applicationsPath}; then
-        echo "Failed to apply root application"
-        exit 1
-      fi
-      echo "Root application applied successfully."
 
       # Print additional information
       echo "Listing installed Helm releases in 'argocd' namespace..."
