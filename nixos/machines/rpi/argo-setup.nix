@@ -37,11 +37,9 @@ in
       echo
     
       # Add helm repos
-      if ! helm repo list | grep -q "argo-cd"; then
-        echo "Adding Argo CD helm repository..."
-        helm repo add argo-cd https://argoproj.github.io/argo-helm
-        helm repo update
-      fi
+      echo "Adding Argo CD helm repository..."
+      helm repo add argo-cd https://argoproj.github.io/argo-helm
+      helm repo update
 
       echo "Installing/Upgrading Argo CD..."
       helm upgrade --install argocd argo-cd/argo-cd \
@@ -49,6 +47,14 @@ in
         --namespace argocd \
         --values ${argoValuesPath} \
         --wait
+
+      # Wait for ArgoCD server to be ready
+      echo "Waiting for ArgoCD server to be ready..."
+      until kubectl -n argocd wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server --timeout=300s; do
+        echo "ArgoCD server not ready yet, retrying..."
+        sleep 10
+      done
+      echo "ArgoCD server is ready"
 
       # TODO: Find a way to register private repos
 
