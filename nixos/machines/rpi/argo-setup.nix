@@ -11,8 +11,8 @@ in
     # To restart this service and apply new values:
     # 1. Delete the argocd release: kubectl delete namespace argocd
     # 2. Restart the service: sudo systemctl restart argo-setup
-    after = [ "k3s.service" "secret-loader.service" ];
-    requires = [ "secret-loader.service" ];
+    after = [ "k3s.service" ];
+    requires = [ "k3s.service" ];
     wantedBy = [ "multi-user.target" ];
     path = with pkgs; [
       kubernetes-helm
