@@ -45,7 +45,7 @@
 
     # Storage services configuration
     services = {
-      iscsi = {
+      openiscsi = {
         enable = true;
         name = "iqn.2024-01.org.nixos:01:${config.networking.hostName}";
       };
