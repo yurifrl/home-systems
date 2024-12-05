@@ -37,8 +37,13 @@ in
       echo
     
       # Add helm repos
-      echo "Adding Argo CD helm repository..."
-      helm repo add argo-cd https://argoproj.github.io/argo-helm
+      echo "Checking if Argo CD helm repository is already added..."
+      if ! helm repo list | grep -q 'argo-cd'; then
+        echo "Adding Argo CD helm repository..."
+        helm repo add argo-cd https://argoproj.github.io/argo-helm
+      else
+        echo "Argo CD helm repository already exists."
+      fi
       helm repo update
 
       echo "Installing/Upgrading Argo CD..."
