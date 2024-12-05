@@ -46,29 +46,55 @@ in
       fi
       helm repo update
 
+      # Initialize failure tracking
+      failed_steps=""
+      failure_count=0
+
+      # Install/Upgrade Argo CD
       echo "Installing/Upgrading Argo CD..."
-      helm upgrade --install argocd argo-cd/argo-cd \
+      if ! helm upgrade --install argocd argo-cd/argo-cd \
         --create-namespace \
         --namespace argocd \
         --values ${argoValuesPath} \
         --atomic \
-        --wait || true
+        --wait; then
+        echo "Failed to install/upgrade Argo CD."
+        failed_steps="$failed_steps\n- Helm install/upgrade"
+        failure_count=$((failure_count + 1))
+      fi
 
       # Apply root application manifest
       echo "Applying root application manifest..."
       if ! kubectl apply -f ${applicationsPath}; then
-        echo "Failed to apply root application"
-        exit 1
+        echo "Failed to apply root application."
+        failed_steps="$failed_steps\n- Root application deployment"
+        failure_count=$((failure_count + 1))
+      else
+        echo "Root application applied successfully."
       fi
-      echo "Root application applied successfully."
 
       # Wait for ArgoCD server to be ready
       echo "Waiting for ArgoCD server to be ready..."
       if ! kubectl -n argocd wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server --timeout=300s; then
-        echo "ArgoCD server not ready after timeout"
-        exit 1
+        echo "ArgoCD server not ready after timeout."
+        failed_steps="$failed_steps\n- ArgoCD server readiness"
+        failure_count=$((failure_count + 1))
+      else
+        echo "ArgoCD server is ready"
       fi
-      echo "ArgoCD server is ready"
+
+      # Check if all steps failed
+      if [ "$failure_count" -eq 3 ]; then
+        echo "All critical steps failed:"
+        echo -e "$failed_steps"
+        echo "Deleting namespace and restarting service..."
+        kubectl delete namespace argocd
+        systemctl restart argo-setup
+        exit 1
+      elif [ "$failure_count" -gt 0 ]; then
+        echo "Some steps failed ($failure_count failures):"
+        echo -e "$failed_steps"
+      fi
 
       # Print additional information
       echo "Listing installed Helm releases in 'argocd' namespace..."
@@ -76,30 +102,6 @@ in
 
       echo "Listing ConfigMaps in 'argocd' namespace..."
       kubectl get configmaps -n argocd
-
-      # Print ASCII art
-      echo "Launch Successful!"
-      echo "          !         "
-      echo "          ^         "
-      echo "         /|\        "
-      echo "        / | \       "
-      echo "       /  |  \      "
-      echo "      /___|___\     "
-      echo "     |     |   |    "
-      echo "     |     |   |    "
-      echo "     |     |   |    "
-      echo "     |     |   |    "
-      echo "    /|     |   |\   "
-      echo "   / |     |   | \  "
-      echo "  /  |     |   |  \ "
-      echo " |   |     |   |   |"
-      echo "  \__|_____|___/   "
-      echo "     |     |       "
-      echo "    /       \      "
-      echo "   /         \     "
-      echo "  /           \    "
-      echo " /  /|     |\  \   "
-      echo "/_______|_______\  "
     '';
     serviceConfig = {
       Type = "oneshot";
