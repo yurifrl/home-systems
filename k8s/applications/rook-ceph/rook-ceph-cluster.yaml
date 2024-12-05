@@ -19,17 +19,17 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
-    - path: k8s/charts/support
-      repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: ceph
-              service:
-                name: rook-ceph-mgr-dashboard
-                namespace: rook-ceph
-                port: 8443
+    # - path: k8s/charts/support
+    #   repoURL: https://github.com/yurifrl/home-systems.git
+    #   targetRevision: HEAD
+    #   helm:
+    #     valuesObject:
+    #       virtualServices:
+    #         - name: ceph
+    #           service:
+    #             name: rook-ceph-mgr-dashboard
+    #             namespace: rook-ceph
+    #             port: 8443
     - path: k8s/charts/rook-ceph-support
       repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
