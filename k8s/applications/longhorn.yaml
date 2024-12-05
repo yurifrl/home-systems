@@ -37,9 +37,12 @@ spec:
             defaultDataPath: /var/lib/longhorn
             createDefaultDiskLabeledNodes: true
             defaultReplicaCount: 2
+            guaranteedEngineManagerCPU: 5
+            guaranteedReplicaManagerCPU: 5
           persistence:
             defaultClass: true
             defaultClassReplicaCount: 2
+            defaultFsType: ext4
           resources:
             limits:
               cpu: 500m
@@ -49,3 +52,11 @@ spec:
               memory: 512Mi
           serviceMonitor:
             enabled: true
+          longhornManager:
+            tolerations:
+              - operator: "Exists"
+            priorityClass: system-cluster-critical
+          longhornDriver:
+            tolerations:
+              - operator: "Exists"
+            priorityClass: system-cluster-critical

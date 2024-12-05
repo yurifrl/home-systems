@@ -27,6 +27,8 @@ in
     # Custom packages
     cowsayVersion 
     diskTemplate
+    openiscsi
+    nfs-utils
   ] ++ (with pkgs-unstable; [
     # Kubernetes tools
     kubectl kubernetes-helm cloudflared
@@ -105,4 +107,14 @@ in
   time.timeZone = "America/Los_Angeles";
   system.stateVersion = "24.05";
   environment.variables.EDITOR = "vim";
+
+  # Enable NFS client support
+  services.nfs.server.enable = true;
+  boot.kernelModules = [ "nfs" "nfs_v4" ];
+
+  # iSCSI configuration
+  services.iscsi = {
+    enable = true;
+    initiatorName = "iqn.2024-01.org.nixos:01:${config.networking.hostName}";
+  };
 }
