@@ -3,6 +3,7 @@
 {
     # ============================================================================
     # Longhorn Storage Requirements
+    # https://github.com/longhorn/longhorn/issues/2166
     # ============================================================================
     
     # Kernel modules required by Longhorn for storage operations

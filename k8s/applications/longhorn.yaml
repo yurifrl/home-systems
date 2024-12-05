@@ -56,13 +56,15 @@ spec:
             tolerations:
               - operator: "Exists"
             priorityClass: system-cluster-critical
-            env:
-              - name: PATH
-                value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin
+            # Whish this worked, but key does not exist https://github.com/longhorn/charts/blob/56fb7aff48c3552c2a374ff95456afd3c3405df5/charts/longhorn/templates/deployment-driver.yaml#L102
+            # env:
+            #   - name: PATH
+            #     value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin
           longhornDriver:
             tolerations:
               - operator: "Exists"
             priorityClass: system-cluster-critical
-            env:
-              - name: PATH
-                value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin
+            # Whish this worked, but key does not exist https://github.com/longhorn/charts/blob/56fb7aff48c3552c2a374ff95456afd3c3405df5/charts/longhorn/templates/deployment-driver.yaml#L102
+            # env:
+            #   - name: PATH
+            #     value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin
