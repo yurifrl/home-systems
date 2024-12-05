@@ -105,6 +105,29 @@ in
 
       echo "Listing Pods in 'argocd' namespace..."
       kubectl get pods -n argocd
+      
+      echo "Launch Successful!"
+      echo "          !         "
+      echo "          ^         "
+      echo "         /|\        "
+      echo "        / | \       "
+      echo "       /  |  \      "
+      echo "      /___|___\     "
+      echo "     |     |   |    "
+      echo "     |     |   |    "
+      echo "     |     |   |    "
+      echo "     |     |   |    "
+      echo "    /|     |   |\   "
+      echo "   / |     |   | \  "
+      echo "  /  |     |   |  \ "
+      echo " |   |     |   |   |"
+      echo "  \__|_____|___/   "
+      echo "     |     |       "
+      echo "    /       \      "
+      echo "   /         \     "
+      echo "  /           \    "
+      echo " /  /|     |\  \   "
+      echo "/_______|_______\  "
     '';
     serviceConfig = {
       Type = "oneshot";
