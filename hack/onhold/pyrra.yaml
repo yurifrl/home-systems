@@ -27,14 +27,7 @@ spec:
                 name: pyrra
                 namespace: monitoring
                 port: 9099
-          resources:
-            limits:
-              cpu: 100m
-              memory: 256Mi
-            requests:
-              cpu: 50m
-              memory: 128Mi
-
+   
     - repoURL: https://rlex.github.io/helm-charts
       chart: pyrra
       targetRevision: "*"

@@ -10,9 +10,4 @@
     "net.bridge.bridge-nf-call-iptables" = 1;
     "net.bridge.bridge-nf-call-ip6tables" = 1;
     };
-
-    # Install required packages
-    environment.systemPackages = with pkgs; [
-        lvm2  # Required for Rook Ceph
-    ];
 }
