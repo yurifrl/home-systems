@@ -44,6 +44,10 @@ spec:
               memory: 512Mi
           serviceMonitor:
             enabled: true
+          defaultSettings:
+            backupTarget: s3://syscd@southamerica-east1/
+            backupTargetCredentialSecret: longhorn-gcp-backups
+          # Other settings can remain commented out
           # defaultSettings:
           #   defaultDataPath: /var/lib/longhorn
           #   createDefaultDiskLabeledNodes: true
