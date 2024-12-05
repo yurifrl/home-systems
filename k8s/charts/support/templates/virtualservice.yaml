@@ -1,6 +1,7 @@
 {{- range .Values.virtualServices }}
 {{- $domains := merge (.domains | default dict) $.Values.virtualServicesDefaults.domains -}}
 {{- $hostPrefix := .hostname | default .name -}}
+---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
