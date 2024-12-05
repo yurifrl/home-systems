@@ -10,7 +10,6 @@ let
         unit: sectors
 
         /dev/sda1 : start=2048, size=2097152, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
-        /dev/sda2 : type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
       '';
     }
     {
@@ -20,7 +19,6 @@ let
         unit: sectors
 
         /dev/sdb1 : start=2048, size=31457280, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
-        /dev/sdb2 : type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
       '';
     }
   ];
