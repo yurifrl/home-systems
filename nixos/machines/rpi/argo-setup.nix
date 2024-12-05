@@ -74,8 +74,9 @@ in
       # Add more robust error handling
       Restart = "on-failure";
       RestartSec = "30s";
-      StartLimitIntervalSec = "0";
-      StartLimitBurst = "0";
+      # Limit restart attempts to 5 times within 10 minutes
+      StartLimitIntervalSec = "600";
+      StartLimitBurst = "5";
       
       # Run as root to ensure proper permissions
       User = "root";
