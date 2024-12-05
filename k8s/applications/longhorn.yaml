@@ -30,21 +30,11 @@ spec:
 
     - repoURL: https://charts.longhorn.io
       chart: longhorn
-      targetRevision: "1.5.3"
+      targetRevision: "*"
       helm:
         valuesObject:
           preUpgradeChecker:
             jobEnabled: false
-          defaultSettings:
-            defaultDataPath: /var/lib/longhorn
-            createDefaultDiskLabeledNodes: true
-            defaultReplicaCount: 2
-            guaranteedEngineManagerCPU: 5
-            guaranteedReplicaManagerCPU: 5
-          persistence:
-            defaultClass: true
-            defaultClassReplicaCount: 2
-            defaultFsType: ext4
           resources:
             limits:
               cpu: 500m
@@ -54,19 +44,29 @@ spec:
               memory: 512Mi
           serviceMonitor:
             enabled: true
-          longhornManager:
-            tolerations:
-              - operator: "Exists"
-            priorityClass: system-cluster-critical
-            # Whish this worked, but key does not exist https://github.com/longhorn/charts/blob/56fb7aff48c3552c2a374ff95456afd3c3405df5/charts/longhorn/templates/deployment-driver.yaml#L102
-            # env:
-            #   - name: PATH
-            #     value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin
-          longhornDriver:
-            tolerations:
-              - operator: "Exists"
-            priorityClass: system-cluster-critical
-            # Whish this worked, but key does not exist https://github.com/longhorn/charts/blob/56fb7aff48c3552c2a374ff95456afd3c3405df5/charts/longhorn/templates/deployment-driver.yaml#L102
-            # env:
-            #   - name: PATH
-            #     value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin
+          # defaultSettings:
+          #   defaultDataPath: /var/lib/longhorn
+          #   createDefaultDiskLabeledNodes: true
+          #   defaultReplicaCount: 2
+          #   guaranteedEngineManagerCPU: 5
+          #   guaranteedReplicaManagerCPU: 5
+          # persistence:
+          #   defaultClass: true
+          #   defaultClassReplicaCount: 2
+          #   defaultFsType: ext4
+          # longhornManager:
+          #   tolerations:
+          #     - operator: "Exists"
+          #   priorityClass: system-cluster-critical
+          #   # Whish this worked, but key does not exist https://github.com/longhorn/charts/blob/56fb7aff48c3552c2a374ff95456afd3c3405df5/charts/longhorn/templates/deployment-driver.yaml#L102
+          #   # env:
+          #   #   - name: PATH
+          #   #     value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin
+          # longhornDriver:
+          #   tolerations:
+          #     - operator: "Exists"
+          #   priorityClass: system-cluster-critical
+          #   # Whish this worked, but key does not exist https://github.com/longhorn/charts/blob/56fb7aff48c3552c2a374ff95456afd3c3405df5/charts/longhorn/templates/deployment-driver.yaml#L102
+          #   # env:
+          #   #   - name: PATH
+          #   #     value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin
