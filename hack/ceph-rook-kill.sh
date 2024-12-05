@@ -6,20 +6,26 @@ kubectl -n rook-ceph annotate cephblockpool ceph-blockpool rook.io/force-deletio
 kubectl -n rook-ceph annotate cephfilesystemsubvolumegroup ceph-filesystem-csi rook.io/force-deletion="true"
 
 echo "Attempting force deletion..."
-kubectl -n rook-ceph delete cephobjectstore ceph-objectstore &
-kubectl -n rook-ceph delete cephfilesystem ceph-filesystem &
-kubectl -n rook-ceph delete cephblockpool ceph-blockpool &
-kubectl -n rook-ceph delete cephcluster rook-ceph &
+kubectl -n rook-ceph delete CephFilesystem ceph-filesystem --grace-period=0 &
+kubectl -n rook-ceph delete CephFilesystem ceph-filesystem-csi --grace-period=0 &
+kubectl -n rook-ceph delete CephFilesystemSubVolumeGroup ceph-filesystem-csi --grace-period=0 &
+kubectl -n rook-ceph delete cephobjectstore ceph-objectstore --grace-period=0 &
+kubectl -n rook-ceph delete cephblockpool ceph-blockpool --grace-period=0 &
 
 echo "Removing finalizers..."
-# Remove finalizers from dependent resources first
-kubectl get cephblockpools.ceph.rook.io ceph-blockpool -o json | jq '.metadata.finalizers = null' | kubectl apply -f -
-kubectl get cephfilesystems.ceph.rook.io ceph-filesystem -o json | jq '.metadata.finalizers = null' | kubectl apply -f -
-kubectl get cephobjectstores.ceph.rook.io ceph-objectstore -o json | jq '.metadata.finalizers = null' | kubectl apply -f -
-kubectl get cephcluster.ceph.rook.io rook-ceph -o json | jq '.metadata.finalizers = null' | kubectl apply -f -
+kubectl -n rook-ceph patch CephFilesystem ceph-filesystem --type merge -p '{"metadata":{"finalizers": []}}'
+kubectl -n rook-ceph patch CephFilesystem ceph-filesystem-csi --type merge -p '{"metadata":{"finalizers": []}}'
+kubectl -n rook-ceph patch CephFilesystemSubVolumeGroup ceph-filesystem-csi --type merge -p '{"metadata":{"finalizers": []}}'
+kubectl -n rook-ceph patch cephobjectstore ceph-objectstore --type merge -p '{"metadata":{"finalizers": []}}'
+kubectl -n rook-ceph patch cephblockpool ceph-blockpool --type merge -p '{"metadata":{"finalizers": []}}'
 
+echo "Checking if resources were deleted..."
+kubectl -n rook-ceph get cephobjectstore,cephfilesystem,cephblockpool,cephcluster 
 
 echo """
+# Check if resources were deleted
+kubectl -n rook-ceph get cephobjectstore,cephfilesystem,cephblockpool,cephcluster 
+
 # Remove rook directory
 sudo rm -rvf /var/lib/rook
 
