@@ -52,7 +52,7 @@ in
         --namespace argocd \
         --values ${argoValuesPath} \
         --atomic \
-        --wait
+        --wait || true
 
       # Apply root application manifest
       echo "Applying root application manifest..."
