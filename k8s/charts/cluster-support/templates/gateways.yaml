@@ -1,3 +1,4 @@
+{{- if lookup "apiregistration.k8s.io/v1" "APIService" "" "v1alpha3.networking.istio.io" }}
 # Argo tunnel domain
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
@@ -62,3 +63,8 @@ spec:
       tls:
         mode: SIMPLE
         credentialName: argocd-server-tls
+{{- end }}
+
+{{- if not (lookup "apiregistration.k8s.io/v1" "APIService" "" "v1alpha3.networking.istio.io") }}
+{{- warning "Gateway API (networking.istio.io/v1alpha3) is not available in the cluster. Please ensure Istio is installed." }}
+{{- end }}

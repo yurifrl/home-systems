@@ -16,16 +16,16 @@ spec:
       - CreateNamespace=true
       - Wait=true
       - ResourcesHealth=true
-  source:
-    repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: 1.23.0
-    chart: gateway
-    helm:
-      valuesObject:
-        service:
-          externalTrafficPolicy: Local
-  ignoreDifferences:
-    - group: "*"
-      kind: "*"
-      managedFieldsManagers:
-        - argocd-application-controller
+    ignoreDifferences:
+      - group: "*"
+        kind: "*"
+        managedFieldsManagers:
+          - argocd-application-controller
+  sources:
+    - repoURL: https://istio-release.storage.googleapis.com/charts
+      targetRevision: 1.23.0
+      chart: gateway
+      helm:
+        valuesObject:
+          service:
+            externalTrafficPolicy: Local
