@@ -33,7 +33,7 @@ in
       cat ${argoValuesPath} | sed 's/^/  /'
 
       echo "Will run: helm repo add argo-cd https://argoproj.github.io/argo-helm; helm repo update"
-      echo "and then: helm upgrade -n argocd --install argocd argo-cd/argo-cd -f ${argoValuesPath} --wait --create-namespace"
+      echo "and then: helm upgrade -n argocd --install argocd argo-cd/argo-cd -f ${argoValuesPath} --wait --create-namespace --atomic"
       echo
     
       # Add helm repos
@@ -46,6 +46,7 @@ in
         --create-namespace \
         --namespace argocd \
         --values ${argoValuesPath} \
+        --atomic \
         --wait
 
       # Wait for ArgoCD server to be ready
