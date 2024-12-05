@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Prompt for confirmation
+read -p "Are you sure you want to force delete Ceph resources? This action cannot be undone. (y/n): " confirm
+if [[ $confirm != "y" ]]; then
+  echo "Operation cancelled."
+  exit 0
+fi
+
 echo "Annotating resources for force deletion..."
 kubectl -n rook-ceph annotate cephfilesystem ceph-filesystem rook.io/force-deletion="true"
 kubectl -n rook-ceph annotate cephblockpool ceph-blockpool rook.io/force-deletion="true"
