@@ -23,7 +23,17 @@ FILES=(
 )
 
 cleanup() {
-    # Remove all directories
+    # First find and unmount any tmpfs mounts under our managed paths
+    for dir in "${DIRS[@]}"; do
+        # Find all tmpfs mounts under this directory and unmount them (in reverse order)
+        findmnt -t tmpfs -n | grep "^/tmp$dir" | tac | cut -d' ' -f1 | while read -r mount_point; do
+            sudo umount "$mount_point" 2>/dev/null || true
+        done
+        # Unmount the main directory if it's mounted
+        sudo umount "/tmp$dir" 2>/dev/null || true
+    done
+
+    # Now safe to remove directories
     for dir in "${DIRS[@]}"; do
         sudo rm -rf "$dir"
         sudo rm -rf "/tmp$dir"
