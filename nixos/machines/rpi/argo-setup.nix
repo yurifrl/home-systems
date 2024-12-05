@@ -102,6 +102,9 @@ in
 
       echo "Listing ConfigMaps in 'argocd' namespace..."
       kubectl get configmaps -n argocd
+
+      echo "Listing Pods in 'argocd' namespace..."
+      kubectl get pods -n argocd
     '';
     serviceConfig = {
       Type = "oneshot";
@@ -115,8 +118,10 @@ in
       StartLimitIntervalSec = "600";
       StartLimitBurst = "5";
       
-      # Run as root to ensure proper permissions
-      User = "root";
+      # Run as nixos user instead of root
+      User = "nixos";
+      # Ensure the user has access to the k3s config
+      SupplementaryGroups = [ "k3s" ];
     };
 
     # Add restart triggers
