@@ -1,4 +1,4 @@
-{{- if lookup "apiregistration.k8s.io/v1" "APIService" "" "v1.monitoring.coreos.com" }}
+{{- if .Values.features.prometheusRules }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:

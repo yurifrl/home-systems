@@ -8,3 +8,10 @@ dashboards:
   - kubernetes-resource-requests # https://grafana.com/grafana/dashboards/7187-kubernetes-resource-requests/?
   - workload-resource-recommendations # https://grafana.com/grafana/dashboards/15154-workload-resource-recommendations-based-on-usage/?
   - ceph-osd-single-dashboard
+
+# Feature flags for enabling different components
+features:
+  istioGateways: true
+  serviceLevelObjectives: true 
+  prometheusRules: true
+  alertmanager: true

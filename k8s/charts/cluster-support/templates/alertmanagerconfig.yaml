@@ -2,7 +2,7 @@
 # https://medium.com/@phil16terpasetheo/configure-alert-manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26
 #
 # curl -X POST http://alertmanager.syscd.tech/-/reload -v   
-{{- if lookup "apiregistration.k8s.io/v1" "APIService" "" "v1alpha1.monitoring.coreos.com" }}
+{{- if .Values.features.alertmanager }}
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
