@@ -142,7 +142,8 @@ in
       StartLimitBurst = "5";
       
       # Run as nixos user instead of root
-      User = "nixos";
+      User = "k3s";
+      Group = "k3s";
       # Ensure the user has access to the k3s config
       SupplementaryGroups = [ "k3s" ];
     };

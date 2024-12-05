@@ -25,8 +25,15 @@ in
       ExecStart = "${pkgs.bash}/bin/bash ${secretScriptPath}";
       # Ensure the script is executable
       ExecStartPre = "${pkgs.coreutils}/bin/chmod +x ${secretScriptPath}";
-      # Run as a specific user, e.g., 'root' or another user
-      User = "root";
+      # Run as non-root user
+      User = "k3s";
+      Group = "k3s";
+      
+      # Add necessary capabilities and security settings
+      SupplementaryGroups = [ "k3s" ];
+      # Ensure the service can read the k3s config and secrets
+      ReadOnlyPaths = [ k3sConfig ];
+      ReadWritePaths = [ secretScriptPath ];
 
       # Add retry logic
       Restart = "on-failure";  # Only restart if the service exits with non-zero status
