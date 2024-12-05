@@ -57,22 +57,22 @@ spec:
             resources:
               mgr:
                 limits:
-                  cpu: 500m        # 0.5 cores
-                  memory: 1Gi
+                  cpu: "250m"        # Halved from 500m
+                  memory: "512Mi"    # Halved from 1Gi
                 requests:
-                  cpu: 250m
-                  memory: 512Mi
+                  cpu: "125m"        # Halved from 250m
+                  memory: "256Mi"    # Halved from 512Mi
               mon:
                 limits:
-                  cpu: 500m        # 0.5 cores
-                  memory: 1Gi
+                  cpu: "250m"        # Halved from 500m
+                  memory: "512Mi"    # Halved from 1Gi
                 requests:
-                  cpu: 250m
-                  memory: 512Mi
+                  cpu: "125m"        # Halved from 250m
+                  memory: "256Mi"    # Halved from 512Mi
               osd:
                 limits:
-                  cpu: 500m        # 0.5 cores
-                  memory: 1Gi
+                  cpu: "250m"        # Halved from 500m
+                  memory: "512Mi"    # Halved from 1Gi
                 requests:
-                  cpu: 250m
-                  memory: 512Mi
+                  cpu: "125m"        # Halved from 250m
+                  memory: "256Mi"    # Halved from 512Mi
