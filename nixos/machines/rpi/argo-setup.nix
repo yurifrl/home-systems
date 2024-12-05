@@ -59,13 +59,11 @@ in
 
       # Wait for ArgoCD server to be ready
       echo "Waiting for ArgoCD server to be ready..."
-      until kubectl -n argocd wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server --timeout=300s; do
-        echo "ArgoCD server not ready yet, retrying..."
-        sleep 10
-      done
+      if ! kubectl -n argocd wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server --timeout=300s; then
+        echo "ArgoCD server not ready after timeout"
+        exit 1
+      fi
       echo "ArgoCD server is ready"
-
-      # TODO: Find a way to register private repos
 
       # Print additional information
       echo "Listing installed Helm releases in 'argocd' namespace..."
