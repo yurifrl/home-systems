@@ -6,20 +6,32 @@ kubectl -n rook-ceph annotate cephblockpool ceph-blockpool rook.io/force-deletio
 kubectl -n rook-ceph annotate cephfilesystemsubvolumegroup ceph-filesystem-csi rook.io/force-deletion="true"
 
 echo "Attempting force deletion..."
-kubectl -n rook-ceph delete CephFilesystem ceph-filesystem --grace-period=0
-kubectl -n rook-ceph delete CephFilesystem ceph-filesystem-csi --grace-period=0
-kubectl -n rook-ceph delete CephFilesystemSubVolumeGroup ceph-filesystem-csi --grace-period=0
-kubectl -n rook-ceph delete cephobjectstore ceph-objectstore --grace-period=0
-kubectl -n rook-ceph delete cephblockpool ceph-blockpool --grace-period=0
+kubectl -n rook-ceph delete cephobjectstore ceph-objectstore &
+kubectl -n rook-ceph delete cephfilesystem ceph-filesystem &
+kubectl -n rook-ceph delete cephblockpool ceph-blockpool &
+kubectl -n rook-ceph delete cephcluster rook-ceph &
 
 echo "Removing finalizers..."
 # Remove finalizers from dependent resources first
-kubectl -n rook-ceph patch CephBlockPool ceph-blockpool --type merge -p '{"metadata":{"finalizers": []}}'
-kubectl -n rook-ceph patch CephFilesystem ceph-filesystem --type merge -p '{"metadata":{"finalizers": []}}'
-kubectl -n rook-ceph patch CephFilesystemSubVolumeGroup ceph-filesystem-csi --type merge -p '{"metadata":{"finalizers": []}}'
-kubectl -n rook-ceph patch CephObjectStore ceph-objectstore --type merge -p '{"metadata":{"finalizers": []}}'
-kubectl -n rook-ceph patch CephCluster rook-ceph --type merge -p '{"metadata":{"finalizers": []}}'
+kubectl get cephblockpools.ceph.rook.io ceph-blockpool -o json | jq '.metadata.finalizers = null' | kubectl apply -f -
+kubectl get cephfilesystems.ceph.rook.io ceph-filesystem -o json | jq '.metadata.finalizers = null' | kubectl apply -f -
+kubectl get cephobjectstores.ceph.rook.io ceph-objectstore -o json | jq '.metadata.finalizers = null' | kubectl apply -f -
+kubectl get cephcluster.ceph.rook.io rook-ceph -o json | jq '.metadata.finalizers = null' | kubectl apply -f -
 
+
+echo """
+# Remove rook directory
+sudo rm -rvf /var/lib/rook
+
+# Remove logical volumes
+sudo lvs --noheadings -o lv_path | grep ceph- | xargs -r -I {} sudo lvremove -f {}
+
+# Remove volume groups
+sudo vgs --noheadings -o vg_name | grep ceph- | xargs -r -I {} sudo vgremove -f {}
+
+# Remove physical volume labels
+sudo pvs --noheadings -o pv_name | xargs -r -I {} sudo pvremove -f {} 
+"""
 
 # echo "Last resort: "
 # kubectl proxy --port=8080
