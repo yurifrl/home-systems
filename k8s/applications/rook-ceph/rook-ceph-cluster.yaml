@@ -43,8 +43,8 @@ spec:
           toolbox:
             enabled: true
           monitoring:
-            enabled: true
-            createPrometheusRules: true
+            enabled: false
+            createPrometheusRules: false
           cephClusterSpec:
             # If there are multiple clusters, the directory must be unique for each cluster.
             dataDirHostPath: /var/lib/rook
