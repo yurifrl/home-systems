@@ -62,9 +62,21 @@ in
     '';
     serviceConfig = {
       Type = "oneshot";
-      RemainAfterExit = true;
+      RemainAfterExit = "yes";
+      TimeoutStartSec = "0";
+      
+      # Add more robust error handling
       Restart = "on-failure";
       RestartSec = "30s";
+      StartLimitIntervalSec = "0";
+      StartLimitBurst = "0";
+      
+      # Run as root to ensure proper permissions
+      User = "root";
     };
+
+    # Add restart triggers
+    restartIfChanged = true;
+    restartTriggers = [ applicationsPath argoValuesPath ];
   };
 } 
