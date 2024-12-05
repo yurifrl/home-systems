@@ -16,9 +16,6 @@ fi
 DIRS=(
     "/var/lib/rook"
 )
-FILES=(
-    "/var/log/k3s.log"
-)
 
 cleanup() {
     # First find and unmount any tmpfs mounts under our managed paths
@@ -36,12 +33,6 @@ cleanup() {
         sudo rm -rf "$dir"
         sudo rm -rf "/tmp$dir"
     done
-
-    # Remove all files
-    for file in "${FILES[@]}"; do
-        sudo rm -f "$file"
-        sudo rm -f "/tmp$file"
-    done
 }
 
 create_temp() {
@@ -49,12 +40,6 @@ create_temp() {
     for dir in "${DIRS[@]}"; do
         sudo mkdir -p "/tmp$dir"
         sudo mount -t tmpfs tmpfs "/tmp$dir"
-    done
-
-    # Create temporary files
-    for file in "${FILES[@]}"; do
-        sudo mkdir -p "$(dirname "/tmp$file")"
-        sudo touch "/tmp$file"
     done
 }
 
@@ -72,15 +57,6 @@ check_status() {
             echo "$dir (regular directory)"
         fi
     done
-
-    echo -e "\nChecking mount status for managed files:"
-    for file in "${FILES[@]}"; do
-        if [[ -L "$file" ]]; then
-            echo "$file -> $(readlink "$file") (symlink)"
-        else
-            echo "$file (regular file)"
-        fi
-    done
 }
 
 case "$1" in
@@ -90,9 +66,6 @@ case "$1" in
         # Create symlinks
         for dir in "${DIRS[@]}"; do
             sudo ln -sf "/tmp$dir" "$dir"
-        done
-        for file in "${FILES[@]}"; do
-            sudo ln -sf "/tmp$file" "$file"
         done
         echo "Ephemeral disks enabled"
         ;;
