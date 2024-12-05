@@ -9,7 +9,6 @@ RUN apk add --no-cache \
 # Create version file
 RUN echo "$(date +%Y%m%d_%H%M%S)" > /version.txt
 
-
 # Create app directory
 WORKDIR /app
 

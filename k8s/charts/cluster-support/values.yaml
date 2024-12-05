@@ -6,5 +6,5 @@ dashboards:
   - kubernetes-pod-resource-overview # https://grafana.com/grafana/dashboards/15207-kubernetes-pod-resource-overview/?
   - kubernetes-pod
   - kubernetes-resource-requests # https://grafana.com/grafana/dashboards/7187-kubernetes-resource-requests/?
-  - workload-Resource-recommendations-based-on-usage # https://grafana.com/grafana/dashboards/15154-workload-resource-recommendations-based-on-usage/?
+  - workload-resource-recommendations # https://grafana.com/grafana/dashboards/15154-workload-resource-recommendations-based-on-usage/?
   - ceph-osd-single-dashboard
