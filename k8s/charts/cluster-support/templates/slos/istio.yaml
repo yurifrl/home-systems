@@ -37,7 +37,3 @@ spec:
       total:
         metric: pilot_xds_pushes_total
 {{- end }}
-
-{{- if not (lookup "apiregistration.k8s.io/v1" "APIService" "" "v1alpha1.pyrra.dev") }}
-{{- warning "ServiceLevelObjective API (pyrra.dev/v1alpha1) is not available in the cluster. Please ensure Pyrra operator is installed." }}
-{{- end }}

@@ -42,7 +42,3 @@ spec:
           sendResolved: true
     - name: "null"
 {{- end }}
-
-{{- if not (lookup "apiregistration.k8s.io/v1" "APIService" "" "v1alpha1.monitoring.coreos.com") }}
-{{- warning "AlertmanagerConfig API (monitoring.coreos.com/v1alpha1) is not available in the cluster. Please ensure prometheus-operator is installed." }}
-{{- end }}
