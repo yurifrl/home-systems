@@ -10,4 +10,16 @@
     "net.bridge.bridge-nf-call-iptables" = 1;
     "net.bridge.bridge-nf-call-ip6tables" = 1;
     };
+
+    # Create kubernetes user and group
+    users.groups.kubernetes = {};
+
+    users.users.kubernetes = {
+        isSystemUser = true;
+        group = "kubernetes";
+        description = "Kubernetes system user";
+        home = "/var/lib/kubernetes";
+        createHome = true;
+        uid = 900;
+    };
 }

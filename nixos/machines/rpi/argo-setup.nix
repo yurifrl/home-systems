@@ -141,11 +141,11 @@ in
       StartLimitIntervalSec = "600";
       StartLimitBurst = "5";
       
-      # Run as nixos user instead of root
-      User = "k3s";
-      Group = "k3s";
+      # Run as kubernetes user instead of k3s
+      User = "kubernetes";
+      Group = "kubernetes";
       # Ensure the user has access to the k3s config
-      SupplementaryGroups = [ "k3s" ];
+      SupplementaryGroups = [ "kubernetes" ];
     };
 
     # Add restart triggers
