@@ -141,9 +141,9 @@ in
       StartLimitIntervalSec = "600";
       StartLimitBurst = "5";
       
-      # Run as kubernetes user
-      User = "kubernetes";
-      Group = "kubernetes";
+      # Run as nixos user
+      User = "nixos";
+      Group = "nixos";
     };
 
     # Add restart triggers

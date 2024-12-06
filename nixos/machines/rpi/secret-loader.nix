@@ -25,12 +25,11 @@ in
       ExecStart = "${pkgs.bash}/bin/bash ${secretScriptPath}";
       # Ensure the script is executable
       ExecStartPre = "${pkgs.coreutils}/bin/chmod +x ${secretScriptPath}";
-      # Run as kubernetes user
-      User = "kubernetes";
-      Group = "kubernetes";
+      # Run as nixos user
+      User = "nixos";
+      Group = "nixos";
       
       # Add necessary capabilities and security settings
-      SupplementaryGroups = [ "kubernetes" ];
       # Ensure the service can read the k3s config and secrets
       ReadOnlyPaths = [ k3sConfig ];
       ReadWritePaths = [ secretScriptPath ];
