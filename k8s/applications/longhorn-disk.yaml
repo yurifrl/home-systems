@@ -1,0 +1,12 @@
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: nixos-1
+  namespace: longhorn-system
+spec:
+  disks:
+    sda:
+      path: /dev/sda
+      allowScheduling: true
+      storageReserved: 0
+      tags: [] 
