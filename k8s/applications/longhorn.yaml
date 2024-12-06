@@ -47,9 +47,3 @@ spec:
           defaultSettings:
             backupTarget: s3://syscd@southamerica-east1/
             backupTargetCredentialSecret: longhorn-gcp-backups
-          #   createDefaultDiskLabeledNodes: false
-          #   defaultDataPath: /var/lib/longhorn/storage
-          # persistence:
-          #   defaultClass: true
-          #   defaultClassReplicaCount: 2
-       
