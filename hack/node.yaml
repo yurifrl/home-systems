@@ -5,12 +5,14 @@ metadata:
   namespace: longhorn-system
 spec:
   name: nixos-1
-  allowScheduling: true
-  evictionRequested: false
-  tags: []
   disks:
     default-disk:
-      path: /var/lib/longhorn/storage
+      path: /storage
       allowScheduling: true
       storageReserved: 0
       tags: []
+  allowScheduling: true
+  evictionRequested: false
+  tags: []
+
+#  kubectl logs -n longhorn-system -l app=longhorn-manager --tail 100

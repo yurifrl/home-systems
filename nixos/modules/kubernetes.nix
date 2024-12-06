@@ -25,6 +25,8 @@
     # NixOS-specific fixes for Longhorn compatibility
     systemd.tmpfiles.rules = [
       "L+ /usr/local/bin - - - - /run/current-system/sw/bin/"  # Fix binary path resolution
+      "d /home/nixos/home-systems 0775 nixos kubernetes -"  # Allow kubernetes group access
+      "d /var/lib/kubernetes 0775 kubernetes kubernetes -"  # Ensure kubernetes home dir permissions
     ];
     virtualisation.docker.logDriver = "json-file";  # Required for proper logging
 
@@ -50,8 +52,10 @@
       "net.bridge.bridge-nf-call-ip6tables" = 1;
     };
 
-    # Create kubernetes user and group
-    users.groups.kubernetes = {};
+    # Create kubernetes user and group with necessary permissions
+    users.groups.kubernetes = {
+        members = [ "nixos" ];  # Add nixos user to kubernetes group
+    };
 
     users.users.kubernetes = {
         isSystemUser = true;
@@ -60,5 +64,7 @@
         home = "/var/lib/kubernetes";
         createHome = true;
         uid = 900;
+        # Add supplementary groups for additional access
+        extraGroups = [ "nixos" ];  # Add kubernetes user to nixos group
     };
 }

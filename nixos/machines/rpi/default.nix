@@ -50,7 +50,7 @@
   services.udisks2.enable = false;
 
   # Longhorn storage
-  fileSystems."/var/lib/longhorn/storage" = {
+  fileSystems."/storage" = {
     device = "/dev/sda";
     fsType = "ext4";
     options = [ "defaults" ];
