@@ -48,4 +48,11 @@
 
   # Prevent automatic mounting of USB drives
   services.udisks2.enable = false;
+
+  # Longhorn storage
+  fileSystems."/var/lib/longhorn/storage" = {
+    device = "/dev/sda";
+    fsType = "ext4";
+    options = [ "defaults" ];
+  };
 }
