@@ -1,0 +1,14 @@
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: nixos-1
+  namespace: longhorn-system
+  finalizers:
+    - longhorn.io/node
+spec:
+  disks:
+    sda:
+      path: /var/lib/longhorn/storage
+      allowScheduling: true
+      storageReserved: 0
+      tags: []
