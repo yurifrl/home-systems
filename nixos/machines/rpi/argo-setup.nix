@@ -144,6 +144,10 @@ in
       # Run as nixos user
       User = "nixos";
       Group = "nixos";
+
+      # Ensure access to required directories and files
+      ReadOnlyPaths = [ k3sConfig ];
+      ReadWritePaths = [ applicationsPath argoValuesPath ];
     };
 
     # Add restart triggers

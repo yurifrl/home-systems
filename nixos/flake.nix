@@ -69,7 +69,7 @@
         nodes = {
           rpi = {
             name = "rpi";
-            hostname = "192.168.68.107";
+            hostname = "nixos-1";
             profiles = {
               system = {
                 sshUser = "root";

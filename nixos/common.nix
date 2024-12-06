@@ -76,7 +76,7 @@ in
   systemd.services.sshd.wantedBy = lib.mkOverride 40 [ "multi-user.target" ];
 
   # Additional services (rarely changed)
-  services.vscode-server.enable = true;
+  # services.vscode-server.enable = true;
 
   # Security configuration (rarely changed)
   security.sudo = {

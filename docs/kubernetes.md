@@ -1,13 +1,7 @@
 # Troubleshooting
 
 ## Initial Setup
-```bash
-# Set up kubectl aliases and permissions
-alias k=kubectl
-set -gx KUBECONFIG /etc/rancher/k3s/k3s.yaml
-sudo chmod 644 /etc/rancher/k3s/k3s.yaml
-k get nodes
-```
+
 
 ## Service Status and Logs
 ```bash

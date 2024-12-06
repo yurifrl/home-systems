@@ -2,7 +2,6 @@
 
 let
   k3sConfig = "/etc/rancher/k3s/k3s.yaml";
-  # Define the path to the script you want to execute
   secretScriptPath = "/data/secrets.sh";
 in
 {

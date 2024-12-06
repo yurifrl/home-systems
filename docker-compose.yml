@@ -3,7 +3,7 @@ x-base-service: &base_service
     context: .
     dockerfile: ./Dockerfile.arm
   image: ghcr.io/yurifrl/home-systems
-  working_dir: /src/nix
+  working_dir: /src/nixos
   volumes:
     - .:/src
     - gomod-cache:/go/pkg/mod

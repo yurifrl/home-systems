@@ -75,3 +75,43 @@
 ## Nixos environment talsks
 - [Nix Kubernetes and the Pursuit of Reproducibility - Josh Rosso, Reddit - YouTube](https://www.youtube.com/watch?v=U-mSWU4see0)
 - [NixCon2023 Nix and Kubernetes: Deployments Done Right - YouTube](https://www.youtube.com/watch?v=SEA1Qm8K4gY&t=1186s)
+
+## Sample Configurations
+- [ymgyt/mynix](https://github.com/ymgyt/mynix/blob/main/homeserver/modules/kubernetes/master.nix)
+- [heywoodlh/nixos-configs](https://github.com/heywoodlh/nixos-configs/blob/master/nixos/roles/kubevirt-master.nix)
+- [JD95/nixos-configuration](https://github.com/JD95/nixos-configuration/blob/main/containers/kube-master/flake.nix)
+
+## Additional Resources
+- [BMC API Documentation](https://docs.turingpi.com/docs/turing-pi2-bmc-api#flash--firmware)
+- [Multicast DNS](https://en.wikipedia.org/wiki/Multicast_DNS)
+- [Zero-configuration networking](https://en.wikipedia.org/wiki/Zero-configuration_networking#DNS-SD)
+
+
+## SLOS
+
+- https://sloth.dev
+- https://pyrra.dev
+- https://grafana.wikimedia.org/dashboards/f/SLOs/slos
+
+
+## Deploy-rs
+
+- [balsoft/nixos-config](https://github.com/balsoft/nixos-config/blob/ee5b3d4fd3720220e35bbb26cf26b6d428f248e9/flake.nix#L201)
+- [i077/system](https://github.com/i077/system/blob/81ae191dafbb7e437f3dfb7e2f2440fe769f5be3/flake/hosts.nix#L28)
+- [Toomoch/nixos-config](https://github.com/Toomoch/nixos-config/blob/be4998e7df2581c5509c70c9f58c7ffbca0e8182/flake.nix#L163)
+- [jordanisaacs/dotfiles](https://github.com/jordanisaacs/dotfiles/blob/20d6ff59e1a468b9ce5d78fcf169b31c977bd1b9/flake.nix#L82)
+- [AtaraxiaSjel/nixos-config](https://github.com/AtaraxiaSjel/nixos-config/blob/919e7d0fae5bcc9792f9e23fdd275e1ef70f913e/flake.nix#L184)
+- [etu/nixconfig](https://github.com/etu/nixconfig/blob/30623b6ff162688a838cad4ad2fdbb5425d1ff3e/flake.nix#L153)
+- [6d6a/webservices-apache2-php73](https://github.com/6d6a/webservices-apache2-php73/blob/9a553acf8bb1abcca91509b34faa51bc0605093f/flake.nix#L56)
+  - seems to use profiles
+- [LunNova/nixos-configs](https://github.com/LunNova/nixos-configs/blob/76ea08c9202ef77ab72eb3cd4715c28475a2667e/flake.nix#L125)
+  - deploy to two machines
+
+
+# Clouflared
+
+- [GitHub - cloudflare/argo-tunnel-examples](https://github.com/cloudflare/argo-tunnel-examples/tree/master)
+
+# Colmena
+- [Cottand/selfhosted: My home-lab setup, a cluster of 7 servers running 50-70 containers](https://github.com/Cottand/selfhosted/tree/master)
+- docker compose run --rm colmena apply --impure --on vm

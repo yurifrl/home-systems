@@ -24,8 +24,10 @@ COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 RUN echo 'extra-experimental-features = nix-command flakes' >> /etc/nix/nix.conf
 RUN echo 'extra-platforms = aarch64-linux' >> /etc/nix/nix.conf
 
-# Add nixpkgs-unstable channel
-RUN nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable && nix-channel --update
+# Add nixpkgs-unstable channel and make it available as a named channel
+RUN nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs && \
+    nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable && \
+    nix-channel --update
 
 RUN nix-env -iA \
     nixpkgs.fish \
