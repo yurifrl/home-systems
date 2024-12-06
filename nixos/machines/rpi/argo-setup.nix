@@ -141,11 +141,9 @@ in
       StartLimitIntervalSec = "600";
       StartLimitBurst = "5";
       
-      # Run as kubernetes user instead of k3s
+      # Run as kubernetes user
       User = "kubernetes";
       Group = "kubernetes";
-      # Ensure the user has access to the k3s config
-      SupplementaryGroups = [ "kubernetes" ];
     };
 
     # Add restart triggers

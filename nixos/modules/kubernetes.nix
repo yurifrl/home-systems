@@ -23,11 +23,6 @@
     };
 
     # NixOS-specific fixes for Longhorn compatibility
-    systemd.tmpfiles.rules = [
-      "L+ /usr/local/bin - - - - /run/current-system/sw/bin/"  # Fix binary path resolution
-      "d /home/nixos/home-systems 0775 nixos kubernetes -"  # Allow kubernetes group access
-      "d /var/lib/kubernetes 0775 kubernetes kubernetes -"  # Ensure kubernetes home dir permissions
-    ];
     virtualisation.docker.logDriver = "json-file";  # Required for proper logging
 
     # Required system utilities for Longhorn operations
@@ -52,11 +47,6 @@
       "net.bridge.bridge-nf-call-ip6tables" = 1;
     };
 
-    # Create kubernetes user and group with necessary permissions
-    users.groups.kubernetes = {
-        members = [ "nixos" ];  # Add nixos user to kubernetes group
-    };
-
     users.users.kubernetes = {
         isSystemUser = true;
         group = "kubernetes";
@@ -66,5 +56,23 @@
         uid = 900;
         # Add supplementary groups for additional access
         extraGroups = [ "nixos" ];  # Add kubernetes user to nixos group
+        # Allow passwordless sudo for kubernetes user
+        hashedPassword = null;  # No password login
+        shell = pkgs.bash;     # Set bash as shell
     };
+
+    # Configure sudo permissions for kubernetes user
+    security.sudo.extraRules = [{
+        users = [ "kubernetes" ];
+        commands = [{
+            command = "ALL";
+            options = [ "NOPASSWD" ];  # No password required for sudo
+        }];
+    }];
+
+    # Create kubernetes user and group with necessary permissions
+    users.groups.kubernetes = {
+        members = [ "nixos" ];  # Add nixos user to kubernetes group
+    };
+
 }
