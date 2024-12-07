@@ -18,10 +18,12 @@
     after = [
       "network-pre.target"
       "tailscale.service"
+      "secret-loader.service"
     ];
     wants = [
       "network-pre.target"
       "tailscale.service"
+      "secret-loader.service"
     ];
     wantedBy = [ "multi-user.target" ];
 
