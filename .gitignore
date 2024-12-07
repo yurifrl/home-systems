@@ -12,3 +12,4 @@ hack/original_k8s/
 hack/longhorn/
 uptime-bot/secrets
 id_ed25519
+hack/longhorn
