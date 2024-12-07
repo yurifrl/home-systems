@@ -21,6 +21,30 @@ in
     environment = {
       KUBECONFIG = k3sConfig;
     };
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      TimeoutStartSec = "0";
+      
+      # Add more robust error handling
+      Restart = "on-failure";
+      RestartSec = "30s";
+      # Limit restart attempts to 5 times within 10 minutes
+      StartLimitBurst = "5";
+      
+      # Run as nixos user
+      User = "nixos";
+      Group = "nixos";
+
+      # Ensure access to required directories and files
+      ReadOnlyPaths = [ k3sConfig ];
+      ReadWritePaths = [ applicationsPath argoValuesPath ];
+    };
+    # Add restart triggers
+    restartIfChanged = true;
+    restartTriggers = [ applicationsPath argoValuesPath ];
+
+    # Fix: Move script inside systemd.services.argo-setup
     script = ''
       # Wait for kubernetes to be ready
       until kubectl get nodes; do
@@ -61,22 +85,6 @@ in
         echo "Failed to install/upgrade Argo CD."
         failed_steps="$failed_steps\n- Helm install/upgrade"
         failure_count=$((failure_count + 1))
-      fi
-
-      # Patch ArgoCD admin password
-      echo "Checking ArgoCD secret..."
-      if ! kubectl -n argocd get secret argocd-secret >/dev/null 2>&1; then
-        echo "Secret argocd-secret does not exist in namespace: argocd"
-        failed_steps="$failed_steps\n- ArgoCD secret check"
-        failure_count=$((failure_count + 1))
-      else
-        echo "Patching secret: argocd-secret in namespace: argocd"
-        if ! kubectl -n argocd patch secret argocd-secret \
-          -p '{"metadata":{"labels":{"app.kubernetes.io/managed-by":"Helm"},"annotations":{"meta.helm.sh/release-name":"argocd","meta.helm.sh/release-namespace":"argocd"}},"stringData":{"admin.password":"$2y$10$05raqTWLoHBJG4kOVXIhYu8q/dvykleKSU17x0ZZludNK3QHQ9zdm","admin.passwordMtime":"'$(date +%FT%T%Z)'"}}'; then
-          echo "Failed to patch ArgoCD secret"
-          failed_steps="$failed_steps\n- ArgoCD secret patch"
-          failure_count=$((failure_count + 1))
-        fi
       fi
 
       # Apply root application manifest
@@ -145,28 +153,5 @@ in
       echo " /  /|     |\  \   "
       echo "/_______|_______\  "
     '';
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      TimeoutStartSec = "0";
-      
-      # Add more robust error handling
-      Restart = "on-failure";
-      RestartSec = "30s";
-      # Limit restart attempts to 5 times within 10 minutes
-      StartLimitBurst = "5";
-      
-      # Run as nixos user
-      User = "nixos";
-      Group = "nixos";
-
-      # Ensure access to required directories and files
-      ReadOnlyPaths = [ k3sConfig ];
-      ReadWritePaths = [ applicationsPath argoValuesPath ];
-    };
-
-    # Add restart triggers
-    restartIfChanged = true;
-    restartTriggers = [ applicationsPath argoValuesPath ];
   };
 } 

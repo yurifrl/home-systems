@@ -91,3 +91,26 @@ echo -e "$YELLOW"Next steps:"$NC"
 echo "1. Check ArgoCD setup: sudo systemctl status argo-setup"
 echo "2. Check secret loader: sudo systemctl status secret-loader"
 echo "3. Access the system: ssh nixos@$TARGET_IP"
+
+echo -e "$YELLOW"Useful commands:"$NC"
+echo "
+# Status
+sudo systemctl status tailscale-autoconnect
+sudo systemctl status argo-setup
+sudo systemctl status secret-loader
+
+# Monitor logs
+sudo journalctl -u tailscale-autoconnect -f
+sudo journalctl -u argo-setup -f
+sudo journalctl -u secret-loader -f
+
+# Restart and monitor services
+sudo systemctl restart argo-setup & sudo journalctl -u argo-setup -f
+sudo systemctl restart secret-loader & sudo journalctl -u secret-loader -f
+sudo systemctl restart tailscale-autoconnect & sudo journalctl -u tailscale-autoconnect -f
+
+# System configuration
+sudo nixos-rebuild switch --flake .#rpi --impure --show-trace
+
+# End
+"

@@ -17,14 +17,15 @@
     # make sure tailscale is running before trying to connect to tailscale
     after = [
       "network-pre.target"
-      "tailscale.service"
+      "tailscale.service" 
       "secret-loader.service"
     ];
     wants = [
       "network-pre.target"
-      "tailscale.service"
+      "tailscale.service" 
       "secret-loader.service"
     ];
+    requires = [ "secret-loader.service" ]; # Make it a hard requirement
     wantedBy = [ "multi-user.target" ];
 
     # set this service as a oneshot job
