@@ -17,54 +17,37 @@ sudo systemctl restart secret-loader & sudo journalctl -u secret-loader.service 
 kill-node.sh
 ```
 
-## Initial Setup
-
-```bash
-# Get private key from 1Password to allow push from the machine
-op item get "Home Server" --fields "private key" --reveal > id_ed25519
-
-# copy key to machine
-scp id_ed25519 root@nixos-1:/home/nixos/.ssh/id_ed25519
-
-# copy secrets to machine
-scp secrets.sh root@nixos-1:/data/secrets.sh
-
-# ssh into machine
-ssh nixos@nixos-1
-
-# Switch configuration on Pi
-sudo nixos-rebuild switch --flake .#rpi --impure --show-trace
-
-# Add unstable channel (not sure if still needed)
-sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable
-sudo nix-channel --update
-
-# clone flake
-git clone git@github.com:yurifrl/home-systems.git
-
-# Exit ssh session
-exit
-
-# Set up k aliases and permissions
-scp root@nixos-1:/etc/rancher/k3s/k3s.yaml ~/.kube/k3s.yaml
-set -gx KUBECONFIG /etc/rancher/k3s/k3s.yaml
-sudo chmod 644 /etc/rancher/k3s/k3s.yaml
-k get nodes
-```
-
 ## Building and Deployment
 
-### Local Development
 ```bash
-# Build AMD64 and ARM64 images
-nix build .#packages.aarch64-linux.default .#packages.x86_64-linux.default --impure
-
 # Check configuration
 nix flake check
 
-# Build Raspberry Pi image specifically
+# Build just the Raspberry Pi image (simplified command)
 nix build .#images.rpi --impure
+
+# Copy the built image
+cp ./result/sd-image/*.img* .
+
+# Unmount the SD card device before writing
+sudo diskutil unmountDisk /dev/disk4
+
+# List available disks to identify the correct device
+sudo diskutil list
+
+# Write the image to the SD card (replace diskX with your device, e.g., disk4)
+sudo dd bs=4M status=progress conv=fsync of=/dev/diskX if=image.img
+
+# Unmount after writing
+sudo diskutil unmountDisk /dev/disk4
 ```
+
+## Initial Setup
+
+```bash
+./hack/new-machine-manual-setup.sh
+```
+
 
 ### Deployment Methods
 ```bash
@@ -121,31 +104,6 @@ nix search nixpkgs cowsay
 nix eval --raw --impure --expr "builtins.currentSystem"
 ```
 
-
-## Image Building
-```bash
-# Build just the Raspberry Pi image (simplified command)
-nix build .#images.rpi --impure
-
-# Build packages for both ARM64 and x86_64 architectures
-nix build .#packages.aarch64-linux.default .#packages.x86_64-linux.default --impure
-
-# Build detailed SD card image with debug output (low-level command)
-nix build ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --show-trace --print-out-paths --no-link --json --impure
-
-# To build the NixOS image for an ARM device (e.g., Raspberry Pi), use the following command:
-nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./sd-image.nix --argstr system aarch64-linux
-
-# Build image on Pi
-nix build --rebuild --impure --builders 'ssh://nixos@192.168.68.108' ./nix/#nixosConfigurations.rpi.config.system.build.sdImage
-
-# Switch configuration on Pi
-NIX_SSHOPTS="-A" nixos-rebuild switch --flake ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --target-host ssh://nixos@192.168.68.108 --use-remote-sudo
-
-# Copy the built image
-cp ./result/sd-image/*.img* .
-```
-
 ## Additional References
 
 ### Derivation Examples
@@ -172,6 +130,26 @@ nix run github:serokell/deploy-rs nix/
 docker compose run --rm colmena apply --impure --on vm
 ```
 
+## Other Build commands
+```bash
+# Build just the Raspberry Pi image (simplified command)
+nix build .#images.rpi --impure
+
+# Build packages for both ARM64 and x86_64 architectures
+nix build .#packages.aarch64-linux.default .#packages.x86_64-linux.default --impure
+
+# Build detailed SD card image with debug output (low-level command)
+nix build ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --show-trace --print-out-paths --no-link --json --impure
+
+# To build the NixOS image for an ARM device (e.g., Raspberry Pi), use the following command:
+nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./sd-image.nix --argstr system aarch64-linux
+
+# Build image on Pi
+nix build --rebuild --impure --builders 'ssh://nixos@192.168.68.108' ./nix/#nixosConfigurations.rpi.config.system.build.sdImage
+
+# Switch configuration on Pi
+NIX_SSHOPTS="-A" nixos-rebuild switch --flake ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --target-host ssh://nixos@192.168.68.108 --use-remote-sudo
+```
 
 # TODO
 

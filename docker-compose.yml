@@ -4,17 +4,16 @@ x-base-service: &base_service
     dockerfile: ./Dockerfile.arm
   image: ghcr.io/yurifrl/home-systems
   working_dir: /src/nixos
+  network_mode: host
+  environment:
+    SSH_AUTH_SOCK: /ssh-agent
+    NIXPKGS_ALLOW_BROKEN: 1
+    NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM: 1
   volumes:
     - .:/src
     - gomod-cache:/go/pkg/mod
     - $SSH_AUTH_SOCK:/ssh-agent
     - /dev/disk5:/dev/disk5
-
-  environment:
-    SSH_AUTH_SOCK: /ssh-agent
-    NIXPKGS_ALLOW_BROKEN: 1
-    NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM: 1
-  network_mode: host
 
 services:
   sh:
@@ -26,10 +25,6 @@ services:
   deploy:
     <<: *base_service
     entrypoint: deploy
-  sh2:
-    <<: *base_service
-    entrypoint: fish
-    privileged: true
 
 volumes:
   gomod-cache:

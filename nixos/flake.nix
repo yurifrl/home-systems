@@ -41,6 +41,12 @@
 
         vm = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
+          specialArgs = {
+            pkgs-unstable = import nixpkgs-unstable {
+              system = "x86_64-linux";
+              config.allowUnfree = true;
+            };
+          };
           modules = [
             "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
             ./common.nix

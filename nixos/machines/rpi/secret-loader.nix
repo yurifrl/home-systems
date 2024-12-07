@@ -7,8 +7,8 @@ in
 {
   systemd.services.secret-loader = {
     description = "Secret Loader Service";
-    after = [ "network.target" "k3s.service" "argo-setup.service" ];
-    requires = [ "k3s.service" "argo-setup.service" ];
+    after = [ "network.target" "k3s.service" ];
+    requires = [ "k3s.service" ];
     wantedBy = [ "multi-user.target" ];
     path = with pkgs; [
       kubectl
@@ -36,7 +36,6 @@ in
       # Add retry logic
       Restart = "on-failure";
       RestartSec = "30s";
-      StartLimitIntervalSec = "0";
       StartLimitBurst = "0";
     };
 
