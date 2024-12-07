@@ -3,6 +3,7 @@
     ./hardware-configuration.nix
     ./argo-setup.nix
     ./secret-loader.nix
+    ./longhorn.nix
     ../../modules/kubernetes.nix
   ];
   networking = {
