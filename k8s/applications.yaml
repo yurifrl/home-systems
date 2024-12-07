@@ -34,6 +34,6 @@ spec:
     - name: http
       port: 80
       targetPort: 8080
-      nodePort: 30007    # This will be accessible on <node-ip>:30007
+      nodePort: 30001
   selector:
     app.kubernetes.io/name: argocd-server 
