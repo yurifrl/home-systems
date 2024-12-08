@@ -6,32 +6,25 @@
     # https://github.com/longhorn/longhorn/issues/2166
     # ============================================================================
     
-    # Required packages for Longhorn
-    environment.systemPackages = with pkgs; [
-        open-iscsi
-        nfs-utils
-        cryptsetup
+    # Add symlink for standard paths that Longhorn expects
+    systemd.tmpfiles.rules = [
+        "L+ /usr/local/bin - - - - /run/current-system/sw/bin/"
     ];
 
-    # Enable required kernel modules
-    boot.kernelModules = [
-        "dm_crypt"    # For encryption support
-        "iscsi_tcp"   # For iSCSI support
-    ];
-
-    # Enable required services
-    services = {
-        open-iscsi = {
-            enable = true;
-            name = "iqn.2024-01.org.nixos:${config.networking.hostName}";
-        };
-        nfs.server.enable = true;
+    # Enable and configure iSCSI service
+    services.openiscsi = {
+        enable = true;
+        name = "iqn.2024-01.org.nixos:${config.networking.hostName}";
     };
 
-    # Ensure mount points exist
-    systemd.tmpfiles.rules = [
-        "d /var/lib/longhorn 0700 root root -"
-        "d /host/etc 0755 root root -"
-        "L+ /host/etc/os-release - - - - /etc/os-release"
+    # Configure Docker to use json-file logging instead of journald
+    virtualisation.docker = {
+        enable = true;
+        logDriver = "json-file";
+    };
+
+    # Ensure required packages are available
+    environment.systemPackages = with pkgs; [
+        openiscsi
     ];
 }
