@@ -8,7 +8,7 @@
     
     # Ensure required system utilities are available
     environment.systemPackages = with pkgs; [
-        iscsi-initiator-utils
+        openiscsi
         nfs-utils
         curl
         findmnt
