@@ -59,6 +59,7 @@ spec:
             while true; do
               log_entry="[$(date '+%Y-%m-%d %H:%M:%S')] Version $VERSION - Pod: $POD_NAME - Node: $NODE_NAME - IP: $POD_IP - Log entry"
               echo "$log_entry" >> /data/app.log
+              echo "$log_entry"
               sleep 1
             done
         volumeMounts:
