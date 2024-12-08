@@ -21,7 +21,7 @@
 
     # Enable required services
     services = {
-        iscsi = {
+        open-iscsi = {
             enable = true;
             name = "iqn.2024-01.org.nixos:${config.networking.hostName}";
         };
