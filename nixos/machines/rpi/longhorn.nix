@@ -22,6 +22,13 @@
       name = "iqn.2024-01.org.nixos.initiator:${config.networking.hostName}";
     };
 
+    # Add required packages to system environment
+    environment.systemPackages = with pkgs; [
+      openiscsi
+      nfs-utils
+      util-linux
+    ];
+
     # NixOS-specific fixes for Longhorn compatibility
     virtualisation.docker.logDriver = "json-file";  # Required for proper logging
 
@@ -35,5 +42,11 @@
         pkgs.gnugrep
         pkgs.gawk
       ];
+    };
+
+    # Ensure iSCSI service starts before Longhorn
+    systemd.services."longhorn-manager" = {
+      after = [ "iscsid.service" ];
+      requires = [ "iscsid.service" ];
     };
 }
