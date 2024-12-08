@@ -11,7 +11,6 @@
         openiscsi
         nfs-utils
         curl
-        findmnt
         util-linux
         grep
         blkid
