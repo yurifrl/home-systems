@@ -27,10 +27,12 @@
       openiscsi
       nfs-utils
       util-linux
+      lsb-release    # Add LSB release information
+      systemd        # Ensure systemd utilities are available
     ];
 
     # NixOS-specific fixes for Longhorn compatibility
-    virtualisation.docker.logDriver = "json-file";  # Required for proper logging
+    virtualisation.docker.logDriver = "json-file";
 
     # Required system utilities for Longhorn operations
     systemd.services.kubelet = {
@@ -41,12 +43,27 @@
         pkgs.util-linux
         pkgs.gnugrep
         pkgs.gawk
+        pkgs.lsb-release
+        pkgs.coreutils
       ];
     };
+
+    # Ensure OS release information is available
+    environment.etc."os-release".text = ''
+      NAME="NixOS"
+      ID=nixos
+      VERSION="${config.system.stateVersion}"
+      VERSION_ID="${config.system.stateVersion}"
+      PRETTY_NAME="NixOS ${config.system.stateVersion}"
+      HOME_URL="https://nixos.org/"
+    '';
 
     # Ensure iSCSI service starts before Longhorn
     systemd.services."longhorn-manager" = {
       after = [ "iscsid.service" ];
       requires = [ "iscsid.service" ];
+      environment = {
+        OS_RELEASE_PATH = "/etc/os-release";
+      };
     };
 }
