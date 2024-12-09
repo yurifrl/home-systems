@@ -11,6 +11,14 @@
         "L+ /usr/local/bin - - - - /run/current-system/sw/bin/"
     ];
 
+    # Enable required kernel modules
+    boot.kernelModules = [
+        "dm_snapshot"
+        "dm_mirror"
+        "dm_thin_pool"
+        "dm_crypt"
+    ];
+
     # Enable and configure iSCSI service
     services.openiscsi = {
         enable = true;
@@ -22,4 +30,12 @@
         enable = true;
         logDriver = "json-file";
     };
+
+    # Add NFS kernel module support
+    boot.supportedFilesystems = [ "nfs" "nfs4" ];
+
+    # Install NFS utilities
+    environment.systemPackages = with pkgs; [
+        nfs-utils
+    ];
 }
