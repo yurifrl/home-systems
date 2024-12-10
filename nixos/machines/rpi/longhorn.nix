@@ -11,8 +11,9 @@
         # Add symlink for standard paths that Longhorn expects
         "L+ /usr/local/bin - - - - /run/current-system/sw/bin/"
         # Ensure storage directories exist with correct permissions
-        "d /storage 0755 root root -"
         "d /var/lib/longhorn 0755 root root -"
+        "d /var/lib/longhorn/engine 0755 root root -"
+        "d /var/lib/longhorn/replica 0755 root root -"
     ];
 
     # Enable required kernel modules
@@ -21,6 +22,7 @@
         "dm_mirror"
         "dm_thin_pool"
         "dm_crypt"
+        "nfs"
     ];
 
     # Enable and configure iSCSI service
@@ -50,7 +52,6 @@
         statdPort = 4000;
         # Export configuration
         exports = ''
-          /storage         *(rw,fsid=0,no_subtree_check,no_root_squash)
           /var/lib/longhorn *(rw,no_root_squash,no_subtree_check,insecure)
         '';
     };
