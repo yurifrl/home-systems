@@ -28,7 +28,7 @@ loggers: []
 # Volume tester configuration
 volumeTester:
   enabled: true
-  image: python:3.9-slim
+  image: python:3.13-slim
   nodePort: 30080
   resources:
     limits:
