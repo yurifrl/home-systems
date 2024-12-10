@@ -17,6 +17,12 @@
         "dm_mirror"
         "dm_thin_pool"
         "dm_crypt"
+        # Add NFS modules explicitly
+        "nfs"
+        "nfsv4"
+        "nfs_acl"
+        "lockd"
+        "sunrpc"
     ];
 
     # Enable and configure iSCSI service
@@ -31,11 +37,28 @@
         logDriver = "json-file";
     };
 
-    # Add NFS kernel module support
+    # Add NFS kernel module support with explicit version support
     boot.supportedFilesystems = [ "nfs" "nfs4" ];
+    boot.kernel.sysctl = {
+        "fs.nfs.nlm_timeout" = 10;
+        "fs.nfs.nlm_udpport" = 32768;
+        "fs.nfs.nlm_tcpport" = 32768;
+    };
 
-    # Install NFS utilities
+    # Install NFS utilities and additional required packages
     environment.systemPackages = with pkgs; [
         nfs-utils
+        nfs-utils.out
+        kmod # For modprobe
     ];
+
+    # Enable NFS server and client services
+    services.nfs.server = {
+        enable = true;
+        exports = "";  # Configure if needed
+    };
+    services.nfs.client = {
+        enable = true;
+        nfsv4 = true;
+    };
 }

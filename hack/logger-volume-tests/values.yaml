@@ -15,15 +15,12 @@ common:
   version: "1"
 
 # Individual logger configurations
-loggers: []
-  # - name: logger
-  #   enabled: true
+loggers:
+  - name: logger
+    nodePort: 1
   # - name: logger-pvc-2
-  #   enabled: true
   # - name: logger-pvc-3
-  #   enabled: true
   # - name: logger-pvc-4
-  #   enabled: true
 
 # Volume tester configuration
 volumeTester:

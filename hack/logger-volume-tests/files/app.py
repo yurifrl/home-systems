@@ -44,6 +44,16 @@ HTML_TEMPLATE = """
         .refresh-button:hover {
             background: #0056b3;
         }
+        .pod-list {
+            list-style: none;
+            padding: 0;
+        }
+        .pod-list li {
+            background: #e9ecef;
+            margin: 5px 0;
+            padding: 8px 15px;
+            border-radius: 3px;
+        }
     </style>
     <script>
         function refreshPage() {
@@ -75,6 +85,15 @@ HTML_TEMPLATE = """
             <p>{{ current_time }}</p>
         </div>
     </div>
+
+    <div class="status-box">
+        <h2>Pods That Accessed This Volume</h2>
+        <ul class="pod-list">
+        {% for pod in unique_pods %}
+            <li>{{ pod }}</li>
+        {% endfor %}
+        </ul>
+    </div>
     
     <div class="status-box">
         <h2>Recent Events</h2>
@@ -98,6 +117,7 @@ HISTORY_FILE = f'{DATA_DIR}/history.json'
 EVENTS_FILE = f'{DATA_DIR}/events.json'
 COUNTER_FILE = f'{DATA_DIR}/counter.txt'
 INIT_FILE = f'{DATA_DIR}/init.txt'
+PODS_FILE = f'{DATA_DIR}/pods.json'
 
 def initialize_volume():
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -117,6 +137,23 @@ def initialize_volume():
     if not os.path.exists(EVENTS_FILE):
         with open(EVENTS_FILE, 'w') as f:
             json.dump([], f)
+            
+    if not os.path.exists(PODS_FILE):
+        with open(PODS_FILE, 'w') as f:
+            json.dump([], f)
+
+def update_pod_history(pod_name):
+    try:
+        with open(PODS_FILE, 'r') as f:
+            pods = json.load(f)
+    except:
+        pods = []
+    
+    if pod_name not in pods:
+        pods.append(pod_name)
+        with open(PODS_FILE, 'w') as f:
+            json.dump(pods, f)
+    return pods
 
 def increment_counter():
     with open(COUNTER_FILE, 'r') as f:
@@ -142,9 +179,13 @@ def add_event(event):
 def home():
     initialize_volume()
     count = increment_counter()
+    pod_name = os.environ.get('POD_NAME', 'unknown')
+    
+    # Update pod history
+    unique_pods = update_pod_history(pod_name)
     
     # Add event for page view
-    add_event(f"Page viewed by pod {os.environ.get('POD_NAME')}")
+    add_event(f"Page viewed by pod {pod_name}")
     
     # Get volume initialization time
     with open(INIT_FILE, 'r') as f:
@@ -159,13 +200,14 @@ def home():
         recent_events = json.load(f)
     
     return render_template_string(HTML_TEMPLATE,
-        pod_name=os.environ.get('POD_NAME', 'unknown'),
+        pod_name=pod_name,
         node_name=os.environ.get('NODE_NAME', 'unknown'),
         volume_age=f"{age_minutes:.1f} minutes",
         write_count=count,
         current_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         recent_events=recent_events[:10],
-        volume_history=recent_events[10:30]
+        volume_history=recent_events[10:30],
+        unique_pods=unique_pods
     )
 
 if __name__ == '__main__':
