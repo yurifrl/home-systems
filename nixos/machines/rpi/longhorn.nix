@@ -6,9 +6,13 @@
     # https://github.com/longhorn/longhorn/issues/2166
     # ============================================================================
     
-    # Add symlink for standard paths that Longhorn expects
+    # Configure tmpfiles rules for required directories and symlinks
     systemd.tmpfiles.rules = [
+        # Add symlink for standard paths that Longhorn expects
         "L+ /usr/local/bin - - - - /run/current-system/sw/bin/"
+        # Ensure storage directories exist with correct permissions
+        "d /storage 0755 root root -"
+        "d /var/lib/longhorn 0755 root root -"
     ];
 
     # Enable required kernel modules
@@ -51,20 +55,8 @@
         '';
     };
 
-    # Open required firewall ports for NFSv3 and NFSv4
-    networking.firewall = {
-        allowedTCPPorts = [ 111 2049 4000 4001 4002 20048 ];
-        allowedUDPPorts = [ 111 2049 4000 4001 4002 20048 ];
-    };
-
     # Install NFS utilities
     environment.systemPackages = with pkgs; [
         nfs-utils
-    ];
-
-    # Ensure storage directory exists and has correct permissions
-    systemd.tmpfiles.rules = [
-        "d /storage 0755 root root -"
-        "d /var/lib/longhorn 0755 root root -"
     ];
 }
