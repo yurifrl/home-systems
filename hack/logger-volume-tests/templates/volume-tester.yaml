@@ -1,0 +1,88 @@
+{{- if .Values.volumeTester.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: volume-test-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.storageClassName }}
+  resources:
+    requests:
+      storage: {{ .Values.storageSize }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: volume-tester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: volume-tester
+  template:
+    metadata:
+      labels:
+        app: volume-tester
+    spec:
+      initContainers:
+      - name: init-dirs
+        image: busybox
+        command: ['sh', '-c', 'mkdir -p /app']
+        volumeMounts:
+        - name: app-storage
+          mountPath: /app
+      containers:
+      - name: web
+        image: {{ .Values.volumeTester.image }}
+        ports:
+        - containerPort: 5000
+        resources:
+          {{- toYaml .Values.volumeTester.resources | nindent 10 }}
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            # Install Flask
+            pip install flask
+            
+            # Create Python app
+            cat > /app/app.py << 'EOF'
+            {{- .Files.Get "files/app.py" | nindent 12 }}
+            EOF
+            
+            # Run the Flask app
+            python /app/app.py
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+        - name: app-storage
+          mountPath: /app
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: volume-test-pvc
+      - name: app-storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: volume-tester
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 5000
+    nodePort: {{ .Values.volumeTester.nodePort }}
+  selector:
+    app: volume-tester
+{{- end }} 

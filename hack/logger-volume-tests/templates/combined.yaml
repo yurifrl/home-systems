@@ -1,0 +1,143 @@
+{{- range .Values.loggers }}
+{{- if .enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .name }}-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ $.Values.storageClassName }}
+  resources:
+    requests:
+      storage: {{ $.Values.storageSize }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logger
+      instance: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: logger
+        instance: {{ .name }}
+    spec:
+      initContainers:
+      - name: init-dirs
+        image: busybox
+        command: ['sh', '-c', 'mkdir -p /app']
+        volumeMounts:
+        - name: app-storage
+          mountPath: /app
+      containers:
+      - name: logger
+        image: {{ $.Values.volumeTester.image }}
+        ports:
+        - containerPort: 5000
+        resources:
+          {{- toYaml $.Values.common.resources | nindent 10 }}
+        env:
+        - name: VERSION
+          value: {{ $.Values.common.version | quote }}
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            # Install Flask
+            pip install flask
+            
+            # Create Python app
+            cat > /app/app.py << 'EOF'
+            from flask import Flask, jsonify
+            import os
+            import datetime
+            import threading
+            import time
+            
+            app = Flask(__name__)
+            log_file = '/data/app.log'
+            
+            def generate_logs():
+                while True:
+                    log_entry = f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Version {os.getenv('VERSION')} - Pod: {os.getenv('POD_NAME')} - Node: {os.getenv('NODE_NAME')} - IP: {os.getenv('POD_IP')} - Log entry"
+                    with open(log_file, 'a') as f:
+                        f.write(log_entry + '\n')
+                    print(log_entry)
+                    time.sleep(1)
+            
+            # Start logging thread
+            threading.Thread(target=generate_logs, daemon=True).start()
+            
+            @app.route('/')
+            def home():
+                return jsonify({
+                    'status': 'running',
+                    'pod': os.getenv('POD_NAME'),
+                    'node': os.getenv('NODE_NAME'),
+                    'version': os.getenv('VERSION')
+                })
+            
+            @app.route('/logs')
+            def get_logs():
+                try:
+                    with open(log_file, 'r') as f:
+                        logs = f.readlines()
+                    return jsonify({'logs': logs})
+                except Exception as e:
+                    return jsonify({'error': str(e)}), 500
+            
+            if __name__ == '__main__':
+                app.run(host='0.0.0.0', port=5000)
+            EOF
+            
+            # Run the Flask app
+            python /app/app.py
+        volumeMounts:
+        - name: log-storage
+          mountPath: /data
+        - name: app-storage
+          mountPath: /app
+      volumes:
+      - name: log-storage
+        persistentVolumeClaim:
+          claimName: {{ .name }}-pvc
+      - name: app-storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 5000
+    nodePort: {{ add 30000 .nodePort }}
+  selector:
+    app: logger
+    instance: {{ .name }}
+{{- end }}
+{{- end }} 

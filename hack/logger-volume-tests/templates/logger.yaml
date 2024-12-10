@@ -1,19 +1,22 @@
+{{- range .Values.loggers }}
+{{- if .enabled }}
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: logger-pvc-3
+  name: {{ .name }}-pvc
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: longhorn
+  storageClassName: {{ $.Values.storageClassName }}
   resources:
     requests:
-      storage: 1Gi
+      storage: {{ $.Values.storageSize }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: logger-pvc-3
+  name: {{ .name }}
 spec:
   replicas: 1
   selector:
@@ -26,17 +29,12 @@ spec:
     spec:
       containers:
       - name: logger
-        image: busybox
+        image: {{ $.Values.common.image }}
         resources:
-          limits:
-            cpu: "200m"
-            memory: "128Mi"
-          requests:
-            cpu: "100m"
-            memory: "64Mi"
+          {{- toYaml $.Values.common.resources | nindent 10 }}
         env:
         - name: VERSION
-          value: "1"
+          value: {{ $.Values.common.version | quote }}
         - name: POD_NAME
           valueFrom:
             fieldRef:
@@ -68,4 +66,6 @@ spec:
       volumes:
       - name: log-storage
         persistentVolumeClaim:
-          claimName: logger-pvc-3
+          claimName: {{ .name }}-pvc
+{{- end }}
+{{- end }} 

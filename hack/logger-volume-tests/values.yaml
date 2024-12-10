@@ -1,0 +1,39 @@
+# Default values for logger-volume-tests
+storageClassName: longhorn
+storageSize: 1Gi
+
+# Common settings for all loggers
+common:
+  image: busybox
+  resources:
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+    requests:
+      cpu: "100m"
+      memory: "64Mi"
+  version: "1"
+
+# Individual logger configurations
+loggers: []
+  # - name: logger
+  #   enabled: true
+  # - name: logger-pvc-2
+  #   enabled: true
+  # - name: logger-pvc-3
+  #   enabled: true
+  # - name: logger-pvc-4
+  #   enabled: true
+
+# Volume tester configuration
+volumeTester:
+  enabled: true
+  image: python:3.9-slim
+  nodePort: 30080
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+    requests:
+      cpu: "200m"
+      memory: "128Mi" 
