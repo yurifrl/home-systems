@@ -47,3 +47,4 @@ spec:
           defaultSettings:
             backupTarget: s3://syscd@southamerica-east1/
             backupTargetCredentialSecret: longhorn-gcp-backups
+            kubeletRootDir: /var/lib/k3s/agent/kubelet
