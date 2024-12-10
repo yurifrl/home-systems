@@ -1,7 +1,7 @@
 # Default values for logger-volume-tests
 storageClassName: longhorn
 storageSize: 1Gi
-image: python:3.9-slim
+image: python:3.13-slim
 nodePort: 30080
 resources:
   limits:
