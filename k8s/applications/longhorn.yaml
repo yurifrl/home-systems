@@ -49,3 +49,4 @@ spec:
             backupTargetCredentialSecret: longhorn-gcp-backups
             replicaZoneSoftAntiAffinity: true
             storageMinimalAvailablePercentage: 10
+            defaultReplicaCount: 1
