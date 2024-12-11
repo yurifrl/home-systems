@@ -10,11 +10,5 @@ resources:
   requests:
     cpu: "200m"
     memory: "128Mi" 
-# Individual logger configurations
-loggers:
-  - name: logger-1
-    nodePort: 1
-  - name: logger-2
-    nodePort: 2
-  - name: logger-3
-    nodePort: 3
+# Number of loggers to create
+loggers: 3

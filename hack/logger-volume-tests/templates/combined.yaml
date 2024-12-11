@@ -1,9 +1,9 @@
-{{- range .Values.loggers }}
+{{- range $i := until (int .Values.loggers) }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ .name }}-pvc
+  name: logger-{{ add $i 1 }}-pvc
 spec:
   accessModes:
     - ReadWriteOnce
@@ -15,18 +15,18 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .name }}
+  name: logger-{{ add $i 1 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: logger
-      instance: {{ .name }}
+      instance: logger-{{ add $i 1 }}
   template:
     metadata:
       labels:
         app: logger
-        instance: {{ .name }}
+        instance: logger-{{ add $i 1 }}
     spec:
       initContainers:
       - name: init-dirs
@@ -72,21 +72,21 @@ spec:
       volumes:
       - name: data-volume
         persistentVolumeClaim:
-          claimName: {{ .name }}-pvc
+          claimName: logger-{{ add $i 1 }}-pvc
       - name: app-storage
         emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .name }}
+  name: logger-{{ add $i 1 }}
 spec:
   type: NodePort
   ports:
   - port: 80
     targetPort: 5000
-    nodePort: {{ add 30010 .nodePort }}
+    nodePort: {{ add 30010 (add $i 1) }}
   selector:
     app: logger
-    instance: {{ .name }}
+    instance: logger-{{ add $i 1 }}
 {{- end }} 
