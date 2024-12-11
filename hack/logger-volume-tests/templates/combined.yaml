@@ -72,7 +72,7 @@ spec:
       volumes:
       - name: data-volume
         persistentVolumeClaim:
-          claimName: volume-test-pvc
+          claimName: {{ .name }}-pvc
       - name: app-storage
         emptyDir: {}
 ---

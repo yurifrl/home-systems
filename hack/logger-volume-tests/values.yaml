@@ -16,3 +16,5 @@ loggers:
     nodePort: 1
   - name: logger-2
     nodePort: 2
+  - name: logger-3
+    nodePort: 3
