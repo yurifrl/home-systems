@@ -3,9 +3,17 @@
     ./hardware-configuration.nix
     ./argo-setup.nix
     ./secret-loader.nix
-    ./longhorn.nix
+    # ./longhorn.nix
     ../../modules/kubernetes.nix
   ];
+
+  # Add RPI-specific packages
+  environment.systemPackages = with pkgs; [
+    htop
+    btop
+    k9s
+  ];
+
   networking = {
     nameservers = [
       "8.8.8.8"
@@ -44,15 +52,5 @@
 
   environment.variables = {
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-  };
-
-  # Prevent automatic mounting of USB drives
-  services.udisks2.enable = false;
-
-  # Longhorn storage
-  fileSystems."/storage" = {
-    device = "/dev/sda";
-    fsType = "ext4";
-    options = [ "defaults" ];
   };
 }

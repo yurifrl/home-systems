@@ -17,7 +17,7 @@ in
     raspberrypi-eeprom
     
     # System utilities
-    vim neovim curl htop btop jq 
+    vim neovim curl jq 
     inetutils git fish sysz argocd
     nixfmt-rfc-style parted
 
@@ -49,6 +49,7 @@ in
     extraUsers.nixos = {
       isNormalUser = true;
       group = "nixos";
+      initialPassword = "nixos";
       openssh.authorizedKeys.keys = [
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAvaTuBhwuQHdjIP1k9YQk9YMqmGiOate19iXe6T4IL/"
       ];
@@ -100,8 +101,12 @@ in
   programs.nix-ld.enable = true;
 
   # Base system configuration (rarely changed)
-  console.keyMap = "us";
-  time.timeZone = "America/Los_Angeles";
+  console = {
+    keyMap = "br-abnt2";
+    font = "ter-v32n";
+    packages = [ pkgs.terminus_font ];
+  };
+  time.timeZone = "America/Sao_Paulo";
   system.stateVersion = "24.05";
   environment.variables.EDITOR = "vim";
 }

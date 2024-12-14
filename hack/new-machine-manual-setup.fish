@@ -36,7 +36,7 @@ ssh root@$TARGET_IP "
 # =====================================
 # Step 4: Initial system configuration
 # =====================================
-echo -e "$YELLOW"Performing initial system configuration..."$NC"
+echo -e "$YELLOW"Performing initial system configuration this may take a while and it will look like it\'s frozen ..."$NC"
 ssh nixos@$TARGET_IP "
   # Add unstable channel
   sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable

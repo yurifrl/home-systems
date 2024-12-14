@@ -60,4 +60,14 @@
     environment.systemPackages = with pkgs; [
         nfs-utils
     ];
+
+    # Prevent automatic mounting of USB drives
+    # services.udisks2.enable = false; # not sure if this is a rook thing or longhorn thing
+
+    # Longhorn storage
+    fileSystems."/storage" = {
+        device = "/dev/sda";
+        fsType = "ext4";
+        options = [ "defaults" ];
+    };
 }
