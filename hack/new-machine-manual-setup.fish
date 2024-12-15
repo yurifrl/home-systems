@@ -9,81 +9,116 @@ set NC '\033[0m' # No Color
 # Target machine IP
 set TARGET_IP "192.168.68.100"
 
+function run_step
+    set -l step_name $argv[1]
+    set -l step_commands $argv[2]
+    
+    echo -e "$YELLOW$step_name"$NC"
+Commands to be executed:
+$GREEN"
+    echo $step_commands | tr ';' '\n' | sed 's/^[[:space:]]*//' | grep -v '^$'
+    echo -e "$NC
+Press ENTER to run, 's' to skip, or Ctrl+C to exit"
+    
+    read -l response
+    if test "$response" = "s"
+        echo -e "$YELLOW"Skipping..."$NC"
+        return
+    end
+    
+    eval $step_commands
+end
+
 echo -e "$GREEN"Starting new machine setup..."$NC"
 
 # =====================================
 # Step 1: Get private key from 1Password
 # =====================================
-echo -e "$YELLOW"Getting private key from 1Password..."$NC"
-op item get "GithubAutomation" --fields "private key" --reveal | tr -d '"' | awk '/BEGIN/,/END/' > /tmp/id_ed25519
-chmod 600 /tmp/id_ed25519
+set step1_commands "
+    op item get 'GithubAutomation' --fields 'private key' --reveal | tr -d '\"' | awk '/BEGIN/,/END/' > /tmp/id_ed25519;
+    chmod 600 /tmp/id_ed25519;
+"
+run_step "Getting private key from 1Password..." $step1_commands
 
 # =====================================
 # Step 2: Copy keys to machine
 # =====================================
-echo -e "$YELLOW"Copying SSH keys to machine..."$NC"
-ssh root@$TARGET_IP "
-    mkdir -p /home/nixos/.ssh
-    chown -R nixos:users /home/nixos/.ssh
-    chmod 700 /home/nixos/.ssh
+set step2_commands "
+    ssh root@$TARGET_IP \"
+        mkdir -p /home/nixos/.ssh;
+        chown -R nixos:users /home/nixos/.ssh;
+        chmod 700 /home/nixos/.ssh;
+    \";
+    scp -O /tmp/id_ed25519 root@$TARGET_IP:/home/nixos/.ssh/id_ed25519;
+    ssh root@$TARGET_IP \"
+        chmod 600 /home/nixos/.ssh/id_ed25519;
+        chown nixos:users /home/nixos/.ssh/id_ed25519;
+    \";
 "
-scp -O /tmp/id_ed25519 root@$TARGET_IP:/home/nixos/.ssh/id_ed25519
-ssh root@$TARGET_IP "
-    chmod 600 /home/nixos/.ssh/id_ed25519
-    chown nixos:users /home/nixos/.ssh/id_ed25519
+run_step "Copying SSH keys to machine..." $step2_commands
+
+# =====================================
+# Step 3: Update nix channels
+# =====================================
+set step3_commands "
+    ssh nixos@$TARGET_IP \"
+        sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable && sudo nix-channel --update;
+    \";
 "
+run_step "Updating nix channels..." $step3_commands
 
 # =====================================
-# Step 4: Initial system configuration
+# Step 4: Clone repository
 # =====================================
-echo -e "$YELLOW"Performing initial system configuration this may take a while and it will look like it\'s frozen ..."$NC"
-ssh nixos@$TARGET_IP "
-  # Add unstable channel
-  sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable
-  sudo nix-channel --update
-
-  # Clone repository
-  cd /home/nixos
-  git clone git@github.com:yurifrl/home-systems.git
-  cd home-systems/nixos
+set step4_commands "
+    ssh nixos@$TARGET_IP \"
+        cd /home/nixos;
+        git clone git@github.com:yurifrl/home-systems.git;
+        cd home-systems/nixos;
+    \";
+    scp ~/.gitconfig root@$TARGET_IP:/home/nixos/.gitconfig
 "
+run_step "Cloning repository..." $step4_commands
 
 # =====================================
-# Step 3: Copy secrets to machine
+# Step 5: Copy secrets to machine
 # =====================================
-echo -e "$YELLOW"Copying secrets to machine..."$NC"
-ssh root@$TARGET_IP "
-    mkdir -p /data
-    chown nixos:users /data
+set step5_commands "
+    ssh root@$TARGET_IP \"
+        mkdir -p /data;
+        chown nixos:users /data;
+    \";
+    scp hack/secrets.sh root@$TARGET_IP:/data/secrets.sh;
+    ssh root@$TARGET_IP \"
+        chmod 644 /data/secrets.sh;
+        chown nixos:users /data/secrets.sh;
+    \";
 "
-scp hack/secrets.sh root@$TARGET_IP:/data/secrets.sh
-ssh root@$TARGET_IP "
-    chmod 644 /data/secrets.sh
-    chown nixos:users /data/secrets.sh
+run_step "Copying secrets to machine..." $step5_commands
+
+# =====================================
+# Step 6: Set up Kubernetes configuration
+# =====================================
+set step6_commands "
+    mkdir -p ~/.kube;
+    scp root@$TARGET_IP:/etc/rancher/k3s/k3s.yaml ~/.kube/k3s.yaml;
+    sudo chmod 644 ~/.kube/k3s.yaml;
+    sed -i \"s|server: https://0.0.0.0:6443|server: https://$TARGET_IP:6443|\" ~/.kube/k3s.yaml;
+    set -x KUBECONFIG ~/.kube/k3s.yaml;
 "
+run_step "Setting up Kubernetes configuration..." $step6_commands
 
 # =====================================
-# Step 5: Set up Kubernetes configuration
+# Step 7: Wait for node to be ready
 # =====================================
-echo -e "$YELLOW"Setting up Kubernetes configuration..."$NC"
-mkdir -p ~/.kube
-scp root@$TARGET_IP:/etc/rancher/k3s/k3s.yaml ~/.kube/k3s.yaml
-sudo chmod 644 ~/.kube/k3s.yaml
-# Replace default server IP with actual IP
-sed -i "s|server: https://0.0.0.0:6443|server: https://$TARGET_IP:6443|" ~/.kube/k3s.yaml
-set -x KUBECONFIG ~/.kube/k3s.yaml
+set step7_commands "kubectl wait --for=condition=ready node nixos-1 --timeout=300s;"
+run_step "Waiting for Kubernetes node to be ready..." $step7_commands
 
 # =====================================
-# Step 6: Wait for node to be ready
+# Step 8: Verify setup
 # =====================================
-echo -e "$YELLOW"Waiting for Kubernetes node to be ready..."$NC"
-kubectl wait --for=condition=ready node nixos-1 --timeout=300s
-
-# =====================================
-# Step 7: Verify setup
-# =====================================
-echo -e "$YELLOW"Verifying setup..."$NC"
-kubectl get nodes
+set step8_commands "kubectl get nodes;"
+run_step "Verifying setup..." $step8_commands
 
 # Final message
 echo -e "$GREEN"Setup complete! Your new machine is ready."$NC"

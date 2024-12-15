@@ -109,4 +109,19 @@ in
   time.timeZone = "America/Sao_Paulo";
   system.stateVersion = "24.05";
   environment.variables.EDITOR = "vim";
+
+  programs.git = {
+    enable = true;
+    config = {
+      alias = {
+        a = "add";
+        c = "commit -m";
+        s = "!git status";
+        ck = "checkout";
+        wip = "!git add . && git commit -m 'wip :zap:' && git push";
+        "undo-last-commit" = "reset HEAD~";
+        l = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --";
+      };
+    };
+  };
 }
