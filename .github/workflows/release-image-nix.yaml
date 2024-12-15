@@ -1,6 +1,7 @@
 name: Release Image Nix
 
 on:
+  push:
   workflow_dispatch:
 
 jobs:
@@ -18,7 +19,9 @@ jobs:
 
       - name: Build packages
         run: |
-          nix build ./nixos#packages.aarch64-linux.default .#packages.x86_64-linux.default --impure
+          ls -la
+          pwd
+          nix build .#packages.aarch64-linux.default .#packages.x86_64-linux.default --impure
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
