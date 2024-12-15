@@ -1,4 +1,4 @@
-name: Build Nix Images
+name: Release Image Nix
 
 on:
   workflow_dispatch:
