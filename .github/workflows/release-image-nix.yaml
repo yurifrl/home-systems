@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        platform: [linux/aarch64, linux/amd64, linux/arm64, linux/arm]
+        platform: [linux/aarch64]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -22,8 +22,6 @@ jobs:
 
       - name: Build packages
         run: |
-          ls -la
-          pwd
           nix build ./nixos#images.rpi --impure
 
       - name: Upload artifacts
