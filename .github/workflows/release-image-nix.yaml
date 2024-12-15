@@ -18,7 +18,7 @@ jobs:
 
       - name: Build packages
         run: |
-          nix build .#packages.aarch64-linux.default ./nixos#packages.x86_64-linux.default --impure
+          nix build ./nixos#packages.aarch64-linux.default .#packages.x86_64-linux.default --impure
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
