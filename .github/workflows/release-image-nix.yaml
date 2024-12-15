@@ -21,7 +21,7 @@ jobs:
         run: |
           ls -la
           pwd
-          nix build .#packages.aarch64-linux.default .#packages.x86_64-linux.default --impure
+          nix build ./nixos#images.rpi --impure
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
