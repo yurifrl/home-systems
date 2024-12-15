@@ -1,7 +1,10 @@
 name: Release Docker
 
-on:
-  workflow_dispatch:
+on: [push]
+
+permissions:
+  packages: write
+  contents: read
 
 jobs:
   build-and-push:
@@ -16,7 +19,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHA_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
