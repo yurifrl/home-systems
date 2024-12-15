@@ -21,7 +21,7 @@ jobs:
           nix build .#packages.aarch64-linux.default ./nixos#packages.x86_64-linux.default --impure
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: nix-packages
           path: result*
