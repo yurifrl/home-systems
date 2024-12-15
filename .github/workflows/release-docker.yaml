@@ -3,6 +3,10 @@ name: Release Docker
 on:
   push:
 
+permissions:
+  packages: write
+  contents: read
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -16,7 +20,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHA_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
