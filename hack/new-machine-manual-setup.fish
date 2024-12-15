@@ -145,7 +145,5 @@ sudo systemctl restart secret-loader & sudo journalctl -u secret-loader -f
 sudo systemctl restart tailscale-autoconnect & sudo journalctl -u tailscale-autoconnect -f
 
 # System configuration
-sudo nixos-rebuild switch --flake .#rpi --impure --show-trace
-
-# End
+sudo nixos-rebuild switch --flake /home/nixos/home-systems/nixos#rpi --impure --show-trace
 "
