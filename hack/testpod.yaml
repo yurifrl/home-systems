@@ -3,6 +3,8 @@ kind: Pod
 metadata:
   name: testpod
 spec:
+  nodeSelector:
+    kubernetes.io/hostname: tp1
   containers:
   - name: nginx
     image: nginx:latest

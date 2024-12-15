@@ -1,14 +1,14 @@
 x-base-service: &base_service
   build:
     context: .
-    dockerfile: ./Dockerfile.arm
+    dockerfile: ./Dockerfile
   image: ghcr.io/yurifrl/home-systems
-  working_dir: /src/nixos
   network_mode: host
   environment:
     SSH_AUTH_SOCK: /ssh-agent
     NIXPKGS_ALLOW_BROKEN: 1
     NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM: 1
+    K3S_TOKEN: $K3S_TOKEN
   volumes:
     - .:/src
     - gomod-cache:/go/pkg/mod
@@ -19,6 +19,10 @@ services:
   sh:
     <<: *base_service
     entrypoint: fish
+  nx:
+    <<: *base_service
+    entrypoint: fish
+    working_dir: /src/nixos
   hs:
     <<: *base_service
     entrypoint: go run main.go

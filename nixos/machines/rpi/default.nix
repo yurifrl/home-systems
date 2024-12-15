@@ -4,7 +4,7 @@
     ./hardware-configuration.nix
     ./argo-setup.nix
     ./secret-loader.nix
-    # ./longhorn.nix
+    ./longhorn.nix
     ../../modules/kubernetes.nix
   ];
 
@@ -41,9 +41,12 @@
   services.k3s = {
     enable = true;
     role = "server";
-    # tokenFile = "/data/k3s-token";
+    tokenFile = "/data/k3s-token";
     extraFlags = [
       "--disable=traefik"
+      "--disable=servicelb"
+      "--disable=local-storage"
+      "--disable-cloud-controller"
       "--flannel-backend=host-gw"
       # Static IP address for the k3s server node
       # Using 192.168.68.100 as a reserved static IP in the local network

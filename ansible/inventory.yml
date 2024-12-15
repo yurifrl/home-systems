@@ -1,0 +1,10 @@
+all:
+  children:
+    workers:
+      hosts:
+        tp1:
+          ansible_host: 192.168.68.111
+          ansible_user: ubuntu
+        tp2:
+          ansible_host: 192.168.68.112
+          ansible_user: ubuntu

@@ -45,6 +45,7 @@ spec:
           serviceMonitor:
             enabled: true
           defaultSettings:
+            defaultDataPath: /storage
             backupTarget: s3://syscd@southamerica-east1/
             backupTargetCredentialSecret: longhorn-gcp-backups
             replicaZoneSoftAntiAffinity: true

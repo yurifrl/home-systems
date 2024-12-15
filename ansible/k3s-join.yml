@@ -1,0 +1,23 @@
+---
+- name: Join K3s Worker Nodes
+  hosts: workers
+  become: true
+  vars:
+    master_ip: "192.168.68.100"
+  
+  tasks:
+    - name: Uninstall K3s agent if exists
+      ansible.builtin.command: /usr/local/bin/k3s-agent-uninstall.sh
+      ignore_errors: true
+      tags: 
+        - never
+        - uninstall
+
+    - name: Join node to K3s cluster
+      ansible.builtin.shell: |
+        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.30.3+k3s1" K3S_TOKEN="{{ lookup('env', 'K3S_TOKEN') }}" K3S_URL="https://{{ master_ip }}:6443" K3S_NODE_NAME="{{ inventory_hostname }}" sh -s - --debug
+      register: install_output
+
+    - name: Display installation output
+      ansible.builtin.debug:
+        var: install_output.stdout_lines
