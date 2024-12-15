@@ -1,0 +1,29 @@
+name: Build Nix Images
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Build packages
+        run: |
+          nix build .#packages.aarch64-linux.default ./nixos#packages.x86_64-linux.default --impure
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: nix-packages
+          path: result*
+          retention-days: 7
