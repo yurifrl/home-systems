@@ -6,7 +6,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest-arm64
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [linux/arm]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
