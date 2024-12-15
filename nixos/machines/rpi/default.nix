@@ -15,6 +15,11 @@
     k9s
   ];
 
+  # Add RPI-specific shell aliases
+  programs.fish.shellAliases = {
+    xablaunixos = "cd /home/nixos/home-systems/nixos && git pull origin main && sudo nixos-rebuild switch --flake .#rpi --impure --show-trace";
+  };
+
   networking = {
     nameservers = [
       "8.8.8.8"
