@@ -1,7 +1,10 @@
 name: Release Docker
 
 on:
+  workflow_dispatch:
   push:
+    paths:
+      - Dockerfile
 
 permissions:
   packages: write
