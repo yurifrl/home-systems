@@ -17,6 +17,9 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHA_PAT }}
+      - name: Docker pull
+        run: |
+          docker pull ghcr.io/yurifrl/home-systems
       - name: Build NixOS SD Image
         uses: addnab/docker-run-action@v3
         with:
