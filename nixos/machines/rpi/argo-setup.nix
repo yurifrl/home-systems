@@ -111,9 +111,8 @@ in
       if [ "$failure_count" -eq 3 ]; then
         echo "All critical steps failed:"
         echo -e "$failed_steps"
-        # echo "Deleting namespace and restarting service..."
-        # kubectl delete namespace argocd
-        # systemctl restart argo-setup
+        echo "Deleting helm release configmap and restarting service..."
+        kubectl -n argocd delete secrets sh.helm.release.v1.argocd.v1
         exit 1
       elif [ "$failure_count" -gt 0 ]; then
         echo "Some steps failed ($failure_count failures):"

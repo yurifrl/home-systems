@@ -103,7 +103,7 @@ set step6_commands "
     mkdir -p ~/.kube;
     scp root@$TARGET_IP:/etc/rancher/k3s/k3s.yaml ~/.kube/k3s.yaml;
     sudo chmod 644 ~/.kube/k3s.yaml;
-    sed -i \"s|server: https://0.0.0.0:6443|server: https://$TARGET_IP:6443|\" ~/.kube/k3s.yaml;
+    sed -i '' \"s|server: https://0.0.0.0:6443|server: https://$TARGET_IP:6443|\" ~/.kube/k3s.yaml;
     set -x KUBECONFIG ~/.kube/k3s.yaml;
 "
 run_step "Setting up Kubernetes configuration..." $step6_commands
