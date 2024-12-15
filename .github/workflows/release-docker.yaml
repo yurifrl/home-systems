@@ -26,4 +26,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/yurifrl/home-systems
+          tags: ghcr.io/yurifrl/home-systems:latest
