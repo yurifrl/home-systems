@@ -36,6 +36,7 @@
   services.k3s = {
     enable = true;
     role = "server";
+    tokenFile = "/data/k3s-token";
     extraFlags = [
       "--disable=traefik"
       "--flannel-backend=host-gw"

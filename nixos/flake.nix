@@ -68,22 +68,13 @@
           }).config.system.build.sdImage;
       };
 
-      packages.x86_64-linux.pi-image = images.rpi;
-      packages.aarch64-linux.pi-image = images.rpi;
-
-      deploy = {
-        nodes = {
-          rpi = {
-            name = "rpi";
-            hostname = "192.168.68.100";
-            profiles = {
-              system = {
-                sshUser = "root";
-                remoteBuild = true;
-                # remoteBuild = false;
-                path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations.rpi;
-              };
-            };
+      deploy.nodes = {
+        rpi = {
+          hostname = "192.168.68.100";
+          profiles.system = {
+            sshUser = "root";
+            path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations.rpi;
+            remoteBuild = true;
           };
         };
       };
