@@ -29,11 +29,11 @@ nix build .#images.rpi --impure
 # Copy the built image
 cp ./result/sd-image/*.img* .
 
-# Unmount the SD card device before writing
-sudo diskutil unmountDisk /dev/disk4
-
 # List available disks to identify the correct device
 sudo diskutil list
+
+# Unmount the SD card device before writing
+sudo diskutil unmountDisk /dev/disk4
 
 # Write the image to the SD card (replace diskX with your device, e.g., disk4)
 sudo dd bs=4M status=progress conv=fsync of=/dev/diskX if=image.img
@@ -64,10 +64,13 @@ scp hack/secrets.sh root@nixos-1:/data/secrets.sh
 ### Service Management
 ```bash
 # ArgoCD setup
-sudo systemctl restart argo-setup & sudo journalctl -u argo-setup.service -f
+sudo systemctl restart argo-setup & sudo journalctl -u argo-setup -f
 
 # Secret loader
-sudo systemctl restart secret-loader & sudo journalctl -u secret-loader.service -f
+sudo systemctl restart secret-loader & sudo journalctl -u secret-loader -f
+
+# Tailscale
+sudo systemctl restart tailscale-autoconnect & sudo journalctl -u tailscale-autoconnect -f
 
 # Kill node if needed
 kill-node.sh

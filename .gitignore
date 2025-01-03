@@ -13,3 +13,4 @@ hack/longhorn/
 uptime-bot/secrets
 id_ed25519
 hack/longhorn
+*.env
