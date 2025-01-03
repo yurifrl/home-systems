@@ -1,5 +1,4 @@
 # Default values for logger-volume-tests
-storageClassName: longhorn
 storageSize: 1Gi
 image: python:3.9-slim
 nodePort: 30080
@@ -11,4 +10,11 @@ resources:
     cpu: "200m"
     memory: "128Mi" 
 # Number of loggers to create
-loggers: 3
+loggers:
+  - number: 1
+    nodeName: tp1
+    claimName: logger-1-pvc
+  
+pvcs:
+  - number: 1
+    storageClassName: longhorn

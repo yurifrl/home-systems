@@ -1,33 +1,23 @@
-{{- range $i := until (int .Values.loggers) }}
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: logger-{{ add $i 1 }}-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: {{ $.Values.storageClassName }}
-  resources:
-    requests:
-      storage: {{ $.Values.storageSize }}
+{{- range $logger := .Values.loggers }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: logger-{{ add $i 1 }}
+  name: logger-{{ $logger.number }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: logger
-      instance: logger-{{ add $i 1 }}
+      instance: logger-{{ $logger.number }}
   template:
     metadata:
       labels:
         app: logger
-        instance: logger-{{ add $i 1 }}
+        instance: logger-{{ $logger.number }}
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: {{ $logger.nodeName }}
       initContainers:
       - name: init-dirs
         image: busybox
@@ -72,21 +62,24 @@ spec:
       volumes:
       - name: data-volume
         persistentVolumeClaim:
-          claimName: logger-{{ add $i 1 }}-pvc
+          claimName: {{ $logger.claimName }}
       - name: app-storage
         emptyDir: {}
+{{- end }}
+
+{{- range $logger := .Values.loggers }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: logger-{{ add $i 1 }}
+  name: logger-{{ $logger.number }}
 spec:
   type: NodePort
   ports:
   - port: 80
     targetPort: 5000
-    nodePort: {{ add 30010 (add $i 1) }}
+    nodePort: {{ add 30010 $logger.number }}
   selector:
     app: logger
-    instance: logger-{{ add $i 1 }}
+    instance: logger-{{ $logger.number }}
 {{- end }} 

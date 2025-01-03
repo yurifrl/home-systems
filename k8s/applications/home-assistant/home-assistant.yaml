@@ -22,7 +22,7 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: home-assistant
+            - name: ha
               service:
                 name: home-assistant
                 namespace: home-assistant

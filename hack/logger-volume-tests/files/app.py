@@ -101,13 +101,6 @@ HTML_TEMPLATE = """
         <div class="log-entry">{{ entry }}</div>
         {% endfor %}
     </div>
-    
-    <div class="status-box">
-        <h2>Volume History</h2>
-        {% for entry in volume_history %}
-        <div class="log-entry">{{ entry }}</div>
-        {% endfor %}
-    </div>
 </body>
 </html>
 """
@@ -206,7 +199,6 @@ def home():
         write_count=count,
         current_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         recent_events=recent_events[:10],
-        volume_history=recent_events[10:30],
         unique_pods=unique_pods
     )
 
