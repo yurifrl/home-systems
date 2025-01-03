@@ -32,8 +32,6 @@ spec:
                 name: home-assistant
                 namespace: home-assistant
                 port: 8080
-
-
     - repoURL: http://pajikos.github.io/home-assistant-helm-chart/
       chart: home-assistant
       targetRevision: "*"
@@ -42,11 +40,11 @@ spec:
           addons:
             codeserver:
               enabled: true
-          # persistence:
-          #   enabled: true
-          #   accessMode: ReadWriteOnce
-          #   size: 1Gi
-          #   storageClass: local-storage
+          persistence:
+            enabled: true
+            accessMode: ReadWriteOnce
+            size: 10Gi
+            storageClass: longhorn
           configuration:
             enabled: true
             forceInit: true
