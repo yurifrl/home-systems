@@ -40,4 +40,4 @@ global: {}
 
 # SLO settings
 slos:
-  enabled: false
+  enabled: true
