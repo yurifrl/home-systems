@@ -40,11 +40,11 @@ spec:
           addons:
             codeserver:
               enabled: true
-          persistence:
-            enabled: true
-            accessMode: ReadWriteOnce
-            size: 10Gi
-            storageClass: longhorn
+          # persistence:
+          #   enabled: true
+          #   accessMode: ReadWriteOnce
+          #   size: 10Gi
+          #   storageClass: longhorn
           configuration:
             enabled: true
             forceInit: true
