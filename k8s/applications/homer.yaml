@@ -87,7 +87,7 @@ spec:
                         - name: "VS Code Server"
                           icon: "fas fa-code"
                           tag: "development"
-                          url: "https://ha-vscode.syscd.live"
+                          url: "https://ha-codeserver.syscd.live"
                           target: "_blank"
 
                     - name: "Monitoring"

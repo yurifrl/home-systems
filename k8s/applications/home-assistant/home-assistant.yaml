@@ -22,7 +22,7 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: vscode
+            - name: ha-codeserver
               service:
                 name: home-assistant-codeserver
                 namespace: home-assistant
