@@ -22,16 +22,17 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: ha
-              service:
-                name: home-assistant
-                namespace: home-assistant
-                port: 8080
             - name: vscode
               service:
                 name: home-assistant-codeserver
                 namespace: home-assistant
                 port: 12321
+            - name: ha
+              service:
+                name: home-assistant
+                namespace: home-assistant
+                port: 8080
+
 
     - repoURL: http://pajikos.github.io/home-assistant-helm-chart/
       chart: home-assistant
