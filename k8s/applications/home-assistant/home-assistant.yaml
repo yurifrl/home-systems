@@ -45,9 +45,9 @@ spec:
           persistence:
             enabled: true
             existingVolume: home-assistant-data
-            storageClass: local-path
-            accessMode: ReadWriteOnce
-            size: 10Gi
+            # storageClass: local-path
+            # accessMode: ReadWriteOnce
+            # size: 10Gi
           configuration:
             enabled: true
             forceInit: true
