@@ -29,3 +29,12 @@ spec:
         valuesObject:
           service:
             externalTrafficPolicy: Local
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: kubernetes.io/hostname
+                        operator: In
+                        values:
+                          - nixos-1
