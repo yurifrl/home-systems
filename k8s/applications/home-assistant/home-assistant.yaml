@@ -43,6 +43,8 @@ spec:
           persistence:
             enabled: true
             existingVolume: home-assistant-data
+          nodeSelector:
+            kubernetes.io/hostname: tp1
           configuration:
             enabled: true
             forceInit: true
