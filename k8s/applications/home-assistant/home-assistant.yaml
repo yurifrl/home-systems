@@ -37,14 +37,14 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
+          nodeSelector:
+            kubernetes.io/hostname: tp1
           addons:
             codeserver:
               enabled: true
           persistence:
             enabled: true
             existingVolume: home-assistant-data
-          nodeSelector:
-            kubernetes.io/hostname: tp1
           configuration:
             enabled: true
             forceInit: true
