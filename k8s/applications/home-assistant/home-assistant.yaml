@@ -43,7 +43,7 @@ spec:
             codeserver:
               enabled: true
           persistence:
-            enabled: true
+            # enabled: true
             existingVolume: home-assistant-data
           configuration:
             enabled: true
