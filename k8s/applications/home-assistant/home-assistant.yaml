@@ -44,7 +44,7 @@ spec:
               enabled: true
           persistence:
             enabled: true
-            existingVolume: home-assistant-data
+            existingVolume: home-assistant-data-claim
           configuration:
             enabled: true
             forceInit: true
