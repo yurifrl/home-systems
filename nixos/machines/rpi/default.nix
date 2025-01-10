@@ -13,6 +13,9 @@
     htop
     btop
     k9s
+
+    #
+    velero
   ];
 
   # Add RPI-specific shell aliases
