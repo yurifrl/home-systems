@@ -17,6 +17,9 @@ loggers:
   - number: 2
     nodeName: tp1
     claimName: logger-2-pvc
+  - number: 2
+    nodeName: tp1
+    claimName: logger-2-pvc
   
 pvcs:
   - number: 1

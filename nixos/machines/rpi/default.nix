@@ -48,7 +48,7 @@
     extraFlags = [
       "--disable=traefik"
       "--disable=servicelb"
-      "--disable=local-storage"
+      # "--disable=local-storage"
       "--disable-cloud-controller"
       "--flannel-backend=host-gw"
       # Static IP address for the k3s server node
