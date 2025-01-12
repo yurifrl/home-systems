@@ -4,7 +4,7 @@
   fetchFromGitHub,
   makeWrapper,
   vcgencmd,
-  metricsDir ? "/var/lib/raspberrypi-exporter",
+  metricsDir ? "/tmp/raspberrypi-exporter",
 }:
 
 stdenv.mkDerivation rec {
