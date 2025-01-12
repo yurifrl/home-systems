@@ -13,6 +13,11 @@ spec:
       values: |
         tolerations:
           - operator: Exists
+        service:
+          port: 9101
+          targetPort: 9101
+        containerPort: 9101
+        hostPort: 9101
         serviceMonitor:
           enabled: true
           namespace: monitoring
@@ -21,6 +26,8 @@ spec:
             enabled: true
             additionalLabels:
               release: kube-prometheus-stack
+        extraArgs:
+          - --web.listen-address=:9101
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
