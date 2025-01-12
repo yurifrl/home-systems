@@ -4,6 +4,7 @@
   fetchFromGitHub,
   makeWrapper,
   vcgencmd,
+  metricsDir ? "/var/lib/raspberrypi-exporter",
 }:
 
 stdenv.mkDerivation rec {
@@ -21,6 +22,9 @@ stdenv.mkDerivation rec {
 
   installPhase = ''
     install -Dm755 raspberrypi_exporter $out/bin/raspberrypi_exporter
+    mkdir -p ${metricsDir}
+    substituteInPlace $out/bin/raspberrypi_exporter \
+      --replace '/var/lib/node_exporter/textfile_collector' '${metricsDir}'
     wrapProgram $out/bin/raspberrypi_exporter \
       --prefix PATH : ${lib.makeBinPath [ vcgencmd ]}
   '';
