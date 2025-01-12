@@ -21,8 +21,9 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [ makeWrapper ];
 
   installPhase = ''
-    install -Dm755 raspberrypi_exporter $out/bin/raspberrypi_exporter
     mkdir -p ${metricsDir}
+
+    install -Dm755 raspberrypi_exporter $out/bin/raspberrypi_exporter
     substituteInPlace $out/bin/raspberrypi_exporter \
       --replace '/var/lib/node_exporter/textfile_collector' '${metricsDir}'
     wrapProgram $out/bin/raspberrypi_exporter \
