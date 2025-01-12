@@ -2,7 +2,7 @@
 let
   cowsayVersion = pkgs.callPackage ./packages/cowsay-version.nix { };
   diskTemplate = pkgs.callPackage ./packages/disk-template.nix { };
-  hs = pkgs.callPackage ./packages/hs.nix { };
+  sbcExporter = pkgs.callPackage ./packages/sbc-exporter.nix { };
 in
 {
   # Module imports (always first)
@@ -27,7 +27,7 @@ in
     # Custom packages
     cowsayVersion 
     diskTemplate
-    hs
+    sbcExporter
   ] ++ (with pkgs-unstable; [
     # Kubernetes tools
     kubectl kubernetes-helm cloudflared
