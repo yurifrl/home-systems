@@ -1,51 +1,27 @@
-{ lib
-, stdenv
-, fetchFromGitHub
-, curl
-, unzip
-, makeWrapper
+{
+  lib,
+  buildGoModule,
+  fetchFromGitHub,
 }:
 
-stdenv.mkDerivation rec {
+buildGoModule rec {
   pname = "raspberrypi-exporter";
-  version = "master";  # Repository doesn't use version tags
+  version = "master"; # Using master as there are no releases
 
   src = fetchFromGitHub {
     owner = "fahlke";
     repo = "raspberrypi_exporter";
-    rev = "master";
-    sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # Will need to be updated
+    rev = "3417493c1f85c8470f2c85b4c9acb31ef473f0f4"; # Latest commit from master
+    sha256 = "sha256-anb1h+nNtzitJsll5/8vJIYK6XRQk9LD6G/n/GkaDDM="; # Will need to be updated with correct hash
   };
 
-  nativeBuildInputs = [ makeWrapper ];
-  buildInputs = [ curl unzip ];
-
-  installPhase = ''
-    runHook preInstall
-
-    # Create necessary directories
-    mkdir -p $out/bin
-    mkdir -p $out/lib/systemd/system
-
-    # Install the main script
-    install -Dm755 raspberrypi_exporter $out/bin/raspberrypi_exporter
-
-    # Install systemd units
-    install -Dm644 raspberrypi_exporter.service $out/lib/systemd/system/raspberrypi_exporter.service
-    install -Dm644 raspberrypi_exporter.timer $out/lib/systemd/system/raspberrypi_exporter.timer
-
-    # Wrap the script with required runtime dependencies
-    wrapProgram $out/bin/raspberrypi_exporter \
-      --prefix PATH : ${lib.makeBinPath [ curl ]}
-
-    runHook postInstall
-  '';
+  vendorHash = null; # Let Nix compute the vendor hash
 
   meta = with lib; {
     description = "Prometheus exporter for Raspberry Pi metrics";
     homepage = "https://github.com/fahlke/raspberrypi_exporter";
     license = licenses.mit;
-    platforms = platforms.linux;
     maintainers = [];
+    platforms = platforms.linux;
   };
-} 
+}
