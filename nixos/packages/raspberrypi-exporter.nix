@@ -3,7 +3,7 @@
   stdenv,
   fetchFromGitHub,
   makeWrapper,
-  pkgsCross,
+  vcgencmd,
 }:
 
 stdenv.mkDerivation rec {
@@ -22,7 +22,7 @@ stdenv.mkDerivation rec {
   installPhase = ''
     install -Dm755 raspberrypi_exporter $out/bin/raspberrypi_exporter
     wrapProgram $out/bin/raspberrypi_exporter \
-      --prefix PATH : ${lib.makeBinPath [ pkgsCross.aarch64-multiplatform.raspberrypi-tools ]}
+      --prefix PATH : ${lib.makeBinPath [ vcgencmd ]}
   '';
 
   meta = with lib; {
