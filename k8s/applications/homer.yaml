@@ -123,6 +123,12 @@ spec:
                           url: "https://pyrra.syscd.live"
                           target: "_blank"
 
+                        - name: "PromLens"
+                          icon: "fas fa-search"
+                          tag: "monitoring"
+                          url: "https://promlens.syscd.live"
+                          target: "_blank"
+
                     - name: "Infrastructure"
                       icon: "fas fa-server"
                       items:

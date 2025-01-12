@@ -3,6 +3,6 @@ server: "https://{{ master_ip }}:6443"
 token: "{{ lookup('env', 'K3S_TOKEN') }}"
 node-name: "{{ inventory_hostname }}"
 node-label:
-  - "local.volume.path=/storage"
+  - "local.volume.path=storage"
 kubelet-arg:
   - "root-dir=/var/lib/rancher/k3s/agent/kubelet" 
