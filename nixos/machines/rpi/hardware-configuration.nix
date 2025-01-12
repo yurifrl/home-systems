@@ -5,9 +5,6 @@
   ...
 }:
 {
-  # This causes an overlay which causes a lot of rebuilding
-  environment.noXlibs = lib.mkForce false;
-
   fileSystems."/" = {
     device = "/dev/disk/by-label/NIXOS_SD";
     fsType = "ext4";

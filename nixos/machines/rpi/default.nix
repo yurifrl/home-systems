@@ -17,7 +17,11 @@
   ];
 
   # Use unstable k3s
+  # Previous   -- v1.30.3+k3s1
+  # Shoulbe    -- 1.31.4+k3s1
+  # Actual     -- 1.31.1+k3s1
   services.k3s.package = pkgs-unstable.k3s;
+  
 
   # Configure storage directory for k3s
   systemd.tmpfiles.rules = [
