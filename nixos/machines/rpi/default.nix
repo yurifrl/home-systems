@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, pkgs-unstable, ... }:
 {
   imports = [
     ./hardware-configuration.nix
@@ -13,10 +13,26 @@
     htop
     btop
     k9s
-
-    #
     velero
   ];
+
+  # Use unstable k3s
+  services.k3s.package = pkgs-unstable.k3s;
+
+  # Configure storage directory for k3s
+  systemd.tmpfiles.rules = [
+    "d /storage 0755 k3s k3s -"
+    "d /storage/test-volume 0755 k3s k3s -"
+  ];
+
+  # Ensure k3s user and group exist
+  users.users.k3s = {
+    isSystemUser = true;
+    group = "k3s";
+    uid = 1000;  # Make sure this matches with your k3s setup
+  };
+
+  users.groups.k3s = {};
 
   # Add RPI-specific shell aliases
   programs.fish.shellAliases = {

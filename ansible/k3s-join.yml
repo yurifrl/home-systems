@@ -3,21 +3,75 @@
   hosts: workers
   become: true
   vars:
-    master_ip: "192.168.68.100"
+    master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] }}"
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+    k3s_arch: "arm64"
+    k3s_version: "v1.30.3+k3s1"
   
   tasks:
-    - name: Uninstall K3s agent if exists
-      ansible.builtin.command: /usr/local/bin/k3s-agent-uninstall.sh
-      ignore_errors: true
-      tags: 
-        - never
-        - uninstall
+    - name: Install required packages
+      ansible.builtin.package:
+        name: 
+          - curl
+          - tar
+        state: present
 
-    - name: Join node to K3s cluster
-      ansible.builtin.shell: |
-        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.30.3+k3s1" K3S_TOKEN="{{ lookup('env', 'K3S_TOKEN') }}" K3S_URL="https://{{ master_ip }}:6443" K3S_NODE_NAME="{{ inventory_hostname }}" sh -s - --debug
-      register: install_output
+    - name: Download K3s binary
+      ansible.builtin.get_url:
+        url: "https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-{{ k3s_arch }}"
+        dest: /usr/local/bin/k3s.new
+        mode: '0755'
+        force: yes
 
-    - name: Display installation output
-      ansible.builtin.debug:
-        var: install_output.stdout_lines
+    - name: Create K3s service directory
+      ansible.builtin.file:
+        path: /etc/rancher/k3s
+        state: directory
+        mode: '0755'
+
+    - name: Configure K3s agent
+      ansible.builtin.template:
+        src: k3s-agent.service.j2
+        dest: /etc/systemd/system/k3s-agent.service
+        mode: '0644'
+      notify: Restart K3s agent
+
+    - name: Create K3s config
+      ansible.builtin.template:
+        src: config.yaml.j2
+        dest: /etc/rancher/k3s/config.yaml
+        mode: '0644'
+      notify: Restart K3s agent
+
+    - name: Enable K3s agent service
+      ansible.builtin.systemd:
+        name: k3s-agent
+        enabled: true
+        daemon_reload: true
+
+    - name: Check if K3s is running
+      ansible.builtin.systemd:
+        name: k3s-agent
+        state: started
+
+    - name: Replace K3s binary if service is running
+      ansible.builtin.command: mv /usr/local/bin/k3s.new /usr/local/bin/k3s
+      notify: Restart K3s agent
+      when: ansible_facts.services['k3s-agent.service'] is defined and ansible_facts.services['k3s-agent.service'].state == 'running'
+
+    - name: Install K3s binary if service is not running
+      ansible.builtin.command: mv /usr/local/bin/k3s.new /usr/local/bin/k3s
+      when: ansible_facts.services['k3s-agent.service'] is not defined or ansible_facts.services['k3s-agent.service'].state != 'running'
+
+    - name: Start K3s agent service if not running
+      ansible.builtin.systemd:
+        name: k3s-agent
+        state: started
+      when: ansible_facts.services['k3s-agent.service'] is not defined or ansible_facts.services['k3s-agent.service'].state != 'running'
+
+  handlers:
+    - name: Restart K3s agent
+      ansible.builtin.systemd:
+        name: k3s-agent
+        state: restarted
+        daemon_reload: true
