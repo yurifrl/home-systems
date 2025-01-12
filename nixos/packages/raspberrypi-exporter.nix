@@ -3,7 +3,7 @@
   stdenv,
   fetchFromGitHub,
   makeWrapper,
-  vcgencmd,
+  raspberrypi-tools,
 }:
 
 stdenv.mkDerivation rec {
@@ -22,7 +22,7 @@ stdenv.mkDerivation rec {
   installPhase = ''
     install -Dm755 raspberrypi_exporter $out/bin/raspberrypi_exporter
     wrapProgram $out/bin/raspberrypi_exporter \
-      --prefix PATH : ${lib.makeBinPath [ vcgencmd ]}
+      --prefix PATH : ${lib.makeBinPath [ raspberrypi-tools ]}
   '';
 
   meta = with lib; {
