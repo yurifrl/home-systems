@@ -1,4 +1,4 @@
-{ pkgs, pkgs-unstable, ... }:
+{ pkgs, ... }:
 {
   imports = [
     ./hardware-configuration.nix
@@ -13,30 +13,10 @@
     htop
     btop
     k9s
+
+    #
     velero
   ];
-
-  # Use unstable k3s
-  # Previous   -- v1.30.3+k3s1
-  # Shoulbe    -- 1.31.4+k3s1
-  # Actual     -- 1.31.1+k3s1
-  services.k3s.package = pkgs-unstable.k3s;
-  
-
-  # Configure storage directory for k3s
-  systemd.tmpfiles.rules = [
-    "d /storage 0755 k3s k3s -"
-    "d /storage/test-volume 0755 k3s k3s -"
-  ];
-
-  # Ensure k3s user and group exist
-  users.users.k3s = {
-    isSystemUser = true;
-    group = "k3s";
-    uid = 1000;  # Make sure this matches with your k3s setup
-  };
-
-  users.groups.k3s = {};
 
   # Add RPI-specific shell aliases
   programs.fish.shellAliases = {
@@ -68,7 +48,7 @@
     extraFlags = [
       "--disable=traefik"
       "--disable=servicelb"
-      # "--disable=local-storage"
+      "--disable=local-storage"
       "--disable-cloud-controller"
       "--flannel-backend=host-gw"
       # Static IP address for the k3s server node
