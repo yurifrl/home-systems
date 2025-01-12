@@ -26,6 +26,8 @@ services:
   hs:
     <<: *base_service
     entrypoint: go run main.go
+    ports:
+      - "9110:9110"
   deploy:
     <<: *base_service
     entrypoint: deploy
