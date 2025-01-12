@@ -45,6 +45,7 @@ spec:
           persistence:
             enabled: true
             existingVolume: home-assistant-data
+            storageClass: local-path
           configuration:
             enabled: true
             forceInit: true
