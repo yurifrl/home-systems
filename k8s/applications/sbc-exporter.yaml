@@ -15,8 +15,8 @@ spec:
     syncOptions:
       - CreateNamespace=true
   source:
-    repoURL: https://github.com/yurifrl/home-systems-enterprise.git
+    repoURL: https://github.com/yurifrl/sbc_exporter.git
     targetRevision: HEAD
-    path: sbc_exporter/charts/sbc-exporter
+    path: charts/sbc-exporter
     helm:
       valuesObject: {}
