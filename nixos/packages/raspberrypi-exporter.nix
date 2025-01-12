@@ -1,21 +1,29 @@
 {
   lib,
-  buildGoModule,
+  stdenv,
   fetchFromGitHub,
+  makeWrapper,
+  vcgencmd,
 }:
 
-buildGoModule rec {
+stdenv.mkDerivation rec {
   pname = "raspberrypi-exporter";
-  version = "master"; # Using master as there are no releases
+  version = "master";
 
   src = fetchFromGitHub {
     owner = "fahlke";
     repo = "raspberrypi_exporter";
-    rev = "3417493c1f85c8470f2c85b4c9acb31ef473f0f4"; # Latest commit from master
-    sha256 = "sha256-anb1h+nNtzitJsll5/8vJIYK6XRQk9LD6G/n/GkaDDM="; # Will need to be updated with correct hash
+    rev = "3417493c1f85c8470f2c85b4c9acb31ef473f0f4";
+    sha256 = "sha256-anb1h+nNtzitJsll5/8vJIYK6XRQk9LD6G/n/GkaDDM=";
   };
 
-  vendorHash = null; # Let Nix compute the vendor hash
+  nativeBuildInputs = [ makeWrapper ];
+
+  installPhase = ''
+    install -Dm755 raspberrypi_exporter $out/bin/raspberrypi_exporter
+    wrapProgram $out/bin/raspberrypi_exporter \
+      --prefix PATH : ${lib.makeBinPath [ vcgencmd ]}
+  '';
 
   meta = with lib; {
     description = "Prometheus exporter for Raspberry Pi metrics";
