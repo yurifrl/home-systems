@@ -8,7 +8,7 @@ buildGoModule rec {
   # Use the current directory as the source
   src = ../../.;
 
-  vendorHash = "sha256-C2s52W2YqGiJZ6dqO9UflRSXmC85ODY7fRpWUSX83qY="; # If you are using vendored dependencies
+  vendorHash = "sha256-qOMFK2gni94AaML+pn4PAO4khFizi81UnqDETudSuGE="; # If you are using vendored dependencies
 
   # Rename the binary otherwise it will be named after the package name
   installPhase = ''
