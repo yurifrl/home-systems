@@ -7,19 +7,19 @@ let
   binaries = {
     "x86_64-linux" = {
       name = "sbc_exporter-linux-amd64";
-      sha256 = ""; # TODO: Add sha256 after first build attempt
+      sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # TODO: Add sha256 after first build attempt
     };
     "aarch64-linux" = {
       name = "sbc_exporter-linux-arm64";
-      sha256 = ""; # TODO: Add sha256 after first build attempt
+      sha256 = "sha256-HA1cemDxoJFP7pko+RyzChQn/qWoR244SGe4ou/G+H0=";
     };
     "x86_64-darwin" = {
       name = "sbc_exporter-darwin-amd64";
-      sha256 = ""; # TODO: Add sha256 after first build attempt
+      sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # TODO: Add sha256 after first build attempt
     };
     "aarch64-darwin" = {
       name = "sbc_exporter-darwin-arm64"; 
-      sha256 = ""; # TODO: Add sha256 after first build attempt
+      sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # TODO: Add sha256 after first build attempt
     };
   };
 
