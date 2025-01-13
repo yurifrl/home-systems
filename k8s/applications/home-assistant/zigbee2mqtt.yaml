@@ -49,6 +49,7 @@ spec:
               storageClass: local-storage
               accessMode: ReadWriteOnce
               size: 10Gi
+              volumeName: zigbee2mqtt-data
             usb:
               enabled: true
               type: hostPath
