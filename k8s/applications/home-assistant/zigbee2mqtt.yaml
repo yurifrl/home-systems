@@ -46,6 +46,7 @@ spec:
               accessMode: ReadWriteOnce
               size: 1Gi
               mountPath: /data
+              existingVolume: zigbee2mqtt-pv
             usb:
               enabled: true
               type: hostPath
