@@ -40,7 +40,7 @@ spec:
           persistence:
             data:
               enabled: true
-              storageClassName: local-path
+              storageClass: local-path
               accessMode: ReadWriteOnce
               size: 10Gi
               volumeName: zigbee2mqtt-data
