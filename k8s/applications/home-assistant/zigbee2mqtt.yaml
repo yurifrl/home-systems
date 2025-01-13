@@ -47,6 +47,7 @@ spec:
               accessMode: ReadWriteOnce
               size: 10Gi
               volumeName: zigbee2mqtt-data
+              mountPath: "/data"
             usb:
               enabled: true
               type: hostPath
