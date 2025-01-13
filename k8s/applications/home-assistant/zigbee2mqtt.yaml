@@ -33,15 +33,6 @@ spec:
       targetRevision: 9.21.0
       helm:
         valuesObject:
-          affinity:
-            nodeAffinity:
-              required:
-                nodeSelectorTerms:
-                  - matchExpressions:
-                      - key: kubernetes.io/hostname
-                        operator: In
-                        values:
-                          - tp1
           env:
             TZ: "America/Sao_Paulo"
 
@@ -68,3 +59,12 @@ spec:
             serial:
               port: /dev/serial/by-id/usb-Texas_Instruments_TI_CC2531_USB_CDC___0X00124B001CDD33E2-if00
 
+          affinity:
+            nodeAffinity:
+              required:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: kubernetes.io/hostname
+                        operator: In
+                        values:
+                          - tp1
