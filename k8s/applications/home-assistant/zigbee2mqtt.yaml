@@ -44,9 +44,11 @@ spec:
 
           # https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common
           persistence:
-            enabled: true
-            config:
-              existingClaim: zigbee2mqtt-config
+            data:
+              enabled: true
+              storageClass: local-storage
+              accessMode: ReadWriteOnce
+              size: 10Gi
             usb:
               enabled: true
               type: hostPath
