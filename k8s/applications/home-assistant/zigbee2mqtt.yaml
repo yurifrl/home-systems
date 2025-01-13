@@ -33,20 +33,20 @@ spec:
       targetRevision: 9.20.0
       helm:
         valuesObject:
+          image:
+            tag: 1.41.0
+
           nodeSelector:
-            kubernetes.io/hostname: tp1
+            kubernetes.io/hostname: nixos-1
 
-          securityContext:
-            privileged: true
+          env:
+            TZ: "America/Sao_Paulo"
 
+          # https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common
           persistence:
-            data:
-              enabled: true
-              storageClass: local-path
-              accessMode: ReadWriteOnce
-              size: 1Gi
-              mountPath: /data
-              existingVolume: zigbee2mqtt-pv
+            enabled: true
+            config:
+              existingClaim: zigbee2mqtt-config
             usb:
               enabled: true
               type: hostPath
@@ -54,14 +54,17 @@ spec:
 
           config:
             homeassistant: true
-            permit_join: true
             mqtt:
-              base_topic: zigbee2mqtt
               server: "mqtt://mosquitto"
-              include_device_information: true
             serial:
               port: /dev/serial/by-id/usb-Texas_Instruments_TI_CC2531_USB_CDC___0X00124B001CDD33E2-if00
-            frontend:
-              port: 8080
-            experimental:
-              new_api: true
+
+          affinity:
+            nodeAffinity:
+              required:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: kubernetes.io/hostname
+                        operator: In
+                        values:
+                          - tp1
