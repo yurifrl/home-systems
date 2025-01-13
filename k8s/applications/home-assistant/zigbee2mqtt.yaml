@@ -45,6 +45,9 @@ spec:
           env:
             TZ: "America/Sao_Paulo"
 
+          securityContext:
+            privileged: true
+
           # https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common
           persistence:
             data:
