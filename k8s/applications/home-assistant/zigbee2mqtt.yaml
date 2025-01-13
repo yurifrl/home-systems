@@ -68,4 +68,4 @@ spec:
                       - key: kubernetes.io/hostname
                         operator: In
                         values:
-                          - tp1
+                          - tp4

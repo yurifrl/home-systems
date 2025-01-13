@@ -38,7 +38,7 @@ spec:
       helm:
         valuesObject:
           nodeSelector:
-            kubernetes.io/hostname: tp1
+            kubernetes.io/hostname: tp4
           addons:
             codeserver:
               enabled: true

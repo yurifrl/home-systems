@@ -10,6 +10,6 @@ all:
         tp1:
           ansible_host: 192.168.68.104
           ansible_user: ubuntu
-        tp2:
-          ansible_host: 192.168.68.105
+        tp4:
+          ansible_host: 192.168.68.103
           ansible_user: ubuntu

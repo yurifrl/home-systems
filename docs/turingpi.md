@@ -20,3 +20,10 @@ ansible-playbook -i ansible/inventory.yml ansible/k3s-join.yml --tags uninstall 
 # Prepare nodes for longhorn
 ansible-playbook -i ansible/inventory.yml ansible/longhorn-prep.yml --ask-pass
 ```
+
+
+## Flash image
+
+https://firmware.turingpi.com/turing-rk1/ubuntu_22.04_rockchip_linux/
+xz -d ubuntu-22.04.3-preinstalled-server-arm64-turing-rk1_v1.33.img.xz
+tpi flash -i ~/Downloads/ubuntu-22.04.3-preinstalled-server-arm64-turing-rk1_v1.33.img -n 1
