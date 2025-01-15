@@ -1,4 +1,0 @@
-apiVersion: v2
-name: tailscale
-description: Deploy a tailscale relay on top of kubernetes
-version: 0.2.6

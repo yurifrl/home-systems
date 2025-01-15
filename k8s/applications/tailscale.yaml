@@ -15,18 +15,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true 
-  source:
-    repoURL: https://github.com/yurifrl/home-systems.git
-    targetRevision: HEAD
-    path: k8s/charts/tailscale
-    helm:
-      valuesObject:
-        image:
-          tag: latest
-        config:
-          variables:
-            TAILSCALE_ADVERTISE_ROUTES: "10.43.0.0/16"
-            TAILSCALE_HOSTNAME: "nixos-k8s-1"
-
-# k -n tailscale delete secret tailscale-auth 
-# k -n tailscale create secret generic tailscale-auth --from-literal=auth-key='tskey-auth-xxxxx'
+  sources:
+    - repoURL: https://pkgs.tailscale.com/helmcharts
+      chart: tailscale-operator
+      targetRevision: "*"
+      helm:
+        valuesObject: {}
