@@ -20,4 +20,7 @@ spec:
       chart: tailscale-operator
       targetRevision: "*"
       helm:
-        valuesObject: {}
+        valuesObject:
+          oauthSecretVolume:
+            secret:
+              secretName: operator-oauth
