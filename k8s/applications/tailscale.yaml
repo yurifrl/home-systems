@@ -23,4 +23,4 @@ spec:
         valuesObject:
           oauthSecretVolume:
             secret:
-              secretName: operator-oauth
+              secretName: tailscale-operator-oauth
