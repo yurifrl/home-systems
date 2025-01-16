@@ -16,7 +16,7 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true 
   sources:
-    - path: charts/support-tailscale
+    - path: k8s/charts/support-tailscale
       repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       helm:
