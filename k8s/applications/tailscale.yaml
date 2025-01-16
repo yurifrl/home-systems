@@ -17,7 +17,7 @@ spec:
       - ServerSideApply=true 
   sources:
     - path: charts/support-tailscale
-    - repoURL: https://github.com/yurifrl/home-systems.git
+      repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       helm:
         version: v3
