@@ -1,0 +1,12 @@
+apiVersion: tailscale.com/v1alpha1
+kind: Connector
+metadata:
+  name: tailscale-tooling-connector
+  namespace: tailscale
+spec:
+  hostname: tailscale-tooling-connector
+  tags:
+    - tag:k8s
+  subnetRouter:
+    advertiseRoutes:
+      - "10.0.0.0/16"

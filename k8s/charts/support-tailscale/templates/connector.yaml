@@ -1,0 +1,19 @@
+{{- range .Values.connectors }}
+---
+apiVersion: tailscale.com/v1alpha1
+kind: Connector
+metadata:
+  name: {{ required "hostname must be set" .hostname }}
+spec:
+  hostname: {{ required "hostname must be set" .hostname }}
+  tags:
+    - tag:k8s
+  subnetRouter:
+    {{- if not .advertiseRoutes }}
+    {{- fail "advertiseRoutes must be set" }}
+    {{- end }}
+    advertiseRoutes:
+    {{- range .advertiseRoutes }}
+    - {{ . | quote }}
+    {{- end }}
+{{- end }}
