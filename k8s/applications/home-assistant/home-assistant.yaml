@@ -44,7 +44,7 @@ spec:
               enabled: true
           persistence:
             enabled: true
-            existingVolume: home-assistant-tp4data
+            existingVolume: home-assistant-tp4-data
             storageClass: local-path
           configuration:
             enabled: true
