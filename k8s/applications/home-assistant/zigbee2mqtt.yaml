@@ -46,7 +46,7 @@ spec:
               storageClass: local-path
               accessMode: ReadWriteOnce
               size: 10Gi
-              volumeName: zigbee2mqtt-data
+              volumeName: zigbee2mqtt-tp4-data
               mountPath: "/data"
             usb:
               enabled: true

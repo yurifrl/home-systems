@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: home-assistant-data
+  name: home-assistant-tp4-data
 spec:
   capacity:
     storage: 10Gi
@@ -24,7 +24,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: zigbee2mqtt-data
+  name: zigbee2mqtt-tp4data
 spec:
   capacity:
     storage: 10Gi
