@@ -33,6 +33,7 @@ spec:
           txtOwnerId: k8s-live
           policy: sync
           domainFilters:
+            - syscd.xyz
             - syscd.live
           interval: 1m
           sources:
