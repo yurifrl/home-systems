@@ -1,5 +1,5 @@
 {{- range .Values.virtualServices }}
-{{- $domains := merge (.domains | default dict) $.Values.virtualServicesDefaults.domains -}}
+{{- $domains := mustMergeOverwrite (deepCopy $.Values.defaultDomains) (.domains | default dict) }}
 {{- $hostPrefix := .hostname | default .name -}}
 apiVersion: monitoring.coreos.com/v1
 kind: Probe

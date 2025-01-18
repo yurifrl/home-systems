@@ -1,6 +1,6 @@
 {{- if .Values.slos.enabled }}
 {{- range .Values.virtualServices }}
-{{- $domains := merge (.domains | default dict) $.Values.virtualServicesDefaults.domains -}}
+{{- $domains := mustMergeOverwrite (deepCopy $.Values.defaultDomains) (.domains | default dict) }}
 {{- $hostPrefix := .hostname | default .name -}}
 {{- if or $domains.xyz $domains.tech }}
 apiVersion: pyrra.dev/v1alpha1

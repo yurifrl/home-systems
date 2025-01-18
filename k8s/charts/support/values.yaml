@@ -24,16 +24,15 @@ virtualServices: []
   #     namespace: monitoring          # Service namespace
   #     port: 80                       # Service port
   #   domains:                         # Control which domains to create (defaults: xyz=true, tech=false, live=false)
-  #     xyz: true                      # Create private .syscd.xyz domain
-  #     tech: false                    # Create private .syscd.tech domain (includes .xyz alias)
   #     live: false                    # Create public .syscd.live domain
+  #     tech: false                    # Create private .syscd.tech domain (includes .xyz alias)
+  #     xyz: true                      # Create private .syscd.xyz domain
 
 # Default values for virtualServices domains
-virtualServicesDefaults:
-  domains:
-    xyz: false
-    tech: true
-    live: true
+defaultDomainsz:
+  live: baz
+  tech: baz
+  xyz: baz
 
 # Global settings
 global: {}

@@ -1,5 +1,5 @@
 {{- range .Values.virtualServices }}
-{{- $domains := merge (.domains | default dict) $.Values.virtualServicesDefaults.domains }}
+{{- $domains := mustMergeOverwrite (deepCopy $.Values.defaultDomains) (.domains | default dict) }}
 {{- $hostPrefix := .hostname | default .name }}
 ---
 apiVersion: networking.istio.io/v1alpha3
@@ -9,14 +9,14 @@ metadata:
   namespace: {{ $.Release.Namespace }}
 spec:
   hosts:
-    {{- if $domains.xyz }}
-    - {{ $hostPrefix }}.syscd.xyz
+    {{- if $domains.live }}
+    - {{ $hostPrefix }}.syscd.live
     {{- end }}
     {{- if $domains.tech }}
     - {{ $hostPrefix }}.syscd.tech
     {{- end }}
-    {{- if $domains.live }}
-    - {{ $hostPrefix }}.syscd.live
+    {{- if $domains.xyz }}
+    - {{ $hostPrefix }}.syscd.xyz
     {{- end }}
   gateways:
     - istio-system/private
