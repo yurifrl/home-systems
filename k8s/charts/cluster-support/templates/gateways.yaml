@@ -61,36 +61,4 @@ spec:
       tls:
         mode: SIMPLE
         credentialName: argocd-server-tls
----
-apiVersion: networking.istio.io/v1alpha3
-kind: Gateway
-metadata:
-  name: service
-  namespace: istio-system
-  annotations:
-    external-dns.alpha.kubernetes.io/hostname: "**.syscd.xyz"
-    external-dns.alpha.kubernetes.io/target: "1b664006-2417-4072-877f-45697ffa642d.cfargotunnel.com"
-    # should work, it does not
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
-spec:
-  selector:
-    istio: gateway
-  servers:
-    - port:
-        number: 80
-        name: http
-        protocol: HTTP
-      hosts:
-        - "*.syscd.xyz"
-      tls:
-        httpsRedirect: false
-    - port:
-        number: 443
-        name: https
-        protocol: HTTPS
-      hosts:
-        - "*.syscd.xyz"
-      tls:
-        mode: SIMPLE
-        credentialName: argocd-server-tls
 {{- end }}

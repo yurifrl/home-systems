@@ -21,7 +21,6 @@ spec:
   gateways:
     - istio-system/private
     - istio-system/public
-    - istio-system/service
   http:
     - route:
         - destination:
