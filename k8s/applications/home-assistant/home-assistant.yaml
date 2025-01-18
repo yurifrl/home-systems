@@ -24,7 +24,7 @@ spec:
           services:
             - name: node-red
               port: 80
-              targetPort: http
+              selectorName: home-assistant
           virtualServices:
             - name: ha-codeserver
               service:

@@ -12,5 +12,5 @@ spec:
       protocol: TCP
       targetPort: http
   selector:
-    app.kubernetes.io/name: {{ .name }}
+    app.kubernetes.io/name: {{ .selectorName }}
 {{- end }}
