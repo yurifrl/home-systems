@@ -36,7 +36,7 @@ spec:
                 name: home-assistant
                 namespace: home-assistant
                 port: 8080
-            - name: ha-external
+            - name: ha-ext
               service:
                 name: home-assistant
                 namespace: home-assistant
