@@ -41,3 +41,9 @@ global: {}
 # SLO settings
 slos:
   enabled: true
+
+# Services
+services: []
+  # - name: service-name
+  #   port: 80
+  #   targetPort: 80
