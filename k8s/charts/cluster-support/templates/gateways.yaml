@@ -50,8 +50,8 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - "*.syscd.live"
         - "*.syscd.xyz"
+        - "*.syscd.live"
       tls:
         httpsRedirect: false
     - port:
@@ -59,8 +59,8 @@ spec:
         name: https
         protocol: HTTPS
       hosts:
-        - "*.syscd.live"
         - "*.syscd.xyz"
+        - "*.syscd.live"
       tls:
         mode: SIMPLE
         credentialName: argocd-server-tls

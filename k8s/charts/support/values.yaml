@@ -30,9 +30,9 @@ virtualServices: []
 
 # Default values for virtualServices domains
 defaultDomains:
-  live: baz
-  tech: baz
-  xyz: baz
+  live: true
+  tech: true
+  xyz: false
 
 # Global settings
 global: {}
