@@ -1,6 +1,8 @@
 # https://www.reddit.com/r/homeassistant/comments/1b8qr52/mount_zigbee_usb_via_usbip_to_k3s_cluster_running/
 # https://www.zigbee2mqtt.io/advanced/remote-adapter/connect_to_a_remote_adapter.html
 # https://tubeszb.com/product/cc2652p7-zigbee-to-poe-coordinator-2023/
+# https://github.com/vicsufer/homelab/blob/main/kluster-manifests/argocd-apps/smarthome/Application-zigbee2mqtt.yaml
+# https://github.com/vFondevilla/k8s-homelab/blob/main/k8s/zigbee2mqtt/app.yaml
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -13,9 +15,9 @@ spec:
     server: https://kubernetes.default.svc
     namespace: zigbee2mqtt
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+    # automated:
+    #   prune: true
+    #   selfHeal: true
     syncOptions:
       - CreateNamespace=true
   sources:
@@ -31,47 +33,33 @@ spec:
                 namespace: zigbee2mqtt
                 port: 8080
 
-    - repoURL: https://andrenarchy.github.io/helm-charts/
+    - repoURL: https://charts.zigbee2mqtt.io
       chart: zigbee2mqtt
       targetRevision: "*"
       helm:
         valuesObject:
-          env:
-            TZ: "America/Sao_Paulo"
-
-          securityContext:
-            privileged: true
-
-          # https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common
-          persistence:
-            data:
+          statefulset:
+            nodeSelector:
+              kubernetes.io/hostname: tp4
+            storage:
               enabled: true
-              storageClass: local-path
-              accessMode: ReadWriteOnce
-              size: 10Gi
-              volumeName: zigbee2mqtt-tp4-data
-              mountPath: "/data"
-            usb:
-              enabled: true
-              type: hostPath
-              hostPath: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da22b4738bd8ed11bf06746162c613ac-if00-port0
-          # serial:
-            # port: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da22b4738bd8ed11bf06746162c613ac-if00-port0
-          config:
-            homeassistant: true
+              size: 1Gi
+              storageClassName: local-path
+              existingVolume: zigbee2mqtt-tp4-data
+            volumeMounts:
+              - name: usb
+                mountPath: /dev/ttyUSB0
+            volumes:
+              # - name: usb
+              #   hostPath:
+              #     path: /dev/ttyUSB0
+              - name: usb
+                hostPath:
+                  path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da22b4738bd8ed11bf06746162c613ac-if00-port0
+                  type: CharDevice
+          zigbee2mqtt:
             mqtt:
-              server: "mqtt://mosquitto.mosquitto.svc.cluster.local"
-
+              server: "mqtt://mosquitto.mosquitto.svc.cluster.local:1883"
             serial:
-              # Node port
-              port: 'tcp://192.168.68.114:20108'
-
-          affinity:
-            nodeAffinity:
-              required:
-                nodeSelectorTerms:
-                  - matchExpressions:
-                      - key: kubernetes.io/hostname
-                        operator: In
-                        values:
-                          - tp4
+              port: "/dev/ttyUSB0"
+              # port: 'tcp://192.168.68.114:20108'
