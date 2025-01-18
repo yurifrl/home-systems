@@ -1,4 +1,4 @@
-# https://github.com/k8s-home-lab/helm-charts 
+# https://github.com/pajikos/home-assistant-helm-chart
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

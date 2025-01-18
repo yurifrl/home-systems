@@ -84,7 +84,7 @@ spec:
                           url: "https://zigbee2mqtt.syscd.live"
                           target: "_blank"
                         
-                        - name: "VS Code Server"
+                        - name: "HA Code Server"
                           icon: "fas fa-code"
                           tag: "development"
                           url: "https://ha-codeserver.syscd.live"

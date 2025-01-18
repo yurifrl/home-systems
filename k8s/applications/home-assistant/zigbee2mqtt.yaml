@@ -3,7 +3,6 @@
 # https://tubeszb.com/product/cc2652p7-zigbee-to-poe-coordinator-2023/
 # https://github.com/vicsufer/homelab/blob/main/kluster-manifests/argocd-apps/smarthome/Application-zigbee2mqtt.yaml
 # https://github.com/vFondevilla/k8s-homelab/blob/main/k8s/zigbee2mqtt/app.yaml
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -50,16 +49,11 @@ spec:
               - name: usb
                 mountPath: /dev/ttyUSB0
             volumes:
-              # - name: usb
-              #   hostPath:
-              #     path: /dev/ttyUSB0
               - name: usb
                 hostPath:
-                  path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da22b4738bd8ed11bf06746162c613ac-if00-port0
-                  type: CharDevice
+                  path: /dev/ttyUSB0
           zigbee2mqtt:
             mqtt:
               server: "mqtt://mosquitto.mosquitto.svc.cluster.local:1883"
             serial:
               port: "/dev/ttyUSB0"
-              # port: 'tcp://192.168.68.114:20108'
