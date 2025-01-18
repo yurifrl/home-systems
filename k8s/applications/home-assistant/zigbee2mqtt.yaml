@@ -30,7 +30,7 @@ spec:
 
     - repoURL: https://andrenarchy.github.io/helm-charts/
       chart: zigbee2mqtt
-      targetRevision: 9.21.0
+      targetRevision: "*"
       helm:
         valuesObject:
           env:
