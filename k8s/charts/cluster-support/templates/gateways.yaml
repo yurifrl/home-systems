@@ -60,6 +60,7 @@ spec:
         protocol: HTTPS
       hosts:
         - "*.syscd.live"
+        - "*.syscd.xyz"
       tls:
         mode: SIMPLE
         credentialName: argocd-server-tls
