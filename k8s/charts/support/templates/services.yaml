@@ -7,6 +7,10 @@ metadata:
   namespace: {{ $.Release.Namespace }}
 spec:
   ports:
-    - port: {{ .port }}
-      targetPort: {{ .port }}
+    - name: http
+      port: {{ .port }}
+      protocol: TCP
+      targetPort: http
+  selector:
+    app.kubernetes.io/name: {{ .name }}
 {{- end }}

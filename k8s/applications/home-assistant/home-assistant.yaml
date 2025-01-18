@@ -24,7 +24,7 @@ spec:
           services:
             - name: node-red
               port: 80
-              targetPort: 8080
+              targetPort: http
           virtualServices:
             - name: ha-codeserver
               service:
