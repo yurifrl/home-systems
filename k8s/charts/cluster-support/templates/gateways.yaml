@@ -6,7 +6,7 @@ metadata:
   name: private
   namespace: istio-system
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech,*.syscd.xyz"
+    external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
 spec:
   selector:
     istio: gateway
@@ -38,7 +38,7 @@ metadata:
   name: public
   namespace: istio-system
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: "*.syscd.live"
+    external-dns.alpha.kubernetes.io/hostname: "*.syscd.live,*.syscd.xyz"
     external-dns.alpha.kubernetes.io/target: "1b664006-2417-4072-877f-45697ffa642d.cfargotunnel.com"
     # should work, it does not
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
