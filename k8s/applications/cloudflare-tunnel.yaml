@@ -17,7 +17,7 @@ spec:
   source:
     chart: cloudflare-tunnel
     repoURL: https://cloudflare.github.io/helm-charts
-    targetRevision: 0.3.2
+    targetRevision: "*"
     helm:
       valuesObject:
         replicaCount: 1
