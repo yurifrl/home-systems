@@ -1,10 +1,10 @@
 apiVersion: tailscale.com/v1alpha1
 kind: Connector
 metadata:
-  name: tailscale-tooling-connector
+  name: tailscale-connector
   namespace: tailscale
 spec:
-  hostname: tailscale-tooling-connector
+  hostname: zyscd-01
   tags:
     - tag:k8s
   subnetRouter:
