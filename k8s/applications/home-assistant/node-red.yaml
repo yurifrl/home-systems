@@ -33,7 +33,6 @@ spec:
       chart: node-red
       helm:
         valuesObject:
-          replicaCount: 2
           persistence:
             enabled: true
             storageClass: local-path

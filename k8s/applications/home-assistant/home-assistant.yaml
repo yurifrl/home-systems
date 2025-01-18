@@ -42,6 +42,8 @@ spec:
           addons:
             codeserver:
               enabled: true
+              image:
+                tag: latest
           persistence:
             enabled: true
             existingVolume: home-assistant-tp4-data
@@ -65,3 +67,9 @@ spec:
               automation: !include automations.yaml
               script: !include scripts.yaml
               scene: !include scenes.yaml
+
+              # Mine
+              node-red:
+                title: Node-red
+                url: node-red.node-red.svc.cluster.local
+                icon: si:node-red
