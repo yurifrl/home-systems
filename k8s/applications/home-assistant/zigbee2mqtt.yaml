@@ -51,7 +51,7 @@ spec:
             usb:
               enabled: true
               type: hostPath
-              hostPath: /dev/serial/by-id/usb-Texas_Instruments_TI_CC2531_USB_CDC___0X00124B001CDD33E2-if00
+              hostPath: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da22b4738bd8ed11bf06746162c613ac-if00-port0
 
           config:
             homeassistant: true
