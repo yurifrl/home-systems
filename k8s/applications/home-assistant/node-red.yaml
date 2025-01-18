@@ -35,6 +35,18 @@ spec:
         valuesObject:
           persistence:
             enabled: true
-            size: 1Gi
+            storageClass: local-path
             accessMode: ReadWriteOnce
-            storageClass: local-storage
+            size: 10Gi
+            volumeName: node-red-tp4-data
+            mountPath: "/data"
+
+          affinity:
+            nodeAffinity:
+              required:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: kubernetes.io/hostname
+                        operator: In
+                        values:
+                          - tp4
