@@ -27,9 +27,8 @@ spec:
         - "*.syscd.tech"
       tls:
         mode: SIMPLE
-        credentialName: argocd-server-tls
+        credentialName: gateway-public-tls
 ---
-# Tailscale domain
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
@@ -62,5 +61,5 @@ spec:
         - "*.syscd.xyz"
       tls:
         mode: SIMPLE
-        credentialName: argocd-server-tls
+        credentialName: gateway-private-tls
 {{- end }}
