@@ -18,6 +18,23 @@ spec:
     repoURL: tccr.io/truecharts
     helm:
       valuesObject:
+        persistence:
+          data:
+            enabled: true
+            mountPath: "/mosquitto/data"
+            size: 10Gi
+          configinc:
+            enabled: true
+            mountPath: "/mosquitto/configinc"
+            size: 2Gi
+          mosquitto-config:
+            enabled: true
+            mountPath: "/mosquitto/config/mosquitto.conf"
+            subPath: "mosquitto.conf"
+            type: configmap
+            objectName: config
+            size: 2Gi
         podOptions:
           nodeSelector:
             kubernetes.io/arch: arm64
+            kubernetes.io/hostname: tp4
