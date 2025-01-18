@@ -41,12 +41,5 @@ spec:
             volumeName: node-red-tp4-data
             mountPath: "/data"
 
-          affinity:
-            nodeAffinity:
-              required:
-                nodeSelectorTerms:
-                  - matchExpressions:
-                      - key: kubernetes.io/hostname
-                        operator: In
-                        values:
-                          - tp4
+          nodeSelector:
+            kubernetes.io/hostname: tp4
