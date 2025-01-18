@@ -25,7 +25,6 @@ spec:
             - name: node-red
               selector:
                 app.kubernetes.io/name: home-assistant
-                app.kubernetes.io/instance: home-assistant
           virtualServices:
             - name: ha-codeserver
               service:
