@@ -31,7 +31,7 @@ virtualServices: []
 # Default values for virtualServices domains
 virtualServicesDefaults:
   domains:
-    xyz: true
+    xyz: false
     tech: true
     live: true
 
