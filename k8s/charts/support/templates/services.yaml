@@ -7,10 +7,9 @@ metadata:
   namespace: {{ $.Release.Namespace }}
 spec:
   ports:
-    - name: http
+    - name: {{ .name | default "http" }}
       port: {{ .port }}
-      protocol: TCP
-      targetPort: http
-  selector:
-    app.kubernetes.io/name: {{ .selectorName }}
+      protocol: {{ .protocol | default "TCP" }}
+      targetPort: {{ required "targetPort is required" .targetPort }}
+  selector: {{ toYaml .selector | nindent 4 }}
 {{- end }}

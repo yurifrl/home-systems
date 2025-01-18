@@ -24,7 +24,10 @@ spec:
           services:
             - name: node-red
               port: 80
-              selectorName: home-assistant
+              targetPort: 8080
+              selector:
+                app.kubernetes.io/name: home-assistant
+                app.kubernetes.io/instance: home-assistant
           virtualServices:
             - name: ha-codeserver
               service:
