@@ -26,6 +26,10 @@ spec:
                 name: probee-httpbin
                 namespace: probee
                 port: 80
+              domains:
+                xyz: true
+                tech: true
+                live: true
 
     - repoURL: https://matheusfm.dev/charts
       chart: httpbin
