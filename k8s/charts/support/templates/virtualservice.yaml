@@ -1,5 +1,5 @@
 {{- range .Values.virtualServices }}
-{{- $domains := mustMergeOverwrite (deepCopy $.Values.defaultDomains) (.domains | default dict) }}
+{{- $domains := mustMergeOverwrite (deepCopy (default dict $.Values.defaultDomains)) (default dict .domains) }}
 {{- $hostPrefix := .hostname | default .name }}
 ---
 apiVersion: networking.istio.io/v1alpha3
