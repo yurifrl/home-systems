@@ -19,4 +19,5 @@ spec:
     helm:
       valuesObject:
         podOptions:
-          nodeSelector: {}
+          nodeSelector:
+            kubernetes.io/arch: arm64
