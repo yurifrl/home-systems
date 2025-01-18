@@ -69,7 +69,12 @@ spec:
               scene: !include scenes.yaml
 
               # Mine
-              node-red:
-                title: Node-red
-                url: node-red.node-red.svc.cluster.local
-                icon: si:node-red
+              panel_iframe:
+                node-red:
+                  title: Node-red
+                  url: node-red.node-red.svc.cluster.local
+                  icon: si:node-red
+                vs-code:
+                  title: VS Code Server
+                  url: home-assistant-codeserver.home-assistant.svc.cluster.local
+                  icon: si:code
