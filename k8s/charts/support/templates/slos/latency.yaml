@@ -1,6 +1,6 @@
 {{- if .Values.slos.enabled }}
 {{- range .Values.virtualServices }}
-{{- $domains := mustMergeOverwrite (deepCopy (default dict $.Values.defaultDomains)) (default dict .domains) }}
+{{- $domains := mergeOverwrite (deepCopy $.Values.defaultDomains) (.domains | default dict) }}
 {{- $hostPrefix := .hostname | default .name -}}
 
 # Indicator Type: latency

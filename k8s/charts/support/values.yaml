@@ -29,7 +29,7 @@ virtualServices: []
   #     xyz: true                      # Create private .syscd.xyz domain
 
 # Default values for virtualServices domains
-defaultDomainsz:
+defaultDomains:
   live: baz
   tech: baz
   xyz: baz
