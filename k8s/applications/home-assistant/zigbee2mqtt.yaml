@@ -1,3 +1,6 @@
+# https://www.reddit.com/r/homeassistant/comments/1b8qr52/mount_zigbee_usb_via_usbip_to_k3s_cluster_running/
+# https://www.zigbee2mqtt.io/advanced/remote-adapter/connect_to_a_remote_adapter.html
+# https://tubeszb.com/product/cc2652p7-zigbee-to-poe-coordinator-2023/
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -52,13 +55,16 @@ spec:
               enabled: true
               type: hostPath
               hostPath: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da22b4738bd8ed11bf06746162c613ac-if00-port0
-
+          # serial:
+            # port: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da22b4738bd8ed11bf06746162c613ac-if00-port0
           config:
             homeassistant: true
             mqtt:
               server: "mqtt://mosquitto.mosquitto.svc.cluster.local"
+
             serial:
-              port: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da22b4738bd8ed11bf06746162c613ac-if00-port0
+              # Node port
+              port: 'tcp://192.168.68.114:20108'
 
           affinity:
             nodeAffinity:
