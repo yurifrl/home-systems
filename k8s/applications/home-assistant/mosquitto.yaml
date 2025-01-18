@@ -23,10 +23,13 @@ spec:
             enabled: true
             mountPath: "/mosquitto/data"
             size: 10Gi
+            storageClass: empt
+            type: emptyDir
           configinc:
             enabled: true
             mountPath: "/mosquitto/configinc"
             size: 2Gi
+            type: emptyDir
           mosquitto-config:
             enabled: true
             mountPath: "/mosquitto/config/mosquitto.conf"
