@@ -27,7 +27,8 @@ spec:
                 name: node-red
                 namespace: node-red
                 port: 1880
-    # https://github.com/pajikos/home-assistant-helm-chart
+
+    # https://github.com/SchwarzIT/node-red-chart
     - repoURL: https://schwarzit.github.io/node-red-chart
       targetRevision: "*"
       chart: node-red
