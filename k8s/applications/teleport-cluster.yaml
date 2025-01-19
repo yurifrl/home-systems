@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: teleport-cluster
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: teleport
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - chart: teleport-cluster
+      repoURL: https://charts.releases.teleport.dev
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          clusterName: tp.syscd.xyz
+          # Disable ACME since we're using cert-manager
+          acme: false
+
+          # Session recording configuration
+          sessionRecording: "off"
+
+          # Persistence for session recordings
+          persistence:
+            enabled: false
+
+          #
+          chartMode: standalone
+                 
+          # Resource limits and requests
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 256Mi
