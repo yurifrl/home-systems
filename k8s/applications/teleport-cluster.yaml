@@ -24,7 +24,7 @@ spec:
             - name: teleport-cluster
               service:
                 name: teleport-cluster
-                namespace: longhorn
+                namespace: teleport
                 port: 443
 
     - chart: teleport-cluster
