@@ -1,0 +1,13 @@
+kind: user
+version: v2
+metadata:
+  name: yuri
+spec:
+  roles: ['access', 'editor', 'auditor']
+---
+kind: user
+version: v2
+metadata:
+  name: gabriele
+spec:
+  roles: ['access']
