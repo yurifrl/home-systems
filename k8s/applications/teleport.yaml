@@ -21,6 +21,7 @@ spec:
       helm:
         valuesObject:
           virtualServices:
+            # This is techicaly not used, it's used to create the cloudflare entry
             - name: teleport-cluster
               hostname: tp
               service:

@@ -35,15 +35,6 @@ spec:
                 name: home-assistant
                 namespace: home-assistant
                 port: 8080
-            - name: ha-ext
-              service:
-                name: home-assistant
-                namespace: home-assistant
-                port: 8080
-              domains:
-                xyz: true
-                tech: false
-                live: false
 
     - repoURL: http://pajikos.github.io/home-assistant-helm-chart/
       chart: home-assistant
