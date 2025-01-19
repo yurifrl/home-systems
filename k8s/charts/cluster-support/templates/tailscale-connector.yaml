@@ -4,7 +4,7 @@ metadata:
   name: tailscale-connector
   namespace: tailscale
 spec:
-  hostname: zyscd-01
+  hostname: syscd-tech-01
   tags:
     - tag:k8s
   subnetRouter:
