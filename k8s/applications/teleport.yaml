@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: teleport-cluster
+  name: teleport
   namespace: argocd
 spec:
   project: default
@@ -50,7 +50,11 @@ spec:
 
           #
           chartMode: standalone
-                 
+
+          #
+          operator:
+            enabled: true
+                             
           # Resource limits and requests
           resources:
             limits:
@@ -60,5 +64,3 @@ spec:
               cpu: 100m
               memory: 256Mi
           
-          operator:
-            enabled: true
