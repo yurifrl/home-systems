@@ -74,4 +74,7 @@ spec:
               cpu: 100m
               memory: 256Mi
 
+# k -n teleport describe teleportusers $USER
+
+# k -n teleport get pod -l app.kubernetes.io/component=auth
 # k -n teleport exec -it $POD_NAME -- tctl users reset $USER
