@@ -44,6 +44,7 @@ spec:
             - istio-virtualservice
           extraArgs:
             - --cloudflare-proxied
+            - --istio-ingress-gateway=istio-system/private
           resources:
             limits:
               cpu: 50m
@@ -51,4 +52,10 @@ spec:
             requests:
               cpu: 25m
               memory: 64Mi
+          rbac:
+            create: true
+            additionalPermissions:
+              - apiGroups: ["networking.k8s.io"]
+                resources: ["ingresses"]
+                verbs: ["get", "list", "watch"]
 # k -n external-dns create secret generic cloudflare-api-token --from-literal=token='your-cloudflare-api-token'
