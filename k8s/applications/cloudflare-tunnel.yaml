@@ -9,9 +9,9 @@ spec:
     server: https://kubernetes.default.svc
     namespace: cloudflare-tunnel
   syncPolicy:
-    # automated:
-    #   prune: true
-    #   selfHeal: true
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true 
   source:
@@ -29,8 +29,8 @@ spec:
               service: http://argocd-server.argocd.svc.cluster.local:80
             - hostname: "*.syscd.live"
               service: http://istio-gateway.istio-system.svc.cluster.local:80
-            # - hostname: "*.syscd.xyz"
-            #   service: http://istio-gateway.istio-system.svc.cluster.local:80
+            - hostname: "*.syscd.xyz"
+              service: http://istio-gateway.istio-system.svc.cluster.local:80
         resources:
           limits:
             cpu: 100m

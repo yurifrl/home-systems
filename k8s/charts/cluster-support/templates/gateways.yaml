@@ -1,36 +1,34 @@
 # https://medium.com/@mattiaforc/zero-trust-kubernetes-ingress-with-tailscale-operator-cert-manager-and-external-dns-8f42272f8647
 {{- if .Values.features.istioGateways }}
-# # Argo tunnel domain
-# apiVersion: networking.istio.io/v1alpha3
-# kind: Gateway
-# metadata:
-#   name: private
-#   namespace: istio-system
-#   annotations:
-#     external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
-#     # external-dns.alpha.kubernetes.io/ingress: "istio-system/istio-gateway"
-# spec:
-#   selector:
-#     istio: gateway
-#   servers:
-#     - port:
-#         number: 80
-#         name: http
-#         protocol: HTTP
-#       hosts:
-#         - "*.syscd.tech"
-#       tls:
-#         httpsRedirect: true
-#     - port:
-#         number: 443
-#         name: https
-#         protocol: HTTPS
-#       hosts:
-#         - "*.syscd.tech"
-#       tls:
-#         mode: SIMPLE
-#         credentialName: gateway-private-tls
-# ---
+# Argo tunnel domain
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: private
+  namespace: istio-system
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
+    # external-dns.alpha.kubernetes.io/ingress: "istio-system/istio-gateway"
+spec:
+  selector:
+    istio: gateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*.syscd.tech"
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - "*.syscd.tech"
+      tls:
+        mode: SIMPLE
+        credentialName: gateway-private-tls
+---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
@@ -52,16 +50,14 @@ spec:
         protocol: HTTP
       hosts:
         - "*.syscd.live"
-        # - "*.syscd.xyz"
-      # tls:
-      #   httpsRedirect: true
+        - "*.syscd.xyz"
     - port:
         number: 443
         name: https
         protocol: HTTPS
       hosts:
         - "*.syscd.live"
-        # - "*.syscd.xyz"
+        - "*.syscd.xyz"
       tls:
         mode: SIMPLE
         credentialName: gateway-public-tls
