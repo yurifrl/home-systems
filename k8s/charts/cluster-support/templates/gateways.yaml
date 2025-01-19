@@ -8,7 +8,7 @@ metadata:
   namespace: istio-system
   annotations:
     external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
-    # external-dns.alpha.kubernetes.io/ingress: "istio-system/gateway"
+    external-dns.alpha.kubernetes.io/ingress: "istio-system/ingress"
 spec:
   selector:
     istio: gateway
