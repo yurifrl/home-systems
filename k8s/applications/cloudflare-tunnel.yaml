@@ -11,7 +11,7 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: true
+      selfHeal: false
     syncOptions:
       - CreateNamespace=true 
   source:
@@ -27,6 +27,8 @@ spec:
           ingress:
             - hostname: "argocd.syscd.live"
               service: http://argocd-server.argocd.svc.cluster.local:80
+            - hostname: "tp.syscd.xyz"
+              service: http://teleport-cluster.teleport.svc.cluster.local:443
             - hostname: "*.syscd.live"
               service: http://istio-gateway.istio-system.svc.cluster.local:80
             - hostname: "*.syscd.xyz"
