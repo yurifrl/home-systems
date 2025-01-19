@@ -16,38 +16,38 @@ spec:
       - CreateNamespace=true
   sources:
     # Cloudflare
-    # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true" should work, it does not
-    - repoURL: https://kubernetes-sigs.github.io/external-dns/
-      chart: external-dns
-      targetRevision: "*"
-      helm:
-        releaseName: external-dns-public
-        valuesObject:
-          provider: cloudflare
-          env:
-            - name: CF_API_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: cloudflare-api-token
-                  key: token
-          txtOwnerId: k8s-live
-          policy: sync
-          domainFilters:
-            - syscd.xyz
-            - syscd.live
-          interval: 1m
-          sources:
-            - istio-gateway
-            - istio-virtualservice
-          extraArgs:
-            - --cloudflare-proxied
-          resources:
-            limits:
-              cpu: 50m
-              memory: 128Mi
-            requests:
-              cpu: 25m
-              memory: 64Mi
+    # # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true" should work, it does not
+    # - repoURL: https://kubernetes-sigs.github.io/external-dns/
+    #   chart: external-dns
+    #   targetRevision: "*"
+    #   helm:
+    #     releaseName: external-dns-public
+    #     valuesObject:
+    #       provider: cloudflare
+    #       env:
+    #         - name: CF_API_TOKEN
+    #           valueFrom:
+    #             secretKeyRef:
+    #               name: cloudflare-api-token
+    #               key: token
+    #       txtOwnerId: k8s-live
+    #       policy: sync
+    #       domainFilters:
+    #         - syscd.xyz
+    #         - syscd.live
+    #       interval: 1m
+    #       sources:
+    #         - istio-gateway
+    #         - istio-virtualservice
+    #       extraArgs:
+    #         - --cloudflare-proxied
+    #       resources:
+    #         limits:
+    #           cpu: 50m
+    #           memory: 128Mi
+    #         requests:
+    #           cpu: 25m
+    #           memory: 64Mi
     # Non cloudflare
     - repoURL: https://kubernetes-sigs.github.io/external-dns/
       chart: external-dns
@@ -63,10 +63,12 @@ spec:
                 secretKeyRef:
                   name: cloudflare-api-token
                   key: token
-          txtOwnerId: k8s
+          txtOwnerId: syscd
           policy: sync
           domainFilters:
             - syscd.tech
+            - syscd.xyz
+            - syscd.live
           interval: 1m
           sources:
             - istio-gateway

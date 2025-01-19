@@ -37,9 +37,7 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/hostname: "*.syscd.live,*.syscd.xyz"
     external-dns.alpha.kubernetes.io/target: "1b664006-2417-4072-877f-45697ffa642d.cfargotunnel.com"
-    # should work, it does not, so I pass --cloudflare-proxied
-    # If I could pass this here, I could have a single external-dns instance
-    # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
 spec:
   selector:
     istio: gateway
