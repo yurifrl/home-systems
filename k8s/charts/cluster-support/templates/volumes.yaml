@@ -12,8 +12,14 @@ spec:
   storageClassName: local-path
   local:
     path: /storage/home-assistant-data
-  nodeSelector:
-    kubernetes.io/hostname: tp4
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - tp4
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -29,8 +35,14 @@ spec:
   storageClassName: local-path
   local:
     path: /storage/zigbee2mqtt-data
-  nodeSelector:
-    kubernetes.io/hostname: tp4
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - tp4
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -46,8 +58,14 @@ spec:
   storageClassName: local-path
   local:
     path: /storage/node-red-data
-  nodeSelector:
-    kubernetes.io/hostname: tp4
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - tp4
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -63,8 +81,14 @@ spec:
   storageClassName: local-path
   local:
     path: /storage/teleport-data
-  nodeSelector:
-    kubernetes.io/hostname: tp4
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - tp4
 
 
 # k -n node-red scale deploy/node-red --replicas=0
