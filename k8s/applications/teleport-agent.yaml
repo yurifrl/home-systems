@@ -23,6 +23,7 @@ spec:
         roles: "kube,app,discovery"
         joinParams:
           method: kubernetes
+          tokenName: teleport-agent-token
         kubeClusterName: k3s.syscd.xyz
         proxyAddr: tp.syscd.xyz:443
         resources:
