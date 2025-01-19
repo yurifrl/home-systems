@@ -1,0 +1,32 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-01
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: yuri@syscd.tech
+    privateKeySecretRef:
+      name: letsencrypt-01
+    solvers:
+    - http01:
+        ingress:
+          class: istio
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: syscd-tech-tls-01
+  namespace: istio-system
+spec:
+  secretName: syscd-tech-tls-01
+  issuerRef:
+    name: letsencrypt-01
+    kind: ClusterIssuer
+  dnsNames:
+  - "*.syscd.tech"
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  privateKey:
+    algorithm: RSA
+    size: 2048 
