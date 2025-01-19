@@ -27,7 +27,13 @@ spec:
                 name: node-red
                 namespace: node-red
                 port: 1880
-
+          persistentVolumeClaims:
+            - name: node-red-tp4-data
+              storage: 10Gi
+              storageClassName: local-path
+              accessModes:
+                - ReadWriteOnce
+              volumeName: node-red-tp4-data
     # https://github.com/SchwarzIT/node-red-chart
     - repoURL: https://schwarzit.github.io/node-red-chart
       targetRevision: "*"
