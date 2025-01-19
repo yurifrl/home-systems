@@ -29,6 +29,8 @@ spec:
               service: http://argocd-server.argocd.svc.cluster.local:80
             - hostname: "tp.syscd.xyz"
               service: http://teleport-cluster.teleport.svc.cluster.local:443
+              originRequest:
+                noTLSVerify: true
             - hostname: "*.syscd.live"
               service: http://istio-gateway.istio-system.svc.cluster.local:80
             - hostname: "*.syscd.xyz"
