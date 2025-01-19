@@ -35,8 +35,8 @@ spec:
           txtOwnerId: syscd
           policy: sync
           domainFilters:
-            # - syscd.tech
-            # - syscd.xyz
+            - syscd.tech
+            - syscd.xyz
             - syscd.live
           interval: 1m
           sources:
