@@ -39,7 +39,7 @@ spec:
             storageClass: local-path
             accessMode: ReadWriteOnce
             size: 10Gi
-            volumeName: node-red-tp4-data
+            existingClaim: node-red-tp4-data
             mountPath: "/data"
 
           nodeSelector:
