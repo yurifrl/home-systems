@@ -73,6 +73,8 @@ spec:
           sources:
             - istio-gateway
             - istio-virtualservice
+          extraArgs:
+            - --cloudflare-proxied
           resources:
             limits:
               cpu: 50m
