@@ -53,9 +53,8 @@ spec:
 
           # Persistence for session recordings
           persistence:
-            enabled: true
+            enabled: false
             existingClaimName: teleport-tp4-data
-            storageClassName: local-path
           #
           chartMode: standalone
 
