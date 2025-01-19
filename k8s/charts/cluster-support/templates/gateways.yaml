@@ -27,7 +27,7 @@ spec:
         - "*.syscd.tech"
       tls:
         mode: SIMPLE
-        credentialName: gateway-public-tls
+        credentialName: gateway-private-tls
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
@@ -61,5 +61,5 @@ spec:
         - "*.syscd.xyz"
       tls:
         mode: SIMPLE
-        credentialName: gateway-private-tls
+        credentialName: gateway-public-tls
 {{- end }}
