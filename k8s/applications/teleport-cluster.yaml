@@ -26,6 +26,10 @@ spec:
                 name: teleport-cluster
                 namespace: teleport
                 port: 443
+              domains:
+                xyz: true
+                tech: false
+                live: false
 
     - chart: teleport-cluster
       repoURL: https://charts.releases.teleport.dev
