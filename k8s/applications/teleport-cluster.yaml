@@ -21,9 +21,9 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: teleport-cluster
+            - name: tp
               service:
-                name: tp
+                name: teleport-cluster
                 namespace: teleport
                 port: 443
               domains:
