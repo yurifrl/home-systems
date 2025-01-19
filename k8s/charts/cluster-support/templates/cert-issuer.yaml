@@ -9,9 +9,14 @@ spec:
     privateKeySecretRef:
       name: letsencrypt
     solvers:
-    - http01:
-        ingress:
-          class: istio
+    - dns01:
+        cloudflare:
+          apiTokenSecretRef:
+            name: cloudflare-api-token
+            key: token
+      selector:
+        dnsZones:
+        - "syscd.tech"
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
