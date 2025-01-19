@@ -27,7 +27,7 @@ spec:
                 namespace: probee
                 port: 80
               domains:
-                xyz: true
+                xyz: false
                 tech: true
                 live: true
 
