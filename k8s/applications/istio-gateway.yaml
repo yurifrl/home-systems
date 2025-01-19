@@ -28,13 +28,7 @@ spec:
       helm:
         valuesObject:
           service:
-            externalTrafficPolicy: Local
-          affinity:
-            nodeAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                nodeSelectorTerms:
-                  - matchExpressions:
-                      - key: kubernetes.io/hostname
-                        operator: In
-                        values:
-                          - nixos-1
+            # externalTrafficPolicy: Local
+            # type: NodePort
+          nodeSelector:
+            kubernetes.io/hostname: nixos-1
