@@ -21,7 +21,8 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: tp
+            - name: teleport-cluster
+              hostname: tp
               service:
                 name: teleport-cluster
                 namespace: teleport
