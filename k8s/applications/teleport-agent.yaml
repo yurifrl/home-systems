@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: teleport-agent
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: teleport
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+  source:
+    chart: teleport-kube-agent
+    repoURL: https://charts.releases.teleport.dev
+    targetRevision: "*"
+    helm:
+      valuesObject:
+        roles: "app,discovery"
+        joinParams:
+          method: kubernetes
+        proxyAddr: tp.syscd.xyz
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi 
