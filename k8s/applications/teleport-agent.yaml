@@ -24,7 +24,7 @@ spec:
         joinParams:
           method: kubernetes
         kubeClusterName: k3s.syscd.xyz
-        proxyAddr: tp.syscd.xyz
+        proxyAddr: tp.syscd.xyz:443
         resources:
           limits:
             cpu: 500m
