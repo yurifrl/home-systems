@@ -33,3 +33,7 @@ spec:
           requests:
             cpu: 100m
             memory: 128Mi 
+
+# k -n teleport get pod -l app.kubernetes.io/component=auth
+# k -n teleport exec -it $POD_NAME -- tctl tokens add --type=kube,app,discovery
+# k -n teleport create secret generic teleport-agent-token --from-literal=token='$TOKEN'
