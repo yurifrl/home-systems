@@ -42,7 +42,6 @@ spec:
           sources:
             - istio-gateway
             - istio-virtualservice
-            - ingress
           extraArgs:
             - --cloudflare-proxied
           resources:
