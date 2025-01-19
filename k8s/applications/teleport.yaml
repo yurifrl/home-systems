@@ -1,66 +1,66 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: teleport
-  namespace: argocd
-spec:
-  project: default
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: teleport
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: false
-    syncOptions:
-      - CreateNamespace=true
-  sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: teleport-cluster
-              hostname: tp
-              service:
-                name: teleport-cluster
-                namespace: teleport
-                port: 443
-              domains:
-                xyz: true
-                tech: false
-                live: false
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: teleport
+#   namespace: argocd
+# spec:
+#   project: default
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: teleport
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: false
+#     syncOptions:
+#       - CreateNamespace=true
+#   sources:
+#     - repoURL: https://github.com/yurifrl/home-systems.git
+#       targetRevision: HEAD
+#       path: k8s/charts/support
+#       helm:
+#         valuesObject:
+#           virtualServices:
+#             - name: teleport-cluster
+#               hostname: tp
+#               service:
+#                 name: teleport-cluster
+#                 namespace: teleport
+#                 port: 443
+#               domains:
+#                 xyz: true
+#                 tech: false
+#                 live: false
 
-    - chart: teleport-cluster
-      repoURL: https://charts.releases.teleport.dev
-      targetRevision: "*"
-      helm:
-        valuesObject:
-          clusterName: tp.syscd.xyz
-          # Disable ACME since we're using cert-manager
-          acme: false
+#     - chart: teleport-cluster
+#       repoURL: https://charts.releases.teleport.dev
+#       targetRevision: "*"
+#       helm:
+#         valuesObject:
+#           clusterName: tp.syscd.xyz
+#           # Disable ACME since we're using cert-manager
+#           acme: false
 
-          # Session recording configuration
-          sessionRecording: "off"
+#           # Session recording configuration
+#           sessionRecording: "off"
 
-          # Persistence for session recordings
-          persistence:
-            enabled: false
+#           # Persistence for session recordings
+#           persistence:
+#             enabled: false
 
-          #
-          chartMode: standalone
+#           #
+#           chartMode: standalone
 
-          #
-          operator:
-            enabled: true
+#           #
+#           operator:
+#             enabled: true
                              
-          # Resource limits and requests
-          resources:
-            limits:
-              cpu: 1000m
-              memory: 1Gi
-            requests:
-              cpu: 100m
-              memory: 256Mi
+#           # Resource limits and requests
+#           resources:
+#             limits:
+#               cpu: 1000m
+#               memory: 1Gi
+#             requests:
+#               cpu: 100m
+#               memory: 256Mi
           
