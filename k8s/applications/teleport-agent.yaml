@@ -20,9 +20,10 @@ spec:
     targetRevision: "*"
     helm:
       valuesObject:
-        roles: "app,discovery"
+        roles: "kube,app,discovery"
         joinParams:
           method: kubernetes
+        kubeClusterName: k3s.syscd.xyz
         proxyAddr: tp.syscd.xyz
         resources:
           limits:
