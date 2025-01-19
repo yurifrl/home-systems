@@ -12,5 +12,6 @@ spec:
       storage: {{ .storage }}
   volumeMode: Filesystem
   storageClassName: {{ .storageClassName }}
+  volumeName: {{ .volumeName }}
 ---
 {{- end }}
