@@ -11,18 +11,18 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: true
+      selfHeal: false
     syncOptions:
       - CreateNamespace=true
   sources:
     # Might work on the virtual service
     # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
-    # Non cloudflare
+    # Tailscale
     - repoURL: https://kubernetes-sigs.github.io/external-dns/
       chart: external-dns
       targetRevision: "*"
       helm:
-        releaseName: external-dns
+        releaseName: external-dns-private
         valuesObject:
           provider: cloudflare
           logLevel: debug
@@ -32,10 +32,34 @@ spec:
                 secretKeyRef:
                   name: cloudflare-api-token
                   key: token
-          txtOwnerId: syscd
+          txtOwnerId: syscd-private
           policy: sync
           domainFilters:
             - syscd.tech
+          interval: 1m
+          sources:
+            - istio-gateway
+            - istio-virtualservice
+          extraArgs:
+            - --service-type-filter=LoadBalancer
+    # Cloudflare
+    - repoURL: https://kubernetes-sigs.github.io/external-dns/
+      chart: external-dns
+      targetRevision: "*"
+      helm:
+        releaseName: external-dns-public
+        valuesObject:
+          provider: cloudflare
+          logLevel: debug
+          env:
+            - name: CF_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-api-token
+                  key: token
+          txtOwnerId: syscd-public
+          policy: sync
+          domainFilters:
             - syscd.xyz
             - syscd.live
           interval: 1m
@@ -44,17 +68,4 @@ spec:
             - istio-virtualservice
           extraArgs:
             - --cloudflare-proxied
-          resources:
-            limits:
-              cpu: 50m
-              memory: 128Mi
-            requests:
-              cpu: 25m
-              memory: 64Mi
-          rbac:
-            create: true
-            additionalPermissions:
-              - apiGroups: ["networking.k8s.io"]
-                resources: ["ingresses"]
-                verbs: ["get", "list", "watch"]
 # k -n external-dns create secret generic cloudflare-api-token --from-literal=token='your-cloudflare-api-token'
