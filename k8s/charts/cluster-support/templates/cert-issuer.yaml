@@ -16,10 +16,10 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: syscd-tech-tl
+  name: syscd-tech-tls
   namespace: istio-system
 spec:
-  secretName: syscd-tech-tl
+  secretName: syscd-tech-tls
   issuerRef:
     name: letsencrypt
     kind: ClusterIssuer
