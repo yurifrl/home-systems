@@ -28,7 +28,7 @@ spec:
       helm:
         valuesObject:
           service:
-            # externalTrafficPolicy: Local
-            # type: NodePort
+            externalTrafficPolicy: Local
+            type: LoadBalancer
           nodeSelector:
             kubernetes.io/hostname: nixos-1
