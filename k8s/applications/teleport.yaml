@@ -46,6 +46,7 @@ spec:
 
           # Persistence for session recordings
           persistence:
+            enabled: true
             existingClaimName: teleport-tp4-data
             storageClassName: local-path
           #
