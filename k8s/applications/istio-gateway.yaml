@@ -29,6 +29,6 @@ spec:
         valuesObject:
           service:
             # externalTrafficPolicy: Local
-            # type: NodePort
+            type: NodePort
           nodeSelector:
             kubernetes.io/hostname: nixos-1
