@@ -58,6 +58,7 @@ spec:
         releaseName: external-dns-private
         valuesObject:
           provider: cloudflare
+          logLevel: debug
           env:
             - name: CF_API_TOKEN
               valueFrom:
@@ -74,6 +75,9 @@ spec:
             - istio-virtualservice
           istioIngressGateways:
             - istio-system/istio-gateway
+          # Try
+          # extraArgs:
+          #   - --cloudflare-proxied
           resources:
             limits:
               cpu: 50m
