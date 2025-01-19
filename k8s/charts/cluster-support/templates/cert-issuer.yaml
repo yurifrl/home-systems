@@ -1,13 +1,13 @@
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
-  name: letsencrypt-01
+  name: letsencrypt
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
     email: yuri@syscd.tech
     privateKeySecretRef:
-      name: letsencrypt-01
+      name: letsencrypt
     solvers:
     - http01:
         ingress:
@@ -16,12 +16,12 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: syscd-tech-tls-01
+  name: syscd-tech-tl
   namespace: istio-system
 spec:
-  secretName: syscd-tech-tls-01
+  secretName: syscd-tech-tl
   issuerRef:
-    name: letsencrypt-01
+    name: letsencrypt
     kind: ClusterIssuer
   dnsNames:
   - "*.syscd.tech"
