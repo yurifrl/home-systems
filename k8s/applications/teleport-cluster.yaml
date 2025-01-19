@@ -23,7 +23,7 @@ spec:
           virtualServices:
             - name: teleport-cluster
               service:
-                name: teleport-cluster
+                name: tp
                 namespace: teleport
                 port: 443
               domains:
