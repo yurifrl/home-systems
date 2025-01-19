@@ -44,6 +44,7 @@ spec:
             - istio-virtualservice
           extraArgs:
             - --cloudflare-proxied
+            - --cloudflare-dns-records-ttl=120 # TTL in seconds (2 minutes)
           resources:
             limits:
               cpu: 50m
