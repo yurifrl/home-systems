@@ -45,7 +45,7 @@ spec:
       helm:
         valuesObject:
           clusterName: tp.syscd.xyz
-          # Disable ACME since we're using cert-manager
+          # Disable ACME since we're cloudflare proxy
           acme: false
 
           # Session recording configuration
@@ -73,4 +73,5 @@ spec:
             requests:
               cpu: 100m
               memory: 256Mi
-          
+
+# k -n teleport exec -it $POD_NAME -- tctl users reset $USER
