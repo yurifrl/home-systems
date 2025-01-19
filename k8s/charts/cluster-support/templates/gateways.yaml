@@ -18,6 +18,8 @@ spec:
         protocol: HTTP
       hosts:
         - "*.syscd.tech"
+      tls:
+        httpsRedirect: true  # Force HTTPS redirect
     - port:
         number: 443
         name: https
@@ -26,7 +28,7 @@ spec:
         - "*.syscd.tech"
       tls:
         mode: SIMPLE
-        credentialName: gateway-private-tls
+        credentialName: syscd-tech-tls  # Updated to match the new certificate secret name
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
