@@ -18,7 +18,7 @@ spec:
       hosts:
         - "*.syscd.tech"
       tls:
-        httpsRedirect: false
+        httpsRedirect: true
     - port:
         number: 443
         name: https
@@ -51,7 +51,7 @@ spec:
         - "*.syscd.live"
         - "*.syscd.xyz"
       tls:
-        httpsRedirect: false
+        httpsRedirect: true
     - port:
         number: 443
         name: https
