@@ -37,6 +37,7 @@ metadata:
   name: public
   namespace: istio-system
   annotations:
+    external-dns.alpha.kubernetes.io/ttl: "1m"
     external-dns.alpha.kubernetes.io/hostname: "*.syscd.live"
     # external-dns.alpha.kubernetes.io/hostname: "*.syscd.live,*.syscd.xyz"
     external-dns.alpha.kubernetes.io/target: "1b664006-2417-4072-877f-45697ffa642d.cfargotunnel.com"
