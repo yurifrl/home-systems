@@ -53,7 +53,7 @@ spec:
       chart: external-dns
       targetRevision: "*"
       helm:
-        releaseName: external-dns-private
+        releaseName: external-dns
         valuesObject:
           provider: cloudflare
           logLevel: debug
