@@ -1,12 +1,12 @@
-kind: user
-version: v2
+apiVersion: resources.teleport.dev/v2
+kind: TeleportUser
 metadata:
   name: yuri
 spec:
   roles: ['access', 'editor', 'auditor']
 ---
-kind: user
-version: v2
+apiVersion: resources.teleport.dev/v2
+kind: TeleportUser
 metadata:
   name: gabriele
 spec:
