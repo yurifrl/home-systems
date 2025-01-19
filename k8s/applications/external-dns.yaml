@@ -39,8 +39,6 @@ spec:
           sources:
             - istio-gateway
             - istio-virtualservice
-          istioIngressGateways:
-            - istio-system/istio-gateway
           extraArgs:
             - --cloudflare-proxied
           resources:
@@ -73,11 +71,6 @@ spec:
           sources:
             - istio-gateway
             - istio-virtualservice
-          istioIngressGateways:
-            - istio-system/istio-gateway
-          # Try
-          # extraArgs:
-          #   - --cloudflare-proxied
           resources:
             limits:
               cpu: 50m
