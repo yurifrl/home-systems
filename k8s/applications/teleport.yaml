@@ -1,94 +1,94 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: teleport
-#   namespace: argocd
-# spec:
-#   project: default
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: teleport
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: false
-#     syncOptions:
-#       - CreateNamespace=true
-#   sources:
-#     - repoURL: https://github.com/yurifrl/home-systems.git
-#       targetRevision: HEAD
-#       path: k8s/charts/support
-#       helm:
-#         valuesObject:
-#           virtualServices:
-#             # This is techicaly not used, it's used to create the cloudflare entry
-#             - name: teleport-cluster
-#               hostnameOverride: syscd.xyz
-#               service:
-#                 name: teleport-cluster
-#                 namespace: teleport
-#                 port: 443
-#               domains:
-#                 xyz: true
-#                 tech: false
-#                 live: false
-#           persistentVolumeClaims:
-#             - name: teleport-tp4-data
-#               storage: 10Gi
-#               storageClassName: local-path
-#               accessModes:
-#                 - ReadWriteOnce
-#               volumeName: teleport-tp4-data
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: teleport
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: teleport
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            # This is techicaly not used, it's used to create the cloudflare entry
+            - name: teleport-cluster
+              hostnameOverride: syscd.xyz
+              service:
+                name: teleport-cluster
+                namespace: teleport
+                port: 443
+              domains:
+                xyz: true
+                tech: false
+                live: false
+          persistentVolumeClaims:
+            - name: teleport-tp4-data
+              storage: 10Gi
+              storageClassName: local-path
+              accessModes:
+                - ReadWriteOnce
+              volumeName: teleport-tp4-data
 
-#     - chart: teleport-cluster
-#       repoURL: https://charts.releases.teleport.dev
-#       targetRevision: "*"
-#       helm:
-#         valuesObject:
-#           clusterName: syscd.xyz
-#           # Disable ACME since we're cloudflare proxy
-#           acme: false
+    - chart: teleport-cluster
+      repoURL: https://charts.releases.teleport.dev
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          clusterName: syscd.xyz
+          # Disable ACME since we're cloudflare proxy
+          acme: false
 
-#           # Session recording configuration
-#           sessionRecording: "off"
+          # Session recording configuration
+          sessionRecording: "off"
 
-#           # Persistence for session recordings
-#           persistence:
-#             enabled: true
-#             existingClaimName: teleport-tp4-data
-#             storageClassName: local-path
-#           #
-#           chartMode: standalone
+          # Persistence for session recordings
+          persistence:
+            enabled: true
+            existingClaimName: teleport-tp4-data
+            storageClassName: local-path
+          #
+          chartMode: standalone
 
-#           nodeSelector:
-#             kubernetes.io/hostname: tp4
-#           #
-#           operator:
-#             enabled: true
+          nodeSelector:
+            kubernetes.io/hostname: tp4
+          #
+          operator:
+            enabled: true
                              
-#           # Resource limits and requests
-#           resources:
-#             limits:
-#               cpu: 1000m
-#               memory: 1Gi
-#             requests:
-#               cpu: 100m
-#               memory: 256Mi
+          # Resource limits and requests
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 256Mi
           
-#           # Needs this for the agent to work
-#           proxyListenerMode: multiplex
+          # Needs this for the agent to work
+          proxyListenerMode: multiplex
 
-# # k -n teleport describe teleportusers $USER
+# k -n teleport describe teleportusers $USER
 
-# # k -n teleport get pod -l app.kubernetes.io/component=auth
-# # k -n teleport exec -it $POD_NAME -- tctl users reset $USER
+# k -n teleport get pod -l app.kubernetes.io/component=auth
+# k -n teleport exec -it $POD_NAME -- tctl users reset $USER
 
 
 
-# # Docs
+# Docs
 
-# # https://goteleport.com/docs/reference/helm-reference/teleport-kube-agent/
-# # https://goteleport.com/docs/enroll-resources/auto-discovery/kubernetes-applications/get-started/
-# # https://goteleport.com/docs/reference/operator-resources/resources-teleport-dev-provisiontokens/
-# # https://goteleport.com/docs/reference/agent-services/kubernetes-application-discovery
-# # https://goteleport.com/docs/reference/helm-reference/teleport-kube-agent
+# https://goteleport.com/docs/reference/helm-reference/teleport-kube-agent/
+# https://goteleport.com/docs/enroll-resources/auto-discovery/kubernetes-applications/get-started/
+# https://goteleport.com/docs/reference/operator-resources/resources-teleport-dev-provisiontokens/
+# https://goteleport.com/docs/reference/agent-services/kubernetes-application-discovery
+# https://goteleport.com/docs/reference/helm-reference/teleport-kube-agent
