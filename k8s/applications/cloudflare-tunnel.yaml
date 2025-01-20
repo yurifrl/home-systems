@@ -25,22 +25,19 @@ spec:
           secretName: cloudflare-tunnel-secret
           tunnelName: nixos-1
           ingress:
+            - hostname: "syscd.xyz"
+              service: https://teleport.teleport.svc.cluster.local
+              originRequest:
+                noTLSVerify: true
+            - hostname: "*.syscd.xyz"
+              service: https://teleport.teleport.svc.cluster.local
+              originRequest:
+                noTLSVerify: true                
             - hostname: "argocd.syscd.live"
               service: http://argocd-server.argocd.svc.cluster.local:80
             - hostname: "*.syscd.live"
               service: http://istio-gateway.istio-system.svc.cluster.local:80
 
-            # - hostname: "*.syscd.xyz"
-            #   service: http://istio-gateway.istio-system.svc.cluster.local:80
-            - hostname: "syscd.xyz"
-              service: https://teleport.teleport.svc.cluster.local
-              originRequest:
-                noTLSVerify: true
-
-            - hostname: "*.syscd.xyz"
-              service: https://teleport.teleport.svc.cluster.local
-              originRequest:
-                noTLSVerify: true
         resources:
           limits:
             cpu: 100m
