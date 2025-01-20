@@ -9,6 +9,9 @@ metadata:
   namespace: {{ $.Release.Namespace }}
 spec:
   hosts:
+    {{- if .hostnameOverride }}
+    - {{ .hostnameOverride }}
+    {{- else }}
     {{- if $domains.live }}
     - {{ $hostPrefix }}.syscd.live
     {{- end }}
@@ -17,6 +20,7 @@ spec:
     {{- end }}
     {{- if $domains.xyz }}
     - {{ $hostPrefix }}.syscd.xyz
+    {{- end }}
     {{- end }}
   gateways:
     - istio-system/private
