@@ -27,18 +27,12 @@ spec:
           ingress:
             - hostname: "argocd.syscd.live"
               service: http://argocd-server.argocd.svc.cluster.local:80
-            - hostname: "tp.syscd.xyz"
-              service: https://teleport.teleport.svc.cluster.local
-              originRequest:
-                noTLSVerify: true
-            - hostname: "*.tp.syscd.xyz"
-              service: https://teleport.teleport.svc.cluster.local
-              originRequest:
-                noTLSVerify: true
             - hostname: "*.syscd.live"
               service: http://istio-gateway.istio-system.svc.cluster.local:80
             - hostname: "*.syscd.xyz"
-              service: http://istio-gateway.istio-system.svc.cluster.local:80
+              service: https://teleport.teleport.svc.cluster.local
+              originRequest:
+                noTLSVerify: true
         resources:
           limits:
             cpu: 100m
