@@ -23,7 +23,7 @@ spec:
           virtualServices:
             # This is techicaly not used, it's used to create the cloudflare entry
             - name: teleport-cluster
-              hostname: tp
+              hostname: syscd.xyz
               service:
                 name: teleport-cluster
                 namespace: teleport
