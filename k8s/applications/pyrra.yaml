@@ -51,3 +51,6 @@ spec:
             requests:
               cpu: 50m
               memory: 128Mi
+          service:
+            annotations:
+              teleport.dev/name: pyrra

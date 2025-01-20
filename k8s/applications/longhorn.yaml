@@ -51,3 +51,6 @@ spec:
             replicaZoneSoftAntiAffinity: true
             storageMinimalAvailablePercentage: 10
             defaultReplicaCount: 1
+          service:
+            annotations:
+              teleport.dev/name: longhorn

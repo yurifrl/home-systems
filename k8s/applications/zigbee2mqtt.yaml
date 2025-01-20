@@ -57,3 +57,6 @@ spec:
               server: "mqtt://mosquitto.mosquitto.svc.cluster.local:1883"
             serial:
               port: "/dev/ttyUSB0"
+          service:
+            annotations:
+              teleport.dev/name: zigbee2mqtt  

@@ -52,6 +52,9 @@ spec:
             enabled: true
             existingVolume: home-assistant-tp4-data
             storageClass: local-path
+          service:
+            annotations:
+              teleport.dev/name: home-assistant
           configuration:
             enabled: true
             forceInit: true

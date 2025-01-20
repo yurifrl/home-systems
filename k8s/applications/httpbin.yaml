@@ -1,13 +1,13 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: probee
+  name: httpbin
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: probee
+    namespace: httpbin
   syncPolicy:
     automated:
       prune: true
@@ -21,10 +21,10 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: probee
+            - name: httpbin
               service:
-                name: probee-httpbin
-                namespace: probee
+                name: httpbin-httpbin
+                namespace: httpbin
                 port: 80
               domains:
                 xyz: false
@@ -41,3 +41,5 @@ spec:
           service:
             type: ClusterIP
             port: 80
+            annotations:
+              teleport.dev/name: httpbin

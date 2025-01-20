@@ -39,6 +39,9 @@ spec:
       helm:
         valuesObject:
           prometheus:
+            service:
+              annotations:
+                teleport.dev/name: prometheus
             prometheusSpec:
               externalUrl: https://prometheus.syscd.live
               # Configure Alertmanager endpoint
@@ -123,6 +126,9 @@ spec:
             forceDeployDashboards: true
             defaultDashboardsEnabled: true
           alertmanager:
+            service:
+              annotations:
+                teleport.dev/name: alertmanager
             alertmanagerSpec:
               externalUrl: https://alertmanager.syscd.live
 

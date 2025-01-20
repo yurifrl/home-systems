@@ -47,3 +47,6 @@ spec:
             requests:
               cpu: 100m
               memory: 128Mi
+          service:
+            annotations:
+              teleport.dev/name: promlens

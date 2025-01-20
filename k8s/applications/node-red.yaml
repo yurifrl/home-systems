@@ -50,3 +50,6 @@ spec:
 
           nodeSelector:
             kubernetes.io/hostname: tp4
+          service:
+            annotations:
+              teleport.dev/name: node-red

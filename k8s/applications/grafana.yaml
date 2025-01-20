@@ -43,6 +43,9 @@ spec:
             auth:
               disable_login_form: true
               disable_signout_menu: true
+          service:
+            annotations:
+              teleport.dev/name: grafana
           resources:
             limits:
               cpu: 200m
