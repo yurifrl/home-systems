@@ -13,3 +13,18 @@ metadata:
   namespace: teleport
 spec:
   roles: ['access']
+---
+apiVersion: resources.teleport.dev/v2
+kind: TeleportProvisionToken
+metadata:
+  name: teleport-agent-token
+  namespace: teleport
+spec:
+  roles: ['kube', 'app', 'discovery']
+  join_method: kubernetes
+  kubernetes:
+    # If type is not specified, it defaults to in_cluster
+    type: in_cluster
+    allow:
+      # Service account names follow the format "namespace:serviceaccountname".
+      - service_account: "teleport:teleport-agent"

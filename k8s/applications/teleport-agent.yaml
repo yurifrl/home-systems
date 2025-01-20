@@ -23,7 +23,7 @@ spec:
         roles: "kube,app,discovery"
         joinParams:
           method: kubernetes
-          # tokenName: teleport-agent-token
+          tokenName: teleport-agent-token
         kubeClusterName: k3s.syscd.xyz
         proxyAddr: tp.syscd.xyz:443
         resources:
@@ -33,7 +33,3 @@ spec:
           requests:
             cpu: 100m
             memory: 128Mi 
-
-# k -n teleport get pod -l app.kubernetes.io/component=auth
-# k -n teleport exec -it $POD_NAME -- tctl tokens add --type=kube,app,discovery
-# k -n teleport create secret generic teleport-agent-token --from-literal=token='$TOKEN'
