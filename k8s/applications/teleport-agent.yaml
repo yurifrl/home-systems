@@ -33,3 +33,13 @@ spec:
           requests:
             cpu: 100m
             memory: 128Mi 
+
+        kubernetesDiscovery:
+          - types: ["app"]
+            namespaces: [ "home-assistant" ]
+            labels:
+              env: home
+          - types: ["app"]
+            namespaces: [ "*" ]
+            labels:
+              env: app

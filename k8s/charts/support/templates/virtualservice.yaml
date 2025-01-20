@@ -7,8 +7,6 @@ kind: VirtualService
 metadata:
   name: {{ .name }}
   namespace: {{ $.Release.Namespace }}
-  annotations:
-    teleport.dev/name: {{ .name }}
 spec:
   hosts:
     {{- if $domains.live }}
