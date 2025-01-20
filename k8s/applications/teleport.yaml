@@ -74,6 +74,9 @@ spec:
             requests:
               cpu: 100m
               memory: 256Mi
+          
+          # Needs this for the agent to work
+          proxyListenerMode: multiplex
 
 # k -n teleport describe teleportusers $USER
 
