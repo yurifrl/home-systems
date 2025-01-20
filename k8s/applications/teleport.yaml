@@ -45,7 +45,7 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
-          clusterName: tp.syscd.xyz
+          clusterName: syscd.xyz
           # Disable ACME since we're cloudflare proxy
           acme: false
 

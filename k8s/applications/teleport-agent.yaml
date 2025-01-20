@@ -24,8 +24,8 @@ spec:
         joinParams:
           method: kubernetes
           tokenName: teleport-agent-token
-        kubeClusterName: k3s.syscd.xyz
-        proxyAddr: tp.syscd.xyz:443
+        kubeClusterName: syscd.xyz
+        proxyAddr: syscd.xyz:443
         resources:
           limits:
             cpu: 500m
