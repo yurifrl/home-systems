@@ -1,45 +1,45 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: teleport-agent
-  namespace: argocd
-spec:
-  project: default
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: teleport
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: false
-    syncOptions:
-      - CreateNamespace=true
-  source:
-    chart: teleport-kube-agent
-    repoURL: https://charts.releases.teleport.dev
-    targetRevision: "*"
-    helm:
-      valuesObject:
-        roles: "kube,app,discovery"
-        joinParams:
-          method: kubernetes
-          tokenName: teleport-agent-token
-        kubeClusterName: syscd.xyz
-        proxyAddr: syscd.xyz:443
-        resources:
-          limits:
-            cpu: 500m
-            memory: 512Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi 
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: teleport-agent
+#   namespace: argocd
+# spec:
+#   project: default
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: teleport
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: false
+#     syncOptions:
+#       - CreateNamespace=true
+#   source:
+#     chart: teleport-kube-agent
+#     repoURL: https://charts.releases.teleport.dev
+#     targetRevision: "*"
+#     helm:
+#       valuesObject:
+#         roles: "kube,app,discovery"
+#         joinParams:
+#           method: kubernetes
+#           tokenName: teleport-agent-token
+#         kubeClusterName: syscd.xyz
+#         proxyAddr: syscd.xyz:443
+#         resources:
+#           limits:
+#             cpu: 500m
+#             memory: 512Mi
+#           requests:
+#             cpu: 100m
+#             memory: 128Mi 
 
-        # kubernetesDiscovery:
-        #   - types: ["app"]
-        #     namespaces: [ "home-assistant" ]
-        #     labels:
-        #       env: home
-        #   - types: ["app"]
-        #     namespaces: [ "*" ]
-        #     labels:
-        #       env: app
+#         # kubernetesDiscovery:
+#         #   - types: ["app"]
+#         #     namespaces: [ "home-assistant" ]
+#         #     labels:
+#         #       env: home
+#         #   - types: ["app"]
+#         #     namespaces: [ "*" ]
+#         #     labels:
+#         #       env: app
