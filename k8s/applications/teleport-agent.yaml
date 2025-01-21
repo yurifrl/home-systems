@@ -34,6 +34,12 @@ spec:
             cpu: 100m
             memory: 128Mi 
 
+        kubernetesDiscovery:
+          - types: ["app"]
+            namespaces: [ "*" ]
+            labels:
+              env: app
+       
         apps:
           - name: grafana
             uri: https://grafana.syscd.xyz
