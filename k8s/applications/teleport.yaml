@@ -31,10 +31,6 @@ spec:
               annotations:
                 external-dns.alpha.kubernetes.io/hostname: syscd.xyz
                 external-dns.alpha.kubernetes.io/target: "1b664006-2417-4072-877f-45697ffa642d.cfargotunnel.com"
-              domains:
-                xyz: true
-                tech: false
-                live: false
           persistentVolumeClaims:
             - name: teleport-tp4-data
               storage: 10Gi

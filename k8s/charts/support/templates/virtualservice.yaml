@@ -16,15 +16,9 @@ spec:
     {{- if .hostnameOverride }}
     - {{ .hostnameOverride }}
     {{- else }}
-    {{- if $domains.live }}
     - {{ $hostPrefix }}.syscd.live
-    {{- end }}
-    {{- if $domains.tech }}
     - {{ $hostPrefix }}.syscd.tech
-    {{- end }}
-    {{- if $domains.xyz }}
     - {{ $hostPrefix }}.syscd.xyz
-    {{- end }}
     {{- end }}
   gateways:
     - istio-system/private

@@ -29,12 +29,6 @@ virtualServices: []
   #     tech: false                    # Create private .syscd.tech domain (includes .xyz alias)
   #     xyz: true                      # Create private .syscd.xyz domain
 
-# Default values for virtualServices domains
-defaultDomains:
-  live: true
-  tech: true
-  xyz: false
-
 # Global settings
 global: {}
 
