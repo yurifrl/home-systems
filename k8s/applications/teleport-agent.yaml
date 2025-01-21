@@ -36,46 +36,46 @@ spec:
 
         apps:
           - name: grafana
-            uri: http://kube-prometheus-stack-grafana.monitoring:80
+            uri: https://grafana.syscd.xyz
             labels:
               purpose: monitoring
-          - name: home-assistant
-            uri: http://home-assistant.home-automation:8123
+          - name: ha
+            uri: https://ha.syscd.xyz
             labels:
               purpose: home-automation
           - name: homer
-            uri: http://homer.default:8080
+            uri: https://homer.syscd.xyz
             labels:
               purpose: dashboard
           - name: argocd
-            uri: http://argocd-server.argocd:80
+            uri: https://argocd.syscd.xyz
             labels:
               purpose: gitops
           - name: prometheus
-            uri: http://kube-prometheus-stack-prometheus.monitoring:9090
+            uri: https://prometheus.syscd.xyz
             labels:
               purpose: monitoring
           - name: pyrra
-            uri: http://pyrra.monitoring:9099
+            uri: https://pyrra.syscd.xyz
             labels:
               purpose: monitoring
           - name: zigbee2mqtt
-            uri: http://zigbee2mqtt.home-automation:8080
+            uri: https://zigbee2mqtt.syscd.xyz
             labels:
               purpose: home-automation
           - name: promlens
-            uri: http://promlens.monitoring:8080
+            uri: https://promlens.syscd.xyz
             labels:
               purpose: monitoring
           - name: node-red
-            uri: http://node-red.home-automation:1880
+            uri: https://node-red.syscd.xyz
             labels:
               purpose: automation
           - name: kiali
-            uri: http://kiali.istio-system:20001
+            uri: https://kiali.syscd.xyz
             labels:
               purpose: monitoring
           - name: longhorn
-            uri: http://longhorn-frontend.longhorn-system:80
+            uri: https://longhorn.syscd.xyz
             labels:
               purpose: storage 
