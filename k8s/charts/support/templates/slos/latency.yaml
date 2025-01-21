@@ -19,20 +19,9 @@ spec:
   indicator:
     latency:
       success:
-        metric: |
-          sum(
-            probe_http_duration_seconds_bucket{
-              instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live)",
-              le="0.5"
-            }
-          )
+        metric: probe_http_duration_seconds_bucket{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live)",le="0.5"}
       total:
-        metric: |
-          sum(
-            probe_http_duration_seconds_count{
-              instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live)"
-            }
-          )
+        metric: probe_http_duration_seconds_count{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live)"}
 ---
 {{- end }}
 {{- end }}
