@@ -1,0 +1,22 @@
+---
+- hosts: workers
+  become: true
+  tasks:
+    - name: Create storage directory
+      file:
+        path: /storage
+        state: directory
+        mode: '0755'
+
+    - name: Format NVMe drive with ext4
+      filesystem:
+        fstype: ext4
+        dev: /dev/nvme0n1
+        force: no  # Set to yes if you want to force format, be careful!
+
+    - name: Mount NVMe drive
+      mount:
+        path: /storage
+        src: /dev/nvme0n1
+        fstype: ext4
+        state: mounted

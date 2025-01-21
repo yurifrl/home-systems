@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: influxdb
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: influxdb
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: influxdb
+              service:
+                name: influxdb
+                namespace: influxdb
+                port: 8086
+
+    - repoURL: https://helm.influxdata.com/
+      chart: influxdb2
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          persistence:
+            enabled: true
+            size: 10Gi
+            storageClass: longhorn-static
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          service:
+            annotations:
+              teleport.dev/name: influxdb 
