@@ -125,6 +125,17 @@ spec:
             enabled: false
             forceDeployDashboards: true
             defaultDashboardsEnabled: true
+          loki:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+              metricsInstance:
+                enabled: true
+            persistence:
+              enabled: false
+            config:
+              limits_config:
+                retention_period: 24h
           alertmanager:
             service:
               annotations:
