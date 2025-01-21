@@ -28,7 +28,7 @@ spec:
             - hostname: "syscd.xyz"
               service: https://teleport.teleport.svc.cluster.local
               originRequest:
-                noTLSVerify: true
+                noTLSVerify: true    
             - hostname: "*.syscd.xyz"
               service: https://teleport.teleport.svc.cluster.local
               originRequest:
