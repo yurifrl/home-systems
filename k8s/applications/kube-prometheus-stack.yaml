@@ -32,6 +32,11 @@ spec:
                 name: kube-prometheus-stack-alertmanager
                 namespace: monitoring
                 port: 9093
+            - name: grafana
+              service:
+                name: kube-prometheus-stack-grafana
+                namespace: monitoring
+                port: 80
 
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: kube-prometheus-stack
@@ -122,9 +127,48 @@ spec:
                   cpu: 500m
                   memory: 1Gi
           grafana:
-            enabled: false
+            enabled: true
             forceDeployDashboards: true
             defaultDashboardsEnabled: true
+            admin:
+              existingSecret: "grafana-credentials"
+              userKey: userKey
+              passwordKey: passwordKey
+            grafana.ini:
+              auth.anonymous:
+                enabled: true
+                org_role: Admin
+              auth:
+                disable_login_form: true
+                disable_signout_menu: true
+            service:
+              annotations:
+                teleport.dev/name: grafana
+            resources:
+              limits:
+                cpu: 200m
+                memory: 256Mi
+              requests:
+                cpu: 100m
+                memory: 128Mi
+            sidecar:
+              dashboards:
+                enabled: true
+            # datasources:
+            #   datasources.yaml:
+            #     apiVersion: 1
+            #     datasources:
+            #       - name: Nixos-1 Prometheus
+            #         type: prometheus
+            #         url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+            #         access: proxy
+            #         isDefault: true
+            #       - name: Nixos-1 Loki
+            #         type: loki
+            #         url: http://loki-stack.monitoring.svc.cluster.local:3100
+            #         access: proxy
+            #         jsonData:
+            #           maxLines: 1000
           loki:
             enabled: true
             serviceMonitor:

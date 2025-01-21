@@ -1,73 +1,73 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: grafana
-  namespace: argocd
-spec:
-  project: default
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true 
-  sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: grafana
-              service:
-                name: grafana
-                namespace: monitoring
-                port: 80
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: grafana
+#   namespace: argocd
+# spec:
+#   project: default
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: monitoring
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true 
+#   sources:
+#     - repoURL: https://github.com/yurifrl/home-systems.git
+#       targetRevision: HEAD
+#       path: k8s/charts/support
+#       helm:
+#         valuesObject:
+#           virtualServices:
+#             - name: grafana
+#               service:
+#                 name: grafana
+#                 namespace: monitoring
+#                 port: 80
 
-    - repoURL: https://grafana.github.io/helm-charts
-      chart: grafana
-      targetRevision: "*"
-      helm:
-        valuesObject:
-          admin:
-            existingSecret: "grafana-credentials"
-            userKey: userKey
-            passwordKey: passwordKey
-          grafana.ini:
-            auth.anonymous:
-              enabled: true
-              org_role: Admin
-            auth:
-              disable_login_form: true
-              disable_signout_menu: true
-          service:
-            annotations:
-              teleport.dev/name: grafana
-          resources:
-            limits:
-              cpu: 200m
-              memory: 256Mi
-            requests:
-              cpu: 100m
-              memory: 128Mi
-          sidecar:
-            dashboards:
-              enabled: true
-          datasources:
-            datasources.yaml:
-              apiVersion: 1
-              datasources:
-                - name: Nixos-1 Prometheus
-                  type: prometheus
-                  url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-                  access: proxy
-                  isDefault: true
-                - name: Nixos-1 Loki
-                  type: loki
-                  url: http://loki-stack.monitoring.svc.cluster.local:3100
-                  access: proxy
-                  jsonData:
-                    maxLines: 1000
+#     - repoURL: https://grafana.github.io/helm-charts
+#       chart: grafana
+#       targetRevision: "*"
+#       helm:
+#         valuesObject:
+#           admin:
+#             existingSecret: "grafana-credentials"
+#             userKey: userKey
+#             passwordKey: passwordKey
+#           grafana.ini:
+#             auth.anonymous:
+#               enabled: true
+#               org_role: Admin
+#             auth:
+#               disable_login_form: true
+#               disable_signout_menu: true
+#           service:
+#             annotations:
+#               teleport.dev/name: grafana
+#           resources:
+#             limits:
+#               cpu: 200m
+#               memory: 256Mi
+#             requests:
+#               cpu: 100m
+#               memory: 128Mi
+#           sidecar:
+#             dashboards:
+#               enabled: true
+#           datasources:
+#             datasources.yaml:
+#               apiVersion: 1
+#               datasources:
+#                 - name: Nixos-1 Prometheus
+#                   type: prometheus
+#                   url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+#                   access: proxy
+#                   isDefault: true
+#                 - name: Nixos-1 Loki
+#                   type: loki
+#                   url: http://loki-stack.monitoring.svc.cluster.local:3100
+#                   access: proxy
+#                   jsonData:
+#                     maxLines: 1000
