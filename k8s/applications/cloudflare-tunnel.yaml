@@ -30,7 +30,8 @@ spec:
               originRequest:
                 noTLSVerify: true    
             - hostname: "*.syscd.xyz"
-              service: http://istio-gateway.istio-system.svc.cluster.local:80
+              # service: http://istio-gateway.istio-system.svc.cluster.local:80
+              service: https://teleport.teleport.svc.cluster.local
               originRequest:
                 noTLSVerify: true                
             - hostname: "argocd.syscd.live"
