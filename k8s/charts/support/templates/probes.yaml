@@ -1,5 +1,4 @@
 {{- range .Values.virtualServices }}
-{{- $domains := mustMergeOverwrite (deepCopy $.Values.defaultDomains) (.domains | default dict) }}
 {{- $hostPrefix := .hostname | default .name -}}
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
@@ -16,14 +15,12 @@ spec:
   targets:
     staticConfig:
       static:
-        {{- if $domains.xyz }}
-        - https://{{ $hostPrefix }}.syscd.xyz
-        {{- end }}
-        {{- if $domains.tech }}
-        - https://{{ $hostPrefix }}.syscd.tech
-        {{- end }}
-        {{- if $domains.live }}
-        - https://{{ $hostPrefix }}.syscd.live
+        {{- if .hostnameOverride }}
+        - {{ .hostnameOverride }}
+        {{- else }}
+        - {{ $hostPrefix }}.syscd.live
+        - {{ $hostPrefix }}.syscd.tech
+        - {{ $hostPrefix }}.syscd.xyz
         {{- end }}
 ---
 {{- end }} 

@@ -1,12 +1,11 @@
 {{- if .Values.slos.enabled }}
 {{- range .Values.virtualServices }}
-{{- $domains := mustMergeOverwrite (deepCopy $.Values.defaultDomains) (.domains | default dict) }}
 {{- $hostPrefix := .hostname | default .name -}}
-{{- if or $domains.xyz $domains.tech }}
+
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
-  name: {{ .name }}-private-availability-slo
+  name: {{ .name }}-availability-slo
   namespace: monitoring
   labels: {{- include "support.slo.labels" (dict "app" .name) | nindent 4 }}
 spec:
@@ -16,26 +15,8 @@ spec:
   indicator:
     bool_gauge:
       metric: |
-        probe_success{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech)"}
+        probe_success{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live)"}
       grouping: []
 ---
-{{- end }}
-{{- if $domains.live }}
-apiVersion: pyrra.dev/v1alpha1
-kind: ServiceLevelObjective
-metadata:
-  name: {{ .name }}-public-availability-slo
-  namespace: monitoring
-  labels: {{- include "support.slo.labels" (dict "app" .name) | nindent 4 }}
-spec:
-  target: "99.9"
-  window: "7d"
-  description: "Ensure availability of {{ .name }} instance https://{{ $hostPrefix }}.syscd.live with 99.9% reliability."
-  indicator:
-    bool_gauge:
-      metric: probe_success{instance="https://{{ $hostPrefix }}.syscd.live"}
-      grouping: []
----
-{{- end }}
 {{- end }}
 {{- end }} 

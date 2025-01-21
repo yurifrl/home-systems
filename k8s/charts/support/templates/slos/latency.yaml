@@ -1,49 +1,38 @@
 {{- if .Values.slos.enabled }}
 {{- range .Values.virtualServices }}
-{{- $domains := mergeOverwrite (deepCopy $.Values.defaultDomains) (.domains | default dict) }}
 {{- $hostPrefix := .hostname | default .name -}}
 
 # Indicator Type: latency
 # Measures if requests are completing within the expected latency threshold (500ms)
 # Uses histogram buckets from probe_http_duration_seconds
 #
-{{- if or $domains.xyz $domains.tech }}
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
-  name: {{ .name }}-private-latency-slo
+  name: {{ .name }}-latency-slo
   namespace: monitoring
   labels: {{- include "support.slo.labels" (dict "app" .name) | nindent 4 }}
 spec:
   target: "99"  # 99% of requests should be under threshold
   window: "7d"  # Weekly evaluation
-  description: "Ensure {{ .name }} private instances respond within 500ms for 99% of requests."
+  description: "Ensure {{ .name }} instances respond within 500ms for 99% of requests."
   indicator:
     latency:
       success:
-        metric: probe_http_duration_seconds_bucket{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech)",le="0.5"}
+        metric: |
+          sum(
+            probe_http_duration_seconds_bucket{
+              instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live)",
+              le="0.5"
+            }
+          )
       total:
-        metric: probe_http_duration_seconds_count{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech)"}
+        metric: |
+          sum(
+            probe_http_duration_seconds_count{
+              instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live)"
+            }
+          )
 ---
-{{- end }}
-{{- if $domains.live }}
-apiVersion: pyrra.dev/v1alpha1
-kind: ServiceLevelObjective
-metadata:
-  name: {{ .name }}-public-latency-slo
-  namespace: monitoring
-  labels: {{- include "support.slo.labels" (dict "app" .name) | nindent 4 }}
-spec:
-  target: "99"  # 99% of requests should be under threshold
-  window: "7d"  # Weekly evaluation
-  description: "Ensure {{ .name }} public instance https://{{ $hostPrefix }}.syscd.live responds within 500ms for 99% of requests."
-  indicator:
-    latency:
-      success:
-        metric: probe_http_duration_seconds_bucket{instance="https://{{ $hostPrefix }}.syscd.live",le="0.5"}
-      total:
-        metric: probe_http_duration_seconds_count{instance="https://{{ $hostPrefix }}.syscd.live"}
----
-{{- end }}
 {{- end }}
 {{- end }}
