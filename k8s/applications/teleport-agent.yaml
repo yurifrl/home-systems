@@ -34,12 +34,48 @@ spec:
             cpu: 100m
             memory: 128Mi 
 
-        # kubernetesDiscovery:
-        #   - types: ["app"]
-        #     namespaces: [ "home-assistant" ]
-        #     labels:
-        #       env: home
-        #   - types: ["app"]
-        #     namespaces: [ "*" ]
-        #     labels:
-        #       env: app
+        apps:
+          - name: grafana
+            uri: http://kube-prometheus-stack-grafana.monitoring:80
+            labels:
+              purpose: monitoring
+          - name: home-assistant
+            uri: http://home-assistant.home-automation:8123
+            labels:
+              purpose: home-automation
+          - name: homer
+            uri: http://homer.default:8080
+            labels:
+              purpose: dashboard
+          - name: argocd
+            uri: http://argocd-server.argocd:80
+            labels:
+              purpose: gitops
+          - name: prometheus
+            uri: http://kube-prometheus-stack-prometheus.monitoring:9090
+            labels:
+              purpose: monitoring
+          - name: pyrra
+            uri: http://pyrra.monitoring:9099
+            labels:
+              purpose: monitoring
+          - name: zigbee2mqtt
+            uri: http://zigbee2mqtt.home-automation:8080
+            labels:
+              purpose: home-automation
+          - name: promlens
+            uri: http://promlens.monitoring:8080
+            labels:
+              purpose: monitoring
+          - name: node-red
+            uri: http://node-red.home-automation:1880
+            labels:
+              purpose: automation
+          - name: kiali
+            uri: http://kiali.istio-system:20001
+            labels:
+              purpose: monitoring
+          - name: longhorn
+            uri: http://longhorn-frontend.longhorn-system:80
+            labels:
+              purpose: storage 
