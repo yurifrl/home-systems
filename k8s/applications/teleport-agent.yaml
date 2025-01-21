@@ -34,54 +34,54 @@ spec:
             cpu: 100m
             memory: 128Mi 
 
-        kubernetesDiscovery:
-          - types: ["app"]
-            namespaces: [ "*" ]
-            labels:
-              env: app
+        # kubernetesDiscovery:
+        #   - types: ["app"]
+        #     namespaces: [ "*" ]
+        #     labels:
+        #       env: app
        
-        apps:
-          - name: grafana
-            uri: https://grafana.syscd.xyz
-            labels:
-              purpose: monitoring
-          - name: ha
-            uri: https://ha.syscd.xyz
-            labels:
-              purpose: home-automation
-          - name: homer
-            uri: https://homer.syscd.xyz
-            labels:
-              purpose: dashboard
-          - name: argocd
-            uri: https://argocd.syscd.xyz
-            labels:
-              purpose: gitops
-          - name: prometheus
-            uri: https://prometheus.syscd.xyz
-            labels:
-              purpose: monitoring
-          - name: pyrra
-            uri: https://pyrra.syscd.xyz
-            labels:
-              purpose: monitoring
-          - name: zigbee2mqtt
-            uri: https://zigbee2mqtt.syscd.xyz
-            labels:
-              purpose: home-automation
-          - name: promlens
-            uri: https://promlens.syscd.xyz
-            labels:
-              purpose: monitoring
-          - name: node-red
-            uri: https://node-red.syscd.xyz
-            labels:
-              purpose: automation
-          - name: kiali
-            uri: https://kiali.syscd.xyz
-            labels:
-              purpose: monitoring
-          - name: longhorn
-            uri: https://longhorn.syscd.xyz
-            labels:
-              purpose: storage 
+        # apps:
+        #   - name: grafana
+        #     uri: https://grafana.syscd.xyz
+        #     labels:
+        #       purpose: monitoring
+        #   - name: ha
+        #     uri: https://ha.syscd.xyz
+        #     labels:
+        #       purpose: home-automation
+        #   - name: homer
+        #     uri: https://homer.syscd.xyz
+        #     labels:
+        #       purpose: dashboard
+        #   - name: argocd
+        #     uri: https://argocd.syscd.xyz
+        #     labels:
+        #       purpose: gitops
+        #   - name: prometheus
+        #     uri: https://prometheus.syscd.xyz
+        #     labels:
+        #       purpose: monitoring
+        #   - name: pyrra
+        #     uri: https://pyrra.syscd.xyz
+        #     labels:
+        #       purpose: monitoring
+        #   - name: zigbee2mqtt
+        #     uri: https://zigbee2mqtt.syscd.xyz
+        #     labels:
+        #       purpose: home-automation
+        #   - name: promlens
+        #     uri: https://promlens.syscd.xyz
+        #     labels:
+        #       purpose: monitoring
+        #   - name: node-red
+        #     uri: https://node-red.syscd.xyz
+        #     labels:
+        #       purpose: automation
+        #   - name: kiali
+        #     uri: https://kiali.syscd.xyz
+        #     labels:
+        #       purpose: monitoring
+        #   - name: longhorn
+        #     uri: https://longhorn.syscd.xyz
+        #     labels:
+        #       purpose: storage 
