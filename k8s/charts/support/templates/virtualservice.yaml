@@ -7,7 +7,10 @@ kind: VirtualService
 metadata:
   name: {{ .name }}
   namespace: {{ $.Release.Namespace }}
-  annotations: {{ toYaml .annotations | quote }}
+  annotations:
+    {{- if .annotations }}
+    {{- toYaml .annotations | nindent 4 }}
+    {{- end }}
 spec:
   hosts:
     {{- if .hostnameOverride }}
