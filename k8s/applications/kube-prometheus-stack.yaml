@@ -174,6 +174,12 @@ spec:
                       defaultBucket: default
                     secureJsonData:
                       token: admin
+                  - name: MQTT
+                    type: mqtt
+                    url: tcp://mosquitto.mosquitto.svc:1883
+                    access: proxy
+                    jsonData:
+                      topic: "#"
           loki:
             enabled: true
             serviceMonitor:

@@ -1,84 +1,87 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: influxdb
-  namespace: argocd
-spec:
-  project: default
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: influxdb
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-  sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: influxdb
-              service:
-                name: influxdb-influxdb2
-                namespace: influxdb
-                port: 80
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: influxdb
+#   namespace: argocd
+# spec:
+#   project: default
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: influxdb
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true
+#   sources:
+#     - repoURL: https://github.com/yurifrl/home-systems.git
+#       targetRevision: HEAD
+#       path: k8s/charts/support
+#       helm:
+#         valuesObject:
+#           virtualServices:
+#             - name: influxdb
+#               service:
+#                 name: influxdb-influxdb2
+#                 namespace: influxdb
+#                 port: 80
 
-    - repoURL: https://helm.influxdata.com/
-      chart: influxdb2
-      targetRevision: "*"
-      helm:
-        valuesObject:
-          adminUser:
-            bucket: "default"
-            organization: "home-systems"
-            password: "adminadmin"
-            token: "admin"
-            user: "admin"
-          persistence:
-            enabled: false
-            size: 10Gi
-            storageClass: longhorn-static
-          resources:
-            limits:
-              cpu: 500m
-              memory: 1Gi
-            requests:
-              cpu: 250m
-              memory: 512Mi
-          service:
-            annotations:
-              teleport.dev/name: influxdb
+#     - repoURL: https://helm.influxdata.com/
+#       chart: influxdb2
+#       targetRevision: "*"
+#       helm:
+#         valuesObject:
+#           adminUser:
+#             bucket: "default"
+#             organization: "home-systems"
+#             password: "adminadmin"
+#             token: "admin"
+#             user: "admin"
+#           persistence:
+#             enabled: false
+#             size: 10Gi
+#             storageClass: longhorn-static
+#           resources:
+#             limits:
+#               cpu: 500m
+#               memory: 1Gi
+#             requests:
+#               cpu: 250m
+#               memory: 512Mi
+#           service:
+#             annotations:
+#               teleport.dev/name: influxdb
 
-    - repoURL: https://helm.influxdata.com/
-      chart: telegraf
-      targetRevision: "*"
-      helm:
-        valuesObject:
-          config:
-            outputs:
-              - influxdb_v2:
-                  urls:
-                    - "http://influxdb-influxdb2.influxdb.svc"
-                  token: "admin"
-                  organization: "home-systems"
-                  bucket: "default"
-            inputs:
-              - mqtt_consumer:
-                  servers: ["tcp://mosquitto.mosquitto.svc:1883"]
-                  topics: ["#"]
-                  data_format: "json"
-          service:
-            enabled: true
-            type: ClusterIP
-            annotations:
-              teleport.dev/name: telegraf
-            ports:
-              - name: http
-                port: 8094
-                targetPort: 8094
+#     - repoURL: https://helm.influxdata.com/
+#       chart: telegraf
+#       targetRevision: "*"
+#       helm:
+#         valuesObject:
+#           config:
+#             outputs:
+#               - influxdb_v2:
+#                   urls:
+#                     - "http://influxdb-influxdb2.influxdb.svc"
+#                   token: "admin"
+#                   organization: "home-systems"
+#                   bucket: "default"
+#             inputs:
+#               - mqtt_consumer:
+#                   servers: ["tcp://mosquitto.mosquitto.svc:1883"]
+#                   topics: ["#"]
+#                   data_format: "value"
+#                   data_type: "string"
+#                   name_override: "mqtt_value"
+#                   client_id: "telegraf"
+#           service:
+#             enabled: false
+#             type: ClusterIP
+#             annotations:
+#               teleport.dev/name: telegraf
+#             ports:
+#               - name: http
+#                 port: 8094
+#                 targetPort: 8094
 
-# https://github.com/influxdata/helm-charts/blob/master/charts/influxdb2/values.yaml
+# # https://github.com/influxdata/helm-charts/blob/master/charts/influxdb2/values.yaml
