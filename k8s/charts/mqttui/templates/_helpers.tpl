@@ -49,14 +49,3 @@ Selector labels
 app.kubernetes.io/name: {{ include "mqttui.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
-
-{{/*
-Create the name of the service account to use
-*/}}
-{{- define "mqttui.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "mqttui.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
-{{- end }}
