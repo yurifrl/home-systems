@@ -7,7 +7,6 @@ dashboards:
   - kubernetes-pod
   - kubernetes-resource-requests # https://grafana.com/grafana/dashboards/7187-kubernetes-resource-requests/?
   - workload-resource-recommendations # https://grafana.com/grafana/dashboards/15154-workload-resource-recommendations-based-on-usage/?
-  - ceph-osd-single-dashboard
   - node-exporter-full # https://github.com/rfmoz/grafana-dashboards/blob/master/prometheus/node-exporter-full.json
 
 # Feature flags for enabling different components
