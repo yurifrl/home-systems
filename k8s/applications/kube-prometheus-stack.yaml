@@ -168,21 +168,10 @@ spec:
                       maxLines: 1000
                   - name: MQTT
                     type: mqtt
-                    url: tcp://mosquitto.mosquitto.svc:1883
+                    url: tcp://mosquitto.mosquitto:1883
                     access: proxy
                     jsonData:
                       topic: "#"
-          loki:
-            enabled: true
-            serviceMonitor:
-              enabled: true
-              metricsInstance:
-                enabled: true
-            persistence:
-              enabled: false
-            config:
-              limits_config:
-                retention_period: 24h
           alertmanager:
             service:
               annotations:
