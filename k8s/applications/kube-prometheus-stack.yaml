@@ -166,16 +166,6 @@ spec:
                     access: proxy
                     jsonData:
                       maxLines: 1000
-                  - name: InfluxDB
-                    type: influxdb
-                    url: http://influxdb-influxdb2.influxdb:8086
-                    access: proxy
-                    jsonData:
-                      version: Flux
-                      organization: home-systems
-                      defaultBucket: default
-                    secureJsonData:
-                      token: admin
                   - name: MQTT
                     type: mqtt
                     url: tcp://mosquitto.mosquitto.svc:1883
