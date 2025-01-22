@@ -141,6 +141,8 @@ spec:
               auth:
                 disable_login_form: true
                 disable_signout_menu: true
+            plugins:
+              - grafana-mqtt-datasource
             service:
               annotations:
                 teleport.dev/name: grafana
