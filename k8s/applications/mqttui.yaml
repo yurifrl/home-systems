@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mqttui
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mqttui
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true 
+  sources:
+    - repoURL: https://github.com/yurikrupnik/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/mqttui
+      helm:
+        values: |
+          config:
+            mqtt:
+              broker: "mqtt://mosquitto.mosquitto:1883"
+              clientId: "mqttui"
