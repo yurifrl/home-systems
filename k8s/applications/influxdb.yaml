@@ -71,5 +71,14 @@ spec:
                   servers: ["tcp://mosquitto.mosquitto.svc:1883"]
                   topics: ["#"]
                   data_format: "json"
+          service:
+            enabled: true
+            type: ClusterIP
+            annotations:
+              teleport.dev/name: telegraf
+            ports:
+              - name: http
+                port: 8094
+                targetPort: 8094
 
 # https://github.com/influxdata/helm-charts/blob/master/charts/influxdb2/values.yaml
