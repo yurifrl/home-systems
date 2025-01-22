@@ -154,21 +154,16 @@ spec:
             sidecar:
               dashboards:
                 enabled: true
-            # datasources:
-            #   datasources.yaml:
-            #     apiVersion: 1
-            #     datasources:
-            #       - name: Nixos-1 Prometheus
-            #         type: prometheus
-            #         url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-            #         access: proxy
-            #         isDefault: true
-            #       - name: Nixos-1 Loki
-            #         type: loki
-            #         url: http://loki-stack.monitoring.svc.cluster.local:3100
-            #         access: proxy
-            #         jsonData:
-            #           maxLines: 1000
+            datasources:
+              datasources.yaml:
+                apiVersion: 1
+                datasources:
+                  - name: Loki
+                    type: loki
+                    url: http://loki-stack.monitoring.svc.cluster.local:3100
+                    access: proxy
+                    jsonData:
+                      maxLines: 1000
           loki:
             enabled: true
             serviceMonitor:
@@ -211,5 +206,5 @@ spec:
                   memory: 128Mi
 
 # https://stackoverflow.com/questions/76669436/alertmanager-default-receivernull-is-not-replacing-with-the-routes-specified
-# https://medium.com/@phil16terpasetheo/configure-alert-manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26
+# https://medium.com/@phil16terpasetheo/configure-alert- manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26
 # k -n monitoring get secrets kube-prometheus-stack-grafana -ojsonpath="{.data.admin-password}" | base64 -d | pbcopy
