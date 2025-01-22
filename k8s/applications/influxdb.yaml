@@ -33,8 +33,11 @@ spec:
       helm:
         valuesObject:
           adminUser:
-            user: "admin"
+            bucket: "default"
+            organization: "home-systems"
             password: "adminadmin"
+            token: "admin"
+            user: "admin"
           persistence:
             enabled: false
             size: 10Gi
@@ -48,7 +51,25 @@ spec:
               memory: 512Mi
           service:
             annotations:
-              teleport.dev/name: influxdb 
+              teleport.dev/name: influxdb
 
+    - repoURL: https://helm.influxdata.com/
+      chart: telegraf
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          config:
+            outputs:
+              - influxdb_v2:
+                  urls:
+                    - "http://influxdb-influxdb2.influxdb.svc"
+                  token: "admin"
+                  organization: "home-systems"
+                  bucket: "default"
+            inputs:
+              - mqtt_consumer:
+                  servers: ["tcp://mosquitto.mosquitto.svc:1883"]
+                  topics: ["#"]
+                  data_format: "json"
 
-# https://github.com/influxdata/helm-charts/blob/master/charts/influxdb/values.yaml
+# https://github.com/influxdata/helm-charts/blob/master/charts/influxdb2/values.yaml
