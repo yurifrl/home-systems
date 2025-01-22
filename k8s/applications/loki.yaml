@@ -33,6 +33,15 @@ spec:
       helm:
         valuesObject:
           deploymentMode: SingleBinary
+          
+          # Set replicas to 0 for scalable targets
+          backend:
+            replicas: 0
+          read:
+            replicas: 0
+          write:
+            replicas: 0
+            
           singleBinary:
             service:
               annotations:
@@ -44,6 +53,7 @@ spec:
           
           loki:
             auth_enabled: false
+            useTestSchema: true
             storage:
               type: filesystem
             limits_config:
