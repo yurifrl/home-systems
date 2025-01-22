@@ -34,7 +34,7 @@ spec:
         valuesObject:
           adminUser:
             user: "admin"
-            password: "admin"
+            password: "adminadmin"
           persistence:
             enabled: false
             size: 10Gi
