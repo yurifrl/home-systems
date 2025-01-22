@@ -32,8 +32,10 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
-          setDefaultUser:
-            enabled: false
+          adminUser:
+            organization: "influxdata"
+            user: "admin"
+            password: "admin"
           persistence:
             enabled: false
             size: 10Gi
@@ -48,3 +50,6 @@ spec:
           service:
             annotations:
               teleport.dev/name: influxdb 
+
+
+# https://github.com/influxdata/helm-charts/blob/master/charts/influxdb/values.yaml
