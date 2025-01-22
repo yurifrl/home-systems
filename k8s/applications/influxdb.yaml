@@ -33,7 +33,6 @@ spec:
       helm:
         valuesObject:
           adminUser:
-            organization: "influxdata"
             user: "admin"
             password: "admin"
           persistence:
