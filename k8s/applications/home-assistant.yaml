@@ -42,7 +42,7 @@ spec:
       helm:
         valuesObject:
           nodeSelector:
-            kubernetes.io/hostname: tp4
+            kubernetes.io/hostname: tp1
           addons:
             codeserver:
               enabled: true
@@ -50,7 +50,7 @@ spec:
                 tag: latest
           persistence:
             enabled: true
-            existingVolume: home-assistant-tp4-data
+            existingVolume: home-assistant-tp1-data
             storageClass: local-path
           service:
             annotations:

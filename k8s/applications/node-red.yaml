@@ -28,12 +28,12 @@ spec:
                 namespace: node-red
                 port: 1880
           persistentVolumeClaims:
-            - name: node-red-tp4-data
+            - name: node-red-tp1-data
               storage: 10Gi
               storageClassName: local-path
               accessModes:
                 - ReadWriteOnce
-              volumeName: node-red-tp4-data
+              volumeName: node-red-tp1-data
     # https://github.com/SchwarzIT/node-red-chart
     - repoURL: https://schwarzit.github.io/node-red-chart
       targetRevision: "*"
@@ -45,11 +45,11 @@ spec:
             storageClass: local-path
             accessMode: ReadWriteOnce
             size: 10Gi
-            existingClaim: node-red-tp4-data
+            existingClaim: node-red-tp1-data
             mountPath: "/data"
 
           nodeSelector:
-            kubernetes.io/hostname: tp4
+            kubernetes.io/hostname: tp1
           service:
             annotations:
               teleport.dev/name: node-red

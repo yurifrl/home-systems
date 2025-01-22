@@ -32,12 +32,12 @@ spec:
                 external-dns.alpha.kubernetes.io/hostname: syscd.xyz
                 external-dns.alpha.kubernetes.io/target: "1b664006-2417-4072-877f-45697ffa642d.cfargotunnel.com"
           persistentVolumeClaims:
-            - name: teleport-tp4-data
+            - name: teleport-tp1-data
               storage: 10Gi
               storageClassName: local-path
               accessModes:
                 - ReadWriteOnce
-              volumeName: teleport-tp4-data
+              volumeName: teleport-tp1-data
 
     - chart: teleport-cluster
       repoURL: https://charts.releases.teleport.dev
@@ -54,13 +54,13 @@ spec:
           # Persistence for session recordings
           persistence:
             enabled: true
-            existingClaimName: teleport-tp4-data
+            existingClaimName: teleport-tp1-data
             storageClassName: local-path
           #
           chartMode: standalone
 
           nodeSelector:
-            kubernetes.io/hostname: tp4
+            kubernetes.io/hostname: tp1
           #
           operator:
             enabled: true
