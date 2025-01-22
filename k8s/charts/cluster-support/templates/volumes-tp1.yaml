@@ -98,8 +98,14 @@ spec:
 
 # k -n home-assistant delete pvc home-assistant-home-assistant-0
 # k -n node-red delete pvc node-red
-# k -n zigbee2mqtt delete pvc data-volume-zigbee2mqtt-0
 # k -n teleport delete pvc teleport-tp1-data
+# k -n zigbee2mqtt delete pvc data-volume-zigbee2mqtt-0
+
+# k -n home-assistant edit pvc home-assistant-home-assistant-0
+# k -n node-red edit pvc node-red
+# k -n teleport edit pvc teleport-tp1-data
+# k -n zigbee2mqtt edit pvc data-volume-zigbee2mqtt-0
+
 
 # # k -n node-red scale deploy/node-red --replicas=1
 # # k -n home-assistant scale statefulset/home-assistant --replicas=1
