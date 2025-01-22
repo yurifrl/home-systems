@@ -23,9 +23,9 @@ spec:
           virtualServices:
             - name: influxdb
               service:
-                name: influxdb
+                name: influxdb-influxdb2
                 namespace: influxdb
-                port: 8086
+                port: 80
 
     - repoURL: https://helm.influxdata.com/
       chart: influxdb2
