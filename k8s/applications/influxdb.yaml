@@ -32,6 +32,9 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
+          config:
+            http:
+              auth-enabled: false
           persistence:
             enabled: false
             size: 10Gi

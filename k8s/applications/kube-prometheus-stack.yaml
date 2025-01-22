@@ -166,7 +166,7 @@ spec:
                       maxLines: 1000
                   - name: InfluxDB
                     type: influxdb
-                    url: http://influxdb.influxdb:8086
+                    url: http://influxdb-influxdb2.influxdb:8086
                     access: proxy
                     jsonData:
                       version: Flux
