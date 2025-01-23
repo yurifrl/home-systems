@@ -25,7 +25,7 @@ spec:
               service:
                 name: mqttui
                 namespace: mqttui
-                port: 8080
+                port: 5000
     
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
