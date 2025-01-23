@@ -45,18 +45,22 @@ spec:
               size: 1Gi
               storageClassName: local-path
               existingVolume: zigbee2mqtt-tp4-data
-            volumeMounts:
-              - name: usb
-                mountPath: /dev/ttyUSB0
+            # securityContext:
+            #   privileged: true
             volumes:
               - name: usb
                 hostPath:
                   path: /dev/ttyUSB0
+                  # path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_5c2679039a39ef11b9e059f454516304-if00-port0
+                  type: CharDevice
+            volumeMounts:
+              - name: usb
+                mountPath: /dev/ttyUSB0
           zigbee2mqtt:
             mqtt:
-              server: "mqtt://mosquitto.mosquitto.svc.cluster.local:1883"
-            serial:
-              port: "/dev/ttyUSB0"
+              server: "mqtt://mosquitto.mosquitto:1883"
+            # serial:
+            #   port:  /dev/ttyUSB0
           service:
             annotations:
               teleport.dev/name: zigbee2mqtt  
