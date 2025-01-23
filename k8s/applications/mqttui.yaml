@@ -34,5 +34,5 @@ spec:
         valuesObject:
           config:
             mqtt:
-              broker: "mqtt://mosquitto.mosquitto:1883"
+              broker: "mosquitto.mosquitto"
               clientId: "mqttui"
