@@ -39,12 +39,12 @@ spec:
         valuesObject:
           statefulset:
             nodeSelector:
-              kubernetes.io/hostname: tp4
+              kubernetes.io/hostname: nixos-1
             storage:
               enabled: true
               size: 1Gi
               storageClassName: local-path
-              existingVolume: zigbee2mqtt-tp4-data
+              existingVolume: zigbee2mqtt-nixos-1-data
             # securityContext:
             #   privileged: true
             volumes:
