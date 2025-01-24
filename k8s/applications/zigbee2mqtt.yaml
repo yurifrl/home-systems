@@ -45,13 +45,11 @@ spec:
               size: 1Gi
               storageClassName: local-path
               existingVolume: zigbee2mqtt-nixos-1-data
-            # securityContext:
-            #   privileged: true
             volumes:
               - name: usb
                 hostPath:
+                  # path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da22b4738bd8ed11bf06746162c613ac-if00-port0
                   path: /dev/ttyUSB0
-                  # path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_5c2679039a39ef11b9e059f454516304-if00-port0
                   type: CharDevice
             volumeMounts:
               - name: usb
@@ -59,8 +57,8 @@ spec:
           zigbee2mqtt:
             mqtt:
               server: "mqtt://mosquitto.mosquitto:1883"
-            # serial:
-            #   port:  /dev/ttyUSB0
+            serial:
+              port:  /dev/ttyUSB0
           service:
             annotations:
               teleport.dev/name: zigbee2mqtt  
