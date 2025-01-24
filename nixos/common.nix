@@ -20,7 +20,7 @@ in
     # System utilities
     vim neovim curl jq 
     inetutils git fish sysz argocd
-    nixfmt-rfc-style parted
+    nixfmt-rfc-style parted rsync
 
     # Packages
     istioctl
