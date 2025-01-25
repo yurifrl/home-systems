@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudders-health-check-operator
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cloudders
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  source:
+    repoURL: https://github.com/cloudders/helm-charts
+    targetRevision: main
+    path: charts/health-checks-operator
+    helm:
+      values: |
+        serviceMonitor:
+          enabled: true
+          namespace: monitoring
+          prometheusReleaseName: prometheus
