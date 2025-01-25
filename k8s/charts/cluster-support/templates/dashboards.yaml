@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ . }}
+  name: dash-{{ . }}
   namespace: monitoring
   labels:
     grafana_dashboard: "1"
