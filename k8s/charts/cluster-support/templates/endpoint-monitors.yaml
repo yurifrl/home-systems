@@ -8,5 +8,4 @@ spec:
   url: https://syscd.xyz/webapi/ping
   uptimeRobotConfig:
     alertContacts: "6870948_0_0"
-    monitorType: "keyword"
-    KeywordValue: "403"
+    monitorType: "http"
