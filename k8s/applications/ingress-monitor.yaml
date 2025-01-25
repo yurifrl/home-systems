@@ -21,7 +21,6 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
-          watchNamespaces: "ingress-monitor"
           env:
             - name: LOG_LEVEL
               value: debug
