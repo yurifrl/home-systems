@@ -1,20 +1,8 @@
 apiVersion: endpointmonitor.stakater.com/v1alpha1
 kind: EndpointMonitor
 metadata:
-  name: argocd-live
-  namespace: ingress-monitor
-spec:
-  forceHttps: true
-  url: https://argocd.syscd.live/
----
-apiVersion: endpointmonitor.stakater.com/v1alpha1
-kind: EndpointMonitor
-metadata:
   name: syscd-xyz
   namespace: ingress-monitor
 spec:
   forceHttps: true
   url: https://syscd.xyz/webapi/ping
-  uptimeRobotConfig:
-    alertContacts: 01573016_0_0-4959831_0_0
-    interval: 120
