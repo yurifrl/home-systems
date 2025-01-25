@@ -2,6 +2,7 @@ apiVersion: check.cloudders.com/v1alpha1
 kind: NotificationRule
 metadata:
   name: default
+  namespace: cloudders
 spec:
   ## Check CRD support multiple or single checks
   ##
