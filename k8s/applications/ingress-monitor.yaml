@@ -20,4 +20,7 @@ spec:
       repoURL: https://stakater.github.io/stakater-charts
       targetRevision: "*"
       helm:
-        valuesObject: {}
+        valuesObject:
+          env:
+            - name: LOG_LEVEL
+              value: debug
