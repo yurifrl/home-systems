@@ -77,7 +77,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(healthcheck_response_codes{name=\"$name\"}[1m])",
+          "expr": "rate(healthcheck_response_codes{name=\"argocd\"}[1m])",
           "instant": false,
           "legendFormat": "{{code}}",
           "range": true,
@@ -460,11 +460,15 @@
   "templating": {
     "list": [
       {
+        "current": {
+          "text": "argocd",
+          "value": "argocd"
+        },
         "definition": "query_result(healthcheck_response_codes)",
         "description": "",
         "includeAll": false,
-        "label": "Health Check",
-        "name": "health_check",
+        "label": "Health Check Name",
+        "name": "name",
         "options": [],
         "query": {
           "qryType": 3,
@@ -485,6 +489,6 @@
   "timezone": "",
   "title": "Cloudders",
   "uid": "c269bc63-4e33-4365-89d7-4e1acbee24e4",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
