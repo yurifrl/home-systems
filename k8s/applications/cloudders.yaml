@@ -15,7 +15,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
   source:
-    chart: cloudders
+    chart: health-check-operator
     repoURL: https://helm.cloudders.com/
     targetRevision: "*"
     helm:
