@@ -4,14 +4,16 @@
   become: true
   vars:
     master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] }}"
+    master_user: "{{ hostvars[groups['master'][0]]['ansible_user'] }}"
     ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
     k3s_arch: "arm64"
   
   tasks:
     - name: Get K3s version from master
-      ansible.builtin.command: ssh nixos@{{ master_ip }} "k3s -v"
+      ansible.builtin.command: ssh {{ master_user }}@{{ master_ip }} "k3s -v"
       register: k3s_version_output
       delegate_to: localhost
+      become: false
       run_once: true
       changed_when: false
 

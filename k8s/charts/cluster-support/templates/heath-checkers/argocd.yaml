@@ -19,4 +19,4 @@ spec:
   ## The searchFor: option accepts string and expression
   ## The expression is regex that can be used to parse part of the reponse body
   searchFor:
-    expression: ".*K"
+    expression: "Argo CD"

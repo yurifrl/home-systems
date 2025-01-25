@@ -17,4 +17,4 @@
         enabled: yes
         state: started
 
-# ansible-playbook --ask-pass -i ansible/inventory.yml ansible/longhorn-prep.yml
+# ansible-playbook --ask-pass -i ansible/inventory.yaml ansible/longhorn-prep.yaml
