@@ -1,11 +1,29 @@
 apiVersion: check.cloudders.com/v1alpha1
 kind: HealthCheck
 metadata:
-  name: argocd
+  name: argocd-live
   namespace: cloudders
 spec:
   ## URL of the destination endpoint to be monitored
   url: "https://argocd.syscd.live/"
+  ## Test interval for the health check (in seconds)
+  ## Beware that lowering this interval under 30 seconds
+  ## might cause the check to be rate limited from the destination server
+  testInterval: 60
+  ## Optional SSL certificate validity check
+  ## Alarm will be triggered if the SSL certificate 
+  ## is set to expire in less than 10 days
+  sslCheck: 
+    expiration: 10
+---
+apiVersion: check.cloudders.com/v1alpha1
+kind: HealthCheck
+metadata:
+  name: argocd-tech
+  namespace: cloudders
+spec:
+  ## URL of the destination endpoint to be monitored
+  url: "https://argocd.syscd.tech/"
   ## Test interval for the health check (in seconds)
   ## Beware that lowering this interval under 30 seconds
   ## might cause the check to be rate limited from the destination server

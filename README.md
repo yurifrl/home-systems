@@ -154,6 +154,9 @@ nix build --rebuild --impure --builders 'ssh://nixos@192.168.68.108' ./nix/#nixo
 NIX_SSHOPTS="-A" nixos-rebuild switch --flake ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --target-host ssh://nixos@192.168.68.108 --use-remote-sudo
 ```
 
+## Turing pi
+[Download image](https://joshua-riek.github.io/ubuntu-rockchip-download/boards/turing-rk1.html)
+
 # TODO
 
 - [ ] Use ingress
