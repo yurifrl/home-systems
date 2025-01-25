@@ -15,3 +15,6 @@ metadata:
 spec:
   forceHttps: true
   url: https://syscd.xyz/webapi/ping
+  uptimeRobotConfig:
+    alertContacts: 01573016_0_0-4959831_0_0
+    interval: 120
