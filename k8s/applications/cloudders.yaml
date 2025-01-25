@@ -19,8 +19,4 @@ spec:
     repoURL: https://helm.cloudders.com/
     targetRevision: "*"
     helm:
-      values: |
-        serviceMonitor:
-          enabled: true
-          namespace: monitoring
-          prometheusReleaseName: prometheus
+      valuesObject: {}
