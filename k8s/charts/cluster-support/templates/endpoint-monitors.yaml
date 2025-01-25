@@ -6,3 +6,5 @@ metadata:
 spec:
   forceHttps: true
   url: https://syscd.xyz/webapi/ping
+  uptimeRobotConfig:
+    alertContacts: "6870948_0_0"
