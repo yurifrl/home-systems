@@ -9,5 +9,4 @@ spec:
   uptimeRobotConfig:
     alertContacts: "6870948_0_0"
     monitorType: "keyword"
-    KeywordExists: "yes"
     KeywordValue: "403"
