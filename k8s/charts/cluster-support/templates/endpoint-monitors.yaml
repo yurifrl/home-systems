@@ -1,0 +1,8 @@
+apiVersion: endpointmonitor.stakater.com/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: argocd-live
+  namespace: ingress-monitor
+spec:
+  forceHttps: true
+  url: https://argocd.syscd.live/
