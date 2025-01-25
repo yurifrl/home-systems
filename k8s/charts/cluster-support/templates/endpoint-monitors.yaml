@@ -6,3 +6,12 @@ metadata:
 spec:
   forceHttps: true
   url: https://argocd.syscd.live/
+---
+apiVersion: endpointmonitor.stakater.com/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: syscd-xyz
+  namespace: ingress-monitor
+spec:
+  forceHttps: true
+  url: https://syscd.xyz/webapi/ping
