@@ -1,7 +1,7 @@
 apiVersion: check.cloudders.com/v1alpha1
 kind: HealthCheck
 metadata:
-  name: ArgoCD
+  name: argocd
 spec:
   ## URL of the destination endpoint to be monitored
   url: "https://argocd.syscd.live/"
