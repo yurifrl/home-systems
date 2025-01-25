@@ -31,3 +31,6 @@ spec:
             type: configmap
             objectName: config
             size: 2Gi
+        podOptions:
+          nodeSelector:
+            kubernetes.io/arch: arm64
