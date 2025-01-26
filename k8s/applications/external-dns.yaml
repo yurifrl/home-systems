@@ -47,6 +47,7 @@ spec:
       targetRevision: "*"
       helm:
         releaseName: external-dns-cloudflare
+        crd.create: false
         valuesObject:
           provider: cloudflare
           env:
@@ -93,6 +94,7 @@ spec:
       targetRevision: "*"
       helm:
         releaseName: external-dns-rfc2136
+        crd.create: false
         valuesObject:
           provider: rfc2136
           logLevel: debug
