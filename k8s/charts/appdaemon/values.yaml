@@ -37,10 +37,7 @@ workload:
             LONGITUDE: -94
             ELEVATION: 1217
             TIMEZONE: "{{ .Values.TZ }}"
-            TOKEN:
-              secretKeyRef:
-                name: appdaemon-secrets
-                key: TOKEN
+
 persistence:
   conf:
     enabled: true
