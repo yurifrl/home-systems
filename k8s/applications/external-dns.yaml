@@ -112,7 +112,7 @@ spec:
             zone: syscd.dev
             tsigAxfr: true
             tsigKeyname: externaldns-key
-          extraArgs:
-            service-type-filter: LoadBalancer
+          # extraArgs:
+          #   service-type-filter: LoadBalancer
 
 # https://github.com/bitnami/charts/blob/main/bitnami/external-dns/README.md
