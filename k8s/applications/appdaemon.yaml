@@ -44,12 +44,12 @@ spec:
                 containers:
                   main:
                     env:
-                      DASH_URL: "http://$HOSTNAME:5050"
+                      DASH_URL: "http://appdaemon.appdaemon.svc.cluster.local:5050"
                       LATITUDE: -23.5505
                       LONGITUDE: -46.6333
                       ELEVATION: 760
                       TIMEZONE: America/Sao_Paulo
-                      HA_URL: http://home-assistant.home-assistant:8080
+                      HA_URL: http://home-assistant.home-assistant.svc.cluster.local:8080
                       TOKEN:
                         secretKeyRef:
                           expandObjectName: false
@@ -58,6 +58,6 @@ spec:
           persistence:
             conf:
               enabled: false
-          # podOptions:
-          #   nodeSelector:
-          #     kubernetes.io/arch: arm64
+          podOptions:
+            nodeSelector:
+              kubernetes.io/arch: arm64
