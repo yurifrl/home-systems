@@ -3,12 +3,6 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-env:
-  - name: BIND9_USER
-    value: root
-  - name: TZ
-    value: UTC
-
 # Bind9 configuration files
 config:
   named.conf: |

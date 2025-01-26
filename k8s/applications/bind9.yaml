@@ -20,9 +20,6 @@ spec:
       path: k8s/charts/bind9
       helm:
         valuesObject:
-          env:
-            - name: TZ
-              value: America/Sao_Paulo
           secretName: bind9-keys
           config:
             named.conf: |

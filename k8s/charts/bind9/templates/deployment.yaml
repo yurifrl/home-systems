@@ -25,10 +25,14 @@ spec:
               containerPort: 53
               protocol: UDP
           env:
-            {{- toYaml .Values.env | nindent 12 }}
+            - name: BIND9_USER
+              value: root
+            - name: TZ
+              value: America/Sao_Paulo
           volumeMounts:
             - name: config
-              mountPath: /etc/bind
+              mountPath: /etc/bind/named.conf
+              subPath: named.conf
             {{- if .Values.secretName }}
             - name: secret-config
               mountPath: /etc/bind/keys.conf
