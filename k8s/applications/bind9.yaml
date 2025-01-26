@@ -86,4 +86,4 @@ spec:
                                             60         ; minimum (1 minute)
                                             )
                                     NS      ns.syscd.dev.
-            ns                      A       ?????
+            ns                      A       192.168.68.203
