@@ -55,6 +55,13 @@ spec:
           service:
             annotations:
               teleport.dev/name: home-assistant
+          initContainers:
+            - name: init-hacs
+              image: bash
+              command: ["bash", "-c", "cd /config && wget -O - https://get.hacs.xyz | bash -"]
+              volumeMounts:
+                - mountPath: /config
+                  name: home-assistant
           configuration:
             enabled: true
             forceInit: true
@@ -74,7 +81,5 @@ spec:
               automation: !include automations.yaml
               script: !include scripts.yaml
               scene: !include scenes.yaml
-
-
 
 # Chart: https://github.com/pajikos/home-assistant-helm-chart
