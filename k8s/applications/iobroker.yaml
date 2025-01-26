@@ -16,7 +16,7 @@ spec:
       - CreateNamespace=true
   source:
     chart: iobroker
-    repoURL: https://eugenrein.github.io/helm-charts
+    repoURL: https://eugenmayer.github.io/helm-charts
     targetRevision: "*"
     helm:
       valuesObject:
