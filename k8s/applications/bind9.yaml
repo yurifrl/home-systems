@@ -61,7 +61,6 @@ spec:
                                      )
               @       IN      NS      ns.syscd.dev.
               ns      IN      A       192.168.68.203
-              ns      IN      TXT     "heritage=external-dns,external-dns/owner=syscd-rfc2136"
 
 
 # Check zone: kubectl -n bind9 exec -it deployment/bind9 -- named-checkzone syscd.dev /etc/bind/syscd.dev.zone
