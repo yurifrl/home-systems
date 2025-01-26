@@ -52,12 +52,15 @@ spec:
               };
             syscd.dev.zone: |
               $TTL 60 ; 1 minute
-              syscd.dev         IN SOA  syscd.dev. root.syscd.dev. (
-                                              16         ; serial
-                                              60         ; refresh (1 minute)
-                                              60         ; retry (1 minute)
-                                              60         ; expire (1 minute)
-                                              60         ; minimum (1 minute)
-                                              )
-                                      NS      ns.syscd.dev.
-              ns                      A       192.168.68.203
+              @       IN      SOA     ns.syscd.dev. root.syscd.dev. (
+                                     16         ; serial
+                                     60         ; refresh (1 minute)
+                                     60         ; retry (1 minute)
+                                     60         ; expire (1 minute)
+                                     60         ; minimum (1 minute)
+                                     )
+              @       IN      NS      ns.syscd.dev.
+              ns      IN      A       192.168.68.203
+
+
+# Check zone: kubectl -n bind9 exec -it deployment/bind9 -- named-checkzone syscd.dev /etc/bind/syscd.dev.zone

@@ -95,6 +95,8 @@ spec:
         valuesObject:
           crd.create: false
           logLevel: debug
+          registry: txt
+          txtPrefix: external-dns-
           txtOwnerId: syscd-rfc2136
           policy: sync
           domainFilters:
@@ -105,10 +107,11 @@ spec:
             - istio-virtualservice
           provider: rfc2136
           rfc2136:
-            host: "bind9.bind9.svc.cluster.local"
-            zone: "syscd.dev"
-            tsigKeyname: "externaldns-key"
-            secretName: "externaldns-tsig-secret"
+            secretName: externaldns-tsig-secret # Secret with key rfc2136_tsig_secret
+            host: bind9.bind9.svc.cluster.local
+            zone: syscd.dev
+            tsigAxfr: true
+            tsigKeyname: externaldns-key
           extraArgs:
             service-type-filter: LoadBalancer
 
