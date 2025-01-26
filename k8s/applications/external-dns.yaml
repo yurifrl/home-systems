@@ -22,7 +22,7 @@ spec:
       chart: external-dns
       targetRevision: "*"
       helm:
-        releaseName: external-dns-tailscale
+        releaseName: tailscale
         valuesObject:
           provider: cloudflare
           env:
@@ -46,9 +46,9 @@ spec:
       chart: external-dns
       targetRevision: "*"
       helm:
-        releaseName: external-dns-cloudflare
-        crd.create: false
+        releaseName: cloudflare
         valuesObject:
+          crd.create: false
           provider: cloudflare
           env:
             - name: CF_API_TOKEN
@@ -71,7 +71,7 @@ spec:
     #   chart: external-dns
     #   targetRevision: "*"
     #   helm:
-    #     releaseName: external-dns-pihole
+    #     releaseName: pihole
     #     valuesObject:
     #       provider: pihole
     #       logLevel: debug
@@ -93,9 +93,9 @@ spec:
       chart: external-dns
       targetRevision: "*"
       helm:
-        releaseName: external-dns-rfc2136
-        crd.create: false
+        releaseName: rfc2136
         valuesObject:
+          crd.create: false
           provider: rfc2136
           logLevel: debug
           txtOwnerId: syscd-rfc2136
