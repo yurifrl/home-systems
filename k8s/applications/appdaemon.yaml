@@ -26,15 +26,17 @@ spec:
                 name: appdaemon
                 namespace: appdaemon
                 port: 5050
-    - chart: appdaemon
-      repoURL: tccr.io/truecharts
-      targetRevision: "*"
+    # - chart: common
+    #   repoURL: tccr.io/truecharts
+    #   targetRevision: "*"
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/appdaemon
       helm:
         valuesObject:
           image:
             repository: acockburn/appdaemon
             tag: latest
-            # tag: dev
             pullPolicy: Always
           # secret:
           #   appdaemon-secrets:
@@ -54,9 +56,10 @@ spec:
                       ELEVATION: 760
                       TIMEZONE: America/Sao_Paulo
                       HA_URL: http://home-assistant.home-assistant:8080
-                    envFrom:
-                      - secretRef:
+                      TOKEN:
+                        secretKeyRef:
                           name: appdaemon-secrets
+                          key: TOKEN
           persistence:
             conf:
               enabled: false
