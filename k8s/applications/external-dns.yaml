@@ -22,7 +22,7 @@ spec:
       chart: external-dns
       targetRevision: "*"
       helm:
-        releaseName: external-dns-private
+        releaseName: external-dns-tailscale
         valuesObject:
           provider: cloudflare
           env:
@@ -31,7 +31,7 @@ spec:
                 secretKeyRef:
                   name: cloudflare-api-token
                   key: token
-          txtOwnerId: syscd-private
+          txtOwnerId: syscd-tailscale
           policy: sync
           domainFilters:
             - syscd.tech
@@ -46,7 +46,7 @@ spec:
       chart: external-dns
       targetRevision: "*"
       helm:
-        releaseName: external-dns-public
+        releaseName: external-dns-cloudflare
         valuesObject:
           provider: cloudflare
           env:
@@ -55,7 +55,7 @@ spec:
                 secretKeyRef:
                   name: cloudflare-api-token
                   key: token
-          txtOwnerId: syscd-public
+          txtOwnerId: syscd-cloudflare
           policy: sync
           domainFilters:
             - syscd.live
@@ -65,26 +65,55 @@ spec:
             - istio-virtualservice
           extraArgs:
             - --cloudflare-proxied
-    # Pi-hole DNS
+    # # Pi-hole DNS
+    # - repoURL: https://kubernetes-sigs.github.io/external-dns/
+    #   chart: external-dns
+    #   targetRevision: "*"
+    #   helm:
+    #     releaseName: external-dns-pihole
+    #     valuesObject:
+    #       provider: pihole
+    #       logLevel: debug
+    #       txtOwnerId: syscd-pihole
+    #       policy: sync
+    #       domainFilters:
+    #         - syscd.dev
+    #       interval: 1m
+    #       pihole:
+    #         server: "http://pihole.pihole-web.svc.cluster.local:443"
+    #         secretName: pihole-password
+    #       sources:
+    #         - istio-gateway
+    #         - istio-virtualservice
+    #       extraArgs:
+    #         - --service-type-filter=LoadBalancer
+    # RFC2136 DNS
     - repoURL: https://kubernetes-sigs.github.io/external-dns/
       chart: external-dns
       targetRevision: "*"
       helm:
-        releaseName: external-dns-local
+        releaseName: external-dns-rfc2136
         valuesObject:
-          provider: pihole
+          provider: rfc2136
           logLevel: debug
-          txtOwnerId: syscd-local
+          txtOwnerId: syscd-rfc2136
           policy: sync
           domainFilters:
             - syscd.dev
           interval: 1m
-          pihole:
-            server: "http://pihole.pihole-web.svc.cluster.local:443"
-            secretName: pihole-password
           sources:
             - istio-gateway
             - istio-virtualservice
+          rfc2136:
+            host: "bind9.bind9.svc.cluster.local"
+            port: 53
+            zones: 
+              - "syscd.local"
+            tsigSecretAlg: "hmac-sha256"
+            tsigKeyname: "externaldns-key"
+            secretName: "externaldns-tsig-secret"
+            tsigAxfr: true
+            minTTL: "300s"
           extraArgs:
             - --service-type-filter=LoadBalancer
 # k -n external-dns create secret generic cloudflare-api-token --from-literal=token='your-cloudflare-api-token'
