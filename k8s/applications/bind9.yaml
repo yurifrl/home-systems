@@ -45,6 +45,10 @@ spec:
               target: 53
         config:
           named.conf: |
+            key "externaldns-key" {
+                algorithm hmac-sha256;
+                secret "96Ah/a2g0/nLeFGK+d/0tzQcccf9hCEIy34PoXX2Qg8=";
+            };
             # ifconfig | grep "inet " | grep -v 127.0.0.1
             acl internal {
               192.168.0.0/16;    # All local networks in 192.168.x.x range
@@ -65,19 +69,21 @@ spec:
             zone "syscd.dev" IN {
                 type master;
                 file "/etc/bind/syscd.dev.zone";
+                allow-transfer {
+                    key "externaldns-key";
+                };
+                update-policy {
+                    grant externaldns-key zonesub ANY;
+                };
             };
           syscd.dev.zone: |
-            $TTL 1d;
-            $ORIGIN syscd.dev.;
-
-            @         IN      SOA   ns.syscd.dev. info.syscd.dev (
-
-                                    2024011700 ; serial number
-                                    12h        ; refresh
-                                    15m        ; update retry
-                                    3w         ; expiry
-                                    2h         ; minimum
-                                    )
-                      IN      NS    ns.syscd.dev.
-            ns        IN      A     192.168.68.203
-            *         IN      A     192.168.68.200
+            $TTL 60 ; 1 minute
+            syscd.dev         IN SOA  syscd.dev. root.syscd.dev. (
+                                            16         ; serial
+                                            60         ; refresh (1 minute)
+                                            60         ; retry (1 minute)
+                                            60         ; expire (1 minute)
+                                            60         ; minimum (1 minute)
+                                            )
+                                    NS      ns.syscd.dev.
+            ns                      A       ?????
