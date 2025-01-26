@@ -25,10 +25,10 @@ spec:
               containerPort: 53
               protocol: UDP
           env:
-            - name: BIND9_USER
-              value: {{ .Values.env.BIND9_USER | quote }}
-            - name: TZ
-              value: {{ .Values.env.TZ | quote }}
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
           volumeMounts:
             - name: config
               mountPath: /etc/bind
