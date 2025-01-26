@@ -74,19 +74,13 @@ spec:
         valuesObject:
           provider: pihole
           logLevel: debug
-          env:
-            - name: EXTERNAL_DNS_PIHOLE_SERVER
-              value: "http://pihole.pihole.svc.cluster.local"
-            - name: EXTERNAL_DNS_PIHOLE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: pihole-admin
-                  key: password
           txtOwnerId: syscd-local
           policy: sync
+          domainFilters:
+            - syscd.dev
           interval: 1m
           pihole:
-            server: "http://pihole.pihole.svc.cluster.local"
+            server: "http://pihole.pihole-web.svc.cluster.local:443"
             secretName: pihole-password
           sources:
             - istio-gateway

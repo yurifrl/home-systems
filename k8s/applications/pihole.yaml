@@ -23,9 +23,9 @@ spec:
           virtualServices:
             - name: pihole
               service:
-                name: pihole
+                name: pihole-web
                 namespace: pihole
-                port: 80
+                port: 443
 
     - repoURL: https://mojo2600.github.io/pihole-kubernetes/
       chart: pihole
@@ -42,10 +42,7 @@ spec:
           serviceDns:
             type: LoadBalancer
             annotations:
-              metallb.universe.tf/loadBalancerIPs: "192.168.1.53"
-            mixedService: false
-          serviceWeb:
-            type: ClusterIP
+              metallb.universe.tf/allow-shared-ip: pihole-svc
           ingress:
             enabled: false
           monitoring:
