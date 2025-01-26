@@ -1,0 +1,57 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pihole
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pihole
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: pihole
+              service:
+                name: pihole
+                namespace: pihole
+                port: 80
+
+    - repoURL: https://mojo2600.github.io/pihole-kubernetes/
+      chart: pihole
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          persistentVolumeClaim:
+            enabled: false
+            # storageClass: local-path
+          DNS1: "1.1.1.1"
+          DNS2: "1.0.0.1"
+          admin:
+            existingSecret: "pihole-admin"
+          serviceDns:
+            type: LoadBalancer
+            annotations:
+              metallb.universe.tf/loadBalancerIPs: "192.168.1.53"
+            mixedService: false
+          serviceWeb:
+            type: ClusterIP
+          ingress:
+            enabled: false
+          monitoring:
+            podMonitor:
+              enabled: true
+          # Timezone for the container
+          TZ: "America/Sao_Paulo"
+
+# Chart: https://wolviecb.github.io/pihole-kubernetes/
