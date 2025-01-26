@@ -105,7 +105,7 @@ spec:
             - istio-virtualservice
           provider: rfc2136
           rfc2136:
-            host: "bind9-svc.bind9.svc.cluster.local"
+            host: "bind9.bind9.svc.cluster.local"
             zone: "syscd.dev"
             tsigKeyname: "externaldns-key"
             secretName: "externaldns-tsig-secret"
