@@ -15,7 +15,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
   source:
-    repoURL: https://johanneskastl.github.io/helm-charts
+    repoURL: https://artem-shestakov.github.io/helm-charts
     chart: bind9
     targetRevision: "*"
     helm:
@@ -27,3 +27,57 @@ spec:
           requests:
             cpu: 100m
             memory: 128Mi 
+        env:
+          - name: TZ
+            value: America/Sao_Paulo
+          - name: BIND9_USER
+            value: bind
+        service:
+          type: LoadBalancer
+          ports:
+            - name: 53-53-tcp
+              port: 53
+              protocol: TCP
+              target: 53
+            - name: 53-53-udp
+              port: 53
+              protocol: UDP
+              target: 53
+        config:
+          named.conf: |
+            # ifconfig | grep "inet " | grep -v 127.0.0.1
+            acl internal {
+              192.168.0.0/16;    # All local networks in 192.168.x.x range
+              198.19.0.0/16;     # Broader network range
+              # 10.0.0.0/8;        # All kubernetes and internal networks
+            };
+
+            options {
+              directory "/var/cache/bind";
+              
+              forwarders {
+                1.1.1.1;
+                1.0.0.1;
+                8.8.8.8;
+              };
+            };
+
+            zone "syscd.dev" IN {
+                type master;
+                file "/etc/bind/syscd.dev.zone";
+            };
+          syscd.dev.zone: |
+            $TTL 1d;
+            $ORIGIN syscd.dev.;
+
+            @         IN      SOA   ns.syscd.dev. info.syscd.dev (
+
+                                    2024011700 ; serial number
+                                    12h        ; refresh
+                                    15m        ; update retry
+                                    3w         ; expiry
+                                    2h         ; minimum
+                                    )
+                      IN      NS    ns.syscd.dev.
+            ns        IN      A     192.168.68.203
+            *         IN      A     192.168.68.200
