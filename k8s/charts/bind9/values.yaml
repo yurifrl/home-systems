@@ -4,8 +4,10 @@ image:
   pullPolicy: IfNotPresent
 
 env:
-  BIND9_USER: root
-  TZ: UTC
+  - name: BIND9_USER
+    value: root
+  - name: TZ
+    value: UTC
 
 # Bind9 configuration files
 config:

@@ -25,10 +25,7 @@ spec:
               containerPort: 53
               protocol: UDP
           env:
-            {{- range $key, $value := .Values.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
+            {{- toYaml .Values.env | nindent 12 }}
           volumeMounts:
             - name: config
               mountPath: /etc/bind
