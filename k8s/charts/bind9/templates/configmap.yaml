@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bind9-config
+  labels:
+    app: bind9
+data:
+  {{- range $filename, $content := .Values.config }}
+  {{ $filename }}: |
+    {{- $content | nindent 4 }}
+    {{- if eq $filename "named.conf" }}
+    {{- if $.Values.secretName }}
+    include "/etc/bind/keys.conf";
+    {{- end }}
+    {{- end }}
+  {{- end }} 

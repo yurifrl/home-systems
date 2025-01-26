@@ -15,7 +15,7 @@ spec:
       - CreateNamespace=true
   source:
     chart: mosquitto
-    targetRevision: "16.4.1"
+    targetRevision: "*"
     repoURL: tccr.io/truecharts
     helm:
       valuesObject:

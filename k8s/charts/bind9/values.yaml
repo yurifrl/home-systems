@@ -1,0 +1,45 @@
+image:
+  repository: ubuntu/bind9
+  tag: latest
+  pullPolicy: IfNotPresent
+
+env:
+  BIND9_USER: root
+  TZ: UTC
+
+# Bind9 configuration files
+config:
+  named.conf: |
+    options {
+      directory "/var/cache/bind";
+      recursion yes;
+      allow-query { any; };
+      forwarders {
+        8.8.8.8;
+        8.8.4.4;
+      };
+    };
+  # Add additional configuration files as needed:
+  # example.zone: |
+  #   $TTL 86400
+  #   @ IN SOA ns1.example.com. admin.example.com. (
+  #     2020010101 ; Serial
+  #     3600       ; Refresh
+  #     1800       ; Retry
+  #     604800     ; Expire
+  #     86400      ; Minimum TTL
+  #   )
+
+# Name of the secret containing bind9 keys configuration
+secretName: ""
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+service:
+  type: LoadBalancer  # Can be changed to LoadBalancer if needed 

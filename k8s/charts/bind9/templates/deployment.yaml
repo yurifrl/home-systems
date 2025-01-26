@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bind9
+  labels:
+    app: bind9
+spec:
+  selector:
+    matchLabels:
+      app: bind9
+  template:
+    metadata:
+      labels:
+        app: bind9
+    spec:
+      containers:
+        - name: bind9
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: dns-tcp
+              containerPort: 53
+              protocol: TCP
+            - name: dns-udp
+              containerPort: 53
+              protocol: UDP
+          env:
+            - name: BIND9_USER
+              value: {{ .Values.env.BIND9_USER | quote }}
+            - name: TZ
+              value: {{ .Values.env.TZ | quote }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/bind
+            {{- if .Values.secretName }}
+            - name: secret-config
+              mountPath: /etc/bind/keys.conf
+              subPath: keys.conf
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: bind9-config
+        {{- if .Values.secretName }}
+        - name: secret-config
+          secret:
+            secretName: {{ .Values.secretName }}
+        {{- end }} 
