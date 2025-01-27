@@ -48,9 +48,17 @@ spec:
             defaultDataPath: /storage
             backupTarget: s3://syscd@southamerica-east1/
             backupTargetCredentialSecret: longhorn-gcp-backups
-            replicaZoneSoftAntiAffinity: true
+            replicaZoneSoftAntiAffinity: false
             storageMinimalAvailablePercentage: 10
             defaultReplicaCount: 1
+            # test
+            # allowVolumeCreationWithDegradedAvailability: false
+            # createDefaultDiskLabeledNodes: true
+            # replicaAutoBalance: best-effort
+            # replicaSoftAntiAffinity: false
+            # replicaDiskSoftAntiAffinity: false
+            # storageOverProvisioningPercentage: 100
+            # upgradeChecker: true
           service:
             annotations:
               teleport.dev/name: longhorn
