@@ -9,6 +9,12 @@
     ../../modules/kubernetes.nix
   ];
 
+  # Enable Argo CD setup service
+  services.argo-setup.enable = false;
+
+  # Enable Secret Loader service
+  services.secret-loader.enable = false;
+
   # Add RPI-specific packages
   environment.systemPackages = with pkgs; [
     htop
