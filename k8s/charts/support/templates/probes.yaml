@@ -21,6 +21,7 @@ spec:
         - {{ $hostPrefix }}.syscd.live
         - {{ $hostPrefix }}.syscd.tech
         - {{ $hostPrefix }}.syscd.xyz
+        - {{ $hostPrefix }}.syscd.dev
         {{- end }}
 ---
 {{- end }} 
