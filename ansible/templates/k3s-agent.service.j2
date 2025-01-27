@@ -6,7 +6,9 @@ Wants=network-online.target
 
 [Service]
 Type=notify
-ExecStart=/usr/local/bin/k3s agent --config /etc/rancher/k3s/config.yaml
+Environment="KUBELET_EXTRA_ARGS=--root-dir=/var/lib/kubelet"
+Environment="KUBELET_ROOT_DIR=/var/lib/kubelet"
+ExecStart=k3s agent --config /k3s/config.yaml
 KillMode=process
 Delegate=yes
 LimitNOFILE=infinity

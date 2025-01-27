@@ -107,7 +107,7 @@ in
     packages = [ pkgs.terminus_font ];
   };
   time.timeZone = "America/Sao_Paulo";
-  system.stateVersion = "24.05";
+  system.stateVersion = "25.05";
   environment.variables.EDITOR = "vim";
 
   programs.git = {

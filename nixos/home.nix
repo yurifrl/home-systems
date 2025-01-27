@@ -19,5 +19,5 @@
   # Let home Manager install and manage itself.
   programs.home-manager.enable = true;
 
-  home-manager.users.nixos.home.stateVersion = "24.05";
+  # home-manager.users.nixos.home.stateVersion = "24.05";
 }
