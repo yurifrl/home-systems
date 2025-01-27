@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 ENDPOINT="https://httpbin.syscd.live/"
-CLIENT_ID=""
-CLIENT_SECRET=""
+CF_CLIENT_ID="${CF_CLIENT_ID:-""}"
+CF_CLIENT_SECRET="${CF_CLIENT_SECRET:-""}"
 
 curl "$ENDPOINT" \
     -H "CF-Access-Client-Id: $CLIENT_ID" \
