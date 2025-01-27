@@ -6,8 +6,14 @@
     ./secret-loader.nix
     ./longhorn.nix
     ./inotify.nix
+    ./k3s-cleanup.nix
+    ./containerd.nix
     ../../modules/kubernetes.nix
   ];
+
+
+  # Enable k3s cleanup service
+  services.k3s-cleanup.enable = true;
 
   # Enable Argo CD setup service
   services.argo-setup.enable = false;
