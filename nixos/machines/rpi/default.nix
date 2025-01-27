@@ -11,7 +11,7 @@
   ];
 
   # Enable k3s cleanup service
-  services.k3s-cleanup.enable = true;
+  services.k3s-cleanup.enable = false;
 
   # Enable Argo CD setup service
   services.argo-setup.enable = false;
@@ -80,8 +80,6 @@
         "CAP_NET_RAW"
         "CAP_SYS_ADMIN"
       ];
-      RuntimeDirectory = "k3s/containerd";
-      RuntimeDirectoryMode = "0755";
     };
   };
 
