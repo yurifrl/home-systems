@@ -20,7 +20,9 @@
 
   # Add RPI-specific shell aliases
   programs.fish.shellAliases = {
+    argo-restart = "cd /home/nixos/home-systems/nixos && git pull origin main & sudo systemctl restart argo-setup & sudo journalctl -u argo-setup.service -f";
     xablaunixos = "cd /home/nixos/home-systems/nixos && git pull origin main && sudo nixos-rebuild switch --flake .#rpi --impure --show-trace";
+    xablaunixosupgrade = "cd /home/nixos/home-systems/nixos && git pull origin main && sudo nixos-rebuild switch --flake .#rpi --impure --show-trace --upgrade";
   };
 
   networking = {
