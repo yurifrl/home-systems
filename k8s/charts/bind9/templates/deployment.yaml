@@ -13,10 +13,23 @@ spec:
       labels:
         app: bind9
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: bind9
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_BIND_SERVICE
           ports:
             - name: dns-tcp
               containerPort: 53
@@ -24,6 +37,16 @@ spec:
             - name: dns-udp
               containerPort: 53
               protocol: UDP
+          livenessProbe:
+            tcpSocket:
+              port: 53
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 53
+            initialDelaySeconds: 5
+            periodSeconds: 10
           env:
             - name: BIND9_USER
               value: root
@@ -40,6 +63,8 @@ spec:
               mountPath: /etc/bind/keys.conf
               subPath: keys.conf
             {{- end }}
+            - name: tmp
+              mountPath: /tmp
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
@@ -50,4 +75,6 @@ spec:
         - name: secret-config
           secret:
             secretName: {{ .Values.secretName }}
-        {{- end }} 
+        {{- end }}
+        - name: tmp
+          emptyDir: {} 
