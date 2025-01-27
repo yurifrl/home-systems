@@ -76,6 +76,17 @@
     ];
   };
 
+  # Add systemd overrides for k3s
+  systemd.services.k3s = {
+    serviceConfig = {
+      AmbientCapabilities = [
+        "CAP_NET_BIND_SERVICE"
+        "CAP_NET_RAW"
+        "CAP_SYS_ADMIN"
+      ];
+    };
+  };
+
   environment.variables = {
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
   };
