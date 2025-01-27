@@ -14,7 +14,7 @@
   services.k3s-cleanup.enable = false;
 
   # Enable Argo CD setup service
-  services.argo-setup.enable = false;
+  services.argo-setup.enable = true;
 
   # Enable Secret Loader service
   services.secret-loader.enable = false;
