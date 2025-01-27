@@ -14,3 +14,14 @@ services:
       - ./secrets/cloudflare.json:/etc/cloudflared/config.json
       - ./tunnel-config.yaml:/etc/cloudflared/config.yaml
     restart: always
+
+  # tailscale:
+  #   image: tailscale/tailscale:latest
+  #   volumes:
+  #     - tailscale:/var/lib/tailscale
+  #   privileged: true
+  #   env_file:
+  #     - secrets/secrets.env
+  #   environment:
+  #     - TS_HOSTNAME=service-monitor
+  #   restart: always

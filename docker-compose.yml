@@ -10,7 +10,7 @@ x-base-service: &base_service
     NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM: 1
     K3S_TOKEN: $K3S_TOKEN
   volumes:
-    - .:/src
+    - ./cli:/src
     - gomod-cache:/go/pkg/mod
     - $SSH_AUTH_SOCK:/ssh-agent
     - /dev/disk5:/dev/disk5
