@@ -1,3 +1,6 @@
+persistence:
+  size: 1Gi  # Default size for the PVC
+
 image:
   repository: ubuntu/bind9
   tag: latest
