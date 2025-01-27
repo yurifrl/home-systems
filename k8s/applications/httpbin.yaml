@@ -23,13 +23,9 @@ spec:
           virtualServices:
             - name: httpbin
               service:
-                name: httpbin-httpbin
+                name: httpbin
                 namespace: httpbin
                 port: 80
-              domains:
-                xyz: false
-                tech: true
-                live: true
 
     - repoURL: https://matheusfm.dev/charts
       chart: httpbin
