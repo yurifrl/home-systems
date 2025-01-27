@@ -9,27 +9,29 @@ spec:
     privateKeySecretRef:
       name: letsencrypt
     solvers:
-    - dns01:
-        cloudflare:
-          apiTokenSecretRef:
-            name: cloudflare-api-token
-            key: token
-      selector:
-        dnsZones:
-        - "syscd.tech"
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: token
+        selector:
+          dnsZones:
+            - "syscd.tech"
+            - "syscd.dev"
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: syscd-tech-tls
+  name: syscd-tls
   namespace: istio-system
 spec:
-  secretName: syscd-tech-tls
+  secretName: syscd-tls
   issuerRef:
     name: letsencrypt
     kind: ClusterIssuer
   dnsNames:
-  - "*.syscd.tech"
+    - "*.syscd.tech"
+    - "*.syscd.dev"
   duration: 2160h # 90 days
   renewBefore: 360h # 15 days
   privateKey:
