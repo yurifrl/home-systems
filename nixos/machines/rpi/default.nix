@@ -5,6 +5,7 @@
     ./argo-setup.nix
     ./secret-loader.nix
     ./longhorn.nix
+    ./inotify.nix
     ../../modules/kubernetes.nix
   ];
 

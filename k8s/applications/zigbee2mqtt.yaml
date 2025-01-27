@@ -3,6 +3,7 @@
 # https://tubeszb.com/product/cc2652p7-zigbee-to-poe-coordinator-2023/
 # https://github.com/vicsufer/homelab/blob/main/kluster-manifests/argocd-apps/smarthome/Application-zigbee2mqtt.yaml
 # https://github.com/vFondevilla/k8s-homelab/blob/main/k8s/zigbee2mqtt/app.yaml
+# https://github.com/Koenkk/zigbee2mqtt-chart
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -38,6 +39,9 @@ spec:
       helm:
         valuesObject:
           statefulset:
+            podSecurityContext:
+              capabilities:
+                add: ["SYS_RESOURCE"]
             nodeSelector:
               kubernetes.io/hostname: nixos-1
             storage:

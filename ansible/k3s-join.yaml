@@ -50,22 +50,14 @@
 
     - name: Create K3s service directory
       ansible.builtin.file:
-        path: /etc/rancher/k3s
+        path: /k3s
         state: directory
         mode: '0755'
-
-    - name: Create kubelet directory
-      ansible.builtin.file:
-        path: /var/lib/kubelet
-        state: directory
-        mode: '0755'
-        owner: root
-        group: root
 
     - name: Create K3s config
       ansible.builtin.template:
         src: config.yaml.j2
-        dest: /etc/rancher/k3s/config.yaml
+        dest: /k3s/config.yaml
         mode: '0644'
       notify: Restart K3s agent
 
