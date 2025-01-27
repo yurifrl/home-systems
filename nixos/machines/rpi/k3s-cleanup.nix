@@ -21,9 +21,17 @@
           # Kill any remaining containerd-shim processes
           pkill containerd-shim || true
           
-          # Unmount any leftover shm mounts
+          # Give processes time to terminate
+          sleep 2
+          
+          # Unmount any containerd rootfs mounts first
+          for m in $(mount | grep '/run/k3s/containerd.*rootfs' | awk '{print $3}'); do
+            umount -R "$m" || true
+          done
+          
+          # Unmount any remaining shm mounts
           for m in $(mount | grep '/run/k3s/containerd' | awk '{print $3}'); do
-            umount "$m" || true
+            umount -R "$m" || true
           done
           
           # Remove containerd socket if it exists
