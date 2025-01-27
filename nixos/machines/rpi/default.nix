@@ -7,7 +7,6 @@
     ./longhorn.nix
     ./inotify.nix
     ./k3s-cleanup.nix
-    ./containerd.nix
     ../../modules/kubernetes.nix
   ];
 
