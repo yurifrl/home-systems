@@ -34,12 +34,16 @@ spec:
             cpu: 100m
             memory: 128Mi 
 
-        # kubernetesDiscovery:
-        #   - types: ["app"]
-        #     namespaces: [ "*" ]
-        #     labels:
-        #       env: app
-       
+        kubernetesDiscovery:
+          - types: ["app"]
+            namespaces: [ "*" ]
+
+        discovery_service:
+          enabled: yes
+          kubernetes:
+            - types: ["app"]
+              namespaces: [ "home-assistant" ]
+              
         # apps:
         #   - name: grafana
         #     uri: https://grafana.syscd.xyz
@@ -49,7 +53,7 @@ spec:
         #     uri: https://ha.syscd.xyz
         #     labels:
         #       purpose: home-automation
-        #   - name: homer
+        #   - name: home
         #     uri: https://homer.syscd.xyz
         #     labels:
         #       purpose: dashboard
