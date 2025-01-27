@@ -30,7 +30,7 @@ spec:
         - "*.syscd.dev"
       tls:
         mode: SIMPLE
-        credentialName: syscd-tech-tls  # Updated to match the new certificate secret name
+        credentialName: syscd-tls  # Updated to match the new certificate secret name
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
