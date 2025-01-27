@@ -14,6 +14,4 @@ services:
     volumes:
       - ./secrets/cloudflare.json:/etc/cloudflared/config.json
       - ./tunnel-config.yaml:/etc/cloudflared/config.yaml
-    env_file:
-      - secrets/secrets.env
     restart: always
