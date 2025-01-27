@@ -10,7 +10,6 @@
     ../../modules/kubernetes.nix
   ];
 
-
   # Enable k3s cleanup service
   services.k3s-cleanup.enable = true;
 
@@ -75,6 +74,15 @@
       "--cluster-init"
       "--write-kubeconfig-mode=644"
     ];
+    serviceConfig = {
+      AmbientCapabilities = [
+        "CAP_NET_BIND_SERVICE"
+        "CAP_NET_RAW"
+        "CAP_SYS_ADMIN"
+      ];
+      RuntimeDirectory = "k3s/containerd";
+      RuntimeDirectoryMode = "0755";
+    };
   };
 
   environment.variables = {
