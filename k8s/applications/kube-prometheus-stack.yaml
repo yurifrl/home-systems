@@ -173,6 +173,7 @@ spec:
                     jsonData:
                       topic: "#"
           alertmanager:
+            enabled: true
             service:
               annotations:
                 teleport.dev/name: alertmanager

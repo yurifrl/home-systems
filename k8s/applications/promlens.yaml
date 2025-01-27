@@ -35,10 +35,10 @@ spec:
         valuesObject:
           config:
             web:
-              defaultPrometheusUrl: http://prometheus.syscd.tech
+              defaultPrometheusUrl: https://prometheus.syscd.tech
             grafana:
               enabled: true
-              url: http://grafana.syscd.tech
+              url: https://grafana.syscd.tech
               existingSecret: promlens-secret
           resources:
             limits:
