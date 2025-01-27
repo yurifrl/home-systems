@@ -8,10 +8,6 @@ services:
       - "3001:3001"
     restart: always
 
-  uptime-shell:
-    build: .
-    restart: always
-
   cloudflared:
     image: cloudflare/cloudflared:latest
     command: tunnel --config /etc/cloudflared/config.yaml run
