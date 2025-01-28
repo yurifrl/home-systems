@@ -4,7 +4,7 @@ metadata:
   name: bind9-vs
 spec:
   hosts:
-  - vs.bind9.svc.cluster.local
+  - bind9.bind9.svc.cluster.local
   gateways:
   - mesh
   tcp:
