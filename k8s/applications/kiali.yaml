@@ -1,42 +1,42 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: kiali
-  namespace: argocd
-spec:
-  project: default
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: istio-system
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true 
-  sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: kiali
-              service:
-                name: kiali
-                namespace: istio-system
-                port: 20001
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: kiali
+#   namespace: argocd
+# spec:
+#   project: default
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: istio-system
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true 
+#   sources:
+#     - repoURL: https://github.com/yurifrl/home-systems.git
+#       targetRevision: HEAD
+#       path: k8s/charts/support
+#       helm:
+#         valuesObject:
+#           virtualServices:
+#             - name: kiali
+#               service:
+#                 name: kiali
+#                 namespace: istio-system
+#                 port: 20001
 
-    - repoURL: https://kiali.org/helm-charts
-      chart: kiali-server
-      targetRevision: "*"
-      helm:
-        valuesObject:
-          auth:
-            strategy: anonymous
-          external_services:
-            prometheus:
-              url: http://kube-prometheus-stack-prometheus.monitoring:9090
-          service:
-            annotations:
-              teleport.dev/name: kiali
+#     - repoURL: https://kiali.org/helm-charts
+#       chart: kiali-server
+#       targetRevision: "*"
+#       helm:
+#         valuesObject:
+#           auth:
+#             strategy: anonymous
+#           external_services:
+#             prometheus:
+#               url: http://kube-prometheus-stack-prometheus.monitoring:9090
+#           service:
+#             annotations:
+#               teleport.dev/name: kiali
