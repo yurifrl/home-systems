@@ -52,7 +52,7 @@ spec:
               mountPath: /etc/named/keys.conf
               subPath: keys.conf
             - name: bind-data
-              mountPath: /var/bind
+              mountPath: /etc/bind
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
