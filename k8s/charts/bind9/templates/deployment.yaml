@@ -53,16 +53,15 @@ spec:
             - name: TZ
               value: America/Sao_Paulo
           volumeMounts:
-            {{- range $filename, $content := .Values.config }}
             - name: config
-              mountPath: /etc/bind/{{ $filename }}
-              subPath: {{ $filename }}
-            {{- end }}
-            {{- if .Values.secretName }}
+              mountPath: /etc/bind/named.conf
+              subPath: named.conf
+            - name: config
+              mountPath: /etc/bind/syscd.dev.zone
+              subPath: syscd.dev.zone
             - name: secret-config
               mountPath: /etc/bind/keys.conf
               subPath: keys.conf
-            {{- end }}
             - name: tmp
               mountPath: /tmp
             - name: bind-data
