@@ -14,9 +14,9 @@ spec:
       selfHeal: false
     syncOptions:
       - CreateNamespace=true
-    managedNamespaceMetadata:
-      labels:
-        istio.io/dataplane-mode: ambient
+    # managedNamespaceMetadata:
+    #   labels:
+    #     istio.io/dataplane-mode: ambient
   sources:
     # Might work on the virtual service
     # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
