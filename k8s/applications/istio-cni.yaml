@@ -15,6 +15,12 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: istiod
+      jqPathExpressions:
+        - '.spec.template.spec.containers[].env[]?.valueFrom.resourceFieldRef.divisor'
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
     targetRevision: "*"
