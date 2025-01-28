@@ -17,6 +17,8 @@ spec:
         - name: bind9
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: Always
+          command: ["/usr/sbin/named"]
+          args: ["-u", "root", "-g", "-c", "/etc/named/named.conf"]
           ports:
             - name: dns-tcp
               containerPort: 53
