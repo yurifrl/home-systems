@@ -53,16 +53,6 @@ spec:
           global:
             cattle:
               systemDefaultRegistry: ""
-          affinity:
-            nodeAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                nodeSelectorTerms:
-                  - matchExpressions:
-                      - key: kubernetes.io/hostname
-                        operator: NotIn
-                        values:
-                          - nixos-1
-
 
 
 # k -n longhorn-system get nodes.longhorn.io tp4 -o yaml # get node information about failing disks

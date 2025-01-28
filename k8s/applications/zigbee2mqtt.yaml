@@ -42,6 +42,11 @@ spec:
             podSecurityContext:
               capabilities:
                 add: ["SYS_RESOURCE"]
+            tolerations:
+              - key: "node-role"
+                operator: "Equal"
+                value: "nixos-1"
+                effect: "NoSchedule"
             nodeSelector:
               kubernetes.io/hostname: nixos-1
             storage:
@@ -65,4 +70,4 @@ spec:
               port:  /dev/ttyUSB0
           service:
             annotations:
-              teleport.dev/name: zigbee2mqtt  
+              teleport.dev/name: zigbee2mqtt

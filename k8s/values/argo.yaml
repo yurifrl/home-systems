@@ -18,18 +18,33 @@ controller:
     enabled: true
     serviceMonitor:
       enabled: true
+  tolerations:
+    - key: "node-role"
+      operator: "Equal"
+      value: "nixos-1"
+      effect: "NoSchedule"
 
 dex:
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
+  tolerations:
+    - key: "node-role"
+      operator: "Equal"
+      value: "nixos-1"
+      effect: "NoSchedule"
 
 redis:
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
+  tolerations:
+    - key: "node-role"
+      operator: "Equal"
+      value: "nixos-1"
+      effect: "NoSchedule"
 
 server:
   ingress:
@@ -55,21 +70,45 @@ server:
     enabled: true
     serviceMonitor:
       enabled: true
+  
+  tolerations:
+    - key: "node-role"
+      operator: "Equal"
+      value: "nixos-1"
+      effect: "NoSchedule"
 
 repoServer:
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
+  tolerations:
+    - key: "node-role"
+      operator: "Equal"
+      value: "nixos-1"
+      effect: "NoSchedule"
 
 applicationSet:
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
+  tolerations:
+    - key: "node-role"
+      operator: "Equal"
+      value: "nixos-1"
+      effect: "NoSchedule"
 
 notifications:
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
+  tolerations:
+    - key: "node-role"
+      operator: "Equal"
+      value: "nixos-1"
+      effect: "NoSchedule"
+
+
+# kubectl taint nodes nixos-1 node-role=nixos-1:NoSchedule

@@ -43,15 +43,6 @@
 #             requests:
 #               cpu: 100m
 #               memory: 128Mi
-#           affinity:
-#             nodeAffinity:
-#               requiredDuringSchedulingIgnoredDuringExecution:
-#                 nodeSelectorTerms:
-#                   - matchExpressions:
-#                       - key: kubernetes.io/hostname
-#                         operator: NotIn
-#                         values:
-#                           - nixos-1
 #           sidecar:
 #             dashboards:
 #               enabled: true
