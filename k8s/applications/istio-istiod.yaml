@@ -24,9 +24,8 @@ spec:
     - group: apps
       kind: Deployment
       name: istiod
-      jsonPointers:
-        - /spec/template/spec/containers/0/env/9/valueFrom/resourceFieldRef/divisor
-        - /spec/template/spec/containers/0/env/10/valueFrom/resourceFieldRef/divisor
+      jqPathExpressions:
+        - '.spec.template.spec.containers[].env[]?.valueFrom.resourceFieldRef.divisor'
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
     targetRevision: 1.23.0 
