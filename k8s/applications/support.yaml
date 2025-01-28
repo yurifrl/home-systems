@@ -16,6 +16,7 @@ spec:
       - CreateNamespace=true 
       - ServerSideApply=true
   sources:
+    # Prometheus
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/support
@@ -37,3 +38,16 @@ spec:
                 name: kube-prometheus-stack-grafana
                 namespace: monitoring
                 port: 80
+    # Pyrra
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: pyrra
+              service:
+                name: pyrra
+                namespace: monitoring
+                port: 9099
+   
