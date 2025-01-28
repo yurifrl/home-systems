@@ -16,6 +16,12 @@ data:
     options {
       directory "/var/cache/bind";
       
+      recursion yes;           # Enable recursion
+      allow-recursion {        # Only allow internal networks to use recursion
+        internal;              # Uses your existing ACL
+        localhost;
+      };
+      
       forwarders {
         1.1.1.1;
         1.0.0.1;
