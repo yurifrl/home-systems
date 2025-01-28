@@ -35,6 +35,8 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
           env:
+            - name: BIND9_USER
+              value: root
             - name: TZ
               value: America/Sao_Paulo
           volumeMounts:
