@@ -20,15 +20,7 @@ spec:
     - group: admissionregistration.k8s.io
       kind: ValidatingWebhookConfiguration
       jqPathExpressions:
-        - '.webhooks[]?.clientConfig.caBundle'
         - '.webhooks[]?.failurePolicy'
-        - '.webhooks[]?.namespaceSelector'
-    - group: admissionregistration.k8s.io
-      kind: MutatingWebhookConfiguration
-      jqPathExpressions:
-        - '.webhooks[]?.clientConfig.caBundle'
-        - '.webhooks[]?.failurePolicy'
-        - '.webhooks[]?.namespaceSelector'
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
     targetRevision: 1.23.0
