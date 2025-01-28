@@ -4,20 +4,15 @@ metadata:
   name: bind9-vs
 spec:
   hosts:
-  - bind9
+  - bind9-vs.bind9.svc.cluster.local
   tcp:
-  - route:
+  - match:
+    - port: 53
+    route:
     - destination:
-        host: bind9
-        subset: v1
-    mirror:
-      host: bind9
-      subset: v2
-    mirror_percent: 100
-    mirror:
-      host: bind9
-      subset: v3
-    mirror_percent: 100
+        host: bind9.bind9.svc.cluster.local
+        port:
+          number: 53
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
