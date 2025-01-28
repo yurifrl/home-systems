@@ -13,6 +13,12 @@ spec:
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: mosquitto
+      jsonPointers:
+        - /spec/template/spec/hostUsers
   source:
     chart: mosquitto
     targetRevision: "*"

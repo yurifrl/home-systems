@@ -14,6 +14,12 @@ spec:
       selfHeal: false
     syncOptions:
       - CreateNamespace=true
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: appdaemon
+      jsonPointers:
+        - /spec/template/spec/hostUsers
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
