@@ -12,6 +12,7 @@ spec:
     metadata:
       labels:
         app: bind9
+        instance: "{{ .nodeIP | default "1" }}"
     spec:
       tolerations:
         - key: "node-role"
