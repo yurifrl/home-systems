@@ -32,15 +32,4 @@ spec:
     chart: istiod
     helm:
       valuesObject:
-        pilot:
-          cni:
-            enabled: true
-          resources:
-            limits:
-              cpu: 500m
-              memory: 1Gi
-            requests:
-              cpu: 250m
-              memory: 512Mi
-          podDisruptionBudget:
-            enabled: false
+        profile: ambient
