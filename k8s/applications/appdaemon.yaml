@@ -14,9 +14,6 @@ spec:
       selfHeal: false
     syncOptions:
       - CreateNamespace=true
-    managedNamespaceMetadata:
-      labels:
-        istio.io/dataplane-mode: ambient
   ignoreDifferences:
     - group: apps
       kind: Deployment

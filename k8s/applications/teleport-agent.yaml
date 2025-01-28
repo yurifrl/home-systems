@@ -14,9 +14,6 @@ spec:
       selfHeal: false
     syncOptions:
       - CreateNamespace=true
-    managedNamespaceMetadata:
-      labels:
-        istio.io/dataplane-mode: ambient      
   source:
     chart: teleport-kube-agent
     repoURL: https://charts.releases.teleport.dev

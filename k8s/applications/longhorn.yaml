@@ -15,9 +15,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-    managedNamespaceMetadata:
-      labels:
-        istio.io/dataplane-mode: ambient
   sources:
     - repoURL: https://charts.longhorn.io
       chart: longhorn

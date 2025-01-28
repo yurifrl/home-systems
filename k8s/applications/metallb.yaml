@@ -9,14 +9,8 @@ spec:
     server: https://kubernetes.default.svc
     namespace: metallb-system
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
     syncOptions:
       - CreateNamespace=true
-    managedNamespaceMetadata:
-      labels:
-        istio.io/dataplane-mode: ambient
   sources:
     - repoURL: https://metallb.github.io/metallb
       chart: metallb

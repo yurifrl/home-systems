@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-client
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ably77/istio-ambient-argocd-quickstart/
+    path: workloads/client/ambient
+    targetRevision: HEAD
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m0s

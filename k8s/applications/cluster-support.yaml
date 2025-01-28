@@ -12,9 +12,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-    managedNamespaceMetadata:
-      labels:
-        istio.io/dataplane-mode: ambient
   source:
     repoURL: https://github.com/yurifrl/home-systems.git
     targetRevision: HEAD
