@@ -25,27 +25,4 @@ spec:
     targetRevision: "*"
     chart: ztunnel
     helm:
-      valuesObject:
-        ztunnel:
-          volumeMounts:
-            - name: ztunnel-uds
-              mountPath: /var/run/ztunnel
-              readOnly: false
-          volumes:
-            - name: ztunnel-uds
-              emptyDir: {}
-          securityContext:
-            capabilities:
-              add:
-                - NET_ADMIN
-                - NET_RAW
-            runAsUser: 1337
-            runAsGroup: 1337
-            fsGroup: 1337
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 2000m
-              memory: 1Gi
+      valuesObject: {}
