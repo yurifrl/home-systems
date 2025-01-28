@@ -35,13 +35,13 @@ cp ./result/sd-image/*.img* .
 sudo diskutil list
 
 # Unmount the SD card device before writing
-sudo diskutil unmountDisk /dev/disk4
+sudo diskutil unmountDisk /dev/diskX
 
-# Write the image to the SD card (replace diskX with your device, e.g., disk4)
+# Write the image to the SD card (replace diskX with your device, e.g., diskX)
 sudo dd bs=4M status=progress conv=fsync of=/dev/diskX if=image.img
 
 # Unmount after writing
-sudo diskutil unmountDisk /dev/disk4
+sudo diskutil unmountDisk /dev/diskX
 ```
 
 ## Initial Setup
