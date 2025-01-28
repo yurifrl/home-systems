@@ -4,18 +4,22 @@ metadata:
   name: bind9-mesh
 spec:
   hosts:
-  - bind9.bind9.svc.cluster.local
+    - bind9.bind9.svc.cluster.local
   gateways:
-  - mesh
+    - mesh
   tcp:
   - match:
-    - port: 53
+      - port: 5353
     route:
-    - destination:
-        host: bind9.bind9.svc.cluster.local
-        port:
-          number: 53
-      weight: 100
+      - destination:
+          host: bind9.bind9.svc.cluster.local
+          port:
+            number: 53
+        weight: 100
+      headers:
+        response:
+          add:
+            x-served-by: "istio-vs"
 # ---
 # apiVersion: networking.istio.io/v1alpha3
 # kind: DestinationRule
