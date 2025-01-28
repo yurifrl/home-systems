@@ -16,10 +16,10 @@ spec:
           port:
             number: 53
         weight: 100
-      headers:
-        response:
-          add:
-            x-served-by: "istio-vs"
+        headers:
+          response:
+            add:
+              x-served-by: "istio-vs"
 # ---
 # apiVersion: networking.istio.io/v1alpha3
 # kind: DestinationRule
