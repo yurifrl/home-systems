@@ -16,6 +16,9 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
       - RespectIgnoreDifferences=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient      
   ignoreDifferences:
     - group: admissionregistration.k8s.io
       kind: ValidatingWebhookConfiguration

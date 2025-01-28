@@ -5,6 +5,8 @@ metadata:
 spec:
   hosts:
   - vs.bind9.svc.cluster.local
+  gateways:
+  - mesh
   tcp:
   - match:
     - port: 53
