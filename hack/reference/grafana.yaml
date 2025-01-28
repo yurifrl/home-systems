@@ -1,3 +1,4 @@
+# Using promtheus in grafana
 # apiVersion: argoproj.io/v1alpha1
 # kind: Application
 # metadata:
