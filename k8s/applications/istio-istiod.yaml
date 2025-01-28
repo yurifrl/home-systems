@@ -16,8 +16,11 @@ spec:
       - CreateNamespace=true
   ignoreDifferences:
     - kind: ValidatingWebhookConfiguration
-      jsonPointers:
-        - /webhooks/0/failurePolicy
+      jqPathExpressions:
+        - '.webhooks[]'
+    - kind: MutatingWebhookConfiguration
+      jqPathExpressions:
+        - '.webhooks[]'
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
     targetRevision: 1.23.0 
