@@ -19,7 +19,7 @@ spec:
     - group: apps
       kind: DaemonSet
       jsonPointers:
-        - /metadata/annotations/deprecated.daemonset.template.generation
+        - /metadata/annotations
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
     targetRevision: "*"
