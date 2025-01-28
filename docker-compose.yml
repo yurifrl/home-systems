@@ -10,7 +10,7 @@ x-base-service: &base_service
     NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM: 1
     K3S_TOKEN: $K3S_TOKEN
   volumes:
-    - ./cli:/src
+    - .:/workdir
     - gomod-cache:/go/pkg/mod
     - $SSH_AUTH_SOCK:/ssh-agent
     - /dev/disk5:/dev/disk5
@@ -22,7 +22,7 @@ services:
   nx:
     <<: *base_service
     entrypoint: fish
-    working_dir: /src/nixos
+    working_dir: /workdir/nixos
   hs:
     <<: *base_service
     entrypoint: go run main.go

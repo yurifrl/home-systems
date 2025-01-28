@@ -19,6 +19,8 @@ kill-node.sh
 
 ## Building and Deployment
 
+If setting up turinpi refer to [turingpi.md](docs/turingpi.md)
+
 ```bash
 # Check configuration
 nix flake check
@@ -47,7 +49,6 @@ sudo diskutil unmountDisk /dev/disk4
 ```bash
 ./hack/new-machine-manual-setup.sh
 ```
-
 
 ### Deployment Methods
 ```bash
@@ -81,20 +82,8 @@ kill-node.sh
 ### Cloudflare Tunnel Setup
 ```bash
 cloudflared tunnel login
-cloudflared tunnel create nixos-1
+cloudflared tunnel create <tunnel-name>
 k -n cloudflare-tunnel create secret generic cloudflare-tunnel-secret --from-file=credentials.json=/home/nixos/.
-```
-
-### Tailscale Configuration
-```bash
-# Create secret with Tailscale auth key
-k -n tailscale create secret generic tailscale-auth --from-literal=auth-key='tskey-auth-xxxxx'
-```
-
-### External DNS Setup
-```bash
-# Create secret with Cloudflare API token
-k -n external-dns create secret generic cloudflare-api-token --from-literal=token='your-cloudflare-api-token'
 ```
 
 ## Useful Commands
@@ -110,6 +99,7 @@ nix eval --raw --impure --expr "builtins.currentSystem"
 ## Additional References
 
 ### Derivation Examples
+
 ```bash
 # Basic derivation build
 nix-build -E '(import <nixpkgs> {}).callPackage ./cowsay-version.nix {}'
@@ -154,25 +144,10 @@ nix build --rebuild --impure --builders 'ssh://nixos@192.168.68.108' ./nix/#nixo
 NIX_SSHOPTS="-A" nixos-rebuild switch --flake ./nix/#nixosConfigurations.rpi.config.system.build.sdImage --target-host ssh://nixos@192.168.68.108 --use-remote-sudo
 ```
 
-## Turing pi
-[Download image](https://joshua-riek.github.io/ubuntu-rockchip-download/boards/turing-rk1.html)
-
-# TODO
-
-- [ ] Use ingress
-- [ ] Filter alerts
-- [ ] Https
-- [ ] Transfer domain to cloudflare https://www.melodylee.tech/website-development-blog/transfer-domain-godaddy-to-cloudflare
-- [ ] Add state to prometheus
-- [ ] Add state to grafana
-- [ ] Add state to home-assistant
 
 ## Old TODO
 
 - [ ] Configure Nix to run as nobody.
-- [x] Install Tailscale:
-  - [ ] Set up multiple networks for admin, users, and IoT devices.
-  - [ ] Find a way to not add the secret to the artifact.
 - [-] Pass secrets on dd?
 - [x] Build raspberry image with preinstalled software:
   - [Read more](https://discourse.nixos.org/t/build-raspberry-image-with-preinstalled-software/33055/3)
