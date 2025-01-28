@@ -5,15 +5,15 @@ metadata:
   labels:
     app: bind9
 spec:
-  type: {{ .Values.service.type }}
+  selector:
+    app: bind9
   ports:
     - name: dns-tcp
       port: 53
       protocol: TCP
-      targetPort: dns-tcp
+      targetPort: 53
     - name: dns-udp
       port: 53
       protocol: UDP
-      targetPort: dns-udp
-  selector:
-    app: bind9 
+      targetPort: 53
+  type: ClusterIP 
