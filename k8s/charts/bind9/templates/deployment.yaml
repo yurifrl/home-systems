@@ -36,7 +36,7 @@ spec:
             periodSeconds: 10
           env:
             - name: BIND9_USER
-              value: root
+              value: "root"
             - name: TZ
               value: America/Sao_Paulo
           volumeMounts:
