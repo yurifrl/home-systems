@@ -27,4 +27,8 @@ spec:
     chart: cni
     helm:
       valuesObject:
-        profile: ambient
+        profile: default
+        cni:
+          chained: false
+          controlz:
+            port: 9877
