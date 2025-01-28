@@ -18,7 +18,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: Always
           command: ["/usr/sbin/named"]
-          args: ["-u", "root", "-g", "-c", "/etc/named/named.conf"]
+          args: ["-u", "root", "-g"]
           ports:
             - name: dns-tcp
               containerPort: 53
@@ -43,16 +43,16 @@ spec:
               value: America/Sao_Paulo
           volumeMounts:
             - name: config
-              mountPath: /etc/named/named.conf
+              mountPath: /etc/bind/named.conf
               subPath: named.conf
             - name: config
-              mountPath: /etc/named/syscd.dev.zone
+              mountPath: /etc/bind/syscd.dev.zone
               subPath: syscd.dev.zone
             - name: secret-config
-              mountPath: /etc/named/keys.conf
+              mountPath: /etc/bind/keys.conf
               subPath: keys.conf
             - name: bind-data
-              mountPath: /var/bind
+              mountPath: /var/lib/bind
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
@@ -63,7 +63,8 @@ spec:
           secret:
             secretName: {{ .Values.secretName }}
         - name: bind-data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: bind9-data
 
 # https://github.com/artem-shestakov/helm-charts/tree/master/charts/bind9
 # https://github.com/johanneskastl/helm-charts/tree/main/charts/bind9
