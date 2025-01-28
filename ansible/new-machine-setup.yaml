@@ -1,0 +1,95 @@
+---
+- name: Set up new machine
+  hosts: master
+  become: true
+  vars:
+    target_user: nixos
+    target_home: "/home/nixos"
+    github_key_name: "GithubAutomation"
+    data_dir: "/data"
+
+  tasks:
+    - name: Create .ssh directory
+      file:
+        path: "{{ target_home }}/.ssh"
+        state: directory
+        owner: "{{ target_user }}"
+        group: users
+        mode: '0700'
+
+    - name: Get SSH key from 1Password and copy to target
+      block:
+        - name: Get private key from 1Password
+          local_action:
+            module: command
+            cmd: op item get '{{ github_key_name }}' --fields 'private key' --reveal
+          register: private_key
+          no_log: true
+
+        - name: Copy private key to remote
+          copy:
+            content: "{{ private_key.stdout }}"
+            dest: "{{ target_home }}/.ssh/id_ed25519"
+            owner: "{{ target_user }}"
+            group: users
+            mode: '0600'
+          no_log: true
+
+    - name: Update Nix channels
+      become_user: "{{ target_user }}"
+      shell: |
+        nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable
+        nix-channel --update
+
+    - name: Clone home-systems repository
+      become_user: "{{ target_user }}"
+      git:
+        repo: git@github.com:yurifrl/home-systems.git
+        dest: "{{ target_home }}/home-systems"
+        accept_hostkey: yes
+
+    - name: Copy gitconfig
+      copy:
+        src: "~/.gitconfig"
+        dest: "{{ target_home }}/.gitconfig"
+        owner: "{{ target_user }}"
+        group: users
+        mode: '0644'
+
+    - name: Create data directory
+      file:
+        path: "{{ data_dir }}"
+        state: directory
+        owner: "{{ target_user }}"
+        group: users
+        mode: '0755'
+
+    - name: Copy secrets
+      copy:
+        src: "../hack/secrets.sh"
+        dest: "{{ data_dir }}/secrets.sh"
+        owner: "{{ target_user }}"
+        group: users
+        mode: '0644'
+
+    - name: Get K3s kubeconfig
+      fetch:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: "~/.kube/k3s.yaml"
+        flat: yes
+
+    - name: Update kubeconfig server address
+      local_action:
+        module: replace
+        path: "~/.kube/k3s.yaml"
+        regexp: 'server: https://0\.0\.0\.0:6443'
+        replace: "server: https://{{ inventory_hostname }}:6443"
+
+    - name: Wait for node to be ready
+      local_action:
+        module: command
+        cmd: kubectl wait --for=condition=ready node nixos-1 --timeout=300s
+      register: node_ready
+      until: node_ready.rc == 0
+      retries: 30
+      delay: 10 
