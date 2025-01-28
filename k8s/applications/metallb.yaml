@@ -16,7 +16,7 @@ spec:
       - CreateNamespace=true
     managedNamespaceMetadata:
       labels:
-        istio-injection: disabled
+        istio.io/dataplane-mode: ambient
   sources:
     - repoURL: https://metallb.github.io/metallb
       chart: metallb

@@ -16,7 +16,7 @@ spec:
       - CreateNamespace=true
     managedNamespaceMetadata:
       labels:
-        istio-injection: disabled
+        istio.io/dataplane-mode: ambient
   ignoreDifferences:
     - group: apps
       kind: Deployment

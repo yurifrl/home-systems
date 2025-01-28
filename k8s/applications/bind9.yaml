@@ -13,7 +13,7 @@ spec:
       - CreateNamespace=true
     managedNamespaceMetadata:
       labels:
-        # istio-injection: disabled
+        # istio.io/dataplane-mode: ambient
         istio.io/dataplane-mode: ambiet
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git

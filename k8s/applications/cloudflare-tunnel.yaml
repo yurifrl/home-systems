@@ -16,7 +16,7 @@ spec:
       - CreateNamespace=true
     managedNamespaceMetadata:
       labels:
-        istio-injection: disabled
+        istio.io/dataplane-mode: ambient
   source:
     chart: cloudflare-tunnel
     repoURL: https://cloudflare.github.io/helm-charts

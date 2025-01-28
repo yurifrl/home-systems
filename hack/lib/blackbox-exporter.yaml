@@ -17,7 +17,7 @@ spec:
       - ServerSideApply=true
     managedNamespaceMetadata:
       labels:
-        istio-injection: disabled
+        istio.io/dataplane-mode: ambient
   sources:
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: prometheus-blackbox-exporter
