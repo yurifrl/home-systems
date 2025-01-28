@@ -25,7 +25,7 @@ data:
 
     zone "syscd.dev" IN {
         type master;
-        file "/etc/bind/syscd.dev.zone";
+        file "/etc/bind/zones/syscd.dev.zone";
         allow-transfer {
             key "externaldns-key";
         };

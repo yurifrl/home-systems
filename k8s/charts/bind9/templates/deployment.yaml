@@ -13,23 +13,10 @@ spec:
       labels:
         app: bind9
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
       containers:
         - name: bind9
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: Always
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop:
-                - ALL
-              add:
-                - NET_BIND_SERVICE
           ports:
             - name: dns-tcp
               containerPort: 53
@@ -48,8 +35,6 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
           env:
-            - name: BIND9_USER
-              value: "1000"
             - name: TZ
               value: America/Sao_Paulo
           volumeMounts:
@@ -74,11 +59,9 @@ spec:
         - name: config
           configMap:
             name: bind9-config
-        {{- if .Values.secretName }}
         - name: secret-config
           secret:
             secretName: {{ .Values.secretName }}
-        {{- end }}
         - name: tmp
           emptyDir: {}
         - name: bind-data

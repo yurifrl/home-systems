@@ -9,7 +9,7 @@ image:
 secretName: "bind9-keys"
 
 # DNS Server IP Configuration
-dnsServerIp: "192.168.68.201"
+dnsServerIp:
 
 resources:
   limits:
