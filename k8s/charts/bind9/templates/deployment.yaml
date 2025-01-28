@@ -63,8 +63,7 @@ spec:
           secret:
             secretName: {{ .Values.secretName }}
         - name: bind-data
-          persistentVolumeClaim:
-            claimName: bind9-data
+          emptyDir: {}
 
 # https://github.com/artem-shestakov/helm-charts/tree/master/charts/bind9
 # https://github.com/johanneskastl/helm-charts/tree/main/charts/bind9
