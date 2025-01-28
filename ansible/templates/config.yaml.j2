@@ -1,6 +1,6 @@
 # K3s Agent Configuration
 server: "https://{{ master_ip }}:6443"
-token: "{{ lookup('env', 'K3S_TOKEN') }}"
+token: "{{ lookup('env', 'NIXOS1_K3S_TOKEN') }}"
 node-name: "{{ inventory_hostname }}"
 node-label:
   - "local.volume.path=storage"

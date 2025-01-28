@@ -3,11 +3,11 @@
   hosts: workers
   become: true
   tasks:
-    - name: Get private key from 1Password
-      ansible.builtin.shell: |
-        op item get 'GithubAutomation' --fields 'private key' --reveal | tr -d '"' | awk '/BEGIN/,/END/'
-      register: private_key_content
-      delegate_to: localhost
+    - name: Get private key from 1Password (local)
+      local_action:
+        module: command
+        cmd: op item get 'GithubAutomation' --fields 'private key' --reveal
+      register: private_key
       become: false
       changed_when: false
 
@@ -19,9 +19,9 @@
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
 
-    - name: Copy SSH private key
+    - name: Copy private key to target
       copy:
-        content: "{{ private_key_content.stdout }}"
+        content: "{{ private_key.stdout }}"
         dest: "/home/{{ ansible_user }}/.ssh/id_ed25519"
         mode: '0600'
         owner: "{{ ansible_user }}"

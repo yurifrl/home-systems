@@ -8,7 +8,7 @@ x-base-service: &base_service
     SSH_AUTH_SOCK: /ssh-agent
     NIXPKGS_ALLOW_BROKEN: 1
     NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM: 1
-    K3S_TOKEN: $K3S_TOKEN
+    NIXOS1_K3S_TOKEN: $NIXOS1_K3S_TOKEN
   volumes:
     - .:/workdir
     - gomod-cache:/go/pkg/mod

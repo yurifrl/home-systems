@@ -1,20 +1,20 @@
-
 # Using Ansible
 ```bash
 # There's a ready to use docker image with ansible installed.
 docker compose run --rm sh
 
+# Setup nixos machine
+ansible-playbook -i ansible/inventory.yml ansible/new-machine-setup.yml
+
+# Setup nodes
+ansible-playbook --ask-pass -i ansible/inventory.yml ansible/setup.yml
+
 # Join nodes using token from master
-ansible-playbook --ask-pass -i ansible/inventory.yaml ansible/k3s-join.yaml -e K3S_TOKEN="$K3S_TOKEN" --limit tp1,tp4
-
-# Setup storage
-ansible-playbook --ask-pass -i ansible/inventory.yaml ansible/storage.yaml ansible/timezone.yaml ansible/longhorn-prep.yaml
-
-# Setup SSH keys
-ansible-playbook --ask-pass -i ansible/inventory.yaml ansible/ssh-key-setup.yaml
+ansible-playbook --ask-pass -i ansible/inventory.yml ansible/k3s-join.yml
 ```
 
 ## Uninstall
 ```bash
-ansible-playbook --ask-pass -i ansible/inventory.yaml ansible/k3s-join.yaml --tags uninstall
+# To only run the uninstall task:
+ansible-playbook --ask-pass -i ansible/inventory.yml ansible/k3s-join.yml --tags uninstall
 ```

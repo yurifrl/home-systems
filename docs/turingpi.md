@@ -1,20 +1,5 @@
 # Install k3s on ubuntu
 
-## Using Ansible
-```bash
-# Join nodes using token from master
-ansible-playbook --ask-pass -i ansible/inventory.yml ansible/k3s-join.yml -e K3S_TOKEN="$K3S_TOKEN"
-
-# Setup nodes
-ansible-playbook --ask-pass -i ansible/inventory.yml ansible/setup.yml
-```
-
-## Uninstall
-```bash
-# To only run the uninstall task:
-ansible-playbook --ask-pass -i ansible/inventory.yml ansible/k3s-join.yml --tags uninstall
-```
-
 ## Flash image
 
 ```bash 

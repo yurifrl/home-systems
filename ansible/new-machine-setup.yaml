@@ -1,95 +1,174 @@
----
-- name: Set up new machine
+- name: New Machine Setup
   hosts: master
   become: true
   vars:
-    target_user: nixos
-    target_home: "/home/nixos"
-    github_key_name: "GithubAutomation"
-    data_dir: "/data"
-
+    target_ip: "{{ hostvars[inventory_hostname]['ansible_host'] }}"
   tasks:
     - name: Create .ssh directory
       file:
-        path: "{{ target_home }}/.ssh"
+        path: /home/nixos/.ssh
         state: directory
-        owner: "{{ target_user }}"
+        owner: nixos
         group: users
         mode: '0700'
 
-    - name: Get SSH key from 1Password and copy to target
-      block:
-        - name: Get private key from 1Password
-          local_action:
-            module: command
-            cmd: op item get '{{ github_key_name }}' --fields 'private key' --reveal
-          register: private_key
-          no_log: true
+    - name: Check if SSH key exists
+      stat:
+        path: /home/nixos/.ssh/id_ed25519
+      register: ssh_key
 
-        - name: Copy private key to remote
+    - name: Get private key from 1Password and copy to target
+      block:
+        - name: Get private key from 1Password (local)
+          local_action:
+            module: shell
+            cmd: op item get 'GithubAutomation' --fields 'private key' --reveal | tr -d '\"' | awk '/BEGIN/,/END/'
+          register: private_key
+          become: false
+          when: not ssh_key.stat.exists
+
+        - name: Copy private key to target
           copy:
             content: "{{ private_key.stdout }}"
-            dest: "{{ target_home }}/.ssh/id_ed25519"
-            owner: "{{ target_user }}"
+            dest: /home/nixos/.ssh/id_ed25519
+            owner: nixos
             group: users
             mode: '0600'
-          no_log: true
+          when: not ssh_key.stat.exists
 
-    - name: Update Nix channels
-      become_user: "{{ target_user }}"
-      shell: |
-        nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable
-        nix-channel --update
+    - name: Update nix channels
+      become_user: nixos
+      command: nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable && nix-channel --update
 
-    - name: Clone home-systems repository
-      become_user: "{{ target_user }}"
+    - name: Check if repository exists
+      stat:
+        path: /home/nixos/home-systems
+      register: repo_check
+
+    - name: Clone repository
+      become_user: nixos
       git:
         repo: git@github.com:yurifrl/home-systems.git
-        dest: "{{ target_home }}/home-systems"
+        dest: /home/nixos/home-systems
         accept_hostkey: yes
+        update: yes
+      when: not repo_check.stat.exists
 
     - name: Copy gitconfig
       copy:
-        src: "~/.gitconfig"
-        dest: "{{ target_home }}/.gitconfig"
-        owner: "{{ target_user }}"
+        src: ~/.gitconfig
+        dest: /home/nixos/.gitconfig
+        owner: nixos
         group: users
         mode: '0644'
 
     - name: Create data directory
       file:
-        path: "{{ data_dir }}"
+        path: /data
         state: directory
-        owner: "{{ target_user }}"
+        owner: nixos
         group: users
         mode: '0755'
 
+    - name: Create Tailscale auth key file
+      copy:
+        content: "{{ lookup('env', 'NIXOS1_TAILSCALE_AUTH_KEY') }}"
+        dest: /data/tailscale-auth.key
+        owner: nixos
+        group: users
+        mode: '0600'
+      no_log: true
+
+    - name: Create k3s token file
+      copy:
+        content: "{{ lookup('env', 'NIXOS1_K3S_TOKEN') }}"
+        dest: /data/k3s-token
+        owner: nixos
+        group: users
+        mode: '0600'
+      no_log: true
+
     - name: Copy secrets
       copy:
-        src: "../hack/secrets.sh"
-        dest: "{{ data_dir }}/secrets.sh"
-        owner: "{{ target_user }}"
+        src: ../hack/secrets.sh
+        dest: /data/secrets.sh
+        owner: nixos
         group: users
-        mode: '0644'
+        mode: '0755'
 
-    - name: Get K3s kubeconfig
+    - name: Check if k3s.yaml exists locally
+      local_action:
+        module: stat
+        path: ~/.kube/k3s.yaml
+      register: k3s_yaml_local
+      become: false
+
+    - name: Create local .kube directory
+      local_action:
+        module: file
+        path: ~/.kube
+        state: directory
+        mode: '0755'
+      become: false
+      when: not k3s_yaml_local.stat.exists
+
+    - name: Get k3s.yaml from remote
       fetch:
         src: /etc/rancher/k3s/k3s.yaml
-        dest: "~/.kube/k3s.yaml"
+        dest: ~/.kube/k3s.yaml
         flat: yes
 
-    - name: Update kubeconfig server address
+    - name: Update k3s.yaml server address (local)
       local_action:
         module: replace
-        path: "~/.kube/k3s.yaml"
-        regexp: 'server: https://0\.0\.0\.0:6443'
-        replace: "server: https://{{ inventory_hostname }}:6443"
+        path: ~/.kube/k3s.yaml
+        regexp: 'server: https://0.0.0.0:6443'
+        replace: "server: https://{{ target_ip }}:6443"
+      become: false
+
+    - name: Set k3s.yaml permissions (local)
+      local_action:
+        module: file
+        path: ~/.kube/k3s.yaml
+        mode: '0644'
+      become: false
 
     - name: Wait for node to be ready
       local_action:
         module: command
         cmd: kubectl wait --for=condition=ready node nixos-1 --timeout=300s
-      register: node_ready
-      until: node_ready.rc == 0
-      retries: 30
-      delay: 10 
+      become: false
+      register: node_wait
+      changed_when: false
+      
+    - name: Verify setup
+      local_action:
+        module: command
+        cmd: kubectl get nodes
+      become: false
+      register: node_status
+      changed_when: false
+
+    - name: Display final instructions
+      debug:
+        msg: |
+          Setup complete! Your new machine is ready.
+
+          Next steps:
+          1. Check ArgoCD setup: sudo systemctl status argo-setup
+          2. Check secret loader: sudo systemctl status secret-loader
+          3. Access the system: ssh nixos@{{ target_ip }}
+
+          Useful commands:
+          # Status
+          sudo systemctl status tailscale-autoconnect
+          sudo systemctl status argo-setup
+          sudo systemctl status secret-loader
+
+          # Monitor logs
+          sudo journalctl -u tailscale-autoconnect -f
+          sudo journalctl -u argo-setup -f
+          sudo journalctl -u secret-loader -f
+
+          # System configuration
+          sudo nixos-rebuild switch --flake /home/nixos/home-systems/nixos#rpi --impure --show-trace

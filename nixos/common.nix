@@ -22,6 +22,8 @@ in
     inetutils git fish sysz argocd
     nixfmt-rfc-style parted rsync
     python3
+    openssl
+    openssh
 
     # Packages
     istioctl
