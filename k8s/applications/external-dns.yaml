@@ -108,7 +108,7 @@ spec:
           provider: rfc2136
           rfc2136:
             secretName: externaldns-tsig-secret # Secret with key rfc2136_tsig_secret
-            host: bind9-vs.bind9.svc.cluster.local
+            host: bind9.bind9.svc.cluster.local
             zone: syscd.dev
             tsigAxfr: true
             tsigKeyname: externaldns-key
