@@ -5,12 +5,47 @@ metadata:
   labels:
     app: bind9
 data:
-  {{- range $filename, $content := .Values.config }}
-  {{ $filename }}: |
-    {{- $content | nindent 4 }}
-    {{- if eq $filename "named.conf" }}
-    {{- if $.Values.secretName }}
+  named.conf: |
+    # ifconfig | grep "inet " | grep -v 127.0.0.1
+    acl internal {
+      192.168.0.0/16;    # All local networks in 192.168.x.x range
+      198.19.0.0/16;     # Broader network range
+      # 10.0.0.0/8;        # All kubernetes and internal networks
+    };
+
+    options {
+      directory "/var/cache/bind";
+      
+      forwarders {
+        1.1.1.1;
+        1.0.0.1;
+        8.8.8.8;
+      };
+    };
+
+    zone "syscd.dev" IN {
+        type master;
+        file "/etc/bind/syscd.dev.zone";
+        allow-transfer {
+            key "externaldns-key";
+        };
+        update-policy {
+            grant externaldns-key zonesub ANY;
+        };
+    };
+    # Include the keys configuration, it will come from a secret previously created
     include "/etc/bind/keys.conf";
-    {{- end }}
-    {{- end }}
-  {{- end }} 
+
+  syscd.dev.zone: |
+    $TTL 60 ; 1 minute
+    @       IN      SOA     ns.syscd.dev. root.syscd.dev. (
+                           16         ; serial
+                           60         ; refresh (1 minute)
+                           60         ; retry (1 minute)
+                           60         ; expire (1 minute)
+                           60         ; minimum (1 minute)
+                           )
+    @       IN      NS      ns.syscd.dev.
+    ns      IN      A       {{ .Values.dnsServerIp }}
+
+#  Validate zone con: kubectl -n bind9 exec -it deployment/bind9 -- named-checkzone syscd.dev /etc/bind/syscd.dev.zone
