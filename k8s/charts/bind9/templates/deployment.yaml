@@ -1,6 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
-# kind: DaemonSet
+kind: DaemonSet
 metadata:
   name: bind9
   labels:

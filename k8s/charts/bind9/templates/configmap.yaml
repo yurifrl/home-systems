@@ -16,9 +16,6 @@ data:
     options {
       directory "/var/cache/bind";
       
-      recursion yes;                    # Enable recursion
-      allow-recursion { any; };         # Allow recursion from any client
-      
       forwarders {
         1.1.1.1;
         1.0.0.1;
