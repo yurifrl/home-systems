@@ -14,13 +14,21 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
   ignoreDifferences:
-    - kind: ValidatingWebhookConfiguration
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
       jqPathExpressions:
-        - '.webhooks[]'
-    - kind: MutatingWebhookConfiguration
+        - '.webhooks[]?.clientConfig.caBundle'
+        - '.webhooks[]?.failurePolicy'
+        - '.webhooks[]?.namespaceSelector'
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
       jqPathExpressions:
-        - '.webhooks[]'
+        - '.webhooks[]?.clientConfig.caBundle'
+        - '.webhooks[]?.failurePolicy'
+        - '.webhooks[]?.namespaceSelector'
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
     targetRevision: 1.23.0 
