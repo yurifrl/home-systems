@@ -16,18 +16,6 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
   sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: longhorn
-              service:
-                name: longhorn-frontend
-                namespace: longhorn-system
-                port: 80
-
     - repoURL: https://charts.longhorn.io
       chart: longhorn
       targetRevision: "*"
@@ -62,6 +50,18 @@ spec:
           service:
             annotations:
               teleport.dev/name: longhorn
+          global:
+            cattle:
+              systemDefaultRegistry: ""
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: kubernetes.io/hostname
+                        operator: NotIn
+                        values:
+                          - nixos-1
 
 
 

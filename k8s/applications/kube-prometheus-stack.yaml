@@ -180,6 +180,15 @@ spec:
                 requests:
                   cpu: 50m
                   memory: 128Mi
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                      - matchExpressions:
+                          - key: kubernetes.io/hostname
+                            operator: NotIn
+                            values:
+                              - nixos-1
 
 # https://stackoverflow.com/questions/76669436/alertmanager-default-receivernull-is-not-replacing-with-the-routes-specified
 # https://medium.com/@phil16terpasetheo/configure-alert- manager-with-slack-notifications-on-kubernetes-cluster-helm-kube-prometheus-stack-112878c35f26

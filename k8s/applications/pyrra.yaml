@@ -16,7 +16,6 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true 
   sources:
-
     - repoURL: https://rlex.github.io/helm-charts
       chart: pyrra
       targetRevision: "*"
