@@ -25,7 +25,7 @@ data:
 
     zone "syscd.dev" IN {
         type master;
-        file "/etc/bind/syscd.dev.zone";
+        file "/etc/named/syscd.dev.zone";
         allow-transfer {
             key "externaldns-key";
         };
@@ -34,7 +34,7 @@ data:
         };
     };
     # Include the keys configuration, it will come from a secret previously created
-    include "/etc/bind/keys.conf";
+    include "/etc/named/keys.conf";
 
   syscd.dev.zone: |
     $TTL 60 ; 1 minute

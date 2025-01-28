@@ -41,16 +41,16 @@ spec:
               value: America/Sao_Paulo
           volumeMounts:
             - name: config
-              mountPath: /etc/bind/named.conf
+              mountPath: /etc/named/named.conf
               subPath: named.conf
             - name: config
-              mountPath: /etc/bind/syscd.dev.zone
+              mountPath: /etc/named/syscd.dev.zone
               subPath: syscd.dev.zone
             - name: secret-config
-              mountPath: /etc/bind/keys.conf
+              mountPath: /etc/named/keys.conf
               subPath: keys.conf
             - name: bind-data
-              mountPath: /var/cache/bind
+              mountPath: /var/bind
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
