@@ -52,7 +52,7 @@ spec:
               mountPath: /etc/named/keys.conf
               subPath: keys.conf
             - name: bind-data
-              mountPath: /etc/bind
+              mountPath: /var/cache/bind
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
@@ -65,3 +65,7 @@ spec:
         - name: bind-data
           persistentVolumeClaim:
             claimName: bind9-data
+
+# https://github.com/artem-shestakov/helm-charts/tree/master/charts/bind9
+# https://github.com/johanneskastl/helm-charts/tree/main/charts/bind9
+# https://github.com/johanneskastl/bind9-isc-helm-chart/tree/main/charts/bind9
