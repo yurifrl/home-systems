@@ -4,7 +4,7 @@ metadata:
   name: bind9-vs
 spec:
   hosts:
-  - bind9-vs.bind9.svc.cluster.local
+  - bind9-vs
   tcp:
   - match:
     - port: 53
