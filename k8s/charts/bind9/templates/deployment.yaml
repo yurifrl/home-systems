@@ -13,6 +13,11 @@ spec:
       labels:
         app: bind9
     spec:
+      tolerations:
+        - key: "node-role"
+          operator: "Equal"
+          value: "nixos-1"
+          effect: "NoSchedule"
       containers:
         - name: bind9
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
