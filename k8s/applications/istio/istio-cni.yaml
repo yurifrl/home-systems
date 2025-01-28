@@ -17,8 +17,8 @@ spec:
       - ServerSideApply=true
   ignoreDifferences:
     - group: apps
-      kind: Deployment
-      name: istiod
+      kind: DaemonSet
+      name: istio-cni-node
       jqPathExpressions:
         - '.spec.template.spec.containers[].env[]?.valueFrom.resourceFieldRef.divisor'
   source:
