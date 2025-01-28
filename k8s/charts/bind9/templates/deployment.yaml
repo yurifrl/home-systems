@@ -49,12 +49,8 @@ spec:
             - name: secret-config
               mountPath: /etc/bind/keys.conf
               subPath: keys.conf
-            - name: tmp
-              mountPath: /tmp
             - name: bind-data
               mountPath: /var/cache/bind
-            - name: run
-              mountPath: /var/run/named
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
@@ -64,10 +60,6 @@ spec:
         - name: secret-config
           secret:
             secretName: {{ .Values.secretName }}
-        - name: tmp
-          emptyDir: {}
         - name: bind-data
           persistentVolumeClaim:
             claimName: bind9-data
-        - name: run
-          emptyDir: {} 
