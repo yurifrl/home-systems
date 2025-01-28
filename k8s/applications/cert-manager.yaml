@@ -14,6 +14,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio-injection: disabled
   source:
     chart: cert-manager
     repoURL: https://charts.jetstack.io

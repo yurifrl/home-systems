@@ -1,13 +1,13 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: httpbin
+  name: kiali
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: httpbin
+    namespace: istio-system
   syncPolicy:
     automated:
       prune: true
@@ -16,7 +16,7 @@ spec:
       - CreateNamespace=true
     managedNamespaceMetadata:
       labels:
-        istio-injection: disabled
+        istio-injection: disabled      
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
@@ -24,21 +24,22 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: httpbin
+            - name: kiali
               service:
-                name: httpbin
-                namespace: httpbin
-                port: 80
+                name: kiali
+                namespace: istio-system
+                port: 20001
 
-    - repoURL: https://matheusfm.dev/charts
-      chart: httpbin
-      targetRevision: 0.1.1
+    - repoURL: https://kiali.org/helm-charts
+      chart: kiali-server
+      targetRevision: "*"
       helm:
         valuesObject:
-          ingress:
-            enabled: false
+          auth:
+            strategy: anonymous
+          external_services:
+            prometheus:
+              url: http://kube-prometheus-stack-prometheus.monitoring:9090
           service:
-            type: ClusterIP
-            port: 80
             annotations:
-              teleport.dev/name: httpbin
+              teleport.dev/name: kiali

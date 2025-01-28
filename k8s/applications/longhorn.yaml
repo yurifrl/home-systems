@@ -15,6 +15,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        istio-injection: disabled
   sources:
     - repoURL: https://charts.longhorn.io
       chart: longhorn

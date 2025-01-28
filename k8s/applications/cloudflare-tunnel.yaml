@@ -13,7 +13,10 @@ spec:
       prune: true
       selfHeal: false
     syncOptions:
-      - CreateNamespace=true 
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio-injection: disabled
   source:
     chart: cloudflare-tunnel
     repoURL: https://cloudflare.github.io/helm-charts

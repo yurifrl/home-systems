@@ -15,6 +15,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true 
+    managedNamespaceMetadata:
+      labels:
+        istio-injection: disabled
   sources:
     - path: k8s/charts/support-tailscale
       repoURL: https://github.com/yurifrl/home-systems.git

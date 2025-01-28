@@ -14,7 +14,10 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true 
+      - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        istio-injection: disabled       
   sources:
     - repoURL: https://rlex.github.io/helm-charts
       chart: pyrra

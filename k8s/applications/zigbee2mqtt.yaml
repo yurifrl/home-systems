@@ -20,6 +20,9 @@ spec:
       selfHeal: false
     syncOptions:
       - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio-injection: disabled      
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD

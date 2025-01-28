@@ -12,6 +12,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        istio-injection: disabled
   source:
     repoURL: https://github.com/yurifrl/home-systems.git
     targetRevision: HEAD
