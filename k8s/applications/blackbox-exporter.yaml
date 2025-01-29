@@ -77,7 +77,3 @@ spec:
               memory: 64Mi
           serviceMonitor:
             enabled: true
-            defaults:
-              enabled: true
-            targets:
-              enabled: true
