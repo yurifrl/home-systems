@@ -15,3 +15,84 @@ spec:
     staticConfig:
       static:
         - 192.168.68.202:53
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: bind9-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: bind9.rules
+      rules:
+        - alert: Bind9Down
+          expr: up{job="bind-exporter"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: dns
+          annotations:
+            summary: "Bind9 DNS server is down"
+            description: "Bind9 instance has been down for more than 5 minutes."
+            runbook_url: "https://your-runbook-url.com/alerts/bind9-down"
+
+        - alert: Bind9HighQueryFailureRate
+          expr: |
+            (
+              rate(bind_resolver_queries_total{result="SERVFAIL"}[5m]) +
+              rate(bind_resolver_queries_total{result="NXDOMAIN"}[5m])
+            ) 
+            / 
+            rate(bind_resolver_queries_total[5m]) 
+            * 100 > 10
+          for: 15m
+          labels:
+            severity: warning
+            service: dns
+          annotations:
+            summary: "High DNS query failure rate"
+            description: "Bind9 has a query failure rate above 10% for more than 15 minutes."
+            runbook_url: "https://your-runbook-url.com/alerts/bind9-high-failure-rate"
+
+        - alert: Bind9HighResponseLatency
+          expr: |
+            rate(bind_resolver_response_time_seconds_sum[5m]) 
+            / 
+            rate(bind_resolver_response_time_seconds_count[5m]) 
+            > 0.1
+          for: 10m
+          labels:
+            severity: warning
+            service: dns
+          annotations:
+            summary: "High DNS response latency"
+            description: "Bind9 average response time is above 100ms for more than 10 minutes."
+            runbook_url: "https://your-runbook-url.com/alerts/bind9-high-latency"
+
+        - alert: Bind9HighQueryRate
+          expr: |
+            rate(bind_resolver_queries_total[5m]) > 1000
+          for: 15m
+          labels:
+            severity: warning
+            service: dns
+          annotations:
+            summary: "Unusually high query rate"
+            description: "Bind9 is receiving more than 1000 queries per second for over 15 minutes."
+            runbook_url: "https://your-runbook-url.com/alerts/bind9-high-query-rate"
+
+        # Recording rules for SLO monitoring
+        - record: dns:query_success_rate:5m
+          expr: |
+            sum(rate(bind_resolver_queries_total{result="NOERROR"}[5m]))
+            /
+            sum(rate(bind_resolver_queries_total[5m]))
+
+        - record: dns:latency_seconds:5m
+          expr: |
+            rate(bind_resolver_response_time_seconds_sum[5m])
+            /
+            rate(bind_resolver_response_time_seconds_count[5m])
