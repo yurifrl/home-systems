@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  labels:
+    probe: bind9
+  name: bind9
+  namespace: bind9
+spec:
+  interval: 30s
+  module: dns_udp_53
+  prober:
+    path: /probe
+    url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+      - 192.168.68.202:53
