@@ -48,21 +48,20 @@ kind: ConfigMap
 metadata:
   name: blackbox-exporter-bind9-config
   namespace: monitoring
-spec:
-  data:
-    bind9.yaml: |
-      modules:
+data:
+  bind9.yaml: |
+    modules:
+      dns:
+        prober: dns
+        timeout: 5s
         dns:
-          prober: dns
-          timeout: 5s
-          dns:
-            transport_protocol: "udp"
-            preferred_ip_protocol: "ip4"
-            query_name: "ha.syscd.dev"
-            query_type: "A"
-            validate_answer_rrs:
-              fail_if_not_matches_regexp:
-                - "ha\\.syscd\\.dev\\.\\s+\\d+\\s+IN\\s+A\\s+\\d+\\.\\d+\\.\\d+\\.\\d+"
+          transport_protocol: "udp"
+          preferred_ip_protocol: "ip4"
+          query_name: "ha.syscd.dev"
+          query_type: "A"
+          validate_answer_rrs:
+            fail_if_not_matches_regexp:
+              - "ha\\.syscd\\.dev\\.\\s+\\d+\\s+IN\\s+A\\s+\\d+\\.\\d+\\.\\d+\\.\\d+"
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
