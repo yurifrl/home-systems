@@ -158,4 +158,3 @@ spec:
         - record: dns:ha_resolution_success:5m
           expr: |
             avg_over_time(probe_success{job="probe/bind9/bind9"}[5m])
-{{- end }}
