@@ -7,7 +7,7 @@ spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: monitoring
+    namespace: blackbox-exporter
   syncPolicy:
     automated:
       prune: true
@@ -15,7 +15,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-
   sources:
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: prometheus-blackbox-exporter

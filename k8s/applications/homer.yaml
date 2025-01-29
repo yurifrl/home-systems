@@ -29,7 +29,6 @@ spec:
                 name: homer
                 namespace: homer
                 port: 8080
-
     - repoURL: https://djjudas21.github.io/charts/
       chart: homer
       targetRevision: "*"

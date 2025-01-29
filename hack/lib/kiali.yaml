@@ -7,14 +7,13 @@ spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: istio-system
+    namespace: kiali
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
@@ -25,7 +24,7 @@ spec:
             - name: kiali
               service:
                 name: kiali
-                namespace: istio-system
+                namespace: kiali
                 port: 20001
 
     - repoURL: https://kiali.org/helm-charts
