@@ -8,10 +8,10 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: cluster-support
-  automated:
-    prune: true
-    selfHeal: true
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -22,6 +22,8 @@ spec:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/cluster-support
+      helm:
+        valuesObject: {}
 
     # Prometheus
     - repoURL: https://github.com/yurifrl/home-systems.git
