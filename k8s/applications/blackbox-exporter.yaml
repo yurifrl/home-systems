@@ -7,7 +7,7 @@ spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: blackbox-exporter
+    namespace: monitoring
   syncPolicy:
     automated:
       prune: true
@@ -75,3 +75,9 @@ spec:
             requests:
               cpu: 25m
               memory: 64Mi
+          serviceMonitor:
+            enabled: true
+            defaults:
+              enabled: true
+            targets:
+              enabled: true
