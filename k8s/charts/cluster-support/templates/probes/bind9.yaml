@@ -67,7 +67,6 @@ spec:
             summary: "DNS queries are failing"
             description: "DNS queries are failing for more than 5 minutes."
 
-        # Recording rules for SLO monitoring
         - record: dns:probe_success_rate:5m
           expr: |
             avg_over_time(probe_success{job="probe/bind9/bind9"}[5m])
@@ -75,17 +74,7 @@ spec:
         - record: dns:probe_duration_seconds:5m
           expr: |
             avg_over_time(probe_dns_duration_seconds{job="probe/bind9/bind9", phase="resolve"}[5m])
----
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  name: bind9-homeassistant-dns-rules
-  namespace: monitoring
-  labels:
-    prometheus: k8s
-    role: alert-rules
-spec:
-  groups:
+
     - name: bind9-homeassistant.rules
       rules:
         - alert: HomeAssistantDNSResolutionFailing
