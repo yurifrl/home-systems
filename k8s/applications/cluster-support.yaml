@@ -15,14 +15,54 @@ spec:
     managedNamespaceMetadata:
       labels:
         istio.io/dataplane-mode: ambient      
-  source:
-    repoURL: https://github.com/yurifrl/home-systems.git
-    targetRevision: HEAD
-    path: k8s/charts/cluster-support
-    helm:
-      valuesObject:
-        features:
-          istioGateways: true
-          serviceLevelObjectives: true
-          prometheusRules: true
-          alertmanager: false
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/cluster-support
+
+    # Prometheus
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: prometheus
+              service:
+                name: kube-prometheus-stack-prometheus
+                namespace: monitoring
+                port: 9090
+            - name: alertmanager
+              service:
+                name: kube-prometheus-stack-alertmanager
+                namespace: monitoring
+                port: 9093
+            - name: grafana
+              service:
+                name: kube-prometheus-stack-grafana
+                namespace: monitoring
+                port: 80
+    # Pyrra
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: pyrra
+              service:
+                name: pyrra
+                namespace: monitoring
+                port: 9099
+    # Longhorn
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: longhorn
+              service:
+                name: longhorn-frontend
+                namespace: longhorn-system
+                port: 80
