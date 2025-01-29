@@ -14,4 +14,4 @@ spec:
   targets:
     staticConfig:
       static:
-      - 192.168.68.202:53
+        - 192.168.68.202:53

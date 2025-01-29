@@ -13,6 +13,6 @@ dashboards:
 # Feature flags for enabling different components
 features:
   istioGateways: true
-  serviceLevelObjectives: true 
-  prometheusRules: true
+  serviceLevelObjectives: false 
+  prometheusRules: false
   alertmanager: true
