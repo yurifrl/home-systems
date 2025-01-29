@@ -173,6 +173,7 @@ spec:
               # Alertmanager configuration.
               alertmanagerConfiguration:
                 name: alertmanager-config
+
               resources:
                 limits:
                   cpu: 100m

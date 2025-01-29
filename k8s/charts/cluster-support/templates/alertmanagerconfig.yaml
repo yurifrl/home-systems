@@ -42,3 +42,21 @@ spec:
           sendResolved: true
     - name: "null"
 {{- end }}
+
+# ???
+# apiVersion: monitoring.coreos.com/v1alpha1
+# kind: AlertmanagerConfig
+# metadata:
+#   name: alertmanager-config
+#   namespace: monitoring
+#   labels:
+#     role: alert-rules
+# spec:
+#   route:
+#     receiver: "null"
+#     groupBy: ['job']
+#     groupWait: 30s
+#     groupInterval: 5m
+#     repeatInterval: 12h
+#   receivers:
+#     - name: "null" 

@@ -34,7 +34,7 @@ global: {}
 
 # SLO settings
 slos:
-  enabled: true
+  enabled: false
 
 # Services
 services: []
