@@ -45,16 +45,6 @@ spec:
   groups:
     - name: bind9.rules
       rules:
-        - alert: Bind9Down
-          expr: up{job="probe/bind9/bind9"} == 0
-          for: 5m
-          labels:
-            severity: critical
-            service: dns
-          annotations:
-            summary: "Bind9 DNS server is down"
-            description: "Bind9 instance has been down for more than 5 minutes."
-
         - alert: Bind9HighQueryLatency
           expr: |
             probe_dns_duration_seconds{job="probe/bind9/bind9", phase="resolve"} > 0.5
@@ -100,7 +90,6 @@ spec:
       rules:
         - alert: HomeAssistantDNSResolutionFailing
           expr: |
-            probe_success{job="probe/bind9/bind9"} == 0 or
             probe_dns_query_succeeded{job="probe/bind9/bind9"} == 0
           for: 5m
           labels:
