@@ -48,20 +48,21 @@ kind: ConfigMap
 metadata:
   name: blackbox-exporter-bind9-config
   namespace: monitoring
-data:
-  bind9.yaml: |
-    modules:
-      dns:
-        prober: dns
-        timeout: 5s
+spec:
+  data:
+    bind9.yaml: |
+      modules:
         dns:
-          transport_protocol: "udp"
-          preferred_ip_protocol: "ip4"
-          query_name: "ha.syscd.dev"
-          query_type: "A"
-          validate_answer_rrs:
-            fail_if_not_matches_regexp:
-              - "ha\\.syscd\\.dev\\.\\s+\\d+\\s+IN\\s+A\\s+\\d+\\.\\d+\\.\\d+\\.\\d+"
+          prober: dns
+          timeout: 5s
+          dns:
+            transport_protocol: "udp"
+            preferred_ip_protocol: "ip4"
+            query_name: "ha.syscd.dev"
+            query_type: "A"
+            validate_answer_rrs:
+              fail_if_not_matches_regexp:
+                - "ha\\.syscd\\.dev\\.\\s+\\d+\\s+IN\\s+A\\s+\\d+\\.\\d+\\.\\d+\\.\\d+"
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -119,16 +120,16 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: bind9-ha-rules
+  name: bind9-homeassistant-dns-rules
   namespace: monitoring
   labels:
     prometheus: k8s
     role: alert-rules
 spec:
   groups:
-    - name: bind9-ha.rules
+    - name: bind9-homeassistant.rules
       rules:
-        - alert: HADNSResolutionFailing
+        - alert: HomeAssistantDNSResolutionFailing
           expr: |
             probe_success{job="probe/bind9/bind9"} == 0 or
             probe_dns_query_succeeded{job="probe/bind9/bind9"} == 0
@@ -141,7 +142,7 @@ spec:
             summary: "DNS resolution failing for ha.syscd.dev"
             description: "Unable to resolve ha.syscd.dev through DNS for more than 5 minutes"
 
-        - alert: HADNSHighLatency
+        - alert: HomeAssistantDNSHighLatency
           expr: |
             probe_dns_duration_seconds{job="probe/bind9/bind9", phase="resolve"} > 0.5
           for: 10m
@@ -154,6 +155,6 @@ spec:
             description: "DNS resolution for ha.syscd.dev is taking longer than 500ms"
 
         # Recording rule for SLO tracking
-        - record: dns:ha_resolution_success:5m
+        - record: dns:homeassistant_resolution_success:5m
           expr: |
             avg_over_time(probe_success{job="probe/bind9/bind9"}[5m])
