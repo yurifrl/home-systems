@@ -7,7 +7,7 @@ metadata:
   namespace: bind9
 spec:
   interval: 30s
-  module: dns_udp_53
+  module: dns_tcp_ha
   prober:
     path: /probe
     url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
@@ -16,52 +16,22 @@ spec:
       static:
         - 192.168.68.202:53
 ---
-apiVersion: monitoring.coreos.com/v1
-kind: PodMonitor
-metadata:
-  name: bind9-probe
-  namespace: monitoring
-  labels:
-    prometheus: k8s
-    role: alert-rules
-spec:
-  jobLabel: probe/bind9/bind9
-  podMetricsEndpoints:
-    - port: http
-      path: /probe
-      interval: 30s
-      scrapeTimeout: 15s
-      params:
-        module: ['dns']
-        target: ['192.168.68.201:53']  # Your DNS server
-        query_name: ['ha.syscd.dev']   # Domain to check
-        query_type: ['A']              # Looking for A record
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: blackbox-exporter
-  namespaceSelector:
-    matchNames:
-      - monitoring
----
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: blackbox-exporter-bind9-config
   namespace: monitoring
 data:
-  bind9.yaml: |
+  dns_tcp_ha.yml: |
     modules:
-      dns:
+      dns_tcp_ha:
         prober: dns
         timeout: 5s
         dns:
-          transport_protocol: "udp"
+          transport_protocol: "tcp"
           preferred_ip_protocol: "ip4"
           query_name: "ha.syscd.dev"
           query_type: "A"
-          validate_answer_rrs:
-            fail_if_not_matches_regexp:
-              - "ha\\.syscd\\.dev\\.\\s+\\d+\\s+IN\\s+A\\s+\\d+\\.\\d+\\.\\d+\\.\\d+"
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
