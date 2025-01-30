@@ -14,3 +14,7 @@ uptime-bot/secrets
 id_ed25519
 hack/longhorn
 *.env
+kubeconfig
+talosconfig
+controlplane.yaml
+worker.yaml

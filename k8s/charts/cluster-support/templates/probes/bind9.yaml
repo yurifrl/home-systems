@@ -1,37 +1,35 @@
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:
-  labels:
-    probe: bind9
-  name: bind9
-  namespace: bind9
+  name: bind9-dns
+  namespace: monitoring
 spec:
   interval: 30s
-  module: dns_tcp_ha
+  module: dns_resolve
   prober:
-    path: /probe
     url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
   targets:
     staticConfig:
       static:
-        - 192.168.68.202:53
+        - bind9.bind9.svc.cluster.local:53
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: blackbox-exporter-bind9-config
+  name: blackbox-bind9-dns
   namespace: monitoring
 data:
-  dns_tcp_ha.yml: |
+  bind9-dns.yaml: |
     modules:
-      dns_tcp_ha:
+      dns_resolve:
         prober: dns
-        timeout: 5s
         dns:
-          transport_protocol: "tcp"
-          preferred_ip_protocol: "ip4"
-          query_name: "ha.syscd.dev"
+          query_name: "kubernetes.default.svc.cluster.local"
           query_type: "A"
+          valid_rcodes:
+          - NOERROR
+          protocol: "udp"
+          preferred_ip_protocol: "ip4"
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -45,74 +43,22 @@ spec:
   groups:
     - name: bind9.rules
       rules:
-        - alert: Bind9HighQueryLatency
-          expr: |
-            probe_dns_duration_seconds{job="probe/bind9/bind9", phase="resolve"} > 0.5
-          for: 10m
-          labels:
-            severity: warning
-            service: dns
-          annotations:
-            summary: "High DNS query latency"
-            description: "DNS resolution time is taking longer than 500ms for more than 10 minutes."
-
-        - alert: Bind9QueryFailures
-          expr: |
-            probe_dns_query_succeeded{job="probe/bind9/bind9"} == 0
-          for: 5m
-          labels:
-            severity: warning
-            service: dns
-          annotations:
-            summary: "DNS queries are failing"
-            description: "DNS queries are failing for more than 5 minutes."
-
-        # Recording rules for SLO monitoring
-        - record: dns:probe_success_rate:5m
-          expr: |
-            avg_over_time(probe_success{job="probe/bind9/bind9"}[5m])
-
-        - record: dns:probe_duration_seconds:5m
-          expr: |
-            avg_over_time(probe_dns_duration_seconds{job="probe/bind9/bind9", phase="resolve"}[5m])
----
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  name: bind9-homeassistant-dns-rules
-  namespace: monitoring
-  labels:
-    prometheus: k8s
-    role: alert-rules
-spec:
-  groups:
-    - name: bind9-homeassistant.rules
-      rules:
-        - alert: HomeAssistantDNSResolutionFailing
-          expr: |
-            probe_dns_query_succeeded{job="probe/bind9/bind9"} == 0
+        - alert: Bind9Down
+          expr: up{job="probe/bind9/bind9", namespace="bind9"} == 0
           for: 5m
           labels:
             severity: critical
             service: dns
-            domain: ha.syscd.dev
           annotations:
-            summary: "DNS resolution failing for ha.syscd.dev"
-            description: "Unable to resolve ha.syscd.dev through DNS for more than 5 minutes"
-
-        - alert: HomeAssistantDNSHighLatency
-          expr: |
-            probe_dns_duration_seconds{job="probe/bind9/bind9", phase="resolve"} > 0.5
-          for: 10m
+            summary: "Bind9 DNS server is down"
+            description: "Bind9 instance has been down for more than 5 minutes."
+            
+        - alert: Bind9DNSResolutionFailing
+          expr: probe_success{job="blackbox-bind9-dns"} == 0
+          for: 5m
           labels:
-            severity: warning
+            severity: critical
             service: dns
-            domain: ha.syscd.dev
           annotations:
-            summary: "High DNS latency for ha.syscd.dev"
-            description: "DNS resolution for ha.syscd.dev is taking longer than 500ms"
-
-        # Recording rule for SLO tracking
-        - record: dns:homeassistant_resolution_success:5m
-          expr: |
-            avg_over_time(probe_success{job="probe/bind9/bind9"}[5m])
+            summary: "Bind9 DNS resolution is failing"
+            description: "Bind9 has failed to resolve DNS queries for more than 5 minutes."

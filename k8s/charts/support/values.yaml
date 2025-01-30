@@ -36,6 +36,10 @@ global: {}
 slos:
   enabled: false
 
+# Probes settings
+probes:
+  enabled: false
+
 # Services
 services: []
   # - name: service-name

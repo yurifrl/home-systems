@@ -1,3 +1,4 @@
+{{- if .Values.probes.enabled }}
 {{- range .Values.virtualServices }}
 {{- $hostPrefix := .hostname | default .name -}}
 apiVersion: monitoring.coreos.com/v1
@@ -24,4 +25,5 @@ spec:
         - {{ $hostPrefix }}.syscd.dev
         {{- end }}
 ---
-{{- end }} 
+{{- end }}
+{{- end }}

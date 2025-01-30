@@ -1,0 +1,114 @@
+# to apply this, you need to be on argo machine, make sure this is in the correct path, git pull
+
+# and run
+# sudo systemctl restart secret-loader
+# sudo systemctl status secret-loader
+# sudo journalctl -u secret-loader -f 
+#
+# sudo systemctl status argo-setup
+# sudo systemctl restart argo-setup & sudo journalctl -u argo-setup.service -f 
+#
+# helm repo add argo-cd https://argoproj.github.io/argo-helm; helm repo update
+# helm upgrade -n argocd --install argocd argo-cd/argo-cd -f k8s/values/argo.yaml --wait
+global:
+  addPrometheusAnnotations: true
+
+controller:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  # tolerations:
+  #   - key: "node-role"
+  #     operator: "Equal"
+  #     value: "nixos-1"
+  #     effect: "NoSchedule"
+
+dex:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  # tolerations:
+  #   - key: "node-role"
+  #     operator: "Equal"
+  #     value: "nixos-1"
+  #     effect: "NoSchedule"
+
+redis:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  # tolerations:
+  #   - key: "node-role"
+  #     operator: "Equal"
+  #     value: "nixos-1"
+  #     effect: "NoSchedule"
+
+server:
+  ingress:
+    enabled: false
+  insecure: true
+  configs:
+    params:
+      server.insecure: true
+      exec.enabled: true
+      server.disable.auth: true
+  
+  extraArgs:
+    - --insecure
+    - --disable-auth
+   
+  admin:
+    enabled: true
+    passwordSecret:
+      name: argocd-secret
+      key: admin.password
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  
+  # tolerations:
+  #   - key: "node-role"
+  #     operator: "Equal"
+  #     value: "nixos-1"
+  #     effect: "NoSchedule"
+
+repoServer:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  # tolerations:
+  #   - key: "node-role"
+  #     operator: "Equal"
+  #     value: "nixos-1"
+  #     effect: "NoSchedule"
+
+applicationSet:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  # tolerations:
+  #   - key: "node-role"
+  #     operator: "Equal"
+  #     value: "nixos-1"
+  #     effect: "NoSchedule"
+
+notifications:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  # tolerations:
+  #   - key: "node-role"
+  #     operator: "Equal"
+  #     value: "nixos-1"
+  #     effect: "NoSchedule"
+
+
+# kubectl taint nodes nixos-1 node-role=nixos-1:NoSchedule
