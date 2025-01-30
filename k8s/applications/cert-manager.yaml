@@ -17,7 +17,7 @@ spec:
   source:
     chart: cert-manager
     repoURL: https://charts.jetstack.io
-    targetRevision: "*"
+    targetRevision: "1.16.3"
     helm:
       valuesObject:
         installCRDs: true
@@ -25,9 +25,6 @@ spec:
           enabled: true
           servicemonitor:
             enabled: true
-        # extraArgs:
-        #   - --dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53
-        #   - --dns01-recursive-nameservers-only
         resources:
           limits:
             cpu: 100m
