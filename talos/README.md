@@ -1,9 +1,9 @@
 # Things to solve
 
-- [ ] Load balancer ips
+- [x] Load balancer ips
 - [ ] storage on the control plane and the workers
 - [ ] Zigbee dongle
-- [ ] make .live work
+- [x] make .live work
 - [ ] make .tech work
 - [ ] make .dev work
 
