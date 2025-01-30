@@ -7,6 +7,8 @@ metadata:
   labels:
     prometheus: k8s
     role: alert-rules
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   groups:
     - name: test-alert-group.rules
@@ -31,6 +33,8 @@ metadata:
   labels:
     prometheus: k8s
     role: alert-rules
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   groups:
     - name: test-alert-group.rules
@@ -55,6 +59,8 @@ metadata:
   labels:
     prometheus: k8s
     role: alert-rules
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   groups:
     - name: cpu-saturation.rules

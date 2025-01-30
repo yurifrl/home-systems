@@ -14,15 +14,15 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-    ignoreDifferences:
-      - group: admissionregistration.k8s.io
-        kind: CustomResourceDefinition
-        jsonPointers:
-          - /webhooks/0/clientConfig/caBundle
-      - group: admissionregistration.k8s.io
-        kind: CustomResourceDefinition
-        jsonPointers:
-          - /spec/conversion/webhook/clientConfig/caBundle
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+    - group: admissionregistration.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /spec/conversion/webhook/clientConfig/caBundle
   sources:
     - repoURL: https://metallb.github.io/metallb
       chart: metallb

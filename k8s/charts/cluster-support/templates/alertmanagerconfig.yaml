@@ -11,6 +11,8 @@ metadata:
   labels:
     prometheus: k8s
     role: alert-rules
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   route:
     receiver: discord

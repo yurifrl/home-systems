@@ -6,8 +6,9 @@ kind: VirtualService
 metadata:
   name: {{ .name }}
   namespace: {{ $.Release.Namespace }}
-  {{- if .annotations }}
   annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+  {{- if .annotations }}
     {{- toYaml .annotations | nindent 4 }}
   {{- end }}
 spec:
