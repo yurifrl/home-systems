@@ -30,3 +30,4 @@ spec:
           service:
             externalTrafficPolicy: Local
             type: LoadBalancer
+            loadBalancerIP: "192.168.68.201"
