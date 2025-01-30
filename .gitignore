@@ -19,3 +19,5 @@ talosconfig
 controlplane.yaml
 worker.yaml
 talos/*
+!talos/README.md
+!talos/factory.md
