@@ -48,6 +48,19 @@ talosctl apply-config  -n 192.168.68.100 --mode=interactive --insecure
 talosctl kubeconfig .  -n 192.168.68.100
 ```
 
+## Apply config
+
+```bash
+# Control plane
+talosctl apply-config -n 192.168.68.100 -f controlplane.yaml --insecure
+
+# Worker tp1
+talosctl apply-config -n 192.168.68.107 -f config01/worker.yaml --insecure
+
+# Worker tp4
+talosctl apply-config -n 192.168.68.114 -f config01/worker.yaml --insecure
+```
+
 # References
 
 - [Ansible Playbook for Talos](https://github.com/JamesTurland/JimsGarage/tree/main/Ansible/Playbooks/Talos)
