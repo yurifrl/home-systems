@@ -53,6 +53,6 @@ data:
                            60         ; minimum (1 minute)
                            )
     @       IN      NS      ns.syscd.dev.
-    ns      IN      A       {{ .Values.dnsServerIp }}
+    ns      IN      A       {{ .Values.loadBalancerIP }}
 
 #  Validate zone con: kubectl -n bind9 exec -it deployment/bind9 -- named-checkzone syscd.dev /etc/bind/syscd.dev.zone

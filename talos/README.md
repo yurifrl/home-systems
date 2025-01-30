@@ -4,6 +4,9 @@
 - [ ] storage on the control plane and the workers
 - [ ] Zigbee dongle
 - [ ] make .live work
+- [ ] make .tech work
+- [ ] make .dev work
+
 - [ ] tailscale
 
 # Steps
