@@ -14,6 +14,11 @@ spec:
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
   sources:
     - repoURL: https://metallb.github.io/metallb
       chart: metallb
