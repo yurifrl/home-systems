@@ -1,3 +1,11 @@
+# Things to solve
+
+- [ ] Load balancer ips
+- [ ] storage on the control plane and the workers
+- [ ] Zigbee dongle
+- [ ] make .live work
+- [ ] tailscale
+
 # Steps
 
 ```bash
@@ -51,14 +59,18 @@ talosctl kubeconfig .  -n 192.168.68.100
 ## Apply config
 
 ```bash
+set -ex TL_CP_IP 192.168.68.100
+set -ex TL_WTP1_IP 192.168.68.107
+set -ex TL_WTP4_IP 192.168.68.114
+
 # Control plane
-talosctl apply-config -n 192.168.68.100 -f controlplane.yaml --insecure
+talosctl apply-config -n $TL_CP_IP -f controlplane.yaml --insecure
 
 # Worker tp1
-talosctl apply-config -n 192.168.68.107 -f config01/worker.yaml --insecure
+talosctl apply-config -n $TL_WTP1_IP -f config01/worker.yaml --insecure
 
 # Worker tp4
-talosctl apply-config -n 192.168.68.114 -f config01/worker.yaml --insecure
+talosctl apply-config -n $TL_WTP4_IP -f config01/worker.yaml --insecure
 ```
 
 # References

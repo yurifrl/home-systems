@@ -1,5 +1,5 @@
 apiVersion: v2
-name: cluster-support
+name: cluster-support-all
 description: Support services for the cluster
 type: application
 version: 0.1.0
