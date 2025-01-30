@@ -14,6 +14,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - SkipDryRunOnMissingResource=true
   source:
     chart: cert-manager
     repoURL: https://charts.jetstack.io
