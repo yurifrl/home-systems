@@ -1,1 +1,0 @@
-kubectl get namespace -o name | grep -v 'kube-system\|kube-public\|istio-system' | cut -d/ -f2 | xargs -I {} kubectl label namespace {} istio-injection- 

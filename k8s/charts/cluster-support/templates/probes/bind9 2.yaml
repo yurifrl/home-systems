@@ -1,0 +1,64 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: bind9-dns
+  namespace: monitoring
+spec:
+  interval: 30s
+  module: dns_resolve
+  prober:
+    url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - bind9.bind9.svc.cluster.local:53
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blackbox-bind9-dns
+  namespace: monitoring
+data:
+  bind9-dns.yaml: |
+    modules:
+      dns_resolve:
+        prober: dns
+        dns:
+          query_name: "kubernetes.default.svc.cluster.local"
+          query_type: "A"
+          valid_rcodes:
+          - NOERROR
+          protocol: "udp"
+          preferred_ip_protocol: "ip4"
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: bind9-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: bind9.rules
+      rules:
+        - alert: Bind9Down
+          expr: up{job="probe/bind9/bind9", namespace="bind9"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: dns
+          annotations:
+            summary: "Bind9 DNS server is down"
+            description: "Bind9 instance has been down for more than 5 minutes."
+            
+        - alert: Bind9DNSResolutionFailing
+          expr: probe_success{job="blackbox-bind9-dns"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: dns
+          annotations:
+            summary: "Bind9 DNS resolution is failing"
+            description: "Bind9 has failed to resolve DNS queries for more than 5 minutes."
