@@ -25,6 +25,7 @@ spec:
           connectors:
             - hostname: tailscale-1
               advertiseRoutes:
+                - "10.42.0.0/16"
                 - "10.43.0.0/16"
           externalSecrets: []
     - repoURL: https://pkgs.tailscale.com/helmcharts
