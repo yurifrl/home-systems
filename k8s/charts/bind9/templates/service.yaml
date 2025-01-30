@@ -17,3 +17,4 @@ spec:
       protocol: UDP
       targetPort: 53
   type: LoadBalancer
+  loadBalancerIP: {{ .Values.loadBalancerIP }}
