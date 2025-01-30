@@ -1,0 +1,17 @@
+dashboards:
+  - argo
+  - kubernetes
+  - k3s
+  - kubernetes-apacity-planning-limits # https://grafana.com/grafana/dashboards/13125-kubernetes-capacity-planning-limits/?
+  - kubernetes-pod-resource-overview # https://grafana.com/grafana/dashboards/15207-kubernetes-pod-resource-overview/?
+  - kubernetes-pod
+  - kubernetes-resource-requests # https://grafana.com/grafana/dashboards/7187-kubernetes-resource-requests/?
+  - workload-resource-recommendations # https://grafana.com/grafana/dashboards/15154-workload-resource-recommendations-based-on-usage/?
+  - node-exporter # https://github.com/rfmoz/grafana-dashboards/blob/master/prometheus/node-exporter-full.json
+  - cloudders # https://cloudders.com/docs/getting-started
+
+# Feature flags for enabling different components
+features:
+  serviceLevelObjectives: false 
+  prometheusRules: false
+  alertmanager: true

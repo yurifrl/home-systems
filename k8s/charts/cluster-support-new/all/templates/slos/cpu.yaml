@@ -1,0 +1,66 @@
+# [OK] VectorSelector
+# http_requests_total{job="frontend"}
+# 
+# [FAIL] No VectorSelector:
+# rate(http_requests_total[5m])  # This is a range vector.
+# sum(http_requests_total)       # This is an aggregated result.
+#
+{{- if .Values.features.serviceLevelObjectives }}
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: cpu-throttling-slo
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    pyrra.dev/severity: critical
+    pyrra.dev/environment: staging
+spec:
+  target: "99"  # 99% availability
+  window: "7d"
+  description: "Minimize container CPU throttling across all nodes."
+  indicator:
+    ratio:
+      total:
+        metric: "container_cpu_cfs_periods_total"
+      errors:
+        metric: "container_cpu_cfs_throttled_periods_total"
+---
+# A BoolGauge in Prometheus refers to a custom metric where:
+#
+# It takes the value 1 if a condition is met.
+# It takes the value 0 otherwise.
+#
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: cpu-saturation-slo
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    pyrra.dev/severity: critical
+    pyrra.dev/environment: staging
+spec:
+  target: "95"  # 95% availability
+  window: "7d"  # Monthly evaluation
+  description: "Ensure CPU utilization stays below 80% for at least 95% of the time."
+  indicator:
+    bool_gauge:
+      metric: "bool:cpu_saturation:above_80"
+      grouping: ["instance"]  # Group by instance to monitor individual nodes
+{{- end }}
+
+# Indicator Types:
+#
+# bool_gauge:    Measures whether a boolean gauge is successful (1) or not (0)
+#
+# latency:       Measures if a certain percentage of requests are faster than
+#                the expected latency threshold
+#
+# latencyNative: Similar to latency but uses Prometheus native histograms
+#                for more efficient latency measurements
+#
+# ratio:         Measures the ratio of errors to total events
+#                (error budget consumption)
