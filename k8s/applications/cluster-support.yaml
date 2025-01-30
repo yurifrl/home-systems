@@ -31,6 +31,10 @@ spec:
       targetRevision: HEAD
       path: k8s/charts/cluster-support/metallb
 
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/cluster-support/cert-manager
+  
     # Prometheus
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
@@ -65,15 +69,15 @@ spec:
                 name: pyrra
                 namespace: monitoring
                 port: 9099
-    # Longhorn
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: longhorn
-              service:
-                name: longhorn-frontend
-                namespace: longhorn-system
-                port: 80
+    # # Longhorn
+    # - repoURL: https://github.com/yurifrl/home-systems.git
+    #   targetRevision: HEAD
+    #   path: k8s/charts/support
+    #   helm:
+    #     valuesObject:
+    #       virtualServices:
+    #         - name: longhorn
+    #           service:
+    #             name: longhorn-frontend
+    #             namespace: longhorn-system
+    #             port: 80
