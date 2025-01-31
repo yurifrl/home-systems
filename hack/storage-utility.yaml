@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-utility
+  namespace: kube-system  # Run in kube-system which is exempted from PSA
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: talos-6vx-8th
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+    fsGroup: 0
+  containers:
+  - name: utility
+    image: busybox
+    command: ['sleep', 'infinity']
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+        add: ["CHOWN", "DAC_OVERRIDE"]
+    volumeMounts:
+    - name: storage
+      mountPath: /storage
+    resources:
+      requests:
+        cpu: 100m
+        memory: 100Mi
+      limits:
+        cpu: 100m
+        memory: 100Mi
+  volumes:
+  - name: storage
+    hostPath:
+      path: /var/mnt/storage 

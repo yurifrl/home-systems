@@ -34,7 +34,7 @@ spec:
                   name: cloudflare-api-token
                   key: token
           txtOwnerId: syscd-tailscale
-          policy: sync
+          policy: upsert-only
           domainFilters:
             - syscd.tech
           interval: 1m
@@ -56,7 +56,7 @@ spec:
         valuesObject:
           crd.create: false
           txtOwnerId: syscd-cloudflare
-          policy: sync
+          policy: upsert-only
           domainFilters:
             - syscd.live
           interval: 1m
@@ -101,7 +101,7 @@ spec:
           registry: txt
           txtPrefix: external-dns-
           txtOwnerId: syscd-rfc2136
-          policy: sync
+          policy: upsert-only
           domainFilters:
             - syscd.dev
           interval: 1m

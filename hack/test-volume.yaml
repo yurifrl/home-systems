@@ -26,7 +26,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: local-path
   local:
-    path: /storage/test-volume
+    path: /var/mnt/storage/test-volume
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -66,20 +66,14 @@ spec:
         instance: logger-test
     spec:
       securityContext:
-        runAsNonRoot: true
-        seccompProfile:
-          type: RuntimeDefault
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
       nodeSelector:
         kubernetes.io/hostname: rpi
       initContainers:
       - name: init-dirs
         image: busybox
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop: ["ALL"]
-          runAsUser: 1000
-          runAsGroup: 1000
         command: ['sh', '-c', 'mkdir -p /app']
         volumeMounts:
         - name: app-storage
@@ -87,12 +81,6 @@ spec:
       containers:
       - name: web
         image: python:3.9-slim
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop: ["ALL"]
-          runAsUser: 1000
-          runAsGroup: 1000
         ports:
         - containerPort: 5000
         resources: {}
