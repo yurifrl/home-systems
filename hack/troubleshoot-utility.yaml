@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: troubleshoot-utility
+  namespace: kube-system  # Run in kube-system which is exempted from PSA
+spec:
+  selector:
+    matchLabels:
+      name: troubleshoot-utility
+  template:
+    metadata:
+      labels:
+        name: troubleshoot-utility
+    spec:
+      # Add tolerations to allow scheduling on control plane nodes
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        effect: NoSchedule
+        operator: Exists
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+      containers:
+      - name: utility
+        image: nicolaka/netshoot:latest  # Contains many troubleshooting tools
+        command: ['sleep', 'infinity']
+        workingDir: /storage
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+            add: ["CHOWN", "DAC_OVERRIDE"]
+        volumeMounts:
+        - name: storage
+          mountPath: /storage
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 100m
+            memory: 100Mi
+      volumes:
+      - name: storage
+        hostPath:
+          path: /var/mnt/storage 

@@ -57,6 +57,9 @@ talosctl apply-config  -n 192.168.68.100 --mode=interactive --insecure
 
 # Get kubeconfig
 talosctl kubeconfig .  -n 192.168.68.100
+
+# Get manifests
+talosctl -n rpi get manifests
 ```
 
 ## Apply config
