@@ -14,15 +14,15 @@ global:
   addPrometheusAnnotations: true
 
 controller:
+  replicas: 2
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
   tolerations:
-    - key: "node-role"
-      operator: "Equal"
-      value: "nixos-1"
-      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/control-plane
+      effect: NoSchedule
+      operator: Exists
 
 dex:
   metrics:
@@ -30,10 +30,9 @@ dex:
     serviceMonitor:
       enabled: true
   tolerations:
-    - key: "node-role"
-      operator: "Equal"
-      value: "nixos-1"
-      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/control-plane
+      effect: NoSchedule
+      operator: Exists
 
 redis:
   metrics:
@@ -41,10 +40,9 @@ redis:
     serviceMonitor:
       enabled: true
   tolerations:
-    - key: "node-role"
-      operator: "Equal"
-      value: "nixos-1"
-      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/control-plane
+      effect: NoSchedule
+      operator: Exists
 
 server:
   ingress:
@@ -72,21 +70,20 @@ server:
       enabled: true
   
   tolerations:
-    - key: "node-role"
-      operator: "Equal"
-      value: "nixos-1"
-      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/control-plane
+      effect: NoSchedule
+      operator: Exists
 
 repoServer:
+  replicas: 2
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
   tolerations:
-    - key: "node-role"
-      operator: "Equal"
-      value: "nixos-1"
-      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/control-plane
+      effect: NoSchedule
+      operator: Exists
 
 applicationSet:
   metrics:
@@ -94,10 +91,9 @@ applicationSet:
     serviceMonitor:
       enabled: true
   tolerations:
-    - key: "node-role"
-      operator: "Equal"
-      value: "nixos-1"
-      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/control-plane
+      effect: NoSchedule
+      operator: Exists
 
 notifications:
   metrics:
@@ -105,10 +101,9 @@ notifications:
     serviceMonitor:
       enabled: true
   tolerations:
-    - key: "node-role"
-      operator: "Equal"
-      value: "nixos-1"
-      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/control-plane
+      effect: NoSchedule
+      operator: Exists
 
 
 # kubectl taint nodes nixos-1 node-role=nixos-1:NoSchedule

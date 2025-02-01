@@ -23518,9 +23518,8 @@ spec:
               topologyKey: kubernetes.io/hostname
       tolerations:
         - effect: NoSchedule
-          key: node-role
-          operator: Equal
-          value: nixos-1
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
       volumes:
         - name: ssh-known-hosts
           configMap:
@@ -23660,9 +23659,8 @@ spec:
               topologyKey: kubernetes.io/hostname
       tolerations:
         - effect: NoSchedule
-          key: node-role
-          operator: Equal
-          value: nixos-1
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
       volumes:
         - name: tls-certs
           configMap:
@@ -23695,7 +23693,7 @@ metadata:
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: "v2.13.4"
 spec:
-  replicas: 1
+  replicas: 2
   revisionHistoryLimit: 3
   selector:
     matchLabels:
@@ -24026,9 +24024,8 @@ spec:
               topologyKey: kubernetes.io/hostname
       tolerations:
         - effect: NoSchedule
-          key: node-role
-          operator: Equal
-          value: nixos-1
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
       volumes:
       - name: helm-working-dir
         emptyDir: {}
@@ -24465,9 +24462,8 @@ spec:
               topologyKey: kubernetes.io/hostname
       tolerations:
         - effect: NoSchedule
-          key: node-role
-          operator: Equal
-          value: nixos-1
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
       volumes:
       - name: plugins-home
         emptyDir: {}
@@ -24642,9 +24638,8 @@ spec:
               topologyKey: kubernetes.io/hostname
       tolerations:
         - effect: NoSchedule
-          key: node-role
-          operator: Equal
-          value: nixos-1
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
       volumes:
       - name: static-files
         emptyDir: {}
@@ -24735,9 +24730,8 @@ spec:
             name: health
       tolerations:
         - effect: NoSchedule
-          key: node-role
-          operator: Equal
-          value: nixos-1
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -24769,7 +24763,7 @@ metadata:
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: "v2.13.4"
 spec:
-  replicas: 1
+  replicas: 2
   revisionHistoryLimit: 5
   serviceName: argocd-application-controller
   selector:
@@ -24802,7 +24796,7 @@ spec:
         name: application-controller
         env:
           - name: ARGOCD_CONTROLLER_REPLICAS
-            value: "1"
+            value: "2"
           - name: ARGOCD_APPLICATION_CONTROLLER_NAME
             value: argocd-application-controller
           - name: ARGOCD_RECONCILIATION_TIMEOUT
@@ -25070,9 +25064,8 @@ spec:
               topologyKey: kubernetes.io/hostname
       tolerations:
         - effect: NoSchedule
-          key: node-role
-          operator: Equal
-          value: nixos-1
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
       volumes:
       - name: argocd-home
         emptyDir: {}
