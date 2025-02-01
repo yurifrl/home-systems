@@ -14,42 +14,34 @@
 ## Setup
 
 ```bash
-set -ex TL_MASTER_IP 192.168.68.100
-set -ex TL_WORKER_1_IP 192.168.68.107
-set -ex TL_WORKER_2_IP 192.168.68.114
-set -ex CLUSTER_NAME rpi
+set -ex T_MASTER_IP 192.168.68.100
+set -ex T_WORKER_1_IP 192.168.68.107
+set -ex T_WORKER_2_IP 192.168.68.114
+set -ex T_CLUSTER_NAME rpi
 ```
 
 ## Routine
 
 ```bash
 # Control plane
-talosctl apply-config -n $TL_MASTER_IP -f talos/config/controlplane.yaml -p @talos/config/patches.yaml
+talosctl apply-config -n $T_MASTER_IP -f talos/config/controlplane.yaml -p @talos/config/patches.yaml
 
 # Workers
-talosctl apply-config -n $TL_WORKER_1_IP,$TL_WORKER_2_IP -f talos/config/worker.yaml
+talosctl apply-config -n $T_WORKER_1_IP,$T_WORKER_2_IP -f talos/config/worker.yaml
 ```
 
 ## Talos commands
 
 ```bash
-# Apply config with patch
-talosctl apply-config -n $TL_MASTER_IP -f controlplane.yaml -p @patches.yaml --insecure 
-
-# Apply config interactively
-talosctl apply-config  -n $TL_MASTER_IP --mode=interactive --insecure
-
-# Get kubeconfig
-talosctl kubeconfig .  -n $TL_MASTER_IP
-
 # Get manifests
 talosctl -n rpi get manifests
 
 # List files
 talosctl -n rpi ls /etc/
-# Set configs
-talosctl config endpoint $TL_MASTER_IP
-talosctl config nodes $TL_MASTER_IP $TL_WORKER_1_IP $TL_WORKER_2_IP
+
+# Set talosconfig endpoint and nodes parameters
+talosctl config endpoint $T_MASTER_IP
+talosctl config nodes $T_MASTER_IP $T_WORKER_1_IP $T_WORKER_2_IP
 ```
 
 ## Start over
@@ -72,23 +64,23 @@ tpi flash -i ./rockship.raw -n 4
 ```bash
 # Apply with insecure while in maintenance mode
 # Control plane
-talosctl apply-config -n $TL_MASTER_IP -f talos/config/controlplane.yaml --insecure
+talosctl apply-config -n $T_MASTER_IP -f talos/config/controlplane.yaml -p @talos/config/patches.yaml --insecure
 
 # Workers
-talosctl apply-config -n $TL_WORKER_1_IP,$TL_WORKER_2_IP -f talos/config/worker.yaml --insecure
+talosctl apply-config -n $T_WORKER_1_IP,$T_WORKER_2_IP -f talos/config/worker.yaml --insecure
 ```
 
 ## Setup From scratch
 
 ```bash
 # Get your config, existing control plane or create a new one with
-talosctl gen config $CLUSTER_NAME https://$TL_MASTER_IP:6443 -o .
+talosctl gen config $T_CLUSTER_NAME https://$T_MASTER_IP:6443 -o .
 
 # Initial Apply needs to be with --insecure
-talosctl apply-config -n $TL_MASTER_IP -f talos/config/controlplane.yaml --insecure 
+talosctl apply-config -n $T_MASTER_IP -f talos/config/controlplane.yaml --insecure 
 
 # Get kubeconfig
-talosctl kubeconfig . -n $TL_MASTER_IP
+talosctl kubeconfig . -n $T_MASTER_IP
 set -gx KUBECONFIG kubeconfig
 ```
 
