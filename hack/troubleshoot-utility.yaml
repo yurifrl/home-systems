@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: troubleshoot-utility
-  namespace: kube-system  # Run in kube-system which is exempted from PSA
+  namespace: default  # Run in kube-system which is exempted from PSA
 spec:
   selector:
     matchLabels:

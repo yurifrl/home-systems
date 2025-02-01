@@ -6,31 +6,93 @@
 - [x] make .live work
 - [ ] make .tech work
 - [ ] make .dev work
-
+- [x] Handle the error where from a worker, the api server is not reachable, not sure what solved, but installing with interactive mode solved it, kinda, I think it's tailscale related.
 - [ ] tailscale
 
-# Steps
+# Talos workflow
+
+## Setup
+
+```bash
+set -ex TL_MASTER_IP 192.168.68.100
+set -ex TL_WORKER_1_IP 192.168.68.107
+set -ex TL_WORKER_2_IP 192.168.68.114
+set -ex CLUSTER_NAME rpi
+```
+
+## Routine
+
+```bash
+# Control plane
+talosctl apply-config -n $TL_MASTER_IP -f talos/config/controlplane.yaml -p @talos/config/patches.yaml
+
+# Workers
+talosctl apply-config -n $TL_WORKER_1_IP,$TL_WORKER_2_IP -f talos/config/worker.yaml
+```
+
+## Talos commands
+
+```bash
+# Apply config with patch
+talosctl apply-config -n $TL_MASTER_IP -f controlplane.yaml -p @patches.yaml --insecure 
+
+# Apply config interactively
+talosctl apply-config  -n $TL_MASTER_IP --mode=interactive --insecure
+
+# Get kubeconfig
+talosctl kubeconfig .  -n $TL_MASTER_IP
+
+# Get manifests
+talosctl -n rpi get manifests
+
+# List files
+talosctl -n rpi ls /etc/
+# Set configs
+talosctl config endpoint $TL_MASTER_IP
+talosctl config nodes $TL_MASTER_IP $TL_WORKER_1_IP $TL_WORKER_2_IP
+```
+
+## Start over
+
+```bash
+cd ~/Downloads/images
+
+# 
+sudo diskutil unmountDisk /dev/disk5
+sudo dd if=metal-arm64-1.8.4.raw of=/dev/disk5 conv=fsync bs=4M status=progress
+sudo diskutil unmountDisk /dev/disk5
+
+#
+tpi flash -i ./rockship.raw -n 1
+tpi flash -i ./rockship.raw -n 4
+```
+
+### Apply config
+
+```bash
+# Apply with insecure while in maintenance mode
+# Control plane
+talosctl apply-config -n $TL_MASTER_IP -f talos/config/controlplane.yaml --insecure
+
+# Workers
+talosctl apply-config -n $TL_WORKER_1_IP,$TL_WORKER_2_IP -f talos/config/worker.yaml --insecure
+```
+
+## Setup From scratch
 
 ```bash
 # Get your config, existing control plane or create a new one with
-talosctl gen config $CLUSTER_NAME https://192.168.68.100:6443 -o .
+talosctl gen config $CLUSTER_NAME https://$TL_MASTER_IP:6443 -o .
 
 # Initial Apply needs to be with --insecure
-talosctl apply-config -n 192.168.68.100 -f controlplane.yaml --insecure 
+talosctl apply-config -n $TL_MASTER_IP -f talos/config/controlplane.yaml --insecure 
 
 # Get kubeconfig
-talosctl kubeconfig . -n 192.168.68.100
+talosctl kubeconfig . -n $TL_MASTER_IP
 set -gx KUBECONFIG kubeconfig
-
-# Kubernetes is running
-helm repo add argo-cd https://argoproj.github.io/argo-helm
-helm repo update
-helm upgrade -n argocd --install argocd argo-cd/argo-cd -f ./argo-values.yaml --wait --create-namespace --atomic
-../hack/secrets.sh
-k apply -f./applications.yaml
 ```
 
-## Image part
+## Image factory
 
 ```bash
 # Get image ID
@@ -41,49 +103,6 @@ curl -Lo metal-arm64_v1.8.4.raw.xz https://factory.talos.dev/image/$ID/v1.8.4/me
 xz -d metal-arm64_v1.8.4.raw.xz
 
 sudo dd if=metal-arm64.raw of=/dev/disk5 conv=fsync bs=4M status=progress
-```
-
-
-## Talos commands
-```bash
-# Get config
-talosctl gen config $CLUSTER_NAME https://192.168.68.100:6443 -o .
-
-# Apply config with patch
-talosctl apply-config -n 192.168.68.100 -f controlplane.yaml -p @patches.yaml --insecure 
-
-# Apply config interactively
-talosctl apply-config  -n 192.168.68.100 --mode=interactive --insecure
-
-# Get kubeconfig
-talosctl kubeconfig .  -n 192.168.68.100
-
-# Get manifests
-talosctl -n rpi get manifests
-
-# List files
-talosctl -n rpi ls /etc/
-
-# Set configs
-talosctl config endpoint 192.168.68.100
-talosctl config nodes 192.168.68.100 192.168.68.114 192.168.68.107
-```
-
-## Apply config
-
-```bash
-set -ex TL_CP_IP 192.168.68.100
-set -ex TL_WTP1_IP 192.168.68.107
-set -ex TL_WTP4_IP 192.168.68.114
-
-# Control plane
-talosctl apply-config -n $TL_CP_IP -f controlplane.yaml --insecure
-
-# Worker tp1
-talosctl apply-config -n $TL_WTP1_IP -f config01/worker.yaml --insecure
-
-# Worker tp4
-talosctl apply-config -n $TL_WTP4_IP -f config01/worker.yaml --insecure
 ```
 
 # References
