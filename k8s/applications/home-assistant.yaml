@@ -45,7 +45,7 @@ spec:
       helm:
         valuesObject:
           nodeSelector:
-            kubernetes.io/hostname: tp1
+            syscd.dev/storage: tp1
           addons:
             codeserver:
               enabled: true

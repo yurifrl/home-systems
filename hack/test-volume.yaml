@@ -31,7 +31,7 @@ spec:
     required:
       nodeSelectorTerms:
         - matchExpressions:
-            - key: kubernetes.io/hostname
+            - key: syscd.dev/storage
               operator: In
               values:
                 - rpi
@@ -70,7 +70,7 @@ spec:
         runAsGroup: 0
         fsGroup: 0
       nodeSelector:
-        kubernetes.io/hostname: rpi
+        syscd.dev/storage: rpi
       initContainers:
       - name: init-dirs
         image: busybox

@@ -49,7 +49,7 @@ spec:
             mountPath: "/data"
 
           nodeSelector:
-            kubernetes.io/hostname: tp1
+            syscd.dev/storage: tp1
           service:
             annotations:
               teleport.dev/name: node-red

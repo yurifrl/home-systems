@@ -18,7 +18,7 @@ spec:
     required:
       nodeSelectorTerms:
         - matchExpressions:
-            - key: kubernetes.io/hostname
+            - key: syscd.dev/storage
               operator: In
               values:
                 - {{ .nodeName | default "nixos-1" }}
