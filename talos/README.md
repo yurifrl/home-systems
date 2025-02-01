@@ -60,6 +60,13 @@ talosctl kubeconfig .  -n 192.168.68.100
 
 # Get manifests
 talosctl -n rpi get manifests
+
+# List files
+talosctl -n rpi ls /etc/
+
+# Set configs
+talosctl config endpoint 192.168.68.100
+talosctl config nodes 192.168.68.100 192.168.68.114 192.168.68.107
 ```
 
 ## Apply config
