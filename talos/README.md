@@ -42,6 +42,9 @@ talosctl -n rpi ls /etc/
 # Set talosconfig endpoint and nodes parameters
 talosctl config endpoint $T_MASTER_IP
 talosctl config nodes $T_MASTER_IP $T_WORKER_1_IP $T_WORKER_2_IP
+
+# Get talos config
+talosctl get machineconfig -o yaml | yq eval .spec
 ```
 
 ## Start over
@@ -107,3 +110,10 @@ sudo dd if=metal-arm64.raw of=/dev/disk5 conv=fsync bs=4M status=progress
 	- guy with the same issue
 - [xvzf/homeassistant-yellow-talos](https://github.com/xvzf/homeassistant-yellow-talos/blob/main/README.md?plain=1)
 	- Talos example with home assistant
+
+
+# Imporvement possibilities
+
+- https://www.talos.dev/v1.9/talos-guides/configuration/editing-machine-configuration/
+    - in Recovering from Node Boot Failures, what can we do about a failing boot? that's no clear
+- How to turn on dashboard in sbcs

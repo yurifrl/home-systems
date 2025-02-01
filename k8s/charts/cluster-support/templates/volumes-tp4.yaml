@@ -16,7 +16,7 @@
 #     required:
 #       nodeSelectorTerms:
 #         - matchExpressions:
-#             - key: kubernetes.io/hostname
+#             - key: syscd.dev/storage
 #               operator: In
 #               values:
 #                 - tp4
@@ -39,7 +39,7 @@
 #     required:
 #       nodeSelectorTerms:
 #         - matchExpressions:
-#             - key: kubernetes.io/hostname
+#             - key: syscd.dev/storage
 #               operator: In
 #               values:
 #                 - tp4
@@ -62,7 +62,7 @@
 #     required:
 #       nodeSelectorTerms:
 #         - matchExpressions:
-#             - key: kubernetes.io/hostname
+#             - key: syscd.dev/storage
 #               operator: In
 #               values:
 #                 - tp4
@@ -85,7 +85,7 @@
 #     required:
 #       nodeSelectorTerms:
 #         - matchExpressions:
-#             - key: kubernetes.io/hostname
+#             - key: syscd.dev/storage
 #               operator: In
 #               values:
 #                 - tp4
