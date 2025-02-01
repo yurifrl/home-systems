@@ -12,3 +12,16 @@ apply:
 	talosctl -n 192.168.68.100 apply-config -f talos/config/controlplane.yaml -p  @talos/config/patches.yaml
 	talosctl -n 192.168.68.114,192.168.68.107 apply-config -f talos/config/worker.yaml
 	./talos/secrets-backup.sh
+
+
+label-nodes:
+	# For tp1
+	kubectl label nodes talos-762-etv syscd.dev/storage=tp1
+
+	# For tp1
+	kubectl label nodes talos-6rr-kw8 syscd.dev/storage=tp4
+
+	# For rp1
+	kubectl label nodes rpi syscd.dev/storage=rpi
+
+	kubectl get nodes --show-labels | grep syscd.dev/storage

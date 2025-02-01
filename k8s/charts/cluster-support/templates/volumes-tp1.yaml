@@ -8,10 +8,10 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
+  persistentVolumeReclaimPolicy: Delete
   storageClassName: local-path
   local:
-    path: /storage/home-assistant-data
+    path: /var/mnt/storage/home-assistant-data
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -31,10 +31,10 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
+  persistentVolumeReclaimPolicy: Delete
   storageClassName: local-path
   local:
-    path: /storage/zigbee2mqtt-data
+    path: /var/mnt/storage/zigbee2mqtt-data
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -54,10 +54,10 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
+  persistentVolumeReclaimPolicy: Delete
   storageClassName: local-path
   local:
-    path: /storage/node-red-data
+    path: /var/mnt/storage/node-red-data
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -77,10 +77,10 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
+  persistentVolumeReclaimPolicy: Delete
   storageClassName: local-path
   local:
-    path: /storage/teleport-data
+    path: /var/mnt/storage/teleport-data
   nodeAffinity:
     required:
       nodeSelectorTerms:

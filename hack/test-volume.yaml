@@ -34,7 +34,7 @@ spec:
             - key: syscd.dev/storage
               operator: In
               values:
-                - rpi
+                - tp1
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -70,7 +70,7 @@ spec:
         runAsGroup: 0
         fsGroup: 0
       nodeSelector:
-        syscd.dev/storage: rpi
+        syscd.dev/storage: tp1
       initContainers:
       - name: init-dirs
         image: busybox
