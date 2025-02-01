@@ -1,113 +1,105 @@
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: home-assistant-tp1-data
-spec:
-  capacity:
-    storage: 10Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: local-path
-  local:
-    path: /var/mnt/storage/home-assistant-data
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: syscd.dev/storage
-              operator: In
-              values:
-                - tp1
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: zigbee2mqtt-tp1-data
-spec:
-  capacity:
-    storage: 10Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: local-path
-  local:
-    path: /var/mnt/storage/zigbee2mqtt-data
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: syscd.dev/storage
-              operator: In
-              values:
-                - tp1
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: node-red-tp1-data
-spec:
-  capacity:
-    storage: 10Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: local-path
-  local:
-    path: /var/mnt/storage/node-red-data
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: syscd.dev/storage
-              operator: In
-              values:
-                - tp1
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: teleport-tp1-data
-spec:
-  capacity:
-    storage: 10Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: local-path
-  local:
-    path: /var/mnt/storage/teleport-data
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: syscd.dev/storage
-              operator: In
-              values:
-                - tp1
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: home-assistant-tp1-data
+# spec:
+#   capacity:
+#     storage: 10Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#     - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Delete
+#   storageClassName: local-path
+#   local:
+#     path: /var/mnt/storage/home-assistant-data
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#         - matchExpressions:
+#             - key: syscd.dev/storage
+#               operator: In
+#               values:
+#                 - tp1
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: zigbee2mqtt-tp1-data
+# spec:
+#   capacity:
+#     storage: 10Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#     - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Delete
+#   storageClassName: local-path
+#   local:
+#     path: /var/mnt/storage/zigbee2mqtt-data
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#         - matchExpressions:
+#             - key: syscd.dev/storage
+#               operator: In
+#               values:
+#                 - tp1
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: node-red-tp1-data
+# spec:
+#   capacity:
+#     storage: 10Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#     - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Delete
+#   storageClassName: local-path
+#   local:
+#     path: /var/mnt/storage/node-red-data
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#         - matchExpressions:
+#             - key: syscd.dev/storage
+#               operator: In
+#               values:
+#                 - tp1
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: teleport-tp1-data
+# spec:
+#   capacity:
+#     storage: 10Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#     - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Delete
+#   storageClassName: local-path
+#   local:
+#     path: /var/mnt/storage/teleport-data
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#         - matchExpressions:
+#             - key: syscd.dev/storage
+#               operator: In
+#               values:
+#                 - tp1
 
-
-# k -n node-red scale deploy/node-red --replicas=0
-# k -n home-assistant scale statefulset/home-assistant --replicas=0
-# k -n zigbee2mqtt scale statefulset/zigbee2mqtt --replicas=0
-# k -n teleport scale statefulset/teleport --replicas=0   
 
 # k -n home-assistant delete pvc home-assistant-home-assistant-0
 # k -n node-red delete pvc node-red
 # k -n teleport delete pvc teleport-tp1-data
 # k -n zigbee2mqtt delete pvc data-volume-zigbee2mqtt-0
 
-# k -n home-assistant edit pvc home-assistant-home-assistant-0
-# k -n node-red edit pvc node-red
-# k -n teleport edit pvc teleport-tp1-data
-# k -n zigbee2mqtt edit pvc data-volume-zigbee2mqtt-0
 
-
-# # k -n node-red scale deploy/node-red --replicas=1
-# # k -n home-assistant scale statefulset/home-assistant --replicas=1
-# # k -n zigbee2mqtt scale statefulset/zigbee2mqtt --replicas=1
-# # k -n teleport scale statefulset/teleport --replicas=1   
+# k delete pv home-assistant-tp1-data  
+# k delete pv logger-test-pv  
+# k delete pv node-red-tp1-data  
+# k delete pv teleport-tp1-data  
+# k delete pv zigbee2mqtt-nixos-1-data  
+# k delete pv zigbee2mqtt-tp1-data  
