@@ -42,10 +42,10 @@ spec:
             nodeSelector:
               syscd.dev/storage: tp1
             storage:
-              enabled: true
-              size: 1Gi
-              storageClassName: local-path
-              existingVolume: zigbee2mqtt-tp1-data
+              enabled: false
+              # size: 1Gi
+              # storageClassName: local-path
+              # existingVolume: zigbee2mqtt-tp1-data
           zigbee2mqtt:
             mqtt:
               server: "mqtt://mosquitto.mosquitto:1883"
