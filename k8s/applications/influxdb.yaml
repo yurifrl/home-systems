@@ -57,6 +57,14 @@ spec:
       helm:
         valuesObject:
           config:
+            inputs:
+              - mqtt_consumer:
+                  servers: ["tcp://mosquitto.mosquitto.svc:1883"]
+                  topics: ["#"]
+                  data_format: "value"
+                  data_type: "string"
+                  name_override: "mqtt_value"
+                  client_id: "telegraf"
             outputs:
               - influxdb_v2:
                   urls:
@@ -68,19 +76,8 @@ spec:
               - prometheus_client:
                   listen: ":8094"
                   metric_version: 2
-            inputs:
-              - mqtt_consumer:
-                  servers: ["tcp://mosquitto.mosquitto.svc:1883"]
-                  topics: ["#"]
-                  data_format: "value"
-                  data_type: "string"
-                  name_override: "mqtt_value"
-                  client_id: "telegraf"
           service:
-            enabled: false
-            type: ClusterIP
-            annotations:
-              teleport.dev/name: telegraf
+            enabled: true
             ports:
               - name: http
                 port: 8094
