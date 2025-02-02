@@ -91,5 +91,11 @@ spec:
               prometheus:
                 namespace: hass
                 requires_auth: false
+              influxdb:
+                host: influxdb-influxdb2.influxdb.svc.cluster.local
+                port: 8086
+                token: admin
+                organization: home-systems
+                bucket: default
 
 # Chart: https://github.com/pajikos/home-assistant-helm-chart

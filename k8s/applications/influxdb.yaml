@@ -40,8 +40,6 @@ spec:
             user: "admin"
           persistence:
             enabled: false
-            size: 10Gi
-            storageClass: longhorn-static
           resources:
             limits:
               cpu: 500m

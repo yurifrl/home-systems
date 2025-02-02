@@ -135,13 +135,7 @@ spec:
 
                     - name: "Infrastructure"
                       icon: "fas fa-server"
-                      items:
-                        - name: "Longhorn"
-                          icon: "fas fa-hard-drive"
-                          tag: "storage"
-                          url: "https://longhorn.syscd.dev"
-                          target: "_blank"
-                        
+                      items:                
                         - name: "ArgoCD"
                           icon: "fas fa-code-branch"
                           tag: "gitops"

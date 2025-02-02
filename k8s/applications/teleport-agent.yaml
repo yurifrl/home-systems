@@ -85,7 +85,3 @@ spec:
         #     uri: https://kiali.syscd.xyz
         #     labels:
         #       purpose: monitoring
-        #   - name: longhorn
-        #     uri: https://longhorn.syscd.xyz
-        #     labels:
-        #       purpose: storage 
