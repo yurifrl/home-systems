@@ -13,24 +13,6 @@ spec:
       static:
         - https://kubernetes.default.svc/api/v1/namespaces/kube-system/pods
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: blackbox-control-plane
-  namespace: monitoring
-data:
-  control-plane.yaml: |
-    modules:
-      control_plane_http:
-        prober: http
-        timeout: 5s
-        http:
-          valid_status_codes: [200]
-          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
-          tls_config:
-            ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-          bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
----
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:

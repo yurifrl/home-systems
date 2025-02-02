@@ -21,6 +21,21 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
+          serviceMonitor:
+            enabled: true
+          extraArgs:
+            - --log.level=debug            
+          extraSecretMounts:
+            - name: secret-files
+              mountPath: /etc/secrets/
+              secretName: blackbox-exporter
+          resources:
+            limits:
+              cpu: 50m
+              memory: 128Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
           config:
             modules:
               http_2xx:
@@ -36,18 +51,21 @@ spec:
                   basic_auth:
                     username: postman
                     password_file: /etc/secrets/http_2xx_test_basic_auth
-          extraSecretMounts:
-            - name: secret-files
-              mountPath: /etc/secrets/
-              secretName: blackbox-exporter
-          extraArgs:
-            - --log.level=debug
-          resources:
-            limits:
-              cpu: 50m
-              memory: 128Mi
-            requests:
-              cpu: 25m
-              memory: 64Mi
-          serviceMonitor:
-            enabled: true
+              control_plane_http:
+                prober: http
+                timeout: 5s
+                http:
+                  valid_status_codes: [200]
+                  valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+                  tls_config:
+                    ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                  bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              dns_resolve:
+                prober: dns
+                dns:
+                  query_name: "kubernetes.default.svc.cluster.local"
+                  query_type: "A"
+                  valid_rcodes:
+                  - NOERROR
+                  protocol: "udp"
+                  preferred_ip_protocol: "ip4"
