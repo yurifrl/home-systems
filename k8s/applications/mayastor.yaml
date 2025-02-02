@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mayastor
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openebs
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true 
+  source:
+    repoURL: https://openebs.github.io/openebs
+    chart: openebs
+    targetRevision: "*"
+    helm:
+      valuesObject:
+        mayastor:
+          csi:
+            node:
+              initContainers:
+                enabled: false
+        engines:
+          local:
+            lvm:
+              enabled: false
+            zfs:
+              enabled: false
