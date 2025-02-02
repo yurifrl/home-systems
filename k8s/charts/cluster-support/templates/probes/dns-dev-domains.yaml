@@ -1,4 +1,4 @@
-# test: https://blackbox-exporter.syscd.live/probe?target=ha.syscd.dev&module=dns_resolve&debug=true
+# test: https://blackbox-exporter.syscd.live/probe?module=resolve_dns_syscd&target=bind9.bind9.svc.cluster.local&debug=true
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:

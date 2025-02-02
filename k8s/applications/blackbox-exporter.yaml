@@ -65,7 +65,7 @@ spec:
                   tls_config:
                     ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                   bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-              resolve_dns_syscd:
+              resolve_dns_syscd: # https://blackbox-exporter.syscd.live/probe?module=resolve_dns_syscd&target=bind9.bind9.svc.cluster.local&debug=true
                 prober: dns
                 timeout: 5s
                 dns:
