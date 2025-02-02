@@ -71,6 +71,9 @@ spec:
                   data_type: "string"
                   name_override: "mqtt_value"
                   client_id: "telegraf"
+              - cpu:
+                percpu: false
+                totalcpu: true
             outputs:
               - influxdb_v2:
                   urls:
