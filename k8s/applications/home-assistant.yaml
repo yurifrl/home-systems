@@ -82,9 +82,6 @@ spec:
               script: !include scripts.yaml
               scene: !include scenes.yaml
 
-              whitelist_external_dirs:
-                - /config/www
-
               hello_world:
               logger:
                 logs:

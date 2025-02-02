@@ -35,17 +35,17 @@ spec:
 
     - repoURL: https://charts.zigbee2mqtt.io
       chart: zigbee2mqtt
-      targetRevision: "*"
+      targetRevision: "2.0.0"
       helm:
         valuesObject:
           statefulset:
             nodeSelector:
               syscd.dev/storage: tp1
             storage:
-              enabled: false
-              # size: 1Gi
-              # storageClassName: local-path
-              # existingVolume: zigbee2mqtt-tp1-data
+              enabled: true
+              size: 1Gi
+              storageClassName: local-path
+              existingVolume: zigbee2mqtt-tp1-data
           zigbee2mqtt:
             mqtt:
               server: "mqtt://mosquitto.mosquitto:1883"
