@@ -11,7 +11,7 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: false
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -65,20 +65,13 @@ spec:
                   tls_config:
                     ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                   bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-              dns_resolve:
+              resolve_dns_syscd:
                 prober: dns
                 timeout: 5s
                 dns:
-                  query_name: "{{ .Target }}"
-                  query_type: "A"
                   transport_protocol: "udp"
                   preferred_ip_protocol: "ip4"
-                  source_ip_address: "bind9.bind9.svc.cluster.local"
-                  validate_answer_rrs:
-                    fail_if_matches_regexp:
-                      - "NXDOMAIN"
-                      - "SERVFAIL"
-                  validate_authority_rrs:
-                    fail_if_matches_regexp: []
-                  validate_additional_rrs:
-                    fail_if_matches_regexp: []
+                  query_name: "syscd.dev"
+                  query_type: "A"
+                  valid_rcodes:
+                    - NOERROR
