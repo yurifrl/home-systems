@@ -16,10 +16,10 @@ apply:
 
 label-nodes:
 	# For tp1
-	kubectl label nodes talos-762-etv syscd.dev/storage=tp1
+	kubectl label nodes talos-k3p-bue syscd.dev/storage=tp1 --overwrite
 
-	# For tp1
-	kubectl label nodes talos-6rr-kw8 syscd.dev/storage=tp4
+	# For tp4
+	kubectl label nodes talos-jhz-4tr syscd.dev/storage=tp4 --overwrite
 
 	# For rp1
 	kubectl label nodes rpi syscd.dev/storage=rpi
