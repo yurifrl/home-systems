@@ -62,10 +62,14 @@ spec:
             outputs:
               - influxdb_v2:
                   urls:
-                    - "http://influxdb-influxdb2.influxdb.svc"
+                    - "http://influxdb-influxdb2.influxdb.svc.cluster.local"
                   token: "admin"
                   organization: "home-systems"
                   bucket: "default"
+              # Add Prometheus output
+              - prometheus_client:
+                  listen: ":8094"
+                  metric_version: 2
             inputs:
               - mqtt_consumer:
                   servers: ["tcp://mosquitto.mosquitto.svc:1883"]

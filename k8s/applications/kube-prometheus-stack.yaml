@@ -97,6 +97,12 @@ spec:
                       regex: ([^:]+)(?::\d+)?;(\d+)
                       replacement: $1:$2
                       target_label: __address__
+                # Add Telegraf scrape config
+                - job_name: 'telegraf'
+                  static_configs:
+                    - targets: ['telegraf.influxdb.svc:8094']
+                  metrics_path: '/metrics'
+                  scheme: 'http'
               resources:
                 limits:
                   cpu: 750m
@@ -150,6 +156,23 @@ spec:
                     access: proxy
                     jsonData:
                       topic: "#"
+                  - name: Telegraf
+                    type: prometheus
+                    url: http://telegraf.influxdb:8094
+                    access: proxy
+                    isDefault: false
+                  # Add InfluxDB datasource
+                  - name: InfluxDB
+                    type: influxdb
+                    url: http://influxdb-influxdb2.influxdb.svc.cluster.local
+                    access: proxy
+                    secureJsonData:
+                      token: admin
+                    jsonData:
+                      version: Flux
+                      organization: home-systems
+                      defaultBucket: default
+                      tlsSkipVerify: true
           alertmanager:
             enabled: true
             service:
@@ -181,6 +204,7 @@ spec:
                 requests:
                   cpu: 50m
                   memory: 128Mi
+          
           defaultRules:
             create: false
             rules:
