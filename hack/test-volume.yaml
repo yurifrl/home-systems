@@ -46,8 +46,8 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  volumeName: logger-test-pv
   storageClassName: local-path
+  volumeName: logger-test-pv
 ---
 apiVersion: apps/v1
 kind: Deployment

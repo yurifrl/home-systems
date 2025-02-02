@@ -39,32 +39,27 @@ spec:
       helm:
         valuesObject:
           statefulset:
-            tolerations:
-              - key: "node-role"
-                operator: "Equal"
-                value: "nixos-1"
-                effect: "NoSchedule"
             nodeSelector:
-              kubernetes.io/hostname: nixos-1
+              syscd.dev/storage: tp1
             storage:
               enabled: true
               size: 1Gi
               storageClassName: local-path
               existingVolume: zigbee2mqtt-nixos-1-data
-            volumes:
-              - name: usb
-                hostPath:
-                  # path: /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da22b4738bd8ed11bf06746162c613ac-if00-port0
-                  path: /dev/ttyUSB0
-                  type: CharDevice
-            volumeMounts:
-              - name: usb
-                mountPath: /dev/ttyUSB0
           zigbee2mqtt:
             mqtt:
               server: "mqtt://mosquitto.mosquitto:1883"
+            # Pay attention, if you use the Z2M addon for HA, it is better to edit Z2M addon yaml configuration file directly (Select the 3 dot menu in the upper right corner → "Edit in YAML")
             serial:
-              port:  /dev/ttyUSB0
+            # Location of SLZB-06P7
+              port: tcp://192.168.68.111:6638
+              baudrate: 115200
+              adapter: zstack
+            # Disable green led?
+              disable_led: false
+            # Set output power to max 20
+            advanced:
+              transmit_power: 20              
           service:
             annotations:
               teleport.dev/name: zigbee2mqtt

@@ -45,6 +45,9 @@ talosctl config nodes $T_MASTER_IP $T_WORKER_1_IP $T_WORKER_2_IP
 
 # Get talos config
 talosctl get machineconfig -o yaml | yq eval .spec
+
+# ls
+talosctl -n $NODE ls /var/mnt/storage/
 ```
 
 ## Start over

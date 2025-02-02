@@ -63,7 +63,7 @@ spec:
           chartMode: standalone
 
           nodeSelector:
-            kubernetes.io/hostname: tp1
+            syscd.dev/storage: tp1
           #
           operator:
             enabled: true

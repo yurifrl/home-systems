@@ -89,13 +89,34 @@
 #               operator: In
 #               values:
 #                 - tp1
-
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: zigbee2mqtt-nixos-1-data
+# spec:
+#   capacity:
+#     storage: 10Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#     - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Delete
+#   storageClassName: local-path
+#   local:
+#     path: /var/mnt/storage/zigbee2mqtt-data
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#         - matchExpressions:
+#             - key: syscd.dev/storage
+#               operator: In
+#               values:
+#                 - nixos-1
 
 # k -n home-assistant delete pvc home-assistant-home-assistant-0
 # k -n node-red delete pvc node-red
 # k -n teleport delete pvc teleport-tp1-data
 # k -n zigbee2mqtt delete pvc data-volume-zigbee2mqtt-0
-
 
 # k delete pv home-assistant-tp1-data  
 # k delete pv logger-test-pv  

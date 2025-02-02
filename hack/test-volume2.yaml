@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: test-volume2-pv
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /var/mnt/storage/test-volume
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: syscd.dev/storage
+          operator: In
+          values:
+          - tp1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-volume2-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-volume2
+spec:
+  replicas: 1  # Specify the number of replicas
+  selector:
+    matchLabels:
+      app: test-volume2
+  template:
+    metadata:
+      labels:
+        app: test-volume2
+    spec:
+      nodeSelector:
+        syscd.dev/storage: tp1
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+      containers:
+      - name: utility
+        image: nicolaka/netshoot:latest  # Contains many troubleshooting tools
+        command: ['sleep', 'infinity']
+        workingDir: /storage
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+            add: ["CHOWN", "DAC_OVERRIDE"]
+        volumeMounts:
+        - name: storage
+          mountPath: /storage
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 100m
+            memory: 100Mi
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: test-volume2-pvc

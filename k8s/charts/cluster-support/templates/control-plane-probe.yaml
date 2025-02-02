@@ -1,0 +1,64 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: control-plane-probe
+  namespace: monitoring
+spec:
+  interval: 30s
+  module: control_plane_http
+  prober:
+    url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - https://kubernetes.default.svc/api/v1/namespaces/kube-system/pods
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blackbox-control-plane
+  namespace: monitoring
+data:
+  control-plane.yaml: |
+    modules:
+      control_plane_http:
+        prober: http
+        timeout: 5s
+        http:
+          valid_status_codes: [200]
+          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+          tls_config:
+            ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: control-plane-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: control-plane.rules
+      rules:
+        - alert: ControlPlaneDown
+          expr: up{job="probe/monitoring/control-plane-probe"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: control-plane
+          annotations:
+            summary: "Control plane is down"
+            description: "The Kubernetes control plane has been unreachable for more than 5 minutes."
+        
+        - alert: ControlPlaneAPIUnreachable
+          expr: probe_success{job="probe/monitoring/control-plane-probe"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: control-plane
+          annotations:
+            summary: "Control plane API is unreachable"
+            description: "The Kubernetes API server has been unreachable for more than 5 minutes." 
