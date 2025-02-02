@@ -29,21 +29,6 @@ spec:
                 http:
                   fail_if_not_ssl: true
                   follow_redirects: true
-              http_2xx_long_timeout:
-                prober: http
-                timeout: 10s
-                http:
-                  fail_if_not_ssl: true
-                  follow_redirects: true
-              http_2xx_server_cloudflare:
-                prober: http
-                timeout: 5s
-                http:
-                  fail_if_not_ssl: true
-                  fail_if_header_not_matches:
-                    - header: server
-                      regexp: ".*(?i)cloudflare.*"
-                      allow_missing: false
               http_2xx_test_basic_auth:
                 prober: http
                 timeout: 5s
@@ -51,19 +36,6 @@ spec:
                   basic_auth:
                     username: postman
                     password_file: /etc/secrets/http_2xx_test_basic_auth
-              dns_udp_53:
-                prober: dns
-                timeout: 5s
-                dns:
-                  transport_protocol: "udp"
-                  preferred_ip_protocol: "ip4"
-                  query_name: "google.com"
-                  query_type: "A"
-                  validate_answer_rrs:
-                    fail_if_matches_regexp:
-                      - ".*"
-                    fail_if_not_matches_regexp:
-                      - ".*"
           extraSecretMounts:
             - name: secret-files
               mountPath: /etc/secrets/
