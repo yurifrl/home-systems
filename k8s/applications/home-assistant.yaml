@@ -87,5 +87,6 @@ spec:
                 logs:
                   custom_components.verisure: debug
               prometheus:
+                namespace: hass
 
 # Chart: https://github.com/pajikos/home-assistant-helm-chart
