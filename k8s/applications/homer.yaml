@@ -91,7 +91,7 @@ spec:
                         - name: "HA Code Server"
                           icon: "fas fa-code"
                           tag: "development"
-                          url: "https://ha-codeserver.syscd.dev"
+                          url: "https://code.syscd.dev"
                           target: "_blank"
 
                     - name: "Monitoring"
