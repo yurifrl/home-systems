@@ -42,6 +42,7 @@ spec:
                 prober: dns
                 timeout: 5s
                 dns:
+                  query_name: "{{ .Target }}"
                   query_type: "A"
                   validate_answer_rrs:
                     fail_if_matches_regexp:
