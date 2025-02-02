@@ -1,3 +1,4 @@
+# test: https://blackbox-exporter.syscd.live/probe?target=ha.syscd.dev&module=control_plane_http&debug=true
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:

@@ -36,6 +36,7 @@ spec:
             - name: secret-files
               mountPath: /etc/secrets/
               secretName: blackbox-exporter
+          automountServiceAccountToken: true
           serviceAccount:
             create: true
           resources:
