@@ -50,7 +50,12 @@ spec:
               size: 1Gi
               storageClassName: local-path
               existingVolume: zigbee2mqtt-tp1-data
+          service:
+            annotations:
+              teleport.dev/name: zigbee2mqtt
           zigbee2mqtt:
+            availability:
+              enabled: true
             mqtt:
               server: "mqtt://mosquitto.mosquitto:1883"
             # Pay attention, if you use the Z2M addon for HA, it is better to edit Z2M addon yaml configuration file directly (Select the 3 dot menu in the upper right corner → "Edit in YAML")
@@ -64,6 +69,3 @@ spec:
             # Set output power to max 20
             advanced:
               transmit_power: 20              
-          service:
-            annotations:
-              teleport.dev/name: zigbee2mqtt
