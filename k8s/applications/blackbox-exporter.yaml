@@ -11,7 +11,7 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: true
+      selfHeal: false
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -71,6 +71,9 @@ spec:
                 dns:
                   query_name: "{{ .Target }}"
                   query_type: "A"
+                  transport_protocol: "udp"
+                  preferred_ip_protocol: "ip4"
+                  source_ip_address: "bind9.bind9.svc.cluster.local"
                   validate_answer_rrs:
                     fail_if_matches_regexp:
                       - "NXDOMAIN"

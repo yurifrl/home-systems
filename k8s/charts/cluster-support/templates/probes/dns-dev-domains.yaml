@@ -1,4 +1,4 @@
-# test: https://blackbox-exporter.syscd.live/probe?target=ha.syscd.dev&module=control_plane_http&debug=true
+# test: https://blackbox-exporter.syscd.live/probe?target=ha.syscd.dev&module=dns_resolve&debug=true
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:

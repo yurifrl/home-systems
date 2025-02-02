@@ -20,6 +20,7 @@ roleRef:
   name: blackbox-control-plane-probe
   apiGroup: rbac.authorization.k8s.io 
 ---
+# Test: https://blackbox-exporter.syscd.live/probe?target=https://kubernetes.default.svc/api/v1/namespaces/kube-system/pods&module=control_plane_http&debug=true
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:
