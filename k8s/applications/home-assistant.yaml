@@ -65,6 +65,8 @@ spec:
               volumeMounts:
                 - mountPath: /config
                   name: home-assistant
+          serviceMonitor:
+            enabled: true
           configuration:
             enabled: true
             forceInit: true
