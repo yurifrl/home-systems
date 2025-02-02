@@ -72,8 +72,8 @@ spec:
                   name_override: "mqtt_value"
                   client_id: "telegraf"
               - cpu:
-                percpu: false
-                totalcpu: true
+                  percpu: false
+                  totalcpu: true
             outputs:
               - influxdb_v2:
                   urls:
@@ -81,6 +81,8 @@ spec:
                   token: "admin"
                   organization: "home-systems"
                   bucket: "default"
+              # Send directly to grafana
+              # https://grafana.com/tutorials/stream-metrics-from-telegraf-to-grafana/
               - http:
                   url: "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local/api/live/push/telegraf"
                   data_format: "influx"
