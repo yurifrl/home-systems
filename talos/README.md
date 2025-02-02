@@ -1,7 +1,7 @@
 # Things to solve
 
 - [x] Load balancer ips
-- [ ] storage on the control plane and the workers
+- [x] storage on the control plane and the workers
 - [ ] Zigbee dongle
 - [x] make .live work
 - [ ] make .tech work
