@@ -45,6 +45,13 @@ spec:
           statefulset:
             nodeSelector:
               syscd.dev/storage: tp1
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
             storage:
               enabled: true
               size: 1Gi
