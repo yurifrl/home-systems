@@ -90,5 +90,6 @@ spec:
                   custom_components.verisure: debug
               prometheus:
                 namespace: hass
+                requires_auth: false
 
 # Chart: https://github.com/pajikos/home-assistant-helm-chart
