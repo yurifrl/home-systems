@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: troubleshoot-utility
-  namespace: default  # Run in kube-system which is exempted from PSA
+  namespace: kube-system  # Run in kube-system which is exempted from PSA
 spec:
   selector:
     matchLabels:
@@ -27,10 +27,7 @@ spec:
         command: ['sleep', 'infinity']
         workingDir: /storage
         securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop: ["ALL"]
-            add: ["CHOWN", "DAC_OVERRIDE"]
+          privileged: true
         volumeMounts:
         - name: storage
           mountPath: /storage
