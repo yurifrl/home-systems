@@ -38,6 +38,7 @@ spec:
             password: "adminadmin"
             token: "admin"
             user: "admin"
+            retention_policy: "7d"
           persistence:
             enabled: false
           resources:
@@ -59,7 +60,7 @@ spec:
           config:
             inputs:
               - mqtt_consumer:
-                  servers: ["tcp://mosquitto.mosquitto.svc:1883"]
+                  servers: ["tcp://mosquitto.mosquitto.svc.cluster.local:1883"]
                   topics: ["#"]
                   data_format: "value"
                   data_type: "string"
@@ -72,12 +73,15 @@ spec:
                   token: "admin"
                   organization: "home-systems"
                   bucket: "default"
-              # Add Prometheus output
               - prometheus_client:
                   listen: ":8094"
                   metric_version: 2
+                  collectors_exclude: ["gocollector", "process"]
           service:
             enabled: true
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "8094"
             ports:
               - name: http
                 port: 8094

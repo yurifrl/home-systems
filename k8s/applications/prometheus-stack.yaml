@@ -156,12 +156,6 @@ spec:
                     access: proxy
                     jsonData:
                       topic: "#"
-                  - name: Telegraf
-                    type: prometheus
-                    url: http://telegraf.influxdb:8094
-                    access: proxy
-                    isDefault: false
-                  # Add InfluxDB datasource
                   - name: InfluxDB
                     type: influxdb
                     url: http://influxdb-influxdb2.influxdb.svc.cluster.local
