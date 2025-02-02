@@ -40,6 +40,8 @@ spec:
             - name: secret-files
               mountPath: /etc/secrets/
               secretName: blackbox-exporter
+          extraArgs:
+            - --log.level=debug
           resources:
             limits:
               cpu: 50m
