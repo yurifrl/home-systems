@@ -27,12 +27,24 @@ spec:
                 name: blackbox-exporter-prometheus-blackbox-exporter
                 namespace: monitoring
                 port: 9115
-
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: prometheus-blackbox-exporter
       targetRevision: "*"
       helm:
         valuesObject:
+          extraSecretMounts:
+            - name: secret-files
+              mountPath: /etc/secrets/
+              secretName: blackbox-exporter
+          resources:
+            limits:
+              cpu: 50m
+              memory: 128Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          serviceMonitor:
+            enabled: true
           config:
             modules:
               http_2xx:
@@ -64,17 +76,3 @@ spec:
                     fail_if_matches_regexp: []
                   validate_additional_rrs:
                     fail_if_matches_regexp: []
-           
-          extraSecretMounts:
-            - name: secret-files
-              mountPath: /etc/secrets/
-              secretName: blackbox-exporter
-          resources:
-            limits:
-              cpu: 50m
-              memory: 128Mi
-            requests:
-              cpu: 25m
-              memory: 64Mi
-          serviceMonitor:
-            enabled: true
