@@ -26,6 +26,11 @@ spec:
                 name: influxdb-influxdb2
                 namespace: influxdb
                 port: 80
+          # Good ideia
+          # secrets:
+          #   - name: grafana-api-key
+          #     stringData:
+          #       key: "<your-grafana-api-key>"  # Replace with actual API key
 
     - repoURL: https://helm.influxdata.com/
       chart: influxdb2
@@ -73,10 +78,21 @@ spec:
                   token: "admin"
                   organization: "home-systems"
                   bucket: "default"
+              - http:
+                  url: "http://kube-prometheus-stack-grafana.monitoring.svc:3000/api/live/push/telegraf"
+                  data_format: "influx"
+                  # headers:
+                  #   Authorization: "Bearer ${GRAFANA_API_KEY}"
               - prometheus_client:
                   listen: ":8094"
                   metric_version: 2
                   collectors_exclude: ["gocollector", "process"]
+          # env:
+          #   - name: GRAFANA_API_KEY
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: grafana-api-key
+          #         key: key
           service:
             enabled: true
             annotations:
