@@ -11,15 +11,9 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: true
+      selfHeal: false
     syncOptions:
       - CreateNamespace=true
-  ignoreDifferences:
-    - group: apps
-      kind: Deployment
-      name: appdaemon
-      jsonPointers:
-        - /spec/template/spec/hostUsers
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
@@ -32,35 +26,6 @@ spec:
                 name: appdaemon
                 namespace: appdaemon
                 port: 5050
-    - chart: appdaemon
-      repoURL: tccr.io/truecharts
-      targetRevision: "*"
-      helm:
-        valuesObject:
-          image:
-            repository: acockburn/appdaemon
-            tag: latest
-            pullPolicy: Always
-          workload:
-            main:
-              podSpec:
-                containers:
-                  main:
-                    env:
-                      DASH_URL: "http://appdaemon.appdaemon.svc.cluster.local:5050"
-                      LATITUDE: -23.5505
-                      LONGITUDE: -46.6333
-                      ELEVATION: 760
-                      TIMEZONE: America/Sao_Paulo
-                      HA_URL: http://home-assistant.home-assistant.svc.cluster.local:8080
-                      TOKEN:
-                        secretKeyRef:
-                          expandObjectName: false
-                          name: appdaemon-secrets
-                          key: TOKEN
-          persistence:
-            conf:
-              enabled: false
-          podOptions:
-            nodeSelector:
-              kubernetes.io/arch: arm64
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/appdaemon

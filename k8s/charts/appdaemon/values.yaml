@@ -1,0 +1,22 @@
+image:
+  repository: acockburn/appdaemon
+  tag: latest
+  pullPolicy: Always
+
+homeAssistant:
+  url: http://home-assistant.home-assistant.svc.cluster.local:8080
+  token: ""
+
+location:
+  latitude: -23.5505
+  longitude: -46.6333
+  elevation: 760
+  timezone: America/Sao_Paulo
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 10m
+    memory: 50Mi 

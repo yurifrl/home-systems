@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appdaemon
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: appdaemon
+  template:
+    metadata:
+      labels:
+        app: appdaemon
+    spec:
+      containers:
+        - name: appdaemon
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 5050
+              name: http
+          env:
+            - name: DASH_URL
+              value: "http://appdaemon.{{ .Release.Namespace }}.svc.cluster.local:5050"
+            - name: HA_URL
+              value: {{ .Values.homeAssistant.url }}
+            - name: TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: appdaemon-secrets
+                  key: token
+            - name: LATITUDE
+              value: "{{ .Values.location.latitude }}"
+            - name: LONGITUDE
+              value: "{{ .Values.location.longitude }}"
+            - name: ELEVATION
+              value: "{{ .Values.location.elevation }}"
+            - name: TIMEZONE
+              value: {{ .Values.location.timezone }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }} 
