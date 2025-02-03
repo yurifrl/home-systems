@@ -17,4 +17,4 @@ spec:
             severity: notification-daily
           annotations:
             summary: "Sensor is out of range"
-            description: "Sensor {{ $labels.topic }} is out of range"
+            description: "Sensor {{ `{{ $labels.topic }}` }} is out of range"
