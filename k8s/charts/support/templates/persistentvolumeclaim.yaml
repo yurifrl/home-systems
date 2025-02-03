@@ -15,17 +15,3 @@ spec:
   volumeName: {{ .volumeName }}
 ---
 {{- end }}
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: appdaemon-data
-  namespace: appdaemon
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: local-path
-  volumeName: appdaemon-tp1-data
-  resources:
-    requests:
-      storage: 5Gi
