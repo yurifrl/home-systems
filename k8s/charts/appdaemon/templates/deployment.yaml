@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: appdaemon
   namespace: {{ .Release.Namespace }}
 spec:
+  serviceName: appdaemon
   replicas: 1
   selector:
     matchLabels:
@@ -13,9 +14,14 @@ spec:
       labels:
         app: appdaemon
     spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
-        - name: shared-data
-          emptyDir: {}
+        - name: config
+          persistentVolumeClaim:
+            claimName: appdaemon-data
       containers:
         - name: appdaemon
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -24,7 +30,7 @@ spec:
             - containerPort: 5050
               name: http
           volumeMounts:
-            - name: shared-data
+            - name: config
               mountPath: /conf
           livenessProbe:
             httpGet:
@@ -68,8 +74,16 @@ spec:
               value: {{ .Values.location.timezone }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            fsGroup: 1000
+            runAsUser: 1000
+            runAsGroup: 1000
         - name: codeserver
           image: "codercom/code-server:latest"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
           args:
             - --auth
             - none
@@ -85,5 +99,15 @@ spec:
               name: codeserver
               protocol: TCP
           volumeMounts:
-            - name: shared-data
+            - name: config
               mountPath: /conf
+  volumeClaimTemplates:
+    - metadata:
+        name: appdaemon-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: local-path
+        volumeName: {{ .Values.persistence.volumeName }}
+        resources:
+          requests:
+            storage: 5Gi
