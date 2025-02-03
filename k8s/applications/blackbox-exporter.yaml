@@ -69,6 +69,7 @@ spec:
                 prober: http
                 timeout: 5s
                 http:
+                  valid_status_codes: [200]
                   basic_auth:
                     username: syscd
                     password_file: /etc/secrets/http_2xx_slzb_basic_auth
