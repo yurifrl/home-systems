@@ -20,7 +20,7 @@ roleRef:
   name: blackbox-control-plane-probe
   apiGroup: rbac.authorization.k8s.io 
 ---
-# Test: https://blackbox-exporter.syscd.live/probe?target=https://kubernetes.default.svc/api/v1/namespaces/kube-system/pods&module=control_plane_http&debug=true
+# Test: https://blackbox-exporter.syscd.live/probe?target=https://kubernetes.default.svc/api/v1/namespaces/kube-system/pods&module=http_2xx_control_plane&debug=true
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:
@@ -28,7 +28,7 @@ metadata:
   namespace: monitoring
 spec:
   interval: 30s
-  module: control_plane_http # k8s/applications/blackbox-exporter.yaml
+  module: http_2xx_control_plane # k8s/applications/blackbox-exporter.yaml
   prober:
     url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
   targets:

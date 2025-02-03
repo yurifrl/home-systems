@@ -54,9 +54,9 @@ spec:
                 prober: http
                 timeout: 5s
                 http:
-                  fail_if_not_ssl: true
+                  fail_if_not_ssl: false
                   follow_redirects: true
-              control_plane_http:
+              http_2xx_control_plane:
                 prober: http
                 timeout: 5s
                 http:
