@@ -2,7 +2,6 @@ hello_world:
   module: hello
   class: HelloWorld
 
-
 button_lamp_control:
   module: button_lamp_control
   class: ButtonLampControl
@@ -11,3 +10,7 @@ button_lamp_control:
 device_lister:
   module: device_lister
   class: DeviceLister
+
+device_lister_mqtt:
+  module: device_lister_mqtt
+  class: DeviceListerMQTT

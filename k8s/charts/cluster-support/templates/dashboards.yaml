@@ -3,11 +3,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: dashboard-{{ . }}
+  name: {{ .name | trunc 63 }}
   namespace: monitoring
   labels:
     grafana_dashboard: "1"
+  annotations:
+    file: {{ .file }}
 data:
-  {{ . }}.json: |
-    {{- $.Files.Get (printf "dashboards/%s.json" .) | nindent 4 }}
+  {{ .file }}: |
+    {{- $.Files.Get .file | nindent 4 }}
 {{- end }}
