@@ -32,7 +32,15 @@ spec:
                 name: zigbee2mqtt
                 namespace: zigbee2mqtt
                 port: 8080
-
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/mqtt-exporter
+      helm:
+        valuesObject:
+          mqttBroker:
+            address: "mosquitto.mosquitto.svc.cluster.local"
+            port: 1883
+            
     - repoURL: https://charts.zigbee2mqtt.io
       chart: zigbee2mqtt
       # 2.1.0 is broken, here's reference
@@ -75,4 +83,5 @@ spec:
               disable_led: false
              # Set output power to max 20
             advanced:
-              transmit_power: 20              
+              transmit_power: 20
+
