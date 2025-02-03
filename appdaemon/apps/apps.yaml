@@ -1,0 +1,12 @@
+hello_world:
+  module: hello
+  class: HelloWorld
+
+# button_lamp_control:
+#   module: button_lamp_control
+#   class: ButtonLampControl
+#   lamp_entity: light.lampada
+
+# device_lister:
+#   module: device_lister
+#   class: DeviceLister

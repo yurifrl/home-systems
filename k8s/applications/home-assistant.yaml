@@ -93,7 +93,7 @@ spec:
                 requires_auth: false
               influxdb:
                 host: influxdb-influxdb2.influxdb.svc.cluster.local
-                port: 8086
+                port: 80
                 token: admin
                 organization: home-systems
                 bucket: default

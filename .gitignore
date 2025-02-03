@@ -22,3 +22,4 @@ talos/*
 !talos/README.md
 !talos/factory.md
 secrets.*
+__pycache__/

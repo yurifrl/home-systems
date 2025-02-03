@@ -1,0 +1,17 @@
+
+services:
+  appdaemon:
+    image: acockburn/appdaemon:latest
+    environment:
+      - TZ=America/Sao_Paulo
+      - HA_URL=https://ha.syscd.tech
+      - TOKEN=${APPDAEMON_HOME_ASSISTANT_TOKEN}  # Get token from environment variable
+      - DASH_URL=http://0.0.0.0:5050
+    volumes:
+      - config:/conf  # Mount local config directory
+      - ./apps:/conf/apps  # Mount local apps directory
+    ports:
+      - "5050:5050"  # Web UI port
+
+volumes:
+  config:
