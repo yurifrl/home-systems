@@ -92,8 +92,11 @@ spec:
                 namespace: hass
                 requires_auth: false
               influxdb:
+                api_version: 2
                 host: influxdb-influxdb2.influxdb.svc.cluster.local
                 port: 80
+                ssl: false
+                verify_ssl: false
                 token: admin
                 organization: home-systems
                 bucket: default
