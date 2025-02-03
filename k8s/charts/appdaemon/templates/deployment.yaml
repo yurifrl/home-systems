@@ -18,10 +18,10 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: config
-          persistentVolumeClaim:
-            claimName: appdaemon-data
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsGroup: 1000
       containers:
         - name: appdaemon
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -30,7 +30,7 @@ spec:
             - containerPort: 5050
               name: http
           volumeMounts:
-            - name: config
+            - name: data
               mountPath: /conf
           livenessProbe:
             httpGet:
@@ -99,11 +99,11 @@ spec:
               name: codeserver
               protocol: TCP
           volumeMounts:
-            - name: config
+            - name: data
               mountPath: /conf
   volumeClaimTemplates:
     - metadata:
-        name: appdaemon-data
+        name: data
       spec:
         accessModes: [ "ReadWriteOnce" ]
         storageClassName: local-path
