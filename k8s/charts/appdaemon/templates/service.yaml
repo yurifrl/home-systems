@@ -9,5 +9,9 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    - port: 12321
+      targetPort: codeserver
+      protocol: TCP
+      name: codeserver
   selector:
     app: appdaemon 
