@@ -97,8 +97,8 @@ spec:
                 port: 80
                 ssl: false
                 verify_ssl: false
-                token: admin
-                organization: home-systems
-                bucket: default
+                token: "admin"
+                organization: "home-systems"
+                bucket: "default"
 
 # Chart: https://github.com/pajikos/home-assistant-helm-chart
