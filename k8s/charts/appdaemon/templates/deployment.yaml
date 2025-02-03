@@ -29,7 +29,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: appdaemon-secrets
-                  key: token
+                  key: TOKEN
             - name: LATITUDE
               value: "{{ .Values.location.latitude }}"
             - name: LONGITUDE

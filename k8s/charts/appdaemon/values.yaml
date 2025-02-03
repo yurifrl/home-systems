@@ -5,7 +5,7 @@ image:
 
 homeAssistant:
   url: http://home-assistant.home-assistant.svc.cluster.local:8080
-  token: ""
+  token: "" # Secret
 
 location:
   latitude: -23.5505
