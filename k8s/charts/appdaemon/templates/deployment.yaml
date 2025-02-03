@@ -29,9 +29,6 @@ spec:
           ports:
             - containerPort: 5050
               name: http
-          volumeMounts:
-            - name: data
-              mountPath: /conf
           livenessProbe:
             httpGet:
               path: /
@@ -78,6 +75,9 @@ spec:
             fsGroup: 1000
             runAsUser: 1000
             runAsGroup: 1000
+          volumeMounts:
+            - name: data
+              mountPath: /conf
         - name: codeserver
           image: "codercom/code-server:latest"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -102,12 +102,12 @@ spec:
             - name: data
               mountPath: /conf
   volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
+    - spec:
         accessModes: [ "ReadWriteOnce" ]
         storageClassName: local-path
         volumeName: {{ .Values.persistence.volumeName }}
         resources:
           requests:
             storage: 5Gi
+      metadata:
+        name: data
