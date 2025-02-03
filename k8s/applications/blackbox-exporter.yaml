@@ -65,6 +65,15 @@ spec:
                   tls_config:
                     ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                   bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              http_2xx_slzb_basic_auth:
+                prober: http
+                timeout: 5s
+                http:
+                  basic_auth:
+                    username: syscd
+                    password_file: /etc/secrets/http_2xx_slzb_basic_auth
+                  fail_if_not_ssl: false
+                  follow_redirects: true
               resolve_dns_syscd: # https://blackbox-exporter.syscd.live/probe?module=resolve_dns_syscd&target=bind9.bind9.svc.cluster.local&debug=true
                 prober: dns
                 timeout: 5s
