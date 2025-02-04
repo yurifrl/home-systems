@@ -16,7 +16,7 @@ spec:
       - CreateNamespace=true
   source:
     chart: vertical-pod-autoscaler
-    repoURL: oci://ghcr.io/stevehipwell/helm-charts
+    repoURL: ghcr.io/stevehipwell/helm-charts
     targetRevision: "*"
     helm:
       valuesObject:
