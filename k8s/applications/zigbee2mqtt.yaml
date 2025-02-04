@@ -66,6 +66,7 @@ spec:
               storageClassName: local-path
               existingVolume: zigbee2mqtt-tp1-data
           service:
+            type: ClusterIP
             annotations:
               teleport.dev/name: zigbee2mqtt
           zigbee2mqtt:

@@ -1,4 +1,0 @@
-apiVersion: v2
-name: external-mdns
-description: A Helm chart for external-mdns
-version: 0.1.0 
