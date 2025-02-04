@@ -1,8 +1,6 @@
 dashboards:
   - name: argo
     file: "dashboards/v1/argo.json"
-  - name: kubernetes
-    file: "dashboards/v1/kubernetes.json"
   - name: kubernetes-apacity-planning-limits # https://grafana.com/grafana/dashboards/13125-kubernetes-capacity-planning-limits/?
     file: "dashboards/v1/kubernetes-apacity-planning-limits.json"
   - name: kubernetes-pod-resource-overview # https://grafana.com/grafana/dashboards/15207-kubernetes-pod-resource-overview/?
