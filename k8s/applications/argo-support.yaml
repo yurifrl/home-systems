@@ -26,3 +26,7 @@ spec:
                 name: argocd-server
                 namespace: argocd
                 port: 80
+
+    - chart: argocd-image-updater
+      repoURL: https://argoproj.github.io/argo-helm
+      targetRevision: "*"                
