@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kubernetes-mixin
+  name: monitoring-mixins
   namespace: argocd
 spec:
   project: default
@@ -25,4 +25,12 @@ spec:
             alerts:
               enabled: false
             rules:
-              enabled: false              
+              enabled: false
+
+    - chart: kube-state-metrics-mixin
+      repoURL: https://charts.portefaix.xyz # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          monitor:
+            enabled: false
