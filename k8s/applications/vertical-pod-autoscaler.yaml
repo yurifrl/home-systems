@@ -26,7 +26,7 @@ spec:
         - /spec/conversion/webhook/clientConfig/caBundle
   source:
     chart: vertical-pod-autoscaler
-    repoURL: ghcr.io/stevehipwell/helm-charts
+    repoURL: ghcr.io/stevehipwell/helm-charts # 
     targetRevision: "*"
     helm:
       valuesObject:
