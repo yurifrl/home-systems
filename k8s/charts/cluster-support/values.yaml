@@ -15,6 +15,8 @@ dashboards:
     file: dashboards/v1/workload-resource-recommendations.json
   - name: node-exporter # https://github.com/rfmoz/grafana-dashboards/blob/master/prometheus/node-exporter-full.json
     file: dashboards/v1/node-exporter.json
+  - name: node-exporter-full
+    file: dashboards/v1/node-exporter-full.json
   - name: alertmanager
     file: dashboards/v2/alertmanager.json
   - name: argo-cd-operational-overview-kask
