@@ -711,7 +711,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Kubernetes Pod Resource Overview",
+  "title": "My - Kubernetes Pod Resource Overview",
   "uid": "WomrHeVnk",
   "version": 24,
   "description": "Kubernetes 集群节点Pod资源使用分配统计"

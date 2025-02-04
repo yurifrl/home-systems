@@ -1046,7 +1046,7 @@
     ]
   },
   "timezone": "UTC",
-  "title": "Workload Resource Recommendations Based on Usage",
+  "title": "My - Workload Resource Recommendations Based on Usage",
   "uid": "g4IZMfd7k",
   "version": 21,
   "description": "Recommended Requests & Limits for Kubernetes Workloads based on historical usage"
