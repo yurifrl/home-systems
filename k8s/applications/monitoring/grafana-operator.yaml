@@ -16,7 +16,6 @@ spec:
       - CreateNamespace=true 
   source:
     chart: grafana-operator
-    repoURL: oci://ghcr.io/grafana/helm-charts/grafana-operator
-    targetRevision: v5.16.0
-    helm:
-      releaseName: grafana-operator      
+    repoURL: ghcr.io/grafana/helm-charts/grafana-operator
+    targetRevision: "*"
+    helm: {}
