@@ -11,5 +11,5 @@ metadata:
     file: {{ .file }}
 data:
   {{ .file }}: |
-    {{- $.Files.Get .file | nindent 4 }}
+    {{- $.Files.Get (.file | quote) | nindent 4 }}
 {{- end }}
