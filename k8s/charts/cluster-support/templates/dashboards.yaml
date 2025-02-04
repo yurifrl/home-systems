@@ -7,8 +7,6 @@ metadata:
   namespace: monitoring
   labels:
     grafana_dashboard: "1"
-  annotations:
-    file: {{ .file }}
 data:
   {{ .file }}: |
     {{- $.Files.Get (.file | quote) | nindent 4 }}
