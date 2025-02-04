@@ -8,6 +8,6 @@ metadata:
   labels:
     grafana_dashboard: "1"
 data:
-  {{ .file }}: |
+  dashboard.json: |
     {{- $.Files.Get (.file | quote) | nindent 4 }}
 {{- end }}
