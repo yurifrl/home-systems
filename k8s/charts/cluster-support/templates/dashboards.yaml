@@ -9,6 +9,6 @@ metadata:
     grafana_dashboard: "1"
     grafana_folder: "syscd"
 data:
-  dashboard.json: |
+  {{ base .file }}: |
     {{- $.Files.Get .file | nindent 4 }}
 {{- end }}
