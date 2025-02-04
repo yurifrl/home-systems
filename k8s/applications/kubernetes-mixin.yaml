@@ -14,7 +14,15 @@ spec:
       selfHeal: false
     syncOptions:
       - CreateNamespace=true
-  source:
-    chart: kubernetes-mixin
-    repoURL: https://charts.portefaix.xyz
-    targetRevision: "*"
+  # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
+  sources:
+    - chart: kubernetes-mixin
+      repoURL: https://charts.portefaix.xyz # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          prometheusRule:
+            alerts:
+              enabled: false
+            rules:
+              enabled: false              
