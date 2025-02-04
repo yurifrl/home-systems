@@ -14,6 +14,16 @@ spec:
       selfHeal: false
     syncOptions:
       - CreateNamespace=true
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: vertical-pod-autoscaler-admission-controller-cert
+      jsonPointers:
+        - /data
+    - group: admissionregistration.k8s.io/v1
+      kind: MutatingWebhookConfiguration
+      jsonPointers:
+        - /spec/conversion/webhook/clientConfig/caBundle
   source:
     chart: vertical-pod-autoscaler
     repoURL: ghcr.io/stevehipwell/helm-charts
