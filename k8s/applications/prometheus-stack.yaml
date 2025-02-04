@@ -16,6 +16,9 @@ spec:
       - CreateNamespace=true 
       - ServerSideApply=true
   sources:
+    - repoURL: https://github.com/dotdc/grafana-dashboards-kubernetes
+      path: .
+      targetRevision: HEAD
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: kube-prometheus-stack
       targetRevision: "*"
