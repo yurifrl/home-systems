@@ -24,7 +24,8 @@
       {
         "tags": [
           "ci/cd",
-          "argo-cd"
+          "argo-cd",
+          "syscd"
         ],
         "targetBlank": true,
         "title": "ArgoCD Dashboards",

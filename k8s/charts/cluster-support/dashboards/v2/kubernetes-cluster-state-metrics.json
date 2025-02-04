@@ -1294,7 +1294,8 @@
     "refresh": "5m",
     "schemaVersion": 40,
     "tags": [
-      "kubernetes"
+      "kubernetes",
+      "syscd"
     ],
     "templating": {
       "list": []

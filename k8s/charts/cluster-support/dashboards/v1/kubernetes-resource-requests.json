@@ -441,7 +441,8 @@
   "schemaVersion": 16,
   "style": "dark",
   "tags": [
-    "kubernetes"
+    "kubernetes",
+    "syscd"
   ],
   "templating": {
     "list": []

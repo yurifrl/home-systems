@@ -4130,7 +4130,9 @@
   ],
   "refresh": "",
   "schemaVersion": 39,
-  "tags": [],
+  "tags": [
+    "syscd"
+  ],
   "templating": {
     "list": [
       {

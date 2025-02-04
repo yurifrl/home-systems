@@ -1159,6 +1159,7 @@
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
+    "syscd",
     "kubernetes",
     "k8s"
   ],

@@ -23764,6 +23764,7 @@
     "schemaVersion": 38,
     "style": "dark",
     "tags": [
+      "syscd",
       "linux"
     ],
     "templating": {

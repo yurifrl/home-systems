@@ -639,7 +639,9 @@
     "preload": false,
     "refresh": "",
     "schemaVersion": 40,
-    "tags": [],
+    "tags": [
+      "syscd"
+    ],
     "templating": {
       "list": [
         {

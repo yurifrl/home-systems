@@ -960,7 +960,9 @@
   "schemaVersion": 40,
   "tags": [
     "blackbox",
-    "prometheus"
+    "prometheus",
+    "syscd",
+    "syscd"
   ],
   "templating": {
     "list": [
