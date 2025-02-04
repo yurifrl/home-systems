@@ -27,12 +27,6 @@ dashboards:
     file: dashboards/v2/kubernetes-cluster-state-metrics.json
   - name: kubernetes-resources-overview
     file: dashboards/v2/kubernetes-resources-overview.json
-  - name: kubernetes-view-global
-    file: dashboards/v2/kubernetes-view-global.json
-  - name: kubernetes-view-namespace
-    file: dashboards/v2/kubernetes-view-namespace.json
-  - name: kubernetes-view-nodes
-    file: dashboards/v2/kubernetes-view-nodes.json
   - name: prometheus-blackbox-exporter
     file: dashboards/v2/prometheus-blackbox-exporter.json
   - name: prometheus-stats
