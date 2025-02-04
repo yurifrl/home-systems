@@ -1301,7 +1301,7 @@
     },
     "timepicker": {},
     "timezone": "utc",
-    "title": "My - ArgoCD / Operational / Overview",
+    "title": "ArgoCD / Operational / Overview",
     "uid": "argo-cd-operational-overview-kask",
     "version": 1,
     "weekStart": ""

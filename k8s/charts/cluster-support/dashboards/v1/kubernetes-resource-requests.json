@@ -477,7 +477,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "My - Kubernetes Resource Requests",
+  "title": "Kubernetes Resource Requests",
   "uid": null,
   "version": 1
 }

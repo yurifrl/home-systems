@@ -2655,7 +2655,7 @@
     },
     "timepicker": {},
     "timezone": "browser",
-    "title": "My - Kubernetes Cluster (Prometheus)",
+    "title": "Kubernetes Cluster (Prometheus)",
     "uid": "4XuMd2Iiz",
     "version": 1,
     "weekStart": ""

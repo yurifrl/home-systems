@@ -866,7 +866,7 @@
     },
     "timepicker": {},
     "timezone": "browser",
-    "title": "My - Prometheus Stats",
+    "title": "Prometheus Stats",
     "uid": "debzr751u4agwe",
     "version": 1,
     "weekStart": ""
