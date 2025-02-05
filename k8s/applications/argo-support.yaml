@@ -11,7 +11,7 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: true
+      selfHeal: false
     syncOptions:
       - CreateNamespace=true
   sources:
@@ -38,3 +38,8 @@ spec:
               grpcWeb: false
               insecure: true
               plaintext: true
+          registries:
+            - name: GitHub Container Registry
+              prefix: ghcr.io
+              api_url: https://ghcr.io
+              credentials: pullsecret:argocd/ghcr-oci-creds
