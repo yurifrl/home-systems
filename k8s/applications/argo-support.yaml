@@ -27,19 +27,19 @@ spec:
                 namespace: argocd
                 port: 80
 
-    # - chart: argocd-image-updater
-    #   repoURL: https://argoproj.github.io/argo-helm
-    #   targetRevision: "*"
-    #   helm:
-    #     valuesObject:
-    #       config:
-    #         argocd:
-    #           serverAddress: "http://argocd.argocd-server.svc.cluster.local"
-    #           grpcWeb: false
-    #           insecure: true
-    #           plaintext: true
-    #       registries:
-    #         - name: GitHub Container Registry
-    #           prefix: ghcr.io
-    #           api_url: https://ghcr.io
-    #           credentials: pullsecret:argocd/ghcr-oci-creds
+    - chart: argocd-image-updater
+      repoURL: https://argoproj.github.io/argo-helm
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          config:
+            argocd:
+              serverAddress: "http://argocd.argocd-server.svc.cluster.local"
+              grpcWeb: false
+              insecure: true
+              plaintext: true
+          registries:
+            - name: GitHub Container Registry
+              prefix: ghcr.io
+              api_url: https://ghcr.io
+              credentials: pullsecret:argocd/ghcr-oci-creds
