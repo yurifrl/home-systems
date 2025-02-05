@@ -29,4 +29,12 @@ spec:
 
     - chart: argocd-image-updater
       repoURL: https://argoproj.github.io/argo-helm
-      targetRevision: "*"                
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          config:
+            argocd:
+              serverAddress: "http://argocd.argocd-server.svc.cluster.local"
+              grpcWeb: false
+              insecure: true
+              plaintext: true
