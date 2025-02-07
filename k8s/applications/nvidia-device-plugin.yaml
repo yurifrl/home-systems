@@ -17,16 +17,20 @@ spec:
   sources:
     - chart: nvidia-device-plugin
       repoURL: https://nvidia.github.io/k8s-device-plugin
-      targetRevision: "*"
+      targetRevision: "0.13.0"
       helm:
         valuesObject:
           runtimeClassName: nvidia
-          version: v1
-          flags:
-            migStrategy: "none"
-            failOnInitError: true
-            nvidiaDriverRoot: "/"
-            plugin:
-              passDeviceSpecs: false
-              deviceListStrategy: envvar
-              deviceIDStrategy: uuid
+          # config:
+          #   map:
+          #     config: |
+          #       version: v1
+          #       flags:
+          #         migStrategy: "none"
+          #         failOnInitError: true
+          #         nvidiaDriverRoot: "/"
+          #         plugin:
+          #           passDeviceSpecs: false
+          #           deviceListStrategy: envvar
+          #           deviceIDStrategy: uuid
+         
