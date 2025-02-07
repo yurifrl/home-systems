@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: vscode
+  name: code-server
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: vscode
+    namespace: code-server
   syncPolicy:
     automated:
       prune: true
-      selfHeal: false
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
     managedNamespaceMetadata:
@@ -24,21 +24,41 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: vscode
+            - name: code-server
               service:
                 name: code-server
-                namespace: vscode
+                namespace: code-server
                 port: 8080
 
-    - repoURL: https://github.com/coder/code-server
+    - repoURL: https://github.com/coder/code-server.git
       targetRevision: HEAD
       path: ci/helm-chart
       helm:
         valuesObject:
           image:
             repository: codercom/code-server
-            tag: latest
+            tag: "latest"
+            pullPolicy: Always
+          
           nodeSelector:
             syscd.dev/gpu: "true"
+
+          securityContext:
+            enabled: true
+            fsGroup: 1000
+            runAsUser: 1000
+
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "all"
+
+          persistence:
+            enabled: true
+            size: 10Gi
+            accessMode: ReadWriteOnce
+
           service:
-            port: 8080 
+            type: ClusterIP
+            port: 8080
+            annotations:
+              teleport.dev/name: code-server
