@@ -21,12 +21,6 @@ spec:
       helm:
         valuesObject:
           runtimeClassName: nvidia
-
-    - chart: nvdp
-      repoURL: https://nvidia.github.io/k8s-device-plugin
-      targetRevision: "*"
-      helm:
-        valuesObject:
           version: v1
           flags:
             migStrategy: "none"
