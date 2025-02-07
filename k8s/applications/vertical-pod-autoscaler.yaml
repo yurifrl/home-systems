@@ -22,8 +22,9 @@ spec:
         - /data
     - group: admissionregistration.k8s.io/v1
       kind: MutatingWebhookConfiguration
+      name: vertical-pod-autoscaler-admission-controller
       jsonPointers:
-        - /spec/conversion/webhook/clientConfig/caBundle
+        - /webhooks/0/clientConfig/caBundle
   source:
     chart: vertical-pod-autoscaler
     repoURL: ghcr.io/stevehipwell/helm-charts # 
