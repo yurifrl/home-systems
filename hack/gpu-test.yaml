@@ -4,7 +4,6 @@ metadata:
   name: gpu-pod
 spec:
   restartPolicy: Never
-  runtimeClassName: nvidia
   containers:
     - name: cuda-container
       image: nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda12.5.0

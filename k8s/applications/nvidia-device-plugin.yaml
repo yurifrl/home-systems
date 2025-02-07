@@ -11,20 +11,28 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: true
+      selfHeal: false
     syncOptions:
       - CreateNamespace=true
-  source:
-    chart: nvidia-device-plugin
-    repoURL: https://nvidia.github.io/k8s-device-plugin
-    targetRevision: "*"
-    helm:
-      valuesObject:
-        runtimeClassName: nvidia
-        resources:
-          limits:
-            cpu: 100m
-            memory: 128Mi
-          requests:
-            cpu: 50m
-            memory: 64Mi 
+  sources:
+    - chart: nvidia-device-plugin
+      repoURL: https://nvidia.github.io/k8s-device-plugin
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          runtimeClassName: nvidia
+
+    - chart: nvdp
+      repoURL: https://nvidia.github.io/k8s-device-plugin
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          version: v1
+          flags:
+            migStrategy: "none"
+            failOnInitError: true
+            nvidiaDriverRoot: "/"
+            plugin:
+              passDeviceSpecs: false
+              deviceListStrategy: envvar
+              deviceIDStrategy: uuid
