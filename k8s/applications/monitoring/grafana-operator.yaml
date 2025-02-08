@@ -16,5 +16,5 @@ spec:
       - CreateNamespace=true 
   source:
     chart: grafana-operator
-    repoURL: https://charts.bitnami.com/bitnami
+    repoURL: registry-1.docker.io/bitnamicharts
     targetRevision: "*"
