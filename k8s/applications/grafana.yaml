@@ -34,19 +34,19 @@ spec:
       - chart: grafana-operator
         repoURL: registry-1.docker.io/bitnamicharts
         targetRevision: "*"
-        # helm:
-        #   valuesObject: {}
-            # grafana:
-            #   config:
-            #     analytics:
-            #       check_for_updates: "false"
-            #       reporting_enabled: "false"
-            #     database:
-            #       wal: "true"
-            #     log:
-            #       level: warn
-            #       mode: console
-            #     security:
-            #       disable_gravatar: "false"
-            #     server:
-            #       root_url: http://localhost:3000
+        helm:
+          valuesObject:
+            grafana:
+              config:
+                analytics:
+                  check_for_updates: "false"
+                  reporting_enabled: "false"
+                database:
+                  wal: "true"
+                log:
+                  level: warn
+                  mode: console
+                security:
+                  disable_gravatar: "false"
+                server:
+                  root_url: http://localhost:3000
