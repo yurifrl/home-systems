@@ -38,15 +38,17 @@ spec:
           valuesObject:
             grafana:
               config:
+                disable_login_form: "true"
+                security:
+                  admin_user: admin
+                  admin_password: admin
                 analytics:
-                  check_for_updates: "false"
+                  check_for_updates: "true"
                   reporting_enabled: "false"
                 database:
                   wal: "true"
                 log:
                   level: warn
                   mode: console
-                security:
-                  disable_gravatar: "false"
                 server:
-                  root_url: http://localhost:3000
+                  root_url: http://grafana-grafana-operator-grafana-service.grafana.svc.cluster.local:3000
