@@ -45,6 +45,8 @@ spec:
         targetRevision: "*"
         helm:
           valuesObject:
+            grafanaDashboard:
+              enabled: true
             monitor:
               enabled: false
       - chart: kube-state-metrics # https://github.com/kubernetes/kube-state-metrics
