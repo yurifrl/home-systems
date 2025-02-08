@@ -36,7 +36,7 @@ data:
     providers:
       - name: 'configmap-dashboard-provider'
         orgId: 1
-        folder: ''
+        folder: 'imported'
         folderUid: ''
         type: file
         disableDeletion: false
