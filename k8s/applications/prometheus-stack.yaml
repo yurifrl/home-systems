@@ -124,8 +124,8 @@ spec:
                   memory: 1Gi
           grafana:
             enabled: false
-            # forceDeployDashboards: true
-            # defaultDashboardsEnabled: true
+            forceDeployDashboards: true
+            defaultDashboardsEnabled: true
             # admin:
             #   existingSecret: "grafana-credentials"
             #   userKey: userKey
