@@ -22,7 +22,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 subjects:
   - kind: ServiceAccount
-    name: grafana-sa
+    name: grafana-operator-grafana-sa
     namespace: {{ .Release.Namespace }}
 ---
 # Provisioning config
