@@ -6,12 +6,7 @@ metadata:
   {{- $filename := base $path | trimSuffix ".json" }}
   {{- $normalized := $filename | lower | nospace | replace "_" "-" }}
   name: {{ $normalized | trunc 63 }}
-  namespace: monitoring
-  labels:
-    grafana_dashboard: "1"
-    grafana_folder: "syscd"
 spec:
-  resyncPeriod: 30s
   instanceSelector:
     matchLabels:
       dashboards: "grafana"
