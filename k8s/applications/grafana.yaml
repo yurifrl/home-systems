@@ -66,8 +66,10 @@ spec:
               labels:
                 dashboards: "grafana"
               config:
-                auth.anonymous:
-                  enabled: true
+                # auth:
+                #   disable_login_form: "false"
+                #   anonymous:
+                #     enabled: "true"
                 security:
                   admin_user: admin
                   admin_password: admin
