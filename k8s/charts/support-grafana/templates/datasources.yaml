@@ -29,9 +29,9 @@ spec:
     name: MQTT
     type: grafana-mqtt-datasource
     access: proxy
-    url: tcp://mosquitto.mosquitto:1883
+    url: tcp://mosquitto.mosquitto.svc.cluster.local:1883
     jsonData:
-      topic: "#"
+      uri: tcp://mosquitto.mosquitto.svc.cluster.local:1883
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
