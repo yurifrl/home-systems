@@ -8,9 +8,6 @@ spec:
     matchLabels:
       dashboards: "grafana"
   resyncPeriod: 30s
-  instanceSelector:
-    matchLabels:
-      dashboards: "grafana"
   json: >
     {
       "title": "Simple Dashboard",
@@ -26,9 +23,20 @@ spec:
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
-  name: grafanadashboard-from-url
+  name: url-dashboard
 spec:
   instanceSelector:
     matchLabels:
       dashboards: "grafana"
   url: "https://raw.githubusercontent.com/grafana-operator/grafana-operator/master/examples/dashboard_from_url/dashboard.json"
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: node-exporter-latest
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  grafanaCom:
+    id: 1860
