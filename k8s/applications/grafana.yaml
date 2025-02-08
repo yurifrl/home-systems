@@ -24,7 +24,7 @@ spec:
             virtualServices:
               - name: grafana
                 service:
-                  name: grafana-grafana-operator-grafana-service
+                  name: grafana-operator-grafana-service
                   namespace: grafana
                   port: 3000
       - repoURL: https://github.com/yurifrl/home-systems.git
@@ -54,4 +54,4 @@ spec:
                   level: warn
                   mode: console
                 server:
-                  root_url: http://grafana-grafana-operator-grafana-service.grafana.svc.cluster.local:3000
+                  root_url: http://grafana-operator-grafana-service.grafana.svc.cluster.local:3000
