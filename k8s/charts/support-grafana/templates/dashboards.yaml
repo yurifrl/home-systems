@@ -1,4 +1,4 @@
-{{- if .Vaues.jsonDashboardsEnabled  -}}
+{{- if .Values.jsonDashboardsEnabled  -}}
 {{- range $path, $_ := .Files.Glob "dashboards/**/*.json" }}
 ---
 apiVersion: grafana.integreatly.org/v1beta1
