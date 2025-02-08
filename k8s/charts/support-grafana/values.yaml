@@ -1,1 +1,4 @@
 jsonDashboardsEnabled: false
+grafanaComDashboards:
+  - id: 1860
+    name: node-exporter-latest
