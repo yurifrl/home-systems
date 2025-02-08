@@ -7,7 +7,7 @@ spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: grafana
+    namespace: monitoring
   syncPolicy:
     automated:
       prune: true
@@ -25,7 +25,7 @@ spec:
               - name: grafana
                 service:
                   name: grafana-operator-grafana-service
-                  namespace: grafana
+                  namespace: monitoring
                   port: 3000
       - path: k8s/charts/support-grafana
         repoURL: https://github.com/yurifrl/home-systems.git
@@ -78,4 +78,4 @@ spec:
                   level: warn
                   mode: console
                 server:
-                  root_url: http://grafana-operator-grafana-service.grafana.svc.cluster.local:3000
+                  root_url: http://grafana-operator-grafana-service.monitoring.svc.cluster.local:3000
