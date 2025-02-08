@@ -14,6 +14,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true 
+      - ServerSideApply=true
   source:
     chart: grafana-operator
     repoURL: registry-1.docker.io/bitnamicharts
