@@ -13,25 +13,25 @@ spec:
     url: http://loki.monitoring:3100
     jsonData:
       maxLines: 1000
----
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDatasource
-metadata:
-  name: mqtt
-spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: "grafana"
-  # plugins:
-  #   - name: grafana-mqtt-datasource
-  #     version: 1.1.0-beta.2
-  datasource:
-    name: MQTT
-    type: grafana-mqtt-datasource
-    access: proxy
-    url: tcp://mosquitto.mosquitto.svc.cluster.local:1883
-    jsonData:
-      uri: tcp://mosquitto.mosquitto.svc.cluster.local:1883
+# ---
+# apiVersion: grafana.integreatly.org/v1beta1
+# kind: GrafanaDatasource
+# metadata:
+#   name: mqtt
+# spec:
+#   instanceSelector:
+#     matchLabels:
+#       dashboards: "grafana"
+#   plugins:
+#     - name: grafana-mqtt-datasource
+#       version: 1.1.0-beta.2
+#   datasource:
+#     name: MQTT
+#     type: grafana-mqtt-datasource
+#     access: proxy
+#     url: tcp://mosquitto.mosquitto.svc.cluster.local:1883
+#     jsonData:
+#       uri: tcp://mosquitto.mosquitto.svc.cluster.local:1883
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
