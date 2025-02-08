@@ -16,9 +16,9 @@ spec:
       - CreateNamespace=true 
       - ServerSideApply=true
   sources:
-      - repoURL: https://github.com/yurifrl/home-systems.git
+      - path: k8s/charts/support
+        repoURL: https://github.com/yurifrl/home-systems.git
         targetRevision: HEAD
-        path: k8s/charts/support
         helm:
           valuesObject:
             virtualServices:
@@ -27,11 +27,11 @@ spec:
                   name: grafana-operator-grafana-service
                   namespace: grafana
                   port: 3000
-      - repoURL: https://github.com/yurifrl/home-systems.git
+      - path: k8s/charts/support-grafana
+        repoURL: https://github.com/yurifrl/home-systems.git
         targetRevision: HEAD
-        path: k8s/charts/support-grafana
-      - chart: kubernetes-mixin
-        repoURL: https://charts.portefaix.xyz # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
+      - chart: kubernetes-mixin # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
+        repoURL: https://charts.portefaix.xyz
         targetRevision: "*"
         helm:
           valuesObject:
@@ -40,14 +40,14 @@ spec:
                 enabled: false
               rules:
                 enabled: false
-      - chart: kube-state-metrics-mixin
-        repoURL: https://charts.portefaix.xyz # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
+      - chart: kube-state-metrics-mixin # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
+        repoURL: https://charts.portefaix.xyz
         targetRevision: "*"
         helm:
           valuesObject:
             monitor:
               enabled: false
-      - chart: kube-state-metrics
+      - chart: kube-state-metrics # https://github.com/kubernetes/kube-state-metrics
         repoURL: https://prometheus-community.github.io/helm-charts
         targetRevision: "*"      
       - repoURL: https://github.com/dotdc/grafana-dashboards-kubernetes
