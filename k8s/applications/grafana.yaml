@@ -7,7 +7,7 @@ spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: monitoring
+    namespace: grafana
   syncPolicy:
     automated:
       prune: true
@@ -25,7 +25,7 @@ spec:
               - name: grafana
                 service:
                   name: grafana-operator-grafana-service
-                  namespace: monitoring
+                  namespace: grafana
                   port: 3000
       - repoURL: https://github.com/yurifrl/home-systems.git
         targetRevision: HEAD
