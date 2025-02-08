@@ -1,0 +1,37 @@
+# {{- range $path, $_ := .Files.Glob "dashboards/**/*.json" }}
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   {{- $filename := base $path | trimSuffix ".json" }}
+#   {{- $normalized := $filename | lower | nospace | replace "_" "-" }}
+#   name: {{ $normalized | trunc 63 }}
+#   namespace: monitoring
+#   labels:
+#     grafana_dashboard: "1"
+#     grafana_folder: "syscd"
+# data:
+#   {{ base $path }}: |
+#     {{- $.Files.Get $path | nindent 4 }}
+# {{- end }}
+# # ---
+# # apiVersion: grafana.integreatly.org/v1beta1
+# # kind: GrafanaDashboard
+# # metadata:
+# #   name: sample-dashboard
+# # spec:
+# #   resyncPeriod: 30s
+# #   instanceSelector:
+# #     matchLabels:
+# #       dashboards: "grafana"
+# #   json: >
+# #     {
+# #       "title": "Simple Dashboard",
+# #       "timezone": "browser",
+# #       "refresh": "5s",
+# #       "panels": [],
+# #       "time": {
+# #         "from": "now-6h",
+# #         "to": "now"
+# #       }
+# #     }

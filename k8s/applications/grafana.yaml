@@ -34,3 +34,12 @@ spec:
       - chart: grafana-operator
         repoURL: registry-1.docker.io/bitnamicharts
         targetRevision: "*"
+        helm:
+          valuesObject:
+            grafana:
+              config:
+              auth:
+                disable_login_form: "true"
+                security:
+                  admin_user: admin
+                  admin_password: admin
