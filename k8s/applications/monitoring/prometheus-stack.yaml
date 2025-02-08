@@ -126,62 +126,62 @@ spec:
                   cpu: 500m
                   memory: 1Gi
           grafana:
-            enabled: true
-            forceDeployDashboards: true
-            defaultDashboardsEnabled: true
-            admin:
-              existingSecret: "grafana-credentials"
-              userKey: userKey
-              passwordKey: passwordKey
-            grafana.ini:
-              auth.anonymous:
-                enabled: true
-                org_role: Admin
-              auth:
-                disable_login_form: true
-                disable_signout_menu: true
-            plugins:
-              - grafana-mqtt-datasource
-            service:
-              annotations:
-                teleport.dev/name: grafana
-            resources:
-              limits:
-                cpu: 200m
-                memory: 256Mi
-              requests:
-                cpu: 100m
-                memory: 128Mi
-            sidecar:
-              dashboards:
-                enabled: true
-            datasources:
-              datasources.yaml:
-                apiVersion: 1
-                datasources:
-                  - name: Loki
-                    type: loki
-                    url: http://loki.monitoring:3100
-                    access: proxy
-                    jsonData:
-                      maxLines: 1000
-                  - name: MQTT
-                    type: mqtt
-                    url: tcp://mosquitto.mosquitto:1883
-                    access: proxy
-                    jsonData:
-                      topic: "#"
-                  - name: InfluxDB
-                    type: influxdb
-                    url: http://influxdb-influxdb2.influxdb.svc.cluster.local
-                    access: proxy
-                    secureJsonData:
-                      token: admin
-                    jsonData:
-                      version: Flux
-                      organization: home-systems
-                      defaultBucket: default
-                      tlsSkipVerify: true
+            enabled: false
+            # forceDeployDashboards: true
+            # defaultDashboardsEnabled: true
+            # admin:
+            #   existingSecret: "grafana-credentials"
+            #   userKey: userKey
+            #   passwordKey: passwordKey
+            # grafana.ini:
+            #   auth.anonymous:
+            #     enabled: true
+            #     org_role: Admin
+            #   auth:
+            #     disable_login_form: true
+            #     disable_signout_menu: true
+            # plugins:
+            #   - grafana-mqtt-datasource
+            # service:
+            #   annotations:
+            #     teleport.dev/name: grafana
+            # resources:
+            #   limits:
+            #     cpu: 200m
+            #     memory: 256Mi
+            #   requests:
+            #     cpu: 100m
+            #     memory: 128Mi
+            # sidecar:
+            #   dashboards:
+            #     enabled: true
+            # datasources:
+            #   datasources.yaml:
+            #     apiVersion: 1
+            #     datasources:
+            #       - name: Loki
+            #         type: loki
+            #         url: http://loki.monitoring:3100
+            #         access: proxy
+            #         jsonData:
+            #           maxLines: 1000
+            #       - name: MQTT
+            #         type: mqtt
+            #         url: tcp://mosquitto.mosquitto:1883
+            #         access: proxy
+            #         jsonData:
+            #           topic: "#"
+            #       - name: InfluxDB
+            #         type: influxdb
+            #         url: http://influxdb-influxdb2.influxdb.svc.cluster.local
+            #         access: proxy
+            #         secureJsonData:
+            #           token: admin
+            #         jsonData:
+            #           version: Flux
+            #           organization: home-systems
+            #           defaultBucket: default
+            #           tlsSkipVerify: true
           alertmanager:
             enabled: true
             service:

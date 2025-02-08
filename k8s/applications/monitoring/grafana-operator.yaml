@@ -15,7 +15,18 @@ spec:
     syncOptions:
       - CreateNamespace=true 
       - ServerSideApply=true
-  source:
-    chart: grafana-operator
-    repoURL: registry-1.docker.io/bitnamicharts
-    targetRevision: "*"
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: grafana
+              service:
+                name: grafana-operator-grafana-service
+                namespace: monitoring
+                port: 3000
+    - chart: grafana-operator
+      repoURL: registry-1.docker.io/bitnamicharts
+      targetRevision: "*"

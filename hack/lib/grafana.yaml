@@ -1,4 +1,3 @@
-Using promtheus in grafana
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -21,6 +20,8 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
+          forceDeployDashboards: true
+          defaultDashboardsEnabled: true
           admin:
             existingSecret: "grafana-credentials"
             userKey: userKey
@@ -51,14 +52,26 @@ spec:
             datasources.yaml:
               apiVersion: 1
               datasources:
-                - name: Nixos-1 Prometheus
-                  type: prometheus
-                  url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-                  access: proxy
-                  isDefault: true
-                - name: Nixos-1 Loki
+                - name: Loki
                   type: loki
-                  url: http://loki-stack.monitoring.svc.cluster.local:3100
+                  url: http://loki.monitoring:3100
                   access: proxy
                   jsonData:
                     maxLines: 1000
+                - name: MQTT
+                  type: mqtt
+                  url: tcp://mosquitto.mosquitto:1883
+                  access: proxy
+                  jsonData:
+                    topic: "#"
+                - name: InfluxDB
+                  type: influxdb
+                  url: http://influxdb-influxdb2.influxdb.svc.cluster.local
+                  access: proxy
+                  secureJsonData:
+                    token: admin
+                  jsonData:
+                    version: Flux
+                    organization: home-systems
+                    defaultBucket: default
+                    tlsSkipVerify: true

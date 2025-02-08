@@ -41,11 +41,11 @@ spec:
                 name: kube-prometheus-stack-alertmanager
                 namespace: monitoring
                 port: 9093
-            - name: grafana
-              service:
-                name: kube-prometheus-stack-grafana
-                namespace: monitoring
-                port: 80
+            # - name: grafana
+            #   service:
+            #     name: kube-prometheus-stack-grafana
+            #     namespace: monitoring
+            #     port: 80
     # Pyrra
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
