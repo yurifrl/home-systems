@@ -38,7 +38,6 @@ spec:
           valuesObject:
             grafana:
               config:
-                disable_login_form: "true"
                 security:
-                  admin_user: admin
-                  admin_password: admin
+                  admin_user: root
+                  admin_password: root
