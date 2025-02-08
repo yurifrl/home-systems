@@ -8,10 +8,11 @@ spec:
   config:
     log:
       mode: "console"
+    auth:
+      disable_login_form: "true"
     security:
-      admin_user: root
-      admin_password: secret
-
+      admin_user: admin
+      admin_password: admin
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
