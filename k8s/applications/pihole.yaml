@@ -32,9 +32,9 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
-          image:
-            repository: docker.io/pihole/pihole
-            tag: latest
+          # image:
+          #   repository: docker.io/pihole/pihole
+          #   tag: latest
           persistentVolumeClaim:
             enabled: false
             # storageClass: local-path
