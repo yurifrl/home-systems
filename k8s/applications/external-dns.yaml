@@ -68,21 +68,22 @@ spec:
             secretName: cloudflare-api-token
             proxied: true
     # Pi-hole DNS
-    - repoURL: https://kubernetes-sigs.github.io/external-dns/
+    - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
       targetRevision: "*"
       helm:
         releaseName: pihole
         valuesObject:
-          provider: pihole
+          crd.create: false
           logLevel: debug
           txtOwnerId: syscd-pihole
           policy: sync
           domainFilters:
             - syscd.dev
           interval: 1m
+          provider: pihole
           pihole:
-            server: "http://pihole-web.pihole.svc.cluster.local:80"
+            server: "http://pihole-web.pihole.svc.cluster.local"
             secretName: externaldns-pihole
           sources:
             - istio-gateway
