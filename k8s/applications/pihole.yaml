@@ -15,7 +15,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
+    - repoURL: https://github.com/yurifrl/home-systems
       targetRevision: HEAD
       path: k8s/charts/support
       helm:
@@ -27,7 +27,7 @@ spec:
                 namespace: pihole
                 port: 443
 
-    - repoURL: https://wolviecb.github.io/pihole-kubernetes/
+    - repoURL: https://wolviecb.github.io/pihole-kubernetes
       chart: pihole
       targetRevision: "*"
       helm:
