@@ -25,7 +25,7 @@ spec:
               service:
                 name: pihole-web
                 namespace: pihole
-                port: 443
+                port: 80
 
     - repoURL: https://wolviecb.github.io/pihole-kubernetes
       chart: pihole
