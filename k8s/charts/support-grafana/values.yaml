@@ -5,7 +5,7 @@ grafanaComDashboards:
   - id: 13332
     name: kube-state-metrics-v2
   - id: 21742
-    name: Kube-state-metrics-v2
+    name: kube-state-metrics-v2
   - id: 22168
     name: kubernetes-autoscaling-vertical-pod-autoscaler
   - id: 19993
