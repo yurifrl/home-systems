@@ -3,9 +3,9 @@ grafanaComDashboards:
   - id: 1860
     name: node-exporter-latest
   - id: 13332
-    name: kube-state-metrics-v2
+    name: garysdevil-kube-state-metrics-v2
   - id: 21742
-    name: kube-state-metrics-v2
+    name: d19akash-kube-state-metrics-v2
   - id: 22168
     name: kubernetes-autoscaling-vertical-pod-autoscaler
   - id: 19993
