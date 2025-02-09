@@ -14,7 +14,6 @@ spec:
       selfHeal: false
     syncOptions:
       - CreateNamespace=true
-
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
@@ -28,7 +27,7 @@ spec:
                 namespace: pihole
                 port: 443
 
-    - repoURL: https://mojo2600.github.io/pihole-kubernetes/
+    - repoURL: https://wolviecb.github.io/pihole-kubernetes/
       chart: pihole
       targetRevision: "*"
       helm:
@@ -36,12 +35,11 @@ spec:
           persistentVolumeClaim:
             enabled: false
             # storageClass: local-path
-          DNS1: "1.1.1.1"
-          DNS2: "1.0.0.1"
           admin:
             existingSecret: "pihole-admin"
           serviceDns:
             type: LoadBalancer
+            loadBalancerIP: 192.168.68.203
             annotations:
               metallb.universe.tf/allow-shared-ip: pihole-svc
           ingress:
@@ -49,7 +47,27 @@ spec:
           monitoring:
             podMonitor:
               enabled: true
-          # Timezone for the container
-          TZ: "America/Sao_Paulo"
 
-# Chart: https://wolviecb.github.io/pihole-kubernetes/
+    # - repoURL: https://mojo2600.github.io/pihole-kubernetes/
+    #   chart: pihole
+    #   targetRevision: "*"
+    #   helm:
+    #     valuesObject:
+    #       persistentVolumeClaim:
+    #         enabled: false
+    #         # storageClass: local-path
+    #       DNS1: "1.1.1.1"
+    #       DNS2: "1.0.0.1"
+    #       admin:
+    #         existingSecret: "pihole-admin"
+    #       serviceDns:
+    #         type: LoadBalancer
+    #         annotations:
+    #           metallb.universe.tf/allow-shared-ip: pihole-svc
+    #       ingress:
+    #         enabled: false
+    #       monitoring:
+    #         podMonitor:
+    #           enabled: true
+    #       # Timezone for the container
+    #       TZ: "America/Sao_Paulo"
