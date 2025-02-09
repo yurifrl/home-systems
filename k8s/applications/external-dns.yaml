@@ -82,7 +82,7 @@ spec:
             - syscd.dev
           interval: 1m
           pihole:
-            server: "http://pihole.pihole-web.svc.cluster.local:443"
+            server: "http://pihole-web.pihole.svc.cluster.local:80"
             secretName: externaldns-pihole
           sources:
             - istio-gateway
