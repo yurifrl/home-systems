@@ -1,18 +1,57 @@
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDatasource
-metadata:
-  name: loki
-spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: "grafana"
-  datasource:
-    name: Loki
-    type: loki
-    access: proxy
-    url: http://loki.monitoring:3100
-    jsonData:
-      maxLines: 1000
+# apiVersion: grafana.integreatly.org/v1beta1
+# kind: GrafanaDatasource
+# metadata:
+#   name: loki
+# spec:
+#   instanceSelector:
+#     matchLabels:
+#       dashboards: "grafana"
+#   datasource:
+#     name: Loki
+#     type: loki
+#     access: proxy
+#     url: http://loki.monitoring:3100
+#     jsonData:
+#       maxLines: 1000
+# ---
+# apiVersion: grafana.integreatly.org/v1beta1
+# kind: GrafanaDatasource
+# metadata:
+#   name: influxdb
+# spec:
+#   instanceSelector:
+#     matchLabels:
+#       dashboards: "grafana"
+#   datasource:
+#     name: InfluxDB
+#     type: influxdb
+#     access: proxy
+#     url: http://influxdb-influxdb2.influxdb.svc.cluster.local
+#     secureJsonData:
+#       token: admin
+#     jsonData:
+#       version: Flux
+#       organization: home-systems
+#       defaultBucket: default
+#       tlsSkipVerify: true
+# ---
+# apiVersion: grafana.integreatly.org/v1beta1
+# kind: GrafanaDatasource
+# metadata:
+#   name: prometheus
+# spec:
+#   instanceSelector:
+#     matchLabels:
+#       dashboards: "grafana"
+#   datasource:
+#     name: Prometheus
+#     type: prometheus
+#     access: proxy
+#     url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+#     isDefault: true
+#     jsonData:
+#       timeInterval: "30s"
+#       tlsSkipVerify: true
 # ---
 # apiVersion: grafana.integreatly.org/v1beta1
 # kind: GrafanaDatasource
@@ -32,42 +71,3 @@ spec:
 #     url: tcp://mosquitto.mosquitto.svc.cluster.local:1883
 #     jsonData:
 #       uri: tcp://mosquitto.mosquitto.svc.cluster.local:1883
----
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDatasource
-metadata:
-  name: influxdb
-spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: "grafana"
-  datasource:
-    name: InfluxDB
-    type: influxdb
-    access: proxy
-    url: http://influxdb-influxdb2.influxdb.svc.cluster.local
-    secureJsonData:
-      token: admin
-    jsonData:
-      version: Flux
-      organization: home-systems
-      defaultBucket: default
-      tlsSkipVerify: true
----
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDatasource
-metadata:
-  name: prometheus
-spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: "grafana"
-  datasource:
-    name: Prometheus
-    type: prometheus
-    access: proxy
-    url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-    isDefault: true
-    jsonData:
-      timeInterval: "30s"
-      tlsSkipVerify: true

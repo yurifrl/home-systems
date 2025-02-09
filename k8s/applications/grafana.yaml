@@ -11,7 +11,7 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: true
+      selfHeal: false
     syncOptions:
       - CreateNamespace=true 
       - ServerSideApply=true
@@ -83,31 +83,31 @@ spec:
                   mode: console
                 server:
                   root_url: http://grafana-operator-grafana-service.monitoring.svc.cluster.local:3000
-              sidecars:
-                - image: 'ghcr.io/kiwigrid/k8s-sidecar:1.24.5'
-                  name: k8s-sidecar
-                  env:
-                    - name: LABEL
-                      value: "grafana_dashboard"
-                    - name: LABEL_VALUE
-                      value: "1"
-                    - name: FOLDER
-                      value: /var/lib/grafana/dashboards
-                    - name: NAMESPACE
-                      value: ALL
-                    - name: RESOURCE
-                      value: configmap
-                  volumeMounts:
-                    - mountPath: /var/lib/grafana/dashboards
-                      name: dashboards                                    
-              extraVolumeMounts:
-                - mountPath: /etc/grafana/provisioning/dashboards
-                  name: provisioning-config
-                - mountPath: /var/lib/grafana/dashboards
-                  name: dashboards
-              extraVolumes:
-                - name: dashboards
-                  emptyDir: { }
-                - name: provisioning-config
-                  configMap:
-                    name: provisioning-config
+              # sidecars:
+              #   - image: 'ghcr.io/kiwigrid/k8s-sidecar:1.24.5'
+              #     name: k8s-sidecar
+              #     env:
+              #       - name: LABEL
+              #         value: "grafana_dashboard"
+              #       - name: LABEL_VALUE
+              #         value: "1"
+              #       - name: FOLDER
+              #         value: /var/lib/grafana/dashboards
+              #       - name: NAMESPACE
+              #         value: ALL
+              #       - name: RESOURCE
+              #         value: configmap
+              #     volumeMounts:
+              #       - mountPath: /var/lib/grafana/dashboards
+              #         name: dashboards                                    
+              # extraVolumeMounts:
+              #   - mountPath: /etc/grafana/provisioning/dashboards
+              #     name: provisioning-config
+              #   - mountPath: /var/lib/grafana/dashboards
+              #     name: dashboards
+              # extraVolumes:
+              #   - name: dashboards
+              #     emptyDir: { }
+              #   - name: provisioning-config
+              #     configMap:
+              #       name: provisioning-config
