@@ -12,3 +12,5 @@ grafanaComDashboards:
     name: argocd-operational-overview
   - id: 7587
     name: prometheus-blackbox-exporter
+  - id: 17375
+    name: k8s-resource-monitoring
