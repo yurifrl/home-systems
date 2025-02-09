@@ -1,7 +1,7 @@
 {{- if .Values.slos.enabled }}
 {{- range .Values.virtualServices }}
 {{- $hostPrefix := .hostname | default .name -}}
-
+---
 # Indicator Type: latency
 # Measures if requests are completing within the expected latency threshold (500ms)
 # Uses histogram buckets from probe_http_duration_seconds
@@ -19,9 +19,8 @@ spec:
   indicator:
     latency:
       success:
-        metric: probe_http_duration_seconds_bucket{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live)",le="0.5"}
+        metric: probe_http_duration_seconds_bucket{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live|dev)",le="0.5"}
       total:
-        metric: probe_http_duration_seconds_count{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live)"}
----
+        metric: probe_http_duration_seconds_count{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live|dev)"}
 {{- end }}
 {{- end }}

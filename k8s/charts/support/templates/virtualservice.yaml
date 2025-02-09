@@ -1,5 +1,4 @@
 {{- range .Values.virtualServices }}
-{{- $hostPrefix := .hostname | default .name }}
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -13,14 +12,7 @@ metadata:
   {{- end }}
 spec:
   hosts:
-    {{- if .hostnameOverride }}
-    - {{ .hostnameOverride }}
-    {{- else }}
-    - {{ $hostPrefix }}.syscd.live
-    - {{ $hostPrefix }}.syscd.tech
-    - {{ $hostPrefix }}.syscd.xyz
-    - {{ $hostPrefix }}.syscd.dev
-    {{- end }}
+    {{- include "support.hosts" (merge . (dict "Values" $.Values)) | nindent 4 }}
   gateways:
     - istio-system/private
     - istio-system/public

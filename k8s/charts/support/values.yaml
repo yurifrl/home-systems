@@ -30,7 +30,12 @@ virtualServices: []
   #     xyz: true                      # Create private .syscd.xyz domain
 
 # Global settings
-global: {}
+global:
+  domains:
+    live: true
+    tech: true
+    xyz: true
+    dev: true
 
 # SLO settings
 slos:

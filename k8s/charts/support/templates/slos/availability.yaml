@@ -1,7 +1,7 @@
 {{- if .Values.slos.enabled }}
 {{- range .Values.virtualServices }}
 {{- $hostPrefix := .hostname | default .name -}}
-
+---
 apiVersion: pyrra.dev/v1alpha1
 kind: ServiceLevelObjective
 metadata:
@@ -15,8 +15,7 @@ spec:
   indicator:
     bool_gauge:
       metric: |
-        probe_success{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live)"}
+        probe_success{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live|dev)"}
       grouping: []
----
 {{- end }}
 {{- end }} 
