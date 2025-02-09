@@ -8,10 +8,26 @@ metadata:
   {{- $normalized := $filename | lower | nospace | replace "_" "-" }}
   name: {{ $normalized | trunc 63 }}
 spec:
+  folder: "custom"
   instanceSelector:
     matchLabels:
       dashboards: "grafana"
   json: |
     {{- $.Files.Get $path | nindent 4 }}
 {{- end }}
+{{- end }}
+
+{{- range .Values.grafanaComDashboards }}
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: {{ .name }}
+spec:
+  folder: "grafana-com"
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  grafanaCom:
+    id: {{ .id }}
 {{- end }}
