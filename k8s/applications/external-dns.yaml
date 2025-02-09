@@ -67,28 +67,28 @@ spec:
           cloudflare:
             secretName: cloudflare-api-token
             proxied: true
-    # # Pi-hole DNS
-    # - repoURL: https://kubernetes-sigs.github.io/external-dns/
-    #   chart: external-dns
-    #   targetRevision: "*"
-    #   helm:
-    #     releaseName: pihole
-    #     valuesObject:
-    #       provider: pihole
-    #       logLevel: debug
-    #       txtOwnerId: syscd-pihole
-    #       policy: sync
-    #       domainFilters:
-    #         - syscd.dev
-    #       interval: 1m
-    #       pihole:
-    #         server: "http://pihole.pihole-web.svc.cluster.local:443"
-    #         secretName: pihole-password
-    #       sources:
-    #         - istio-gateway
-    #         - istio-virtualservice
-    #       extraArgs:
-    #         service-type-filter: LoadBalancer
+    # Pi-hole DNS
+    - repoURL: https://kubernetes-sigs.github.io/external-dns/
+      chart: external-dns
+      targetRevision: "*"
+      helm:
+        releaseName: pihole
+        valuesObject:
+          provider: pihole
+          logLevel: debug
+          txtOwnerId: syscd-pihole
+          policy: sync
+          domainFilters:
+            - syscd.dev
+          interval: 1m
+          pihole:
+            server: "http://pihole.pihole-web.svc.cluster.local:443"
+            secretName: externaldns-pihole
+          sources:
+            - istio-gateway
+            - istio-virtualservice
+          extraArgs:
+            service-type-filter: LoadBalancer
     # RFC2136 DNS
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
