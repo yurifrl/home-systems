@@ -87,8 +87,8 @@ spec:
           sources:
             - istio-gateway
             - istio-virtualservice
-          extraArgs:
-            service-type-filter: LoadBalancer
+          # extraArgs:
+          #   service-type-filter: LoadBalancer
     # RFC2136 DNS
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
