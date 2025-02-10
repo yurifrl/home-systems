@@ -23,27 +23,6 @@ spec:
     targetRevision: "*"
     helm:
       valuesObject:
-        # Configure Velero server
-        configuration:
-          # Configure backup storage location for GCP
-          backupStorageLocation:
-            name: default
-            provider: gcp
-            bucket: syscd
-            config:
-              project: syscd-443112
-              serviceAccount: velero@syscd-443112.iam.gserviceaccount.com
-
-          # Configure volume snapshot location for GCP
-          volumeSnapshotLocation:
-            name: default
-            provider: gcp
-
-        # Configure credentials
-        credentials:
-          useSecret: true
-          existingSecret: velero-credentials
-
         # Configure resources
         resources:
           requests:
@@ -67,6 +46,25 @@ spec:
             volumeMounts:
               - mountPath: /target
                 name: plugins
+
+        # Configure credentials
+        credentials:
+          useSecret: true
+          existingSecret: velero-credentials
+
+        # Configure backup locations
+        configuration:
+          backupStorageLocation:
+            - name: default
+              provider: gcp
+              bucket: syscd
+              config:
+                project: syscd-443112
+                serviceAccount: velero@syscd-443112.iam.gserviceaccount.com
+
+          volumeSnapshotLocation:
+            - name: default
+              provider: gcp
 
         # Configure backups
         schedules:
