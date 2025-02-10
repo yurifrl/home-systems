@@ -10,7 +10,9 @@ argo-update:
 
 apply:
 	talosctl -n 192.168.68.100 apply-config -f talos/config/controlplane.yaml -p  @talos/config/patches.yaml
-	talosctl -n 192.168.68.114,192.168.68.107 apply-config -f talos/config/worker.yaml
+	talosctl -n 192.168.68.114 apply-config -f talos/config/tp4.yaml
+	talosctl -n 192.168.68.107 apply-config -f talos/config/tp1.yaml
+	talosctl -n 192.168.68.112 apply-config -f talos/config/pc01.yaml
 	./talos/secrets-backup.sh
 
 
