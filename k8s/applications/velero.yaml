@@ -59,7 +59,6 @@ spec:
               provider: gcp
               bucket: syscd
               config:
-                project: syscd-443112
                 serviceAccount: velero@syscd-443112.iam.gserviceaccount.com
 
           volumeSnapshotLocation:
