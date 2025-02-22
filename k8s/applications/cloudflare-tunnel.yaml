@@ -17,37 +17,45 @@ spec:
     managedNamespaceMetadata:
       labels:
         istio.io/dataplane-mode: ambient
-  source:
-    chart: cloudflare-tunnel
-    repoURL: https://cloudflare.github.io/helm-charts
-    targetRevision: "*"
-    helm:
-      valuesObject:
-        replicaCount: 1
-        cloudflare:
-          secretName: cloudflare-tunnel-secret
-          tunnelName: nixos-1
-          ingress:
-            - hostname: "syscd.xyz"
-              service: https://teleport.teleport.svc.cluster.local
-              originRequest:
-                noTLSVerify: true    
-            - hostname: "*.syscd.xyz"
-              # service: http://istio-gateway.istio-system.svc.cluster.local:80
-              service: https://teleport.teleport.svc.cluster.local
-              originRequest:
-                noTLSVerify: true                
-            - hostname: "argocd.syscd.live"
-              service: http://argocd-server.argocd.svc.cluster.local:80
-            - hostname: "*.syscd.live"
-              service: http://istio-gateway.istio-system.svc.cluster.local:80
-        resources:
-          limits:
-            cpu: 100m
-            memory: 256Mi
-          requests:
-            cpu: 50m
-            memory: 128Mi
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: cloudflare-tunnel-secret
+              namespace: cloudflare-tunnel  
+    - chart: cloudflare-tunnel
+      repoURL: https://cloudflare.github.io/helm-charts
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          replicaCount: 1
+          cloudflare:
+            secretName: cloudflare-tunnel-secret
+            tunnelName: nixos-1
+            ingress:
+              - hostname: "syscd.xyz"
+                service: https://teleport.teleport.svc.cluster.local
+                originRequest:
+                  noTLSVerify: true    
+              - hostname: "*.syscd.xyz"
+                # service: http://istio-gateway.istio-system.svc.cluster.local:80
+                service: https://teleport.teleport.svc.cluster.local
+                originRequest:
+                  noTLSVerify: true                
+              - hostname: "argocd.syscd.live"
+                service: http://argocd-server.argocd.svc.cluster.local:80
+              - hostname: "*.syscd.live"
+                service: http://istio-gateway.istio-system.svc.cluster.local:80
+          resources:
+            limits:
+              cpu: 100m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
 
 # https://github.com/cloudflare/helm-charts/tree/main/charts/cloudflare-tunnel
 # cloudflared tunnel login

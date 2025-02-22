@@ -41,6 +41,9 @@ spec:
               accessModes:
                 - ReadWriteOnce
               volumeName: teleport-tp1-data
+          externalSecrets:
+            - name: teleport-agent-token
+              namespace: teleport
 
     - chart: teleport-cluster
       repoURL: https://charts.releases.teleport.dev

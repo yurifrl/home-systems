@@ -27,6 +27,9 @@ spec:
                   name: grafana-operator-grafana-service
                   namespace: monitoring
                   port: 3000
+            externalSecrets:
+              - name: grafana-credentials
+                namespace: monitoring
       - path: k8s/charts/support-grafana
         repoURL: https://github.com/yurifrl/home-systems.git
         targetRevision: HEAD

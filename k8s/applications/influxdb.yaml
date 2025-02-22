@@ -26,11 +26,9 @@ spec:
                 name: influxdb-influxdb2
                 namespace: influxdb
                 port: 80
-          # Good ideia
-          # secrets:
-          #   - name: grafana-api-key
-          #     stringData:
-          #       key: "<your-grafana-api-key>"  # Replace with actual API key
+          externalSecrets:
+            - name: grafana-api-key
+              namespace: influxdb
 
     - repoURL: https://helm.influxdata.com/
       chart: influxdb2

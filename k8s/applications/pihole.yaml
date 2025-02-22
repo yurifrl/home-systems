@@ -26,6 +26,9 @@ spec:
                 name: pihole-web
                 namespace: pihole
                 port: 80
+          externalSecrets:
+            - name: pihole-admin
+              namespace: pihole
 
     - repoURL: https://wolviecb.github.io/pihole-kubernetes
       chart: pihole

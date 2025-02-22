@@ -16,6 +16,14 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true 
   sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: tailscale-operator-oauth
+              namespace: tailscale  
     - path: k8s/charts/support-tailscale
       repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD

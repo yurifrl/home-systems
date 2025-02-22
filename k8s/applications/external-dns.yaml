@@ -18,6 +18,19 @@ spec:
       labels:
         istio.io/dataplane-mode: ambient
   sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: cloudflare-api-token
+              namespace: external-dns
+            - name: externaldns-pihole
+              namespace: external-dns
+            - name: externaldns-tsig-secret
+              namespace: external-dns
+
     # Might work on the virtual service
     # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
     # Tailscale
@@ -118,5 +131,4 @@ spec:
             tsigKeyname: externaldns-key
           # extraArgs:
           #   service-type-filter: LoadBalancer
-
 # https://github.com/bitnami/charts/blob/main/bitnami/external-dns/README.md
