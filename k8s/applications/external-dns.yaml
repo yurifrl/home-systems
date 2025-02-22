@@ -24,7 +24,7 @@ spec:
       helm:
         valuesObject:
           externalSecrets:
-            - name: cloudflare-api-token
+            - name: cloudflare-api-token-external-dns
               namespace: external-dns
             - name: externaldns-pihole
               namespace: external-dns

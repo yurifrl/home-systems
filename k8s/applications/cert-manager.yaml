@@ -21,7 +21,7 @@ spec:
       helm:
         valuesObject:
           externalSecrets:
-            - name: cloudflare-api-token
+            - name: cloudflare-api-token-cert-manager
               namespace: cert-manager
     - repoURL: https://charts.jetstack.io
       chart: cert-manager
