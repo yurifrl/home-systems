@@ -9,7 +9,7 @@ argo-update:
 	helm template -n argocd argocd argo-cd/argo-cd -f ./manifests/values/argocd.yaml --create-namespace --atomic > ./manifests/argocd.yaml
 
 apply:
-	talosctl -n 192.168.68.100 apply-config -f talos/config/controlplane.yaml -p  @talos/config/patches.yaml
+	talosctl -n 192.168.68.100 apply-config -f talos/config/controlplane.yaml  -p  @talos/config/patches.yaml -p "$(cat talos/config/external-secrets.yaml | op inject)"
 	talosctl -n 192.168.68.114 apply-config -f talos/config/tp4.yaml
 	talosctl -n 192.168.68.107 apply-config -f talos/config/tp1.yaml
 	talosctl -n 192.168.68.112 apply-config -f talos/config/pc01.yaml

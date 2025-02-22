@@ -29,6 +29,8 @@ virtualServices: []
   #     tech: false                    # Create private .syscd.tech domain (includes .xyz alias)
   #     xyz: true                      # Create private .syscd.xyz domain
 
+
+
 # Global settings
 global:
   domains:
@@ -50,3 +52,8 @@ services: []
   # - name: service-name
   #   port: 80
   #   targetPort: 80
+
+# External Secrets configuration
+externalSecrets: []
+  # - name: teleport-agent-token      # This matches the 1Password item name
+  #   namespace: teleport             # Kubernetes namespace

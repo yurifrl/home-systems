@@ -25,3 +25,4 @@ secrets.*
 __pycache__/
 appdaemon
 1password-credentials.json
+setup-1password.sh
