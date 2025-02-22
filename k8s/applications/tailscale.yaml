@@ -23,7 +23,6 @@ spec:
         valuesObject:
           externalSecrets:
             - name: tailscale-operator-oauth
-              namespace: tailscale  
     - path: k8s/charts/support-tailscale
       repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
@@ -34,7 +33,6 @@ spec:
             - hostname: tailscale-1
               advertiseRoutes:
                 - 10.244.0.0/16
-          externalSecrets: []
     - repoURL: https://pkgs.tailscale.com/helmcharts
       chart: tailscale-operator
       targetRevision: "*"

@@ -23,9 +23,7 @@ spec:
         valuesObject:
           externalSecrets:
             - name: alertmanager-discord
-              namespace: monitoring
             - name: blackbox-exporter
-              namespace: monitoring  
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: kube-prometheus-stack
       targetRevision: "*"

@@ -25,7 +25,6 @@ spec:
         valuesObject:
           externalSecrets:
             - name: cloudflare-tunnel-secret
-              namespace: cloudflare-tunnel  
     - chart: cloudflare-tunnel
       repoURL: https://cloudflare.github.io/helm-charts
       targetRevision: "*"

@@ -28,7 +28,6 @@ spec:
                 port: 80
           externalSecrets:
             - name: grafana-api-key
-              namespace: influxdb
 
     - repoURL: https://helm.influxdata.com/
       chart: influxdb2

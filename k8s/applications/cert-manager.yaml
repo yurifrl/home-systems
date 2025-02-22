@@ -22,7 +22,6 @@ spec:
         valuesObject:
           externalSecrets:
             - name: cloudflare-api-token-cert-manager
-              namespace: cert-manager
     - repoURL: https://charts.jetstack.io
       chart: cert-manager
       targetRevision: "1.16.3"

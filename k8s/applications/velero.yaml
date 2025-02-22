@@ -25,7 +25,6 @@ spec:
         valuesObject:
           externalSecrets:
             - name: velero-credentials
-              namespace: velero
     - chart: velero
       repoURL: https://vmware-tanzu.github.io/helm-charts
       targetRevision: "*"

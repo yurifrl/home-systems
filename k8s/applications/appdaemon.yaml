@@ -33,7 +33,6 @@ spec:
                 port: 12321
           externalSecrets:
             - name: appdaemon-secrets
-              namespace: appdaemon
     - repoURL: https://github.com/yurifrl/appdaemon.git
       targetRevision: HEAD
       path: charts/appdaemon

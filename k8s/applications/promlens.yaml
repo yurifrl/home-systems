@@ -30,7 +30,6 @@ spec:
                 port: 8080
           externalSecrets:
             - name: promlens-secret
-              namespace: promlens
 
     - repoURL: https://charts.christianhuth.de
       chart: promlens
