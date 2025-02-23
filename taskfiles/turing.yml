@@ -1,0 +1,12 @@
+version: '3'
+
+# TODO
+tasks:
+  all:
+    cmds: |-
+      tpi uart -n 1 get
+      tpi uart -n 4 get
+      # fetch images
+      tpi flash -i ./rockship-1.9.4.raw -n 1
+      tpi flash -i ./rockship-1.9.4.raw -n 1
+      

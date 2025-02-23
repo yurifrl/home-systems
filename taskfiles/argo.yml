@@ -1,0 +1,11 @@
+version: '3'
+
+tasks:
+  repo-add:
+    cmds:
+      - helm repo add argo-cd https://argoproj.github.io/argo-helm
+      - helm repo update
+
+  update:
+    cmds:
+      - helm template -n argocd argocd argo-cd/argo-cd -f ./manifests/values/argocd.yaml --create-namespace --atomic > ./manifests/argocd.yaml 

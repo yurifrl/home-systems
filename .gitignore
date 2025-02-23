@@ -2,6 +2,7 @@ foo
 *.iso
 *.img
 result
+secrets.*
 secrets
 .bkp
 vendor/
@@ -14,15 +15,10 @@ uptime-bot/secrets
 id_ed25519
 hack/longhorn
 *.env
-kubeconfig
-talosconfig
-controlplane.yaml
-worker.yaml
-talos/*
 !talos/README.md
 !talos/factory.md
-secrets.*
 __pycache__/
 appdaemon
+
 1password-credentials.json
-setup-1password.sh
+talos/op

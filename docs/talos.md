@@ -110,9 +110,9 @@ sudo dd if=metal-arm64.raw of=/dev/disk5 conv=fsync bs=4M status=progress
 - [Homelab: Installation and Configuration of Talos on Raspberry Pi | by Alfonso fortunato - Freedium](https://freedium.cfd/https://medium.com/@alfor93/homelab-installation-and-configuration-of-talos-on-raspberry-pi-dee256527b9f)
     - Updated raspberry guide
 - [Raspberry Pi 4 - Cannot install - 1.7.6+ · Issue #9283 · siderolabs/talos](https://github.com/siderolabs/talos/issues/9283) 
-	- guy with the same issue
+    - guy with the same issue
 - [xvzf/homeassistant-yellow-talos](https://github.com/xvzf/homeassistant-yellow-talos/blob/main/README.md?plain=1)
-	- Talos example with home assistant
+    - Talos example with home assistant
 
 
 # Imporvement possibilities
