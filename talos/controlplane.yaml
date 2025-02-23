@@ -182,7 +182,7 @@ machine:
   # Used to provide instructions for installations.
   install:
     disk: /dev/mmcblk0 # The disk used for installations.
-    image: ghcr.io/siderolabs/installer:v1.8.4 # Allows for supplying the image used to perform the installation.
+    image: ghcr.io/siderolabs/installer:v1.9.4 # Allows for supplying the image used to perform the installation.
     wipe: false # Indicates if the installation disk should be wiped at installation time.
     extraKernelArgs:
       - talos.dashboard.disabled=0
