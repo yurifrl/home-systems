@@ -13,11 +13,15 @@
     # `nix run` and `nix build` will look for this attribute by default
     # `nix run` or `nix run .#default` should print "Hello world"
     packages.x86_64-linux.default = 
-      inputs.nixpkgs.packages.x86_64-linux.hello;
+      inputs.nixpkgs.legacyPackages.x86_64-linux.hello;
 
     # You can switch to the system described in ./configuration with
     # `nixos-rebuild switch --flake .#hal9000`
     nixosConfigurations.hal9000 = inputs.nixpkgs.lib {
+      specialArgs = {
+        # remember "inherit x;" is the same as "x = x;"
+        inherit inputs; 
+      };
       system = "x86_64-linux";
       modules = [ ./configuration.nix ];
     };
