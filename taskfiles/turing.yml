@@ -2,11 +2,14 @@ version: '3'
 
 # TODO
 tasks:
-  all:
-    cmds: |-
-      tpi uart -n 1 get
-      tpi uart -n 4 get
-      # fetch images
-      tpi flash -i ./rockship-1.9.4.raw -n 1
-      tpi flash -i ./rockship-1.9.4.raw -n 1
+  flash:
+    desc: "flash"
+    cmds:
+      - tpi flash -i /tmp/images/rockship-1.9.4-tailscale.raw -n 1
       
+  download:
+    desc: "Download the rockship-1.9.4-tailscale.raw image"
+    dir: /tmp/images
+    cmds:
+      - curl https://factory.talos.dev/image/3616c4c824f2540c0a14da0cc8e6fc46143f2ca0cc75c9c6376a66e562894950/v1.9.4/metal-arm64.raw.xz > rockship-1.9.4-tailscale.raw.xz 
+      - xz -d rockship-1.9.4-tailscale.raw.xz

@@ -3,4 +3,5 @@ version: '3'
 includes:
   talos: ./taskfiles/talos.yml
   argo: ./taskfiles/argo.yml
-  k8s: ./taskfiles/kubernetes.yml
+  # k8s: ./taskfiles/kubernetes.yml
+  turing: ./taskfiles/turing.yml

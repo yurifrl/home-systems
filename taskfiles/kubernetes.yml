@@ -2,6 +2,7 @@ version: "3"
 
 tasks:
   external-secrets:
+    desc: "Connect to 1Password and create a secret for the external-secrets operator"
     cmds: |-
       op connect server create kubernetes --vaults kubernetes
       export OP_CONNECT_TOKEN=$(op connect token create "external-secret-operator" --server kubernetes --vault kubernetes)
