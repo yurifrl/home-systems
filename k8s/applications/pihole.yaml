@@ -34,6 +34,7 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
+          namespace: pihole
           # image:
           #   repository: docker.io/pihole/pihole
           #   tag: latest
