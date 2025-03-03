@@ -9,10 +9,10 @@ tasks:
 
   apply:
     cmds:
-      - talosctl -n 192.168.68.100 apply-config -f talos/op/controlplane.yaml
-      - talosctl -n 192.168.68.114 apply-config -f talos/op/nodes/tp4.yaml
-      - talosctl -n 192.168.68.107 apply-config -f talos/op/nodes/tp1.yaml
-      - talosctl -n 192.168.68.112 apply-config -f talos/op/nodes/pc01.yaml
+      - talosctl -n 192.168.68.100 apply-config -f talos/op/controlplane-192.168.68.100.yaml
+      - talosctl -n 192.168.68.114 apply-config -f talos/op/nodes/tp4-192.168.68.114.yaml  
+      - talosctl -n 192.168.68.107 apply-config -f talos/op/nodes/tp1-192.168.68.107.yaml
+      - talosctl -n 192.168.68.112 apply-config -f talos/op/nodes/pc01-192.168.68.112.yaml
 
   apply-controlplane:
     cmds:
@@ -54,3 +54,15 @@ tasks:
       # Patch config
       - talosctl patch mc -p @talos/op/extensions.yaml
       - talosctl get extensionserviceconfigs
+
+
+  pc01-install:
+    dir: /tmp/images
+    cmds:
+      - curl https://factory.talos.dev/image/928a5067f4e4e16157c96b7e855624d44022d6dce9e9ebaeb05f4b62e64b4b11/v1.9.4/metal-amd64.raw.zst > metal-amd64.raw.zst
+      - zstd -d metal-amd64.raw.zst
+      - sudo diskutil unmountDisk /dev/disk5
+      - sudo dd if=metal-amd64.raw of=/dev/disk5 bs=4M status=progress
+      - sync
+      - sudo diskutil unmountDisk /dev/disk5
+      - talosctl -n 192.168.68.112 apply-config -f talos/op/nodes/pc01.yaml -i
