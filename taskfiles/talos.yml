@@ -10,7 +10,7 @@ tasks:
   apply:
     cmds:
       - talosctl -n 192.168.68.100 apply-config -f talos/op/controlplane-192.168.68.100.yaml
-      - talosctl -n 192.168.68.114 apply-config -f talos/op/nodes/tp4-192.168.68.114.yaml  
+      - talosctl -n 192.168.68.114 apply-config -f talos/op/nodes/tp4-192.168.68.114.yaml
       - talosctl -n 192.168.68.107 apply-config -f talos/op/nodes/tp1-192.168.68.107.yaml
       - talosctl -n 192.168.68.112 apply-config -f talos/op/nodes/pc01-192.168.68.112.yaml
 
