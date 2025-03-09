@@ -32,7 +32,6 @@ spec:
               targetName: externaldns-pihole
             - name: tsig-secret
               targetName: externaldns-tsig
-
     # Might work on the virtual service
     # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
     # Tailscale
