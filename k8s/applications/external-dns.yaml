@@ -42,12 +42,6 @@ spec:
       helm:
         releaseName: tailscale
         valuesObject:
-          # env:
-          #   - name: CF_API_TOKEN
-          #     valueFrom:
-          #       secretKeyRef:
-          #         name: cloudflare-api-token-external-dns
-          #         key: cloudflare_api_token
           txtOwnerId: syscd-tailscale
           policy: upsert-only
           domainFilters:
