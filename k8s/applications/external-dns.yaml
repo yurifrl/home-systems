@@ -26,9 +26,12 @@ spec:
       helm:
         valuesObject:
           externalSecrets:
-            - name: cloudflare-api-token-external-dns
-            - name: externaldns-pihole
-            - name: externaldns-tsig-secret
+            - name: cloudflare-api-token-secret
+              targetName: externaldns-cloudflare
+            - name: pihole-secret
+              targetName: externaldns-pihole
+            - name: tsig-secret
+              targetName: externaldns-tsig-secret
 
     # Might work on the virtual service
     # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
@@ -39,12 +42,12 @@ spec:
       helm:
         releaseName: tailscale
         valuesObject:
-          env:
-            - name: CF_API_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: cloudflare-api-token
-                  key: token
+          # env:
+          #   - name: CF_API_TOKEN
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: cloudflare-api-token-external-dns
+          #         key: cloudflare_api_token
           txtOwnerId: syscd-tailscale
           policy: upsert-only
           domainFilters:
@@ -57,7 +60,7 @@ spec:
             service-type-filter: LoadBalancer
           provider: cloudflare
           cloudflare:
-            secretName: cloudflare-api-token
+            secretName: cloudflare-api-token-secret
             proxied: false
     # Cloudflare
     - repoURL: registry-1.docker.io/bitnamicharts
@@ -77,7 +80,7 @@ spec:
             - istio-virtualservice
           provider: cloudflare
           cloudflare:
-            secretName: cloudflare-api-token
+            secretName: cloudflare-api-token-secret
             proxied: true
     # Pi-hole DNS
     - repoURL: registry-1.docker.io/bitnamicharts
@@ -96,7 +99,7 @@ spec:
           provider: pihole
           pihole:
             server: "http://pihole-web.pihole.svc.cluster.local"
-            secretName: externaldns-pihole
+            secretName: pihole-secret
           sources:
             - istio-gateway
             - istio-virtualservice
@@ -123,7 +126,7 @@ spec:
             - istio-virtualservice
           provider: rfc2136
           rfc2136:
-            secretName: externaldns-tsig-secret # Secret with key rfc2136_tsig_secret
+            secretName: tsig-secret # Secret with key rfc2136_tsig_secret
             host: bind9.bind9.svc.cluster.local
             zone: syscd.dev
             tsigAxfr: true
