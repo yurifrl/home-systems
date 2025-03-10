@@ -56,12 +56,7 @@ data:
             key "externaldns-key";
         };
         
-        # Allow updates from external-dns using the key
-        allow-update {
-            key "externaldns-key";
-        };
-        
-        # Update policy (more granular control if needed)
+        # Update policy for external-dns - allows dynamic updates with the specified key
         update-policy {
             grant externaldns-key zonesub ANY;
         };
