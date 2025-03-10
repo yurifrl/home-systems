@@ -13,6 +13,8 @@ spec:
       labels:
         app: bind9
         instance: "{{ .nodeIP | default "1" }}"
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       tolerations:
         - key: "node-role"
