@@ -11,7 +11,7 @@ data:
       192.168.0.0/16;    # All local networks in 192.168.x.x range
       198.19.0.0/16;     # Broader network range
       10.0.0.0/8;        # All kubernetes and internal networks - needed for external-dns to connect
-      127.0.0.1/8;       # Localhost
+      127.0.0.0/8;       # Localhost network - using network address, not host address
       ::1/128;           # IPv6 localhost
     };
 
