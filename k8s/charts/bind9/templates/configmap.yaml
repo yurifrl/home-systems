@@ -10,9 +10,7 @@ data:
     acl internal {
       192.168.0.0/16;    # All local networks in 192.168.x.x range
       198.19.0.0/16;     # Broader network range
-      10.0.0.0/8;        # All kubernetes and internal networks - needed for external-dns to connect
-      127.0.0.0/8;       # Localhost network - using network address, not host address
-      ::1/128;           # IPv6 localhost
+      # 10.0.0.0/8;        # All kubernetes and internal networks
     };
 
     options {
@@ -29,39 +27,19 @@ data:
         1.0.0.1;
         8.8.8.8;
       };
-      
-      # Allow dynamic updates
-      allow-update-forwarding { internal; };
-      
-      # Enable DNSSEC validation
-      dnssec-validation auto;
-      
-      # Listen on all interfaces
-      listen-on { any; };
-      listen-on-v6 { any; };
-    };
-
-    # Controls section for remote management (without requiring a key)
-    controls {
-      inet 127.0.0.1 port 953 allow { localhost; };
     };
 
     zone "syscd.dev" IN {
         type master;
         file "/etc/bind/syscd.dev.zone";
         journal "/var/lib/bind/syscd.dev.zone.jnl";
-        
-        # Allow zone transfers using the key
         allow-transfer {
             key "externaldns-key";
         };
-        
-        # Update policy for external-dns - allows dynamic updates with the specified key
         update-policy {
             grant externaldns-key zonesub ANY;
         };
     };
-    
     # Include the keys configuration, it will come from a secret previously created
     include "/etc/bind/keys.conf";
 
