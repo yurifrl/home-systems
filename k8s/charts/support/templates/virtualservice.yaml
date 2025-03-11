@@ -14,8 +14,8 @@ spec:
   hosts:
     {{- include "support.hosts" (merge . (dict "Values" $.Values)) | nindent 4 }}
   gateways:
-    - istio-system/private
-    - istio-system/public
+    - istio-system/dev
+    - istio-system/cloudflare
     - istio-system/tailscale
   http:
     - route:
