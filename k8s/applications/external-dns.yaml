@@ -32,7 +32,6 @@ spec:
               name: externaldns-pihole
             - targetName: tsig-secret
               name: externaldns-tsig
-
     # Might work on the virtual service
     # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
     # Tailscale
@@ -44,18 +43,18 @@ spec:
         valuesObject:
           txtOwnerId: syscd-tailscale
           policy: sync
+          interval: 1m
           domainFilters:
             - syscd.tech
-          interval: 1m
           sources:
             - istio-gateway
             - istio-virtualservice
-          extraArgs:
-            service-type-filter: LoadBalancer
           provider: cloudflare
           cloudflare:
             secretName: cloudflare-api-token-secret
             proxied: false
+          extraArgs:
+            service-type-filter: LoadBalancer
     # Cloudflare
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
@@ -66,9 +65,9 @@ spec:
           crd.create: false
           txtOwnerId: syscd-cloudflare
           policy: upsert-only
+          interval: 1m
           domainFilters:
             - syscd.live
-          interval: 1m
           sources:
             - istio-gateway
             - istio-virtualservice
@@ -76,29 +75,6 @@ spec:
           cloudflare:
             secretName: cloudflare-api-token-secret
             proxied: true
-    # # Pi-hole DNS
-    # - repoURL: registry-1.docker.io/bitnamicharts
-    #   chart: external-dns
-    #   targetRevision: "*"
-    #   helm:
-    #     releaseName: pihole
-    #     valuesObject:
-    #       crd.create: false
-    #       logLevel: debug
-    #       txtOwnerId: syscd-pihole
-    #       policy: sync
-    #       domainFilters:
-    #         - syscd.dev
-    #       interval: 1m
-    #       provider: pihole
-    #       pihole:
-    #         server: "http://pihole-web.pihole.svc.cluster.local"
-    #         secretName: pihole-secret
-    #       sources:
-    #         - istio-gateway
-    #         - istio-virtualservice
-    #       # extraArgs:
-    #       #   service-type-filter: LoadBalancer
     # RFC2136 DNS
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
@@ -112,9 +88,9 @@ spec:
           txtPrefix: external-dns-
           txtOwnerId: syscd-rfc2136
           policy: upsert-only
+          interval: 1m
           domainFilters:
             - syscd.dev
-          interval: 1m
           sources:
             - istio-gateway
             - istio-virtualservice
@@ -127,4 +103,27 @@ spec:
             tsigKeyname: externaldns-key
           # extraArgs:
           #   service-type-filter: LoadBalancer
+    # # Pi-hole DNS
+    # - repoURL: registry-1.docker.io/bitnamicharts
+    #   chart: external-dns
+    #   targetRevision: "*"
+    #   helm:
+    #     releaseName: pihole
+    #     valuesObject:
+    #       crd.create: false
+    #       logLevel: debug
+    #       txtOwnerId: syscd-pihole
+    #       policy: sync
+    #       interval: 1m
+    #       domainFilters:
+    #         - syscd.dev
+    #       sources:
+    #         - istio-gateway
+    #         - istio-virtualservice
+    #       provider: pihole
+    #       pihole:
+    #         server: "http://pihole-web.pihole.svc.cluster.local"
+    #         secretName: pihole-secret
+    #       # extraArgs:
+    #       #   service-type-filter: LoadBalancer
 # https://github.com/bitnami/charts/blob/main/bitnami/external-dns/README.md
