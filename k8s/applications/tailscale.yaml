@@ -35,6 +35,10 @@ spec:
             - hostname: tailscale-1
               advertiseRoutes:
                 - 10.244.0.0/16
+                - 192.168.50.0/24
+                - 10.0.0.0/16
+                - 10.1.0.0/16
+                - 10.69.0.0/16
     - repoURL: https://pkgs.tailscale.com/helmcharts
       chart: tailscale-operator
       targetRevision: "*"
