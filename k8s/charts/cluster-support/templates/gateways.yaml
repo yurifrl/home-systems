@@ -1,4 +1,3 @@
-# https://medium.com/@mattiaforc/zero-trust-kubernetes-ingress-with-tailscale-operator-cert-manager-and-external-dns-8f42272f8647
 # Argo tunnel domain
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
@@ -37,6 +36,7 @@ metadata:
   namespace: istio-system
   annotations:
     external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
+    external-dns.alpha.kubernetes.io/target: "tailscale-1-1.tailcecc0.ts.net"
 spec:
   selector:
     istio: gateway
@@ -90,3 +90,4 @@ spec:
       tls:
         mode: SIMPLE
         credentialName: gateway-public-tls
+# https://medium.com/@mattiaforc/zero-trust-kubernetes-ingress-with-tailscale-operator-cert-manager-and-external-dns-8f42272f8647
