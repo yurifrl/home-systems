@@ -6,7 +6,7 @@ metadata:
   name: private
   namespace: istio-system
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech,*.syscd.dev"
+    external-dns.alpha.kubernetes.io/hostname: "*.syscd.dev"
 spec:
   selector:
     istio: gateway
@@ -16,7 +16,6 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - "*.syscd.tech"
         - "*.syscd.dev"
       tls:
         httpsRedirect: true  # Force HTTPS redirect
@@ -30,6 +29,37 @@ spec:
       tls:
         mode: SIMPLE
         credentialName: syscd-tls  # Updated to match the new certificate secret name
+---
+# Tailscale domain
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: tailscale
+  namespace: istio-system
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
+spec:
+  selector:
+    istio: gateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*.syscd.tech"
+      tls:
+        httpsRedirect: true  # Force HTTPS redirect
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - "*.syscd.tech"
+        - "*.syscd.dev"
+      tls:
+        mode: SIMPLE
+        credentialName: syscd-tls  # Updated to match the new certificate secret name        
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway

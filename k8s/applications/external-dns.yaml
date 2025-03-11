@@ -43,7 +43,7 @@ spec:
         releaseName: tailscale
         valuesObject:
           txtOwnerId: syscd-tailscale
-          policy: upsert-only
+          policy: sync
           domainFilters:
             - syscd.tech
           interval: 1m
@@ -76,29 +76,29 @@ spec:
           cloudflare:
             secretName: cloudflare-api-token-secret
             proxied: true
-    # Pi-hole DNS
-    - repoURL: registry-1.docker.io/bitnamicharts
-      chart: external-dns
-      targetRevision: "*"
-      helm:
-        releaseName: pihole
-        valuesObject:
-          crd.create: false
-          logLevel: debug
-          txtOwnerId: syscd-pihole
-          policy: sync
-          domainFilters:
-            - syscd.dev
-          interval: 1m
-          provider: pihole
-          pihole:
-            server: "http://pihole-web.pihole.svc.cluster.local"
-            secretName: pihole-secret
-          sources:
-            - istio-gateway
-            - istio-virtualservice
-          # extraArgs:
-          #   service-type-filter: LoadBalancer
+    # # Pi-hole DNS
+    # - repoURL: registry-1.docker.io/bitnamicharts
+    #   chart: external-dns
+    #   targetRevision: "*"
+    #   helm:
+    #     releaseName: pihole
+    #     valuesObject:
+    #       crd.create: false
+    #       logLevel: debug
+    #       txtOwnerId: syscd-pihole
+    #       policy: sync
+    #       domainFilters:
+    #         - syscd.dev
+    #       interval: 1m
+    #       provider: pihole
+    #       pihole:
+    #         server: "http://pihole-web.pihole.svc.cluster.local"
+    #         secretName: pihole-secret
+    #       sources:
+    #         - istio-gateway
+    #         - istio-virtualservice
+    #       # extraArgs:
+    #       #   service-type-filter: LoadBalancer
     # RFC2136 DNS
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
