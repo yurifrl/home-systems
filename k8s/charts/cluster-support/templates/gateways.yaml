@@ -36,7 +36,7 @@ metadata:
   namespace: istio-system
   annotations:
     external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
-    external-dns.alpha.kubernetes.io/target: "100.100.246.96"
+    # external-dns.alpha.kubernetes.io/target: "100.100.246.96"
 spec:
   selector:
     istio: gateway
