@@ -1,0 +1,136 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vector
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vector
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    # Add virtual service configuration
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: vector
+              service:
+                name: vector
+                namespace: vector
+                port: 8686
+
+    # Vector Helm chart installation
+    - repoURL: https://helm.vector.dev
+      chart: vector
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          # Deploy Vector as an Aggregator (default)
+          # role: "Aggregator"
+          
+          # Alternatively, deploy Vector as an Agent by uncommenting this line:
+          # role: "Agent"
+          
+          # Configure resources for Vector
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          
+          # Service monitor for Prometheus integration
+          monitoring:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+          
+          # Custom Vector configuration
+          customConfig:
+            data_dir: /vector-data-dir
+            
+            # Define sources
+            sources:
+              internal_metrics:
+                type: "internal_metrics"
+              
+              host_metrics:
+                type: "host_metrics"
+                collectors:
+                  - cpu
+                  - disk
+                  - memory
+                  - network
+                  - load
+            
+              kubernetes_logs:
+                type: "kubernetes_logs"
+                extra_label_selector: "component=kube-scheduler,component=kube-apiserver"
+                extra_field_selector: "metadata.namespace=kube-system"
+                
+              # Example HTTP source for receiving logs
+              vector_api:
+                type: "http_server"
+                address: "0.0.0.0:8686"
+                encoding: "json"
+            
+            # Define transforms
+            transforms:
+              remap_logs:
+                type: "remap"
+                inputs: ["kubernetes_logs"]
+                source: |
+                  # Add timestamp if not present
+                  if !exists(.timestamp) {
+                    .timestamp = now()
+                  }
+                  # Add hostname field
+                  .host = get_env_var("HOSTNAME") ?? "unknown"
+            
+            # Define sinks
+            sinks:
+              prometheus_sink:
+                type: "prometheus_exporter"
+                inputs: ["internal_metrics", "host_metrics"]
+                address: "0.0.0.0:9598"
+              
+              console:
+                type: "console"
+                inputs: ["remap_logs"]
+                encoding:
+                  codec: "json"
+              
+              # Example Loki sink - uncomment and configure if needed
+              # loki:
+              #   type: "loki"
+              #   inputs: ["remap_logs"]
+              #   endpoint: "http://loki-single-binary.monitoring.svc.cluster.local:3100"
+              #   encoding:
+              #     codec: "json"
+              #   labels:
+              #     app: "{{ pod_name }}"
+              #     namespace: "{{ namespace }}"
+              #     pod: "{{ pod_name }}"
+              #     container: "{{ container_name }}"
+          
+          # Persistence configuration
+          persistence:
+            enabled: false
+            size: 10Gi
+            storageClass: local-path
+          
+          # Service annotations
+          service:
+            enabled: true
+            annotations:
+              teleport.dev/name: vector 
