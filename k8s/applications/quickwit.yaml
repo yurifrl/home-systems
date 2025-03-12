@@ -1,0 +1,92 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: quickwit
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: quickwit
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    # Add virtual service configuration
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: quickwit
+              service:
+                name: quickwit
+                namespace: quickwit
+                port: 7280
+          
+          # Optional: Add external secrets configuration if needed
+          # externalSecrets:
+          #   - name: quickwit-s3-credentials
+          #   - name: quickwit-postgres-credentials
+
+    # Quickwit Helm chart installation
+    - repoURL: https://helm.quickwit.io
+      chart: quickwit
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          # Configure resources
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          
+          # Service monitor for Prometheus integration
+          serviceMonitor:
+            enabled: true
+          
+          # Configure persistence if needed
+          persistence:
+            enabled: true
+            size: 10Gi
+            storageClass: local-path
+          
+          # Configure environment variables
+          environment:
+            # For file-backed metastore (S3)
+            QW_METASTORE_URI: s3://default/quickwit-indexes
+          
+          # Configuration for Quickwit
+          config:
+            default_index_root_uri: s3://default/quickwit-indexes
+            
+            # For PostgreSQL metastore (recommended for production)
+            # Uncomment and configure as needed
+            # postgres:
+            #   host: postgres
+            #   port: 5432
+            #   database: quickwit-metastore
+            #   username: quickwit
+            #   password: password # Consider using secretRef instead
+            
+            # S3 storage configuration
+            storage:
+              s3:
+                region: us-east-1
+                # For MinIO integration with your existing setup
+                endpoint: http://minio.minio.svc.cluster.local:9000
+                # Uncomment if using AWS S3 or configure for your S3-compatible storage
+                # access_key_id: access_key
+                # secret_access_key: secret_key
+          
+          # Service annotations
+          service:
+            annotations:
+              teleport.dev/name: quickwit 
