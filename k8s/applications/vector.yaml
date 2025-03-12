@@ -38,7 +38,21 @@ spec:
           # role: "Aggregator"
           
           # Alternatively, deploy Vector as an Agent by uncommenting this line:
-          # role: "Agent"
+          role: "Agent"
+          
+          # Environment variables for Vector
+          env:
+            - name: VECTOR_SELF_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+
+          # Pod security context
+          podSecurityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
           
           # Configure resources for Vector
           resources:
@@ -77,18 +91,20 @@ spec:
                 type: "kubernetes_logs"
                 extra_label_selector: "component=kube-scheduler,component=kube-apiserver"
                 extra_field_selector: "metadata.namespace=kube-system"
+                # The self_node_name will be populated from the VECTOR_SELF_NODE_NAME env var
                 
               # Example HTTP source for receiving logs
               vector_api:
                 type: "http_server"
                 address: "0.0.0.0:8686"
                 encoding: "json"
+                outputs: ["remap_logs"]  # Add output to fix the "no consumers" warning
             
             # Define transforms
             transforms:
               remap_logs:
                 type: "remap"
-                inputs: ["kubernetes_logs"]
+                inputs: ["kubernetes_logs", "vector_api"]  # Include vector_api source
                 source: |
                   # Add timestamp if not present
                   if !exists(.timestamp) {
@@ -110,18 +126,18 @@ spec:
                 encoding:
                   codec: "json"
               
-              # Example Loki sink - uncomment and configure if needed
-              # loki:
-              #   type: "loki"
-              #   inputs: ["remap_logs"]
-              #   endpoint: "http://loki-single-binary.monitoring.svc.cluster.local:3100"
-              #   encoding:
-              #     codec: "json"
-              #   labels:
-              #     app: "{{ pod_name }}"
-              #     namespace: "{{ namespace }}"
-              #     pod: "{{ pod_name }}"
-              #     container: "{{ container_name }}"
+              # Uncommented Loki sink for integration with your monitoring stack
+              loki:
+                type: "loki"
+                inputs: ["remap_logs"]
+                endpoint: "http://loki-single-binary.monitoring.svc.cluster.local:3100"
+                encoding:
+                  codec: "json"
+                labels:
+                  app: "{{ pod_name }}"
+                  namespace: "{{ namespace }}"
+                  pod: "{{ pod_name }}"
+                  container: "{{ container_name }}"
           
           # Persistence configuration
           persistence:
