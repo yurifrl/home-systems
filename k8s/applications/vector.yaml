@@ -34,26 +34,6 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
-          # Deploy Vector as an Aggregator (default)
-          # role: "Aggregator"
-          
-          # Alternatively, deploy Vector as an Agent by uncommenting this line:
-          role: "Agent"
-          
-          # Environment variables for Vector
-          env:
-            - name: VECTOR_SELF_NODE_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-
-          # Pod security context
-          podSecurityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            fsGroup: 1000
-          
           # Configure resources for Vector
           resources:
             requests:
@@ -68,72 +48,11 @@ spec:
             enabled: true
             serviceMonitor:
               enabled: true
+         
           
-          # Custom Vector configuration
-          customConfig:
-            data_dir: /vector-data-dir
-            
-            # Define sources
-            sources:
-              internal_metrics:
-                type: "internal_metrics"
-              
-              host_metrics:
-                type: "host_metrics"
-                collectors:
-                  - cpu
-                  - disk
-                  - memory
-                  - network
-                  - load
-            
-              kubernetes_logs:
-                type: "kubernetes_logs"
-                extra_label_selector: "component=kube-scheduler,component=kube-apiserver"
-                extra_field_selector: "metadata.namespace=kube-system"
-                # The self_node_name will be populated from the VECTOR_SELF_NODE_NAME env var
-                
-              # Example HTTP source for receiving logs
-              vector_api:
-                type: "http_server"
-                address: "0.0.0.0:8686"
-                encoding: "json"
-                outputs: ["remap_logs"]  # Add output to fix the "no consumers" warning
-            
-            # Define transforms
-            transforms:
-              remap_logs:
-                type: "remap"
-                inputs: ["kubernetes_logs", "vector_api"]  # Include vector_api source
-                source: |
-                  # Add timestamp if not present
-                  if !exists(.timestamp) {
-                    .timestamp = now()
-                  }
-                  # Add hostname field
-                  .host = get_env_var("HOSTNAME") ?? "unknown"
-            
-            # Define sinks
-            sinks:
-              prometheus_sink:
-                type: "prometheus_exporter"
-                inputs: ["internal_metrics", "host_metrics"]
-                address: "0.0.0.0:9598"
-              
-              console:
-                type: "console"
-                inputs: ["remap_logs"]
-                encoding:
-                  codec: "json"
-          
-          # Persistence configuration
+          # No need for persistence since we're using emptyDir
           persistence:
             enabled: false
             size: 10Gi
             storageClass: local-path
           
-          # Service annotations
-          service:
-            enabled: true
-            annotations:
-              teleport.dev/name: vector 
