@@ -47,7 +47,7 @@ spec:
             database: quickwit-metastore
           primary:
             persistence:
-              enabled: true
+              enabled: false
               size: 10Gi
               storageClass: local-path
             resources:
