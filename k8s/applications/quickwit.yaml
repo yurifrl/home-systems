@@ -54,7 +54,7 @@ spec:
           
           # Configure persistence if needed
           persistence:
-            enabled: true
+            enabled: false
             size: 10Gi
             storageClass: local-path
           
