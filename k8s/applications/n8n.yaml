@@ -36,8 +36,8 @@ spec:
           #     accessModes:
           #       - ReadWriteOnce
 
-    # n8n Helm chart installation
-    - repoURL: https://helm.8gears.com
+    # n8n Helm chart installation using OCI repository
+    - repoURL: 8gears.container-registry.com/library
       chart: n8n
       targetRevision: "*"
       helm:
