@@ -84,21 +84,12 @@ spec:
             size: 10Gi
             storageClass: local-path
           
-          # Configure environment variables - using PostgreSQL, so removing file-backed metastore
-          # environment:
-          #   QW_METASTORE_URI: s3://default/quickwit-indexes
-          
           # Configuration for Quickwit
           config:
             default_index_root_uri: s3://default/quickwit-indexes
             
-            # PostgreSQL metastore configuration (hardcoded)
-            postgres:
-              host: quickwit-postgres
-              port: 5432
-              database: quickwit-metastore
-              username: quickwit
-              password: quickwit-password123
+            # PostgreSQL metastore configuration using metastore instead of postgres field
+            metastore_uri: postgres://quickwit:quickwit-password123@quickwit-postgres:5432/quickwit-metastore
             
             # S3 storage configuration
             storage:
