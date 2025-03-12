@@ -125,19 +125,6 @@ spec:
                 inputs: ["remap_logs"]
                 encoding:
                   codec: "json"
-              
-              # Uncommented Loki sink for integration with your monitoring stack
-              loki:
-                type: "loki"
-                inputs: ["remap_logs"]
-                endpoint: "http://loki-single-binary.monitoring.svc.cluster.local:3100"
-                encoding:
-                  codec: "json"
-                labels:
-                  app: "{{ pod_name }}"
-                  namespace: "{{ namespace }}"
-                  pod: "{{ pod_name }}"
-                  container: "{{ container_name }}"
           
           # Persistence configuration
           persistence:
