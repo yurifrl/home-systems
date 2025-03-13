@@ -48,9 +48,6 @@ spec:
       index: 'hdfs-logs'
       logMessageField: body
       logLevelField: severity_text
-  plugins:
-    - name: quickwit-quickwit-datasource # https://github.com/quickwit-oss/quickwit-datasource
-      version: 0.4.6
 # ---
 # apiVersion: grafana.integreatly.org/v1beta1
 # kind: GrafanaDatasource

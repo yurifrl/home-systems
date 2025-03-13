@@ -33,9 +33,9 @@ spec:
                 port: 12321
           externalSecrets:
             - name: appdaemon-secrets
-    - repoURL: https://github.com/yurifrl/appdaemon.git
+    - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
-      path: charts/appdaemon
+      path: k8s/charts/appdaemon
       helm:
         valuesObject:
           nodeSelector:

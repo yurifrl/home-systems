@@ -2,8 +2,4 @@ secrets.*
 secrets
 .DS_Store
 *.env
-appdaemon
-1password-credentials.json
 talos/op
-hack/nixos
-result
