@@ -48,8 +48,8 @@ spec:
           primary:
             persistence:
               enabled: false
-              size: 10Gi
-              storageClass: local-path
+              # size: 10Gi
+              # storageClass: local-path
             resources:
               requests:
                 memory: 256Mi
@@ -65,43 +65,34 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
+          environment:
+            # https://quickwit.io/docs/get-started/tutorials/trace-analytics-with-grafana
+            QW_ENABLE_OPENTELEMETRY_OTLP_EXPORTER: "true"
+            OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:7281"
+            
           # Configure resources
           resources:
-            requests:
-              cpu: 250m
-              memory: 512Mi
             limits:
-              cpu: 1000m
-              memory: 1Gi
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
           
           # Service monitor for Prometheus integration
           serviceMonitor:
             enabled: true
-          
-          # Configure persistence if needed
-          persistence:
-            enabled: false
-            size: 10Gi
-            storageClass: local-path
-          
+
           # Configuration for Quickwit
           config:
-            default_index_root_uri: s3://default/quickwit-indexes
-            
-            # PostgreSQL metastore configuration using metastore instead of postgres field
-            metastore_uri: postgres://quickwit:quickwit-password123@quickwit-postgres:5432/quickwit-metastore
-            
-            # S3 storage configuration
-            storage:
-              s3:
-                region: us-east-1
-                # For MinIO integration with your existing setup
-                endpoint: http://minio.minio.svc.cluster.local:9000
-                # Hardcoded S3 credentials (for demonstration purposes only)
-                access_key_id: minio-access-key
-                secret_access_key: minio-secret-key
-          
-          # Service annotations
-          service:
-            annotations:
-              teleport.dev/name: quickwit 
+            postgres:
+              host: quickwit-postgres
+              port: 5432
+              database: quickwit-metastore
+              username: quickwit
+              password: quickwit-password123 # This password will be stored as a Kubernetes Secret
+
+            indexer:
+              # By activating the OTEL service, Quickwit will be able
+              # to receive gRPC requests from OTEL collectors.
+              enable_otlp_endpoint: true
