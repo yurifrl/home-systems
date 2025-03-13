@@ -70,8 +70,6 @@ spec:
               config:
                 auth:
                   disable_login_form: "true"
-                  anonymous:
-                    enabled: "true"
                 security:
                   admin_user: admin
                   admin_password: admin
