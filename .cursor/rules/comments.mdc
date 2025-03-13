@@ -1,0 +1,61 @@
+---
+description: Code Commenting Guidelines
+globs: 
+alwaysApply: false
+---
+### **Code Commenting Guidelines for the Model**
+Your task is to generate comments that explain the **purpose and reasoning** behind the code, rather than describing what it does. Follow these principles:
+
+1. **Explain the Why, Not the What**  
+   - Instead of stating what a piece of code does, explain why it exists.  
+   - Focus on the problem it solves, the intention behind it, or any trade-offs made.
+
+2. **Be Concise, Avoid Over-Commenting**  
+   - Do not clutter the code with excessive comments.  
+   - Only add comments when necessary for clarity or context.
+
+3. **Avoid Redundant Comments**  
+   - Do not write comments that simply restate the function, variable, or class name.  
+   - If the function is already self-explanatory, skip the comment.
+
+4. **Provide Context for Complex Logic**  
+   - When the code involves optimizations, workarounds, or business logic that is not obvious, explain the reasoning.  
+   - If a specific implementation decision was made (e.g., for performance reasons), mention it.
+
+5. **Mark Assumptions, Limitations, and Side Effects**  
+   - If the code relies on certain assumptions (e.g., an API returning a specific structure), make that explicit.  
+   - Highlight potential edge cases, gotchas, or technical debt.
+
+6. **Use TODO and FIXME When Needed**  
+   - Use `TODO:` for future improvements or known enhancements.  
+   - Use `FIXME:` to flag known issues or temporary fixes.
+
+7. **Keep Comments Up to Date**  
+   - Comments should reflect the current state of the code.  
+   - Do not leave outdated or misleading comments.
+
+### **Examples**
+
+✅ **Good Comment:**  
+```python
+# Using a dictionary for O(1) lookups instead of a list for better performance
+cache = {}
+```
+
+❌ **Bad Comment (Redundant and Obvious):**  
+```python
+# Creating an empty dictionary
+cache = {}
+```
+
+✅ **Good Comment:**  
+```python
+# Fetching user data once to avoid repeated API calls
+user_data = fetch_user_info()
+```
+
+❌ **Bad Comment (Function Name Already Explains It):**  
+```python
+# Fetch user info
+user_data = fetch_user_info()
+```

@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: appdaemon
+  namespace: {{ .Release.Namespace }}
+spec:
+  serviceName: appdaemon
+  replicas: 1
+  selector:
+    matchLabels:
+      app: appdaemon
+  template:
+    metadata:
+      labels:
+        app: appdaemon
+    spec:
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: appdaemon
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 5050
+              name: http
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+          env:
+            - name: DASH_URL
+              value: "http://appdaemon.{{ .Release.Namespace }}.svc.cluster.local:5050"
+            - name: HA_URL
+              value: {{ .Values.homeAssistant.url }}
+            - name: TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: appdaemon-secrets
+                  key: TOKEN
+            - name: LATITUDE
+              value: "{{ .Values.location.latitude }}"
+            - name: LONGITUDE
+              value: "{{ .Values.location.longitude }}"
+            - name: ELEVATION
+              value: "{{ .Values.location.elevation }}"
+            - name: TIMEZONE
+              value: {{ .Values.location.timezone }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          volumeMounts:
+            - name: config
+              mountPath: /conf
+        - name: codeserver
+          image: "codercom/code-server:latest"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          args:
+            - --auth
+            - none
+            - --user-data-dir
+            - "/conf/.vscode"
+            - --extensions-dir
+            - "/conf/.vscode"
+            - --port
+            - "12321"
+            - "/conf"
+          ports:
+            - containerPort: 12321
+              name: codeserver
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /conf
+  volumeClaimTemplates:
+    - metadata:
+        name: config
+      spec:
+        volumeName: {{ .Values.persistence.volumeName }}
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 5Gi
