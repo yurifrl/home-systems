@@ -65,8 +65,9 @@ spec:
             runAsUser: 1000
             runAsGroup: 1000
           volumeMounts:
-            - name: config
+            - name: conf
               mountPath: /conf
+              subPath: appdaemon
         - name: codeserver
           image: "codercom/code-server:latest"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -88,11 +89,11 @@ spec:
               name: codeserver
               protocol: TCP
           volumeMounts:
-            - name: config
+            - name: conf
               mountPath: /conf
   volumeClaimTemplates:
     - metadata:
-        name: config
+        name: conf
       spec:
         volumeName: {{ .Values.persistence.volumeName }}
         accessModes: [ "ReadWriteOnce" ]
