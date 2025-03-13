@@ -24,7 +24,7 @@ spec:
           virtualServices:
             - name: quickwit
               service:
-                name: quickwit
+                name: quickwit-searcher
                 namespace: quickwit
                 port: 7280
           
