@@ -62,13 +62,13 @@ spec:
     matchLabels:
       dashboards: grafana
   datasource:
-    access: proxy
-    type: prometheus
-    jsonData:
-      timeInterval: 5s
-      tlsSkipVerify: true
     name: Quickwit
+    type: quickwit-quickwit-datasource
     url: http://quickwit.quickwit.svc.cluster.local:8080
+    jsonData:
+      index: 'hdfs-logs'
+      logMessageField: body
+      logLevelField: severity_text
   plugins:
     - name: quickwit-quickwit-datasource
       version: 0.4.5
