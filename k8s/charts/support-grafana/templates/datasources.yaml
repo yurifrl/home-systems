@@ -52,7 +52,6 @@ spec:
     jsonData:
       timeInterval: "30s"
       tlsSkipVerify: true
-
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
@@ -68,8 +67,8 @@ spec:
     jsonData:
       timeInterval: 5s
       tlsSkipVerify: true
-    name: Prometheus
-    url: http://prometheus-service:9090
+    name: Quickwit
+    url: http://quickwit.quickwit.svc.cluster.local:8080
   plugins:
     - name: grafana-clock-panel
       version: 1.3.0
