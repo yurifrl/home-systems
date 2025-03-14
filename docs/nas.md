@@ -1,0 +1,5 @@
+# NAS
+
+- [Alder Lake N100 NAS Placa-mãe ITX Processador Doméstico DDR5 4 \* I226 2.5G LAN M.2 Slot 6xSATA DP HD Baixa Potência - AliExpress](https://pt.aliexpress.com/item/1005006374631897.html?srcSns=sns_Copy&spreadType=socialShare&bizType=ProductDetail&social_params=21705699364&aff_fcid=253fe685f41a4701844ff5fc77486172-1734654120434-08507-_mtox9sB&tt=MG&aff_fsk=_mtox9sB&aff_platform=default&sk=_mtox9sB&aff_trace_key=253fe685f41a4701844ff5fc77486172-1734654120434-08507-_mtox9sB&shareId=21705699364&businessType=ProductDetail&platform=AE&terminal_id=9c1e2c611a54427dad6fbd4639ac89d2&afSmartRedirect=y)
+    - THis can serve as the nas board
+- [Gabinete Rack 1U Supermicro 4 Gavetas Hot Swap - Fonte 600w | HB Store](https://www.hbstore.com.br/produto/gabinete-rack-1u-supermicro-4-gavetas-hot-swap-fonte-600w)

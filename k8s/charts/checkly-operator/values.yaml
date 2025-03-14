@@ -1,0 +1,67 @@
+# Default values for checkly-operator
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: ghcr.io/checkly/checkly-operator
+  pullPolicy: IfNotPresent
+  tag: "" # Defaults to .Chart.AppVersion
+
+replicaCount: 1
+
+# Required configuration
+config:
+  # Required: Your Checkly API key
+  apiKey: ""
+  # Required: Your Checkly account ID
+  accountId: ""
+  # Optional: Controller domain for annotations and finalizers
+  controllerDomain: "k8s.checklyhq.com"
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Metrics configuration
+metrics:
+  port: 8080
+  path: /metrics
+
+# Health probe configuration
+healthProbe:
+  port: 8081
+
+# Leader election configuration
+leaderElection:
+  enabled: true
+  resourceName: "4e7eab13.checklyhq.com" 

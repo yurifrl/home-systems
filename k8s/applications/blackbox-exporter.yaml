@@ -1,0 +1,87 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: blackbox-exporter
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: blackbox-exporter
+              service:
+                name: blackbox-exporter-prometheus-blackbox-exporter
+                namespace: monitoring
+                port: 9115
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: prometheus-blackbox-exporter
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          extraSecretMounts:
+            - name: secret-files
+              mountPath: /etc/secrets/
+              secretName: blackbox-exporter
+          automountServiceAccountToken: true
+          serviceAccount:
+            create: true
+          resources:
+            limits:
+              cpu: 50m
+              memory: 128Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          serviceMonitor:
+            enabled: true
+          config:
+            modules:
+              http_2xx:
+                prober: http
+                timeout: 5s
+                http:
+                  fail_if_not_ssl: false
+                  follow_redirects: true
+              http_2xx_control_plane:
+                prober: http
+                timeout: 5s
+                http:
+                  valid_status_codes: [200]
+                  valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+                  tls_config:
+                    ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                  bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              http_2xx_slzb_basic_auth:
+                prober: http
+                timeout: 5s
+                http:
+                  valid_status_codes: [200]
+                  basic_auth:
+                    username: syscd
+                    password_file: /etc/secrets/http_2xx_slzb_basic_auth
+                  fail_if_not_ssl: false
+                  follow_redirects: true
+              resolve_dns_syscd: # https://blackbox-exporter.syscd.live/probe?module=resolve_dns_syscd&target=bind9.bind9.svc.cluster.local&debug=true
+                prober: dns
+                timeout: 5s
+                dns:
+                  transport_protocol: "udp"
+                  preferred_ip_protocol: "ip4"
+                  query_name: "syscd.dev"
+                  query_type: "A"
+                  valid_rcodes:
+                    - NOERROR

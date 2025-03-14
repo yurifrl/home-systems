@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-test-chart
+  labels:
+    app: {{ .Release.Name }}-test-chart
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-test-chart
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-test-chart
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        env:
+        - name: TEST_VALUE
+          value: {{ .Values.testValue | quote }} 

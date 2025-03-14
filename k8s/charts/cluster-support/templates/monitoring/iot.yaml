@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: iot-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: iot
+      rules:
+        - alert: SensorDown
+          expr: mqtt_linkquality == 0
+          for: 12h
+          labels:
+            severity: notification-daily
+          annotations:
+            summary: "Sensor is out of range"
+            description: "Sensor {{ `{{ $labels.topic }}` }} is out of range"

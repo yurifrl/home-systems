@@ -1,0 +1,85 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: velero
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: velero
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: velero-credentials
+    - chart: velero
+      repoURL: https://vmware-tanzu.github.io/helm-charts
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          # Configure resources
+          resources:
+            requests:
+              cpu: 500m
+              memory: 128Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+
+          # Configure metrics
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+
+          # Configure init containers for GCP plugin
+          initContainers:
+            - name: velero-plugin-for-gcp
+              image: velero/velero-plugin-for-gcp:v1.7.0
+              imagePullPolicy: IfNotPresent
+              volumeMounts:
+                - mountPath: /target
+                  name: plugins
+
+          # Configure credentials
+          credentials:
+            useSecret: true
+            existingSecret: velero-credentials
+
+          # Configure backup locations
+          configuration:
+            backupStorageLocation:
+              - name: default
+                provider: gcp
+                bucket: syscd
+                config:
+                  serviceAccount: velero@syscd-443112.iam.gserviceaccount.com
+
+            volumeSnapshotLocation:
+              - name: default
+                provider: gcp
+
+          # Configure backups
+          schedules:
+            daily-backup:
+              schedule: "0 1 * * *"
+              template:
+                ttl: "240h"
+                includedNamespaces:
+                  - argocd
+                  - home-assistant 
+                  - zigbee2mqtt
+                  - node-red

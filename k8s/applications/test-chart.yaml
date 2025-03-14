@@ -1,0 +1,34 @@
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: test-chart
+#   namespace: argocd
+# spec:
+#   project: default
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: test
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true
+#   source:
+#     repoURL: http://laptop-de-nsx000542.tailcecc0.ts.net:8000
+#     chart: test-chart
+#     targetRevision: 0.1.0
+#     helm:
+#       values: |
+#         replicaCount: 2
+        
+#         # Override test value to demonstrate custom configuration
+#         testValue: "This value comes from the Argo CD Application manifest!"
+        
+#         resources:
+#           requests:
+#             memory: 128Mi
+#             cpu: 100m
+#           limits:
+#             memory: 256Mi
+#             cpu: 200m 

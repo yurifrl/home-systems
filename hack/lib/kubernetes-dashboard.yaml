@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubernetes-dashboard
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kubernetes-dashboard
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: k8s
+              service:
+                name: kubernetes-dashboard
+                namespace: kubernetes-dashboard
+                port: 443
+    - chart: kubernetes-dashboard
+      repoURL: https://kubernetes.github.io/dashboard/
+      targetRevision: 6.0.8
+      helm:
+        values: |
+          extraArgs:
+            - --enable-insecure-login
+          protocolHttp: true
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          service:
+            annotations:
+              teleport.dev/name: kubernetes-dashboard

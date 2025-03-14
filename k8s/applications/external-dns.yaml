@@ -1,0 +1,129 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-dns
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: external-dns
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - targetName: cloudflare-api-token-secret
+              name: externaldns-cloudflare
+            - targetName: pihole-secret
+              name: externaldns-pihole
+            - targetName: tsig-secret
+              name: externaldns-tsig
+    # Might work on the virtual service
+    # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    # Tailscale
+    - repoURL: registry-1.docker.io/bitnamicharts
+      chart: external-dns
+      targetRevision: "*"
+      helm:
+        releaseName: tailscale
+        valuesObject:
+          txtOwnerId: syscd-tailscale
+          policy: sync
+          interval: 1m
+          domainFilters:
+            - syscd.tech
+          sources:
+            - istio-gateway
+            - istio-virtualservice
+          provider: cloudflare
+          cloudflare:
+            secretName: cloudflare-api-token-secret
+            proxied: false
+          extraArgs:
+            service-type-filter: LoadBalancer
+    # Cloudflare
+    - repoURL: registry-1.docker.io/bitnamicharts
+      chart: external-dns
+      targetRevision: "*"
+      helm:
+        releaseName: cloudflare
+        valuesObject:
+          crd.create: false
+          txtOwnerId: syscd-cloudflare
+          policy: upsert-only
+          interval: 1m
+          domainFilters:
+            - syscd.live
+          sources:
+            - istio-gateway
+            - istio-virtualservice
+          provider: cloudflare
+          cloudflare:
+            secretName: cloudflare-api-token-secret
+            proxied: true
+    # RFC2136 DNS
+    - repoURL: registry-1.docker.io/bitnamicharts
+      chart: external-dns
+      targetRevision: "*"
+      helm:
+        releaseName: rfc2136
+        valuesObject:
+          crd.create: false
+          logLevel: debug
+          registry: txt
+          txtPrefix: external-dns-
+          txtOwnerId: syscd-rfc2136
+          policy: upsert-only
+          interval: 1m
+          domainFilters:
+            - syscd.dev
+          sources:
+            - istio-gateway
+            - istio-virtualservice
+          provider: rfc2136
+          rfc2136:
+            secretName: tsig-secret # Secret with key rfc2136_tsig_secret
+            host: bind9.bind9.svc.cluster.local
+            zone: syscd.dev
+            tsigAxfr: true
+            tsigKeyname: externaldns-key
+          # extraArgs:
+          #   service-type-filter: LoadBalancer
+    # # Pi-hole DNS
+    # - repoURL: registry-1.docker.io/bitnamicharts
+    #   chart: external-dns
+    #   targetRevision: "*"
+    #   helm:
+    #     releaseName: pihole
+    #     valuesObject:
+    #       crd.create: false
+    #       logLevel: debug
+    #       txtOwnerId: syscd-pihole
+    #       policy: sync
+    #       interval: 1m
+    #       domainFilters:
+    #         - syscd.dev
+    #       sources:
+    #         - istio-gateway
+    #         - istio-virtualservice
+    #       provider: pihole
+    #       pihole:
+    #         server: "http://pihole-web.pihole.svc.cluster.local"
+    #         secretName: pihole-secret
+    #       # extraArgs:
+    #       #   service-type-filter: LoadBalancer
+# https://github.com/bitnami/charts/blob/main/bitnami/external-dns/README.md

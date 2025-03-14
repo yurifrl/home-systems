@@ -1,0 +1,37 @@
+# test: https://blackbox-exporter.syscd.live/probe?module=http_2xx_slzb_basic_auth&target=http://192.168.68.111/ha_info&debug=true
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: slzb-zigbee
+  namespace: monitoring
+spec:
+  interval: 30s
+  module: http_2xx_slzb_basic_auth
+  prober:
+    url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - http://192.168.68.111
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: slzb-zigbee-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: slzb.rules
+      rules:
+        - alert: SLZBZigbeeDown
+          expr: probe_success{job="probe/monitoring/slzb-zigbee"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: zigbee
+          annotations:
+            summary: "SLZB Zigbee adapter is down"
+            description: "The SLZB-06 Zigbee adapter has been unreachable for more than 5 minutes." 

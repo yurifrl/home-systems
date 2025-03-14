@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bind9
+  labels:
+    app: bind9
+spec:
+  selector:
+    matchLabels:
+      app: bind9
+  template:
+    metadata:
+      labels:
+        app: bind9
+        instance: "{{ .nodeIP | default "1" }}"
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      tolerations:
+        - key: "node-role"
+          operator: "Equal"
+          value: "nixos-1"
+          effect: "NoSchedule"
+      containers:
+        - name: bind9
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: Always
+          command: ["/usr/sbin/named"]
+          args: ["-u", "root", "-g"]
+          ports:
+            - name: dns-tcp
+              containerPort: 53
+              protocol: TCP
+            - name: dns-udp
+              containerPort: 53
+              protocol: UDP
+          livenessProbe:
+            tcpSocket:
+              port: 53
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 53
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          env:
+            - name: BIND9_USER
+              value: "root"
+            - name: TZ
+              value: America/Sao_Paulo
+          volumeMounts:
+            - name: config
+              mountPath: /etc/bind/named.conf
+              subPath: named.conf
+            - name: config
+              mountPath: /etc/bind/syscd.dev.zone
+              subPath: syscd.dev.zone
+            - name: secret-config
+              mountPath: /etc/bind/keys.conf
+              subPath: keys.conf
+            - name: bind-data
+              mountPath: /var/lib/bind
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: bind9-config
+        - name: secret-config
+          secret:
+            secretName: {{ .Values.secretName }}
+        - name: bind-data
+          emptyDir: {}
+
+# https://github.com/artem-shestakov/helm-charts/tree/master/charts/bind9
+# https://github.com/johanneskastl/helm-charts/tree/main/charts/bind9
+# https://github.com/johanneskastl/bind9-isc-helm-chart/tree/main/charts/bind9

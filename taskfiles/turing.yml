@@ -1,0 +1,26 @@
+version: '3'
+
+# TODO
+tasks:
+  flash:
+    desc: "flash"
+    cmds:
+      - tpi flash -i /tmp/images/rockship-1.9.4-tailscale.raw -n 1
+      - tpi power on -n 1
+      
+  download:
+    desc: "Download the rockship-1.9.4-tailscale.raw image"
+    dir: /tmp/images
+    cmds:
+      - curl https://factory.talos.dev/image/3616c4c824f2540c0a14da0cc8e6fc46143f2ca0cc75c9c6376a66e562894950/v1.9.4/metal-arm64.raw.xz > rockship-1.9.4-tailscale.raw.xz 
+      - xz -d rockship-1.9.4-tailscale.raw.xz
+
+  get:
+    desc: "Get the image"
+    cmds:
+      - tpi uart get -n 1
+
+  install-talos:
+    cmds:
+      - talosctl -n 192.168.68.107 apply-config -f -i talos/op/nodes/tp1.yaml
+      

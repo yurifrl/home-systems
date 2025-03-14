@@ -1,0 +1,34 @@
+# apiVersion: k8s.checklyhq.com/v1alpha1
+# kind: AlertChannel
+# metadata:
+#   name: checkly-operator-test-alertchannel
+# spec:
+#   email:
+#     address: yurifl03@gmail.com
+# ---
+# apiVersion: k8s.checklyhq.com/v1alpha1
+# kind: Group
+# metadata:
+#   name: checkly-operator-test-group
+#   labels:
+#     environment: "local"
+# spec:
+#   locations:
+#     - eu-west-1
+#   alertchannel:
+#     - checkly-operator-test-alertchannel
+
+# ---
+# apiVersion: k8s.checklyhq.com/v1alpha1
+# kind: ApiCheck
+# metadata:
+#   name: checkly-operator-test-check-1
+#   namespace: default
+#   labels:
+#     service: "foo"
+# spec:
+#   endpoint: "https://probee.syscd.live"
+#   success: "200"
+#   frequency: 10 # Default 5
+#   muted: true # Default "false"
+#   group: "checkly-operator-test-group"

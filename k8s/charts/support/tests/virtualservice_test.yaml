@@ -1,0 +1,54 @@
+suite: test virtualservice template
+templates:
+  - virtualservice.yaml
+tests:
+  - it: should create virtualservice with correct hosts
+    set:
+      virtualServices:
+        - name: test-service
+          service:
+            name: test
+    asserts:
+      - isKind:
+          of: VirtualService
+      - equal:
+          path: metadata.name
+          value: test-service
+      - equal:
+          path: spec.hosts
+          value:
+            - test-service.syscd.live
+            - test-service.syscd.tech
+            - test-service.syscd.xyz
+            - test-service.syscd.dev
+
+  - it: should create virtualservice with correct hosts
+    set:
+      virtualServices:
+        - name: test-service
+          service:
+            name: test
+            namespace: default
+            port: 80
+          domains:
+            live: true
+            tech: false
+            xyz: true
+            dev: false
+      global:
+        domains:
+          live: false
+          tech: true
+          xyz: false
+          dev: true
+    asserts:
+      - isKind:
+          of: VirtualService
+      - equal:
+          path: metadata.name
+          value: test-service
+      - equal:
+          path: spec.hosts
+          value:
+            - test-service.syscd.live
+            - test-service.syscd.xyz

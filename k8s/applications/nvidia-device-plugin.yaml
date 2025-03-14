@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nvidia-device-plugin
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nvidia-device-plugin
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - chart: nvidia-device-plugin
+      repoURL: https://nvidia.github.io/k8s-device-plugin
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          runtimeClassName: nvidia
+
+# cuda 12.5 does not work with the current version of the device plugin
+# kubectl run \
+#   nvidia-test \
+#   --restart=Never \
+#   -ti --rm \
+#   --image nvcr.io/nvidia/cuda:12.0.0-base-ubuntu22.04 \
+#   --overrides '{"spec": {"runtimeClassName": "nvidia"}}' \
+#   nvidia-smi

@@ -1,0 +1,104 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home-assistant
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          services:
+            - name: node-red
+              selector:
+                app.kubernetes.io/name: home-assistant
+          virtualServices:
+            - name: code
+              service:
+                name: home-assistant-codeserver
+                namespace: home-assistant
+                port: 12321
+            - name: ha
+              service:
+                name: home-assistant
+                namespace: home-assistant
+                port: 8080
+
+    - repoURL: http://pajikos.github.io/home-assistant-helm-chart/
+      chart: home-assistant
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          nodeSelector:
+            syscd.dev/storage: tp1
+          addons:
+            codeserver:
+              enabled: true
+              image:
+                tag: latest
+          persistence:
+            enabled: true
+            existingVolume: home-assistant-tp1-data
+            storageClass: local-path
+          service:
+            annotations:
+              teleport.dev/name: home-assistant
+          initContainers:
+            - name: init-hacs
+              image: bash
+              command: ["bash", "-c", "cd /config && wget -O - https://get.hacs.xyz | bash -"]
+              volumeMounts:
+                - mountPath: /config
+                  name: home-assistant
+          serviceMonitor:
+            enabled: true
+          configuration:
+            enabled: true
+            forceInit: true
+            templateConfig: |-
+              default_config:
+              http:
+                use_x_forwarded_for: true
+                trusted_proxies:
+                  - 0.0.0.0/0
+                  - ::/0
+              # Load frontend themes from the themes folder
+              frontend:
+                themes: !include_dir_merge_named themes
+              automation: !include automations.yaml
+              script: !include scripts.yaml
+              scene: !include scenes.yaml
+
+              hello_world:
+              logger:
+                logs:
+                  custom_components.verisure: debug
+              prometheus:
+                namespace: hass
+                requires_auth: false
+              # https://www.home-assistant.io/integrations/influxdb/
+              influxdb:
+                api_version: 2
+                ssl: false
+                host: influxdb-influxdb2.influxdb.svc.cluster.local
+                port: 80
+                token: admin
+                organization: home-systems
+                bucket: default
+               
+# Chart: https://github.com/pajikos/home-assistant-helm-chart

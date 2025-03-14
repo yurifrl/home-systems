@@ -1,0 +1,58 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vector
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vector
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    # Add virtual service configuration
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: vector
+              service:
+                name: vector
+                namespace: vector
+                port: 8686
+
+    # Vector Helm chart installation
+    - repoURL: https://helm.vector.dev
+      chart: vector
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          # Configure resources for Vector
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          
+          # Service monitor for Prometheus integration
+          monitoring:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+         
+          
+          # No need for persistence since we're using emptyDir
+          persistence:
+            enabled: false
+            size: 10Gi
+            storageClass: local-path
+          

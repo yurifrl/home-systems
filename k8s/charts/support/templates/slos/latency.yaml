@@ -1,0 +1,26 @@
+{{- if .Values.slos.enabled }}
+{{- range .Values.virtualServices }}
+{{- $hostPrefix := .hostname | default .name -}}
+---
+# Indicator Type: latency
+# Measures if requests are completing within the expected latency threshold (500ms)
+# Uses histogram buckets from probe_http_duration_seconds
+#
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: {{ .name }}-latency-slo
+  namespace: monitoring
+  labels: {{- include "support.slo.labels" (dict "app" .name) | nindent 4 }}
+spec:
+  target: "99"  # 99% of requests should be under threshold
+  window: "7d"  # Weekly evaluation
+  description: "Ensure {{ .name }} instances respond within 500ms for 99% of requests."
+  indicator:
+    latency:
+      success:
+        metric: probe_http_duration_seconds_bucket{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live|dev)",le="0.5"}
+      total:
+        metric: probe_http_duration_seconds_count{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live|dev)"}
+{{- end }}
+{{- end }}

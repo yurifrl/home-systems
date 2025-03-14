@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: code-server
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: code-server
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: code-server
+              service:
+                name: code-server
+                namespace: code-server
+                port: 8080
+
+    - repoURL: https://github.com/coder/code-server.git
+      targetRevision: HEAD
+      path: ci/helm-chart
+      helm:
+        valuesObject:
+          image:
+            repository: codercom/code-server
+            tag: "latest"
+            pullPolicy: Always
+          
+          nodeSelector:
+            syscd.dev/gpu: "true"
+
+          securityContext:
+            enabled: true
+            fsGroup: 1000
+            runAsUser: 1000
+
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "all"
+
+          persistence:
+            enabled: true
+            size: 10Gi
+            accessMode: ReadWriteOnce
+
+          service:
+            type: ClusterIP
+            port: 8080
+            annotations:
+              teleport.dev/name: code-server

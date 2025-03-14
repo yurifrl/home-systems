@@ -1,0 +1,58 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  sources:
+    - repoURL: https://charts.longhorn.io
+      chart: longhorn
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          preUpgradeChecker:
+            jobEnabled: false
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          serviceMonitor:
+            enabled: true
+          defaultSettings:
+            defaultDataPath: /storage
+            backupTarget: s3://syscd@southamerica-east1/
+            backupTargetCredentialSecret: longhorn-gcp-backups
+            replicaZoneSoftAntiAffinity: false
+            storageMinimalAvailablePercentage: 10
+            defaultReplicaCount: 1
+            # test
+            # allowVolumeCreationWithDegradedAvailability: false
+            # createDefaultDiskLabeledNodes: true
+            # replicaAutoBalance: best-effort
+            # replicaSoftAntiAffinity: false
+            # replicaDiskSoftAntiAffinity: false
+            # storageOverProvisioningPercentage: 100
+            # upgradeChecker: true
+          service:
+            annotations:
+              teleport.dev/name: longhorn
+          global:
+            cattle:
+              systemDefaultRegistry: ""
+
+
+# k -n longhorn-system get nodes.longhorn.io tp4 -o yaml # get node information about failing disks

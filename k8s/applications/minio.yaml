@@ -1,0 +1,93 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: minio
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: minio
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    # Add virtual service configuration
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: minio
+              service:
+                name: minio
+                namespace: minio
+                port: 9000
+            - name: minio-console
+              service:
+                name: minio-console
+                namespace: minio
+                port: 9001
+
+    # MinIO Operator installation
+    - repoURL: https://operator.min.io/
+      chart: operator
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          operator:
+            env:
+              - name: MINIO_CONSOLE_TLS_ENABLE
+                value: "false"
+          console:
+            ingress:
+              enabled: false
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+    # MinIO Tenant configuration
+    - repoURL: https://operator.min.io/
+      chart: tenant
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          tenant:
+            name: minio
+            pools:
+              - servers: 1
+                name: pool-0
+                volumesPerServer: 1
+                size: 10Gi
+                storageClassName: local-path
+            users:
+              - name: admin
+                accessKey: minioadmin
+                secretKey: minioadmin
+                policy: consoleAdmin
+            buckets:
+              - name: default
+                objectLock: false
+            metrics:
+              enabled: true
+              port: 9000
+            prometheusOperator:
+              enabled: true
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+            service:
+              annotations:
+                teleport.dev/name: minio 

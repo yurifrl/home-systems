@@ -1,0 +1,59 @@
+# Persistent Volume Claims configuration
+persistentVolumeClaims: []
+  # - name: claim-name
+  #   accessModes:
+  #     - ReadWriteOnce
+  #   storage: 1Gi
+  #   storageClassName: local-storage
+  #   volumeName: volume-name
+
+# Persistent Volumes configuration
+persistentVolumes: []
+  # - name: volume-name                 # Name of the persistent volume
+  #   size: 1Gi                        # Storage capacity (e.g., 1Gi, 500Mi)
+  #   accessMode: ReadWriteOnce        # Access mode (default: ReadWriteOnce)
+  #   reclaimPolicy: Delete           # Volume reclaim policy (default: Delete)
+  #   storageClass: local-storage     # Storage class name
+  #   path: /mnt/data                 # Local path on the node
+  #   nodeName: worker-node-1         # Kubernetes node name where volume exists
+
+# Virtual Services configuration
+virtualServices: []
+  # - name: grafana                    # Name of the virtual service
+  #   service:
+  #     name: grafana-service          # Internal k8s service name
+  #     namespace: monitoring          # Service namespace
+  #     port: 80                       # Service port
+  #   domains:                         # Control which domains to create (defaults: xyz=true, tech=false, live=false)
+  #     live: false                    # Create public .syscd.live domain
+  #     tech: false                    # Create private .syscd.tech domain (includes .xyz alias)
+  #     xyz: true                      # Create private .syscd.xyz domain
+
+
+
+# Global settings
+global:
+  domains:
+    live: true
+    tech: true
+    xyz: true
+    dev: true
+
+# SLO settings
+slos:
+  enabled: false
+
+# Probes settings
+probes:
+  enabled: false
+
+# Services
+services: []
+  # - name: service-name
+  #   port: 80
+  #   targetPort: 80
+
+# External Secrets configuration
+externalSecrets: []
+  # - name: teleport-agent-token      # This matches the 1Password item name
+  #   namespace: teleport             # Kubernetes namespace

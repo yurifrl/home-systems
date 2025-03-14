@@ -1,0 +1,55 @@
+name: Release Charts
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'k8s/charts/**'
+
+env:
+  REGISTRY: ghcr.io
+  OWNER: ${{ github.repository_owner }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.13.2
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Package and Push Charts
+        run: |
+          # For each chart directory
+          for chart in k8s/charts/*; do
+            if [ -d "$chart" ]; then
+              chart_name=$(basename $chart)
+              
+              # Package the chart
+              helm package "$chart"
+              
+              # Get the version from Chart.yaml
+              version=$(helm show chart "$chart" | grep '^version:' | cut -d' ' -f2)
+              
+              # Push to GHCR
+              helm push "${chart_name}-${version}.tgz" "oci://${REGISTRY}/${OWNER}/charts"
+            fi
+          done 

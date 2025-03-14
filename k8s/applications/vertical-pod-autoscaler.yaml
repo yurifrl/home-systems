@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vertical-pod-autoscaler
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vpa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: vertical-pod-autoscaler-admission-controller-cert
+      jsonPointers:
+        - /data
+    - group: admissionregistration.k8s.io/v1
+      kind: MutatingWebhookConfiguration
+      name: vertical-pod-autoscaler-admission-controller
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+  source:
+    chart: vertical-pod-autoscaler
+    repoURL: ghcr.io/stevehipwell/helm-charts # 
+    targetRevision: "*"
+    helm:
+      valuesObject:
+        serviceMonitor:
+          enabled: true
+        recommender:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+        updater:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+        admissionController:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi 

@@ -1,0 +1,58 @@
+# https://grafana.github.io/grafana-operator/docs/examples/configmaps_sidecar/readme/
+# Dashboard from configmap via sidecar example
+# Using the kiwigrid/k8s-sidecar to watch for configmaps and import their contents as dashboards.
+# We need to extend the permissions of the Grafana serviceaccount to watch for configmaps
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: sidecar-role
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "watch", "list"]
+---
+# We bind the new permissions to the grafana-sa
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: sidecar-rolebinding
+roleRef:
+  kind: ClusterRole
+  name: sidecar-role
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: grafana-operator-grafana-sa
+    namespace: {{ .Release.Namespace }}
+---
+# Provisioning config
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: provisioning-config
+data:
+  provisioning.yaml: |-
+    apiVersion: 1
+    providers:
+      - name: 'configmap-dashboard-provider'
+        orgId: 1
+        folder: 'imported'
+        folderUid: ''
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 10
+        allowUiUpdates: false
+        options:
+          path: /var/lib/grafana/dashboards
+          foldersFromFilesStructure: true 
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaFolder
+metadata:
+  name: imported
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: "grafana"
+  # If title is not defined, the value will be taken from metadata.name
+  title: imported
