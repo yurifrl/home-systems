@@ -55,8 +55,8 @@ spec:
         repoURL: https://prometheus-community.github.io/helm-charts
         targetRevision: "*"      
       - repoURL: https://github.com/dotdc/grafana-dashboards-kubernetes
+        targetRevision: HEAD
         path: .
-        targetRevision: HEAD      
       - chart: grafana-operator
         repoURL: registry-1.docker.io/bitnamicharts
         targetRevision: "*"
