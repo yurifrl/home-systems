@@ -27,11 +27,6 @@ spec:
                 name: quickwit-searcher
                 namespace: quickwit
                 port: 7280
-          
-          # Optional: Add external secrets configuration if needed
-          # externalSecrets:
-          #   - name: quickwit-s3-credentials
-          #   - name: quickwit-postgres-credentials
 
     # PostgreSQL deployment
     - repoURL: https://charts.bitnami.com/bitnami
@@ -41,15 +36,12 @@ spec:
         releaseName: quickwit-postgres
         values: |
           auth:
-            # Hardcoded credentials (for demonstration purposes only - use secrets in production)
             username: quickwit
             password: quickwit-password123
             database: quickwit-metastore
           primary:
             persistence:
               enabled: false
-              # size: 10Gi
-              # storageClass: local-path
             resources:
               requests:
                 memory: 256Mi
@@ -58,6 +50,32 @@ spec:
                 memory: 512Mi
                 cpu: 500m
           fullnameOverride: quickwit-postgres
+    
+    # OpenTelemetry Collector deployment
+    - repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+      chart: opentelemetry-collector
+      targetRevision: "*"
+      helm:
+        releaseName: otel-collector
+        valuesObject:
+          mode: daemonset
+          presets:
+            logsCollection:
+              enabled: true
+            kubernetesAttributes:
+              enabled: true
+          config:
+            exporters:
+              otlp:
+                endpoint: quickwit-indexer.quickwit.svc.cluster.local:7281
+                compression: none
+                tls:
+                  insecure: true
+            service:
+              pipelines:
+                logs:
+                  exporters:
+                    - otlp
     
     # Quickwit Helm chart installation
     - repoURL: https://helm.quickwit.io
