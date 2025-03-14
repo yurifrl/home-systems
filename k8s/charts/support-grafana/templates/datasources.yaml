@@ -46,16 +46,17 @@ spec:
   # https://github.com/FNNDSC/charts/blob/master/testing/observe/prom-stack.yaml
   # https://github.com/serenditree/stem/blob/dev/charts/terra/scope/values.yaml
   # https://github.com/jbwittner/k8s_deploy/blob/main/gitops/apps/monitoring/release.yaml
+  # https://github.com/felixz92/infrastructure/blob/main/infrastructure/observability/base/grafana/datasources.yaml
   datasource:
     name: Quickwit
-    type: prometheus
+    type: quickwit-datasource
     url: http://quickwit-searcher.quickwit.svc.cluster.local:7280/api/v1
     jsonData:
       index: 'otel-logs-v0_7'
       logMessageField: body.message
       logLevelField: severity_text
   plugins:
-    - name: https://github.com/quickwit-oss/quickwit-datasource/releases/download/v0.4.6/quickwit-quickwit-datasource-0.4.6.zip;quickwit-quickwit-datasource # https://github.com/quickwit-oss/quickwit-datasource/releases/download/v0.3.1/quickwit-quickwit-datasource-0.3.1.zip # https://github.com/quickwit-oss/quickwit-datasource
+    - name: https://github.com/quickwit-oss/quickwit-datasource/releases/download/v0.4.6/quickwit-quickwit-datasource-0.4.6.zip;quickwit-quickwit-datasource
       version: 0.4.6
 # ---
 # apiVersion: grafana.integreatly.org/v1beta1
