@@ -58,6 +58,9 @@ spec:
       helm:
         releaseName: otel-collector
         valuesObject:
+          image:
+            repository: otel/opentelemetry-collector-k8s
+            tag: latest
           mode: daemonset
           presets:
             logsCollection:
