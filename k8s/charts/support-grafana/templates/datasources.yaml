@@ -49,10 +49,10 @@ spec:
   # https://github.com/felixz92/infrastructure/blob/main/infrastructure/observability/base/grafana/datasources.yaml
   datasource:
     name: Quickwit
-    type: quickwit-datasource
+    type: quickwit-quickwit-datasource
     url: http://quickwit-searcher.quickwit.svc.cluster.local:7280/api/v1
     jsonData:
-      index: 'otel-logs-v0_7'
+      index: otel-traces-v0_7
       logMessageField: body.message
       logLevelField: severity_text
   plugins:
