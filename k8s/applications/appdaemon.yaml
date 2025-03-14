@@ -33,6 +33,8 @@ spec:
                 port: 12321
           externalSecrets:
             - name: appdaemon-secrets
+          nodeSelector:
+            syscd.dev/storage: tp1
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/appdaemon
