@@ -98,14 +98,14 @@ spec:
               #     volumeMounts:
               #       - mountPath: /var/lib/grafana/dashboards
               #         name: dashboards                                    
-              extraVolumeMounts:
-                - mountPath: /etc/grafana/provisioning/dashboards
-                  name: provisioning-config
-                # - mountPath: /var/lib/grafana/dashboards
-                #   name: dashboards
-              extraVolumes:
-                # - name: dashboards
-                #   emptyDir: { }
-                - name: provisioning-config
-                  configMap:
-                    name: provisioning-config
+              # extraVolumeMounts:
+              #   - mountPath: /etc/grafana/provisioning/dashboards
+              #     name: provisioning-config
+              #   # - mountPath: /var/lib/grafana/dashboards
+              #   #   name: dashboards
+              # extraVolumes:
+              #   # - name: dashboards
+              #   #   emptyDir: { }
+              #   - name: provisioning-config
+              #     configMap:
+              #       name: provisioning-config
