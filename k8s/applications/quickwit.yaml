@@ -81,7 +81,7 @@ spec:
                     - otlp
     
     # Quickwit Helm chart installation
-    - repoURL: https://helm.quickwit.io
+    - repoURL: https://helm.quickwit.io # https://github.com/quickwit-oss/helm-charts
       chart: quickwit
       targetRevision: "*"
       helm:
@@ -104,8 +104,9 @@ spec:
           serviceMonitor:
             enabled: true
 
-          # Configuration for Quickwit
           config:
+            default_index_root_uri: s3://syscd/quickwit-indexes
+
             postgres:
               host: quickwit-postgres
               port: 5432
@@ -113,7 +114,10 @@ spec:
               username: quickwit
               password: quickwit-password123 # This password will be stored as a Kubernetes Secret
 
-            indexer:
-              # By activating the OTEL service, Quickwit will be able
-              # to receive gRPC requests from OTEL collectors.
-              enable_otlp_endpoint: true
+            storage:
+              s3:
+                region: eu-east-1
+                # We recommend using IAM roles and permissions to access Amazon S3 resources,
+                # but you can specify a pair of access and secret keys if necessary.
+                access_key_id: foo
+                secret_access_key: bar
