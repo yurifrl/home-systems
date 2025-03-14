@@ -1,0 +1,154 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homer
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: homer
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: homer
+              service:
+                name: homer
+                namespace: homer
+                port: 8080
+    - repoURL: https://djjudas21.github.io/charts/
+      chart: homer
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          env:
+            TZ: "America/Sao_Paulo"
+          tolerations:
+            - key: "arm"
+              operator: "Exists"
+          ingress:
+            main:
+              enabled: false
+          resources:
+            requests:
+              memory: 350Mi
+              cpu: 25m
+            limits:
+              memory: 500Mi
+          service:
+            annotations:
+              teleport.dev/name: homer
+          configmap:
+            config:
+              # -- Store homer configuration as a ConfigMap
+              enabled: true
+              # -- Homer configuration. See [image documentation](https://github.com/bastienwirtz/homer/blob/main/docs/configuration.md) for more information.
+              # @default -- See values.yaml
+              data:
+                config.yml: |
+                  title: "Home Server"
+                  subtitle: "Dashboard"
+                  links:
+                    - name: "github"
+                      icon: "fab fa-github"
+                      url: "https://github.com/yurifrl/k8s"
+                      target: "_blank"
+                  services:
+                    - name: "Applications"
+                      icon: "fas fa-cloud"
+                      items:
+                        - name: "Home Assistant"
+                          icon: "fas fa-home"
+                          tag: "home-automation"
+                          url: "https://home-assistant.syscd.dev"
+                          target: "_blank"
+                        
+                        - name: "Node-RED"
+                          icon: "fas fa-project-diagram"
+                          tag: "automation"
+                          url: "https://node-red.syscd.dev"
+                          target: "_blank"
+                        
+                        - name: "Zigbee2MQTT"
+                          icon: "fas fa-broadcast-tower"
+                          tag: "iot"
+                          url: "https://zigbee2mqtt.syscd.dev"
+                          target: "_blank"
+                        
+                        - name: "HA Code Server"
+                          icon: "fas fa-code"
+                          tag: "development"
+                          url: "https://code.syscd.dev"
+                          target: "_blank"
+
+                    - name: "Monitoring"
+                      icon: "fas fa-chart-line"
+                      items:
+                        - name: "Grafana"
+                          icon: "fas fa-chart-area"
+                          tag: "monitoring"
+                          url: "https://grafana.syscd.dev"
+                          target: "_blank"
+                        
+                        - name: "Prometheus"
+                          icon: "fas fa-fire"
+                          tag: "monitoring"
+                          url: "http://prometheus.syscd.dev"
+                          target: "_blank"
+                        
+                        - name: "Alertmanager"
+                          icon: "fas fa-bell"
+                          tag: "monitoring"
+                          url: "http://alertmanager.syscd.dev"
+                          target: "_blank"
+                        
+                        - name: "Kiali"
+                          icon: "fas fa-project-diagram"
+                          tag: "monitoring"
+                          url: "http://kiali.syscd.dev"
+                          target: "_blank"
+                        
+                        - name: "Pyrra"
+                          icon: "fas fa-chart-pie"
+                          tag: "monitoring"
+                          url: "https://pyrra.syscd.dev"
+                          target: "_blank"
+
+                        - name: "PromLens"
+                          icon: "fas fa-search"
+                          tag: "monitoring"
+                          url: "https://promlens.syscd.dev"
+                          target: "_blank"
+
+                    - name: "Infrastructure"
+                      icon: "fas fa-server"
+                      items:                
+                        - name: "ArgoCD"
+                          icon: "fas fa-code-branch"
+                          tag: "gitops"
+                          url: "https://argocd.syscd.dev"
+                          target: "_blank"
+                        
+                        - name: "GitHub"
+                          icon: "fab fa-github"
+                          url: "https://github.com/yurifrl/k8s"
+                          target: "_blank"
+                        
+                        - name: "Kubernetes Dashboard"
+                          icon: "fas fa-dharmachakra"
+                          tag: "kubernetes"
+                          url: "https://k8s.syscd.dev"
+                          target: "_blank"

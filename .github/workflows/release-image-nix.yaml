@@ -1,0 +1,32 @@
+name: Release Image Nix
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [linux/aarch64]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Build packages
+        run: |
+          nix build ./nixos#images.rpi --impure
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: nix-packages
+          path: result*
+          retention-days: 7

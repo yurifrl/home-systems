@@ -1,0 +1,16 @@
+jsonDashboardsEnabled: false
+grafanaComDashboards:
+  - id: 1860
+    name: node-exporter-latest
+  - id: 13332
+    name: garysdevil-kube-state-metrics-v2
+  - id: 21742
+    name: d19akash-kube-state-metrics-v2
+  - id: 22168
+    name: kubernetes-autoscaling-vertical-pod-autoscaler
+  - id: 19993
+    name: argocd-operational-overview
+  - id: 7587
+    name: prometheus-blackbox-exporter
+  - id: 17375
+    name: k8s-resource-monitoring

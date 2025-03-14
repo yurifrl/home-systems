@@ -1,0 +1,69 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: blackbox-control-plane-probe
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: blackbox-control-plane-probe
+subjects:
+  - kind: ServiceAccount
+    name: blackbox-exporter-prometheus-blackbox-exporter
+    namespace: monitoring
+roleRef:
+  kind: ClusterRole
+  name: blackbox-control-plane-probe
+  apiGroup: rbac.authorization.k8s.io 
+---
+# Test: https://blackbox-exporter.syscd.live/probe?target=https://kubernetes.default.svc/api/v1/namespaces/kube-system/pods&module=http_2xx_control_plane&debug=true
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: control-plane-probe
+  namespace: monitoring
+spec:
+  interval: 30s
+  module: http_2xx_control_plane # k8s/applications/blackbox-exporter.yaml
+  prober:
+    url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - https://kubernetes.default.svc/api/v1/namespaces/kube-system/pods
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: control-plane-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: control-plane.rules
+      rules:
+        - alert: ControlPlaneDown
+          expr: up{job="probe/monitoring/control-plane-probe"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: control-plane
+          annotations:
+            summary: "Control plane is down"
+            description: "The Kubernetes control plane has been unreachable for more than 5 minutes."
+        
+        - alert: ControlPlaneAPIUnreachable
+          expr: probe_success{job="probe/monitoring/control-plane-probe"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: control-plane
+          annotations:
+            summary: "Control plane API is unreachable"
+            description: "The Kubernetes API server has been unreachable for more than 5 minutes." 

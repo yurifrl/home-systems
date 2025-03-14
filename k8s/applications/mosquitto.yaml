@@ -1,0 +1,45 @@
+# https://github.com/truecharts/public/blob/master/charts/stable/mosquitto/values.yaml
+# https://truecharts.org/general/
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mosquitto
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mosquitto
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: mosquitto
+      jsonPointers:
+        - /spec/template/spec/hostUsers
+  source:
+    chart: mosquitto
+    targetRevision: "*"
+    repoURL: tccr.io/truecharts
+    helm:
+      valuesObject:
+        persistence:
+          data:
+            enabled: false
+          configinc:
+            enabled: false
+          mosquitto-config:
+            enabled: true
+            mountPath: "/mosquitto/config/mosquitto.conf"
+            subPath: "mosquitto.conf"
+            type: configmap
+            objectName: config
+            size: 2Gi
+        podOptions:
+          nodeSelector:
+            kubernetes.io/arch: arm64

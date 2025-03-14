@@ -1,0 +1,19 @@
+replicaCount: 1
+
+image:
+  repository: kpetrem/mqtt-exporter
+  tag: "1.6.1"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 9000
+
+mqttBroker:
+  address: "mqtt-broker"
+  port: 1883
+  # username: ""
+  # password: "" 
+
+serviceMonitor:
+  interval: 30s 

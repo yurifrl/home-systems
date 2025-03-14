@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-exporter
+  labels:
+    app: mqtt-exporter
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: mqtt-exporter
+  template:
+    metadata:
+      labels:
+        app: mqtt-exporter
+    spec:
+      containers:
+        - name: mqtt-exporter
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: MQTT_ADDRESS
+              value: {{ .Values.mqttBroker.address | quote }}
+            - name: MQTT_PORT
+              value: {{ .Values.mqttBroker.port | quote }}
+            {{- if .Values.mqttBroker.username }}
+            - name: MQTT_USERNAME
+              value: {{ .Values.mqttBroker.username | quote }}
+            {{- end }}
+            {{- if .Values.mqttBroker.password }}
+            - name: MQTT_PASSWORD
+              value: {{ .Values.mqttBroker.password | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: 9000
+              protocol: TCP 

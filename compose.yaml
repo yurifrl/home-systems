@@ -1,0 +1,8 @@
+  services:
+    git-server:
+      image: ryan0x44/local-git-server
+      container_name: git-server
+      ports:
+        - "8000:80"
+      volumes:
+        - .:/var/www/git

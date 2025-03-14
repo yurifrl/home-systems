@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mqtt-exporter
+  labels:
+    app: mqtt-exporter
+spec:
+  selector:
+    matchLabels:
+      app: mqtt-exporter
+  endpoints:
+    - port: http
+      interval: {{ .Values.serviceMonitor.interval }} 

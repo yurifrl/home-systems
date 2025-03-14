@@ -1,0 +1,108 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: influxdb
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: influxdb
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: influxdb
+              service:
+                name: influxdb-influxdb2
+                namespace: influxdb
+                port: 80
+          externalSecrets:
+            - name: grafana-api-key
+
+    - repoURL: https://helm.influxdata.com/
+      chart: influxdb2
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          adminUser:
+            bucket: "default"
+            organization: "home-systems"
+            password: "adminadmin"
+            token: "admin"
+            user: "admin"
+            retention_policy: "7d"
+          persistence:
+            enabled: false
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          service:
+            annotations:
+              teleport.dev/name: influxdb
+
+    - repoURL: https://helm.influxdata.com/
+      chart: telegraf
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          config:
+            inputs:
+              - mqtt_consumer:
+                  servers: ["tcp://mosquitto.mosquitto.svc.cluster.local:1883"]
+                  topics: ["#"]
+                  data_format: "value"
+                  data_type: "string"
+                  name_override: "mqtt_value"
+                  client_id: "telegraf"
+              - cpu:
+                  percpu: false
+                  totalcpu: true
+            outputs:
+              - influxdb_v2:
+                  urls:
+                    - "http://influxdb-influxdb2.influxdb.svc.cluster.local"
+                  token: "admin"
+                  organization: "home-systems"
+                  bucket: "default"
+              # Send directly to grafana
+              # https://grafana.com/tutorials/stream-metrics-from-telegraf-to-grafana/
+              - http:
+                  url: "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local/api/live/push/telegraf"
+                  data_format: "influx"
+                  # headers:
+                  #   Authorization: "Bearer ${GRAFANA_API_KEY}"
+              - prometheus_client:
+                  listen: ":8094"
+                  metric_version: 2
+                  collectors_exclude: ["gocollector", "process"]
+          # env:
+          #   - name: GRAFANA_API_KEY
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: grafana-api-key
+          #         key: key
+          service:
+            enabled: true
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "8094"
+            ports:
+              - name: http
+                port: 8094
+                targetPort: 8094
+
+# https://github.com/influxdata/helm-charts/blob/master/charts/influxdb2/values.yaml

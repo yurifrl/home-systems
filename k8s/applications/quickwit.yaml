@@ -1,0 +1,116 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: quickwit
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: quickwit
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    # Add virtual service configuration
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: quickwit
+              service:
+                name: quickwit-searcher
+                namespace: quickwit
+                port: 7280
+
+    # PostgreSQL deployment
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: postgresql
+      targetRevision: "12.1.9"
+      helm:
+        releaseName: quickwit-postgres
+        values: |
+          auth:
+            username: quickwit
+            password: quickwit-password123
+            database: quickwit-metastore
+          primary:
+            persistence:
+              enabled: false
+            resources:
+              requests:
+                memory: 256Mi
+                cpu: 250m
+              limits:
+                memory: 512Mi
+                cpu: 500m
+          fullnameOverride: quickwit-postgres
+    
+    # OpenTelemetry Collector deployment
+    - repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+      chart: opentelemetry-collector
+      targetRevision: "*"
+      helm:
+        releaseName: otel-collector
+        valuesObject:
+          mode: daemonset
+          presets:
+            logsCollection:
+              enabled: true
+            kubernetesAttributes:
+              enabled: true
+          config:
+            exporters:
+              otlp:
+                endpoint: quickwit-indexer.quickwit.svc.cluster.local:7281
+                compression: none
+                tls:
+                  insecure: true
+            service:
+              pipelines:
+                logs:
+                  exporters:
+                    - otlp
+    
+    # Quickwit Helm chart installation
+    - repoURL: https://helm.quickwit.io
+      chart: quickwit
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          environment:
+            # https://quickwit.io/docs/get-started/tutorials/trace-analytics-with-grafana
+            QW_ENABLE_OPENTELEMETRY_OTLP_EXPORTER: "true"
+            OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:7281"
+            
+          # Configure resources
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          
+          # Service monitor for Prometheus integration
+          serviceMonitor:
+            enabled: true
+
+          # Configuration for Quickwit
+          config:
+            postgres:
+              host: quickwit-postgres
+              port: 5432
+              database: quickwit-metastore
+              username: quickwit
+              password: quickwit-password123 # This password will be stored as a Kubernetes Secret
+
+            indexer:
+              # By activating the OTEL service, Quickwit will be able
+              # to receive gRPC requests from OTEL collectors.
+              enable_otlp_endpoint: true

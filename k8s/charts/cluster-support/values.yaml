@@ -1,0 +1,42 @@
+dashboards:
+  - name: argo
+    file: "dashboards/v1/argo.json"
+  - name: kubernetes-apacity-planning-limits # https://grafana.com/grafana/dashboards/13125-kubernetes-capacity-planning-limits/?
+    file: "dashboards/v1/kubernetes-apacity-planning-limits.json"
+  - name: kubernetes-pod-resource-overview # https://grafana.com/grafana/dashboards/15207-kubernetes-pod-resource-overview/?
+    file: "dashboards/v1/kubernetes-pod-resource-overview.json"
+  - name: kubernetes-pod
+    file: "dashboards/v1/kubernetes-pod.json"
+  - name: kubernetes-resource-requests # https://grafana.com/grafana/dashboards/7187-kubernetes-resource-requests/?
+    file: "dashboards/v1/kubernetes-resource-requests.json"
+  - name: workload-resource-recommendations # https://grafana.com/grafana/dashboards/15154-workload-resource-recommendations-based-on-usage/?
+    file: "dashboards/v1/workload-resource-recommendations.json"
+  - name: node-exporter # https://github.com/rfmoz/grafana-dashboards/blob/master/prometheus/node-exporter-full.json
+    file: "dashboards/v1/node-exporter.json"
+  - name: node-exporter-full
+    file: "dashboards/v1/node-exporter-full.json"
+  - name: alertmanager
+    file: "dashboards/v2/alertmanager.json"
+  - name: argo-cd-operational-overview-kask
+    file: "dashboards/v2/argo-cd-operational-overview-kask.json"
+  - name: kubernetes-cluster-monitoring-via-prometheus
+    file: "dashboards/v2/kubernetes-cluster-monitoring-via-prometheus.json"
+  - name: kubernetes-cluster-prometheus
+    file: "dashboards/v2/kubernetes-cluster-prometheus.json"
+  - name: kubernetes-cluster-state-metrics
+    file: "dashboards/v2/kubernetes-cluster-state-metrics.json"
+  - name: kubernetes-resources-overview
+    file: "dashboards/v2/kubernetes-resources-overview.json"
+  - name: prometheus-blackbox-exporter
+    file: "dashboards/v2/prometheus-blackbox-exporter.json"
+  - name: prometheus-stats
+    file: "dashboards/v2/prometheus-stats.json"
+  - name: watch-tower
+    file: "dashboards/v2/watch-tower.json"
+
+
+# Feature flags for enabling different components
+features:
+  serviceLevelObjectives: false 
+  prometheusRules: false
+  alertmanager: true

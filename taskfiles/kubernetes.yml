@@ -1,0 +1,12 @@
+version: "3"
+
+tasks:
+  1password:
+    desc: "Connect to 1Password and create a secret for the external-secrets operator"
+    cmds: |-
+      op connect server create kubernetes --vaults kubernetes
+      export OP_CONNECT_TOKEN=$(op connect token create "external-secret-operator" --server kubernetes --vault kubernetes)
+      kubectl create secret generic op-credentials \
+        -n 1password \
+        --from-literal=token="$OP_CONNECT_TOKEN" \
+        --from-literal=1password-credentials.json="$(cat 1password-credentials.json | openssl base64 | tr -d '\n')"

@@ -1,0 +1,79 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pihole
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pihole
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: pihole
+              service:
+                name: pihole-web
+                namespace: pihole
+                port: 80
+          externalSecrets:
+            - name: pihole-admin
+
+    - repoURL: https://wolviecb.github.io/pihole-kubernetes
+      chart: pihole
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          namespace: pihole
+          # image:
+          #   repository: docker.io/pihole/pihole
+          #   tag: latest
+          persistentVolumeClaim:
+            enabled: false
+            # storageClass: local-path
+          admin:
+            existingSecret: "pihole-admin"
+          serviceDns:
+            type: LoadBalancer
+            loadBalancerIP: 192.168.68.203
+            annotations:
+              metallb.universe.tf/allow-shared-ip: pihole-svc
+          ingress:
+            enabled: false
+          monitoring:
+            podMonitor:
+              enabled: true
+
+    # - repoURL: https://mojo2600.github.io/pihole-kubernetes/
+    #   chart: pihole
+    #   targetRevision: "*"
+    #   helm:
+    #     valuesObject:
+    #       persistentVolumeClaim:
+    #         enabled: false
+    #         # storageClass: local-path
+    #       DNS1: "1.1.1.1"
+    #       DNS2: "1.0.0.1"
+    #       admin:
+    #         existingSecret: "pihole-admin"
+    #       serviceDns:
+    #         type: LoadBalancer
+    #         annotations:
+    #           metallb.universe.tf/allow-shared-ip: pihole-svc
+    #       ingress:
+    #         enabled: false
+    #       monitoring:
+    #         podMonitor:
+    #           enabled: true
+    #       # Timezone for the container
+    #       TZ: "America/Sao_Paulo"

@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: promlens
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: promlens
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: promlens
+              service:
+                name: promlens
+                namespace: promlens
+                port: 8080
+          externalSecrets:
+            - name: promlens-secret
+
+    - repoURL: https://charts.christianhuth.de
+      chart: promlens
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          config:
+            web:
+              defaultPrometheusUrl: https://prometheus.syscd.tech
+            grafana:
+              enabled: true
+              url: https://grafana.syscd.tech
+              existingSecret: promlens-secret
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          service:
+            annotations:
+              teleport.dev/name: promlens

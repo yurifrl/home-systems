@@ -1,0 +1,2 @@
+- ^: Move the cursor to the first non-blank character of the line.
+- $: Move the cursor to the last non-blank character of the line.

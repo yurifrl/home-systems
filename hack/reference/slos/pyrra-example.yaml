@@ -1,0 +1,20 @@
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: apiserver-availability
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+    pyrra.dev/owner: sre-team
+    pyrra.dev/tier: "0"
+spec:
+  target: "99.95"
+  window: 2w
+  description: "SLO based on successful API server request responses"
+  indicator:
+    ratio:
+      errors:
+        metric: apiserver_request_total{code=~"5.*"}
+      total:
+        metric: apiserver_request_total 

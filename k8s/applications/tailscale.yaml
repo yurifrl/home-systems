@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tailscale
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tailscale
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true 
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: tailscale-operator-oauth
+    - path: k8s/charts/support-tailscale
+      repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      helm:
+        version: v3
+        valuesObject:
+          connectors:
+            - hostname: tailscale-1
+              advertiseRoutes:
+                - 10.244.0.0/16
+                - 192.168.50.0/24
+                - 10.0.0.0/16
+                - 10.1.0.0/16
+                - 10.69.0.0/16
+    - repoURL: https://pkgs.tailscale.com/helmcharts
+      chart: tailscale-operator
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          oauthSecretVolume:
+            secret:
+              secretName: tailscale-operator-oauth

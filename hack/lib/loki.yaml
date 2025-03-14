@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: loki
+              service:
+                name: loki-single-binary
+                namespace: monitoring
+                port: 3100
+
+    - repoURL: https://grafana.github.io/helm-charts
+      chart: loki
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          deploymentMode: SingleBinary
+          
+          singleBinary:
+            service:
+              annotations:
+                teleport.dev/name: loki
+            persistence:
+              enabled: true
+              size: 10Gi
+              type: emptyDir
+          
+          loki:
+            auth_enabled: false
+            useTestSchema: true
+            storage:
+              type: filesystem
+            limits_config:
+              retention_period: 24h
+            
+          monitoring:
+            serviceMonitor:
+              enabled: true

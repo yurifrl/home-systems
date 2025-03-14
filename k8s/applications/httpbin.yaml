@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: httpbin
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: httpbin
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: httpbin
+              service:
+                name: httpbin
+                namespace: httpbin
+                port: 80
+
+    - repoURL: https://matheusfm.dev/charts
+      chart: httpbin
+      targetRevision: 0.1.1
+      helm:
+        valuesObject:
+          ingress:
+            enabled: false
+          service:
+            type: ClusterIP
+            port: 80
+            annotations:
+              teleport.dev/name: httpbin

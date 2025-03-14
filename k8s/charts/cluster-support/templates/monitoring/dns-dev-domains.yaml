@@ -1,0 +1,37 @@
+# test: https://blackbox-exporter.syscd.live/probe?module=resolve_dns_syscd&target=bind9.bind9.svc.cluster.local&debug=true
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: dns-dev-domains
+  namespace: monitoring
+spec:
+  interval: 30s
+  module: resolve_dns_syscd
+  prober:
+    url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - bind9.bind9.svc.cluster.local
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: resolve-dns-dev-domains-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: dns.rules
+      rules:
+        - alert: DNSResolutionFailing
+          expr: probe_success{job="probe/monitoring/dns-dev-domains"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: dns
+          annotations:
+            summary: "DNS resolution is failing"
+            description: "DNS resolution for {{ `{{ $labels.instance }}` }} has failed for more than 5 minutes."

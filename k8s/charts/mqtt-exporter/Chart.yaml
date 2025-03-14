@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mqtt-exporter
+description: A Helm chart for MQTT Prometheus Exporter
+type: application
+version: 0.1.0
+appVersion: "1.6.1" 

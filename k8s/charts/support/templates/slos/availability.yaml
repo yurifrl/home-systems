@@ -1,0 +1,21 @@
+{{- if .Values.slos.enabled }}
+{{- range .Values.virtualServices }}
+{{- $hostPrefix := .hostname | default .name -}}
+---
+apiVersion: pyrra.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: {{ .name }}-availability-slo
+  namespace: monitoring
+  labels: {{- include "support.slo.labels" (dict "app" .name) | nindent 4 }}
+spec:
+  target: "99.9"
+  window: "7d"
+  description: "Ensure availability of {{ .name }} instances with 99.9% reliability."
+  indicator:
+    bool_gauge:
+      metric: |
+        probe_success{instance=~"https://{{ $hostPrefix }}.syscd.(xyz|tech|live|dev)"}
+      grouping: []
+{{- end }}
+{{- end }} 

@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-istiod
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-4"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient      
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jqPathExpressions:
+        - '.webhooks[]?.failurePolicy'
+    - group: apps
+      kind: Deployment
+      name: istiod
+      jqPathExpressions:
+        - '.spec.template.spec.containers[].env[]?.valueFrom.resourceFieldRef.divisor'
+  source:
+    repoURL: https://istio-release.storage.googleapis.com/charts
+    targetRevision: "*"
+    chart: istiod
+    helm:
+      valuesObject:
+        profile: ambient

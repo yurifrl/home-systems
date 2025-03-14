@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-gateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - Wait=true
+      - ResourcesHealth=true
+  ignoreDifferences:
+    - group: "*"
+      kind: "*"
+      managedFieldsManagers:
+        - argocd-application-controller
+  sources:
+    - repoURL: https://istio-release.storage.googleapis.com/charts
+      targetRevision: "*"
+      chart: gateway
+      helm:
+        valuesObject:
+          service:
+            annotations:
+              kubelish/service-name: "istio-gateway"
+              kubelish/service-type: "_http._tcp"
+              # Optional TXT record with additional info
+              kubelish/txt: "path=/"
+            externalTrafficPolicy: Local
+            type: LoadBalancer
+            loadBalancerIP: "192.168.68.201"

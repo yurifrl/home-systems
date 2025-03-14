@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-support
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: argocd
+              service:
+                name: argocd-server
+                namespace: argocd
+                port: 80
+
+    # - chart: argocd-image-updater
+    #   repoURL: https://argoproj.github.io/argo-helm
+    #   targetRevision: "*"
+    #   helm:
+    #     valuesObject:
+    #       config:
+    #         argocd:
+    #           serverAddress: "http://argocd.argocd-server.svc.cluster.local"
+    #           grpcWeb: false
+    #           insecure: true
+    #           plaintext: true
+    #       registries:
+    #         - name: GitHub Container Registry
+    #           prefix: ghcr.io
+    #           api_url: https://ghcr.io
+    #           credentials: pullsecret:argocd/ghcr-oci-creds

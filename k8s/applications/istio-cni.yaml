@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-cni
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  ignoreDifferences:
+    - group: apps
+      kind: DaemonSet
+      name: istio-cni-node
+      jqPathExpressions:
+        - '.spec.template.spec.containers[].env[]?.valueFrom.resourceFieldRef.divisor'
+  source:
+    repoURL: https://istio-release.storage.googleapis.com/charts
+    targetRevision: "*"
+    chart: cni
+    helm:
+      valuesObject:
+        profile: ambient
+        # cni:
+        #   cniBinDir: "/var/lib/rancher/k3s/data/current/bin"
+        #   cniConfDir: "/var/lib/rancher/k3s/agent/etc/cni/net.d"
+        #   hostMounts:
+        #     - name: cni-bin
+        #       mountPath: /opt/cni/bin
+        #       hostPath: /var/lib/rancher/k3s/data/current/bin
+        #     - name: cni-net-dir
+        #       mountPath: /etc/cni/net.d
+        #       hostPath: /var/lib/rancher/k3s/agent/etc/cni/net.d

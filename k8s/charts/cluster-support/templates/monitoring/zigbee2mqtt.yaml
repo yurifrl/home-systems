@@ -1,0 +1,37 @@
+# test: https://blackbox-exporter.syscd.live/probe?module=http_2xx&target=http://zigbee2mqtt.zigbee2mqtt.svc.cluster.local:8080/health&debug=true
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: zigbee2mqtt
+  namespace: monitoring
+spec:
+  interval: 30s
+  module: http_2xx
+  prober:
+    url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - http://zigbee2mqtt.zigbee2mqtt.svc.cluster.local:8080
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: zigbee2mqtt-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: zigbee2mqtt.rules
+      rules:
+        - alert: Zigbee2MQTTDown
+          expr: probe_success{job="probe/monitoring/zigbee2mqtt"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: zigbee2mqtt
+          annotations:
+            summary: "Zigbee2MQTT is down"
+            description: "Zigbee2MQTT has been unreachable for more than 5 minutes." 

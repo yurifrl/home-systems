@@ -1,0 +1,38 @@
+suite: test support-tailscale chart
+templates:
+  - externalsecrets.yaml
+  - connector.yaml
+tests:
+  - it: should render externalsecrets correctly
+    template: externalsecrets.yaml
+    values:
+      - ../test.yaml
+    asserts:
+      - isKind:
+          of: ExternalSecret
+      - equal:
+          path: spec.target.name
+          value: tailscale-operator-oauth
+      - equal:
+          path: spec.refreshInterval
+          value: 1h0m0s
+      - equal:
+          path: spec.dataFrom[0].extract.key
+          value: test/test/tailscale-operator
+
+  - it: should render connector correctly
+    template: connector.yaml
+    values:
+      - ../test.yaml
+    asserts:
+      - isKind:
+          of: Connector
+      - equal:
+          path: spec.hostname
+          value: tailscale
+      - equal:
+          path: spec.subnetRouter.advertiseRoutes[0]
+          value: "10.0.0.0/16"
+      - contains:
+          path: spec.tags
+          content: tag:k8s 

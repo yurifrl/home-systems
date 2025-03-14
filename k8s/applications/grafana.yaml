@@ -1,0 +1,111 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grafana
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true 
+      - ServerSideApply=true
+  sources:
+      - path: k8s/charts/support
+        repoURL: https://github.com/yurifrl/home-systems.git
+        targetRevision: HEAD
+        helm:
+          valuesObject:
+            virtualServices:
+              - name: grafana
+                service:
+                  name: grafana-operator-grafana-service
+                  namespace: monitoring
+                  port: 3000
+            externalSecrets:
+              - name: grafana-credentials
+      - path: k8s/charts/support-grafana
+        repoURL: https://github.com/yurifrl/home-systems.git
+        targetRevision: HEAD
+      - chart: kubernetes-mixin # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
+        repoURL: https://charts.portefaix.xyz
+        targetRevision: "*"
+        helm:
+          valuesObject:
+            prometheusRule:
+              alerts:
+                enabled: false
+              rules:
+                enabled: false
+      - chart: kube-state-metrics-mixin # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
+        repoURL: https://charts.portefaix.xyz
+        targetRevision: "*"
+        helm:
+          valuesObject:
+            grafanaDashboard:
+              enabled: true
+            monitor:
+              enabled: false
+      - chart: kube-state-metrics # https://github.com/kubernetes/kube-state-metrics
+        repoURL: https://prometheus-community.github.io/helm-charts
+        targetRevision: "*"      
+      - repoURL: https://github.com/dotdc/grafana-dashboards-kubernetes
+        targetRevision: HEAD
+        path: .
+      - chart: grafana-operator
+        repoURL: registry-1.docker.io/bitnamicharts
+        targetRevision: "*"
+        helm:
+          valuesObject:
+            fullnameOverride: grafana-operator
+            nameOverride: grafana
+            grafana:
+              labels:
+                dashboards: "grafana"
+              config:
+                security:
+                  admin_user: admin
+                  admin_password: admin
+                analytics:
+                  check_for_updates: "true"
+                  reporting_enabled: "false"
+                database:
+                  wal: "true"
+                log:
+                  level: warn
+                  mode: console
+                server:
+                  root_url: http://grafana-operator-grafana-service.monitoring.svc.cluster.local:3000
+              sidecars:
+                - image: 'ghcr.io/kiwigrid/k8s-sidecar:1.24.5'
+                  name: k8s-sidecar
+                  env:
+                    - name: LABEL
+                      value: "grafana_dashboard"
+                    - name: LABEL_VALUE
+                      value: "1"
+                    - name: FOLDER
+                      value: /var/lib/grafana/dashboards
+                    - name: NAMESPACE
+                      value: ALL
+                    - name: RESOURCE
+                      value: configmap
+                  volumeMounts:
+                    - mountPath: /var/lib/grafana/dashboards
+                      name: dashboards                                    
+              extraVolumeMounts:
+                - mountPath: /etc/grafana/provisioning/dashboards
+                  name: provisioning-config
+                - mountPath: /var/lib/grafana/dashboards
+                  name: dashboards
+              extraVolumes:
+                - name: dashboards
+                  emptyDir: { }
+                - name: provisioning-config
+                  configMap:
+                    name: provisioning-config

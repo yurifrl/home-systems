@@ -1,0 +1,26 @@
+{{- range .Values.persistentVolumes | default (list) }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  storageClassName: {{ .storageClass | default "local-storage" }}
+  capacity:
+    storage: {{ .size | default "10Gi" }}
+  accessModes:
+    - {{ .accessMode | default "ReadWriteOnce" }}
+  persistentVolumeReclaimPolicy: {{ .reclaimPolicy | default "Retain" }}
+  volumeMode: Filesystem
+  local:
+    path: {{ .path | default "/dev/sda" }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: syscd.dev/storage
+              operator: In
+              values:
+                - {{ .nodeName | default "nixos-1" }}
+---
+{{- end }}
