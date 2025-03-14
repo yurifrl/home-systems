@@ -55,8 +55,8 @@ spec:
       logMessageField: body.message
       logLevelField: severity_text
   plugins:
-    - name: quickwit-quickwit-datasource # https://github.com/quickwit-oss/quickwit-datasource
-      version: 0.4.6
+    - name: https://github.com/quickwit-oss/quickwit-datasource/releases/download/v0.3.1/quickwit-quickwit-datasource-0.3.1.zip;quickwit-quickwit-datasource # https://github.com/quickwit-oss/quickwit-datasource
+      version: 0.3.1
 # ---
 # apiVersion: grafana.integreatly.org/v1beta1
 # kind: GrafanaDatasource
