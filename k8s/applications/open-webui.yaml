@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: open-webui
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: open-webui
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    # Support chart for VirtualService
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: open-webui
+              service:
+                name: open-webui
+                namespace: open-webui
+                port: 8080
+
+    # Main Open WebUI chart
+    - repoURL: https://github.com/open-webui/helm-charts.git
+      chart: open-webui
+      targetRevision: "*"
+      helm:
+        values: |
+          # Disable embedded Ollama as we already have it running
+          ollama:
+            enabled: false
+          
+          # Point to the existing Ollama service
+          ollamaUrls:
+            - "http://ollama.ollama.svc.cluster.local:11434"
+          
+          # Configure persistence for chat history and configurations
+          persistence:
+            enabled: true
+            size: 2Gi
+          
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
