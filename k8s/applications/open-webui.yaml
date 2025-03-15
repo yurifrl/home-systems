@@ -26,7 +26,7 @@ spec:
               service:
                 name: open-webui
                 namespace: open-webui
-                port: 8080
+                port: 80
 
     # Main Open WebUI chart
     - repoURL: https://helm.openwebui.com/
