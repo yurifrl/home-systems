@@ -31,6 +31,7 @@ spec:
         valuesObject:
           service:
             annotations:
+              tailscale.com/expose: "true"
               kubelish/service-name: "istio-gateway"
               kubelish/service-type: "_http._tcp"
               # Optional TXT record with additional info
