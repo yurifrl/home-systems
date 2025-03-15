@@ -15,6 +15,28 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
+    - repoURL: registry-1.docker.io
+      chart: bitnamicharts/redis
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          architecture: standalone
+          auth:
+            enabled: false
+          master:
+            persistence:
+              enabled: false
+            resources:
+              requests:
+                memory: 256Mi
+                cpu: 100m
+              limits:
+                memory: 456Mi
+                cpu: 200m
+          replica:
+            replicaCount: 0
+          sentinel:
+            enabled: false
     # Add virtual service configuration
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
@@ -27,119 +49,82 @@ spec:
                 name: n8n
                 namespace: n8n
                 port: 80
-          
-          # # Optional: Add persistent volume claim for n8n data
-          # persistentVolumeClaims:
-          #   - name: n8n-data
-          #     storage: 10Gi
-          #     storageClassName: local-path
-          #     accessModes:
-          #       - ReadWriteOnce
-
-    # n8n Helm chart installation using OCI repository
+            - name: n8n
+              service:
+                name: n8n-webhook
+                namespace: n8n
+                port: 80                
+          externalSecrets:
+            - name: n8n
+              enabled: true
+              secretsManagerName: tooling/n8n/n8n
+              refreshInterval: 1h0m0s
     - repoURL: 8gears.container-registry.com/library
       chart: n8n
       targetRevision: "*"
       helm:
         valuesObject:
-          # Global settings
           main:
-            # Configure resources
+            config:
+              n8n:
+                editor_base_url: https://n8n.nsx.services
+              executions_mode: queue
+              # db:
+              #   type: postgresdb
+              #   postgresdb:
+              #     host: nsx-global-pg-tooling.chsbp8d88md9.us-east-1.rds.amazonaws.com
+              #     user: n8n
+              webhook_url: n8n-webhook.mundial.bet
+              queue:
+                health:
+                  check:
+                    active: true
+                bull:
+                  redis:
+                    host: n8n-redis-master
+                    port: 6379
+            extraEnv: &extraEnv
+              N8N_LOG_LEVEL:
+                value: debug
+              N8N_RUNNERS_ENABLED:
+                value: "true"
+              DB_POSTGRESDB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: n8n
+                    key: DB_POSTGRESDB_PASSWORD
+              N8N_ENCRYPTION_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: n8n
+                    key: N8N_ENCRYPTION_KEY                     
             resources:
-              requests:
-                cpu: 200m
-                memory: 256Mi
               limits:
-                cpu: 1000m
-                memory: 1Gi
-            
-            # Service configuration
-            service:
-              type: ClusterIP
-              port: 80
-            
-            # Persistence configuration
-            persistence:
+                memory: 2048Mi
+              requests:
+                memory: 512Mi
+
+          worker:
+            enabled: true
+            extraEnv: *extraEnv # using YAML magic (anchors) to reference main extraEnv
+
+          webhook:
+            enabled: true
+            count: 1
+            extraEnv: *extraEnv # using YAML magic (anchors) to reference main extraEnv
+
+          valkey:
+            enabled: true
+            architecture: standalone
+            sentinel:
               enabled: false
-              # existingClaim: n8n-data
-            
-            # Security context
-            podSecurityContext:
-              runAsNonRoot: true
-              runAsUser: 1000
-              runAsGroup: 1000
-              fsGroup: 1000
-            
-            # n8n configuration via environment variables
-            env:
-              N8N_PORT: "5678"
-              N8N_PROTOCOL: "http"
-              N8N_HOST: "n8n.syscd.tech"
-              N8N_ENCRYPTION_KEY: "replace-with-your-own-key"
-              # Uncomment for PostgreSQL database connection
-              # N8N_DB_TYPE: "postgresdb"
-              # N8N_DB_POSTGRESDB_HOST: "postgres"
-              # N8N_DB_POSTGRESDB_PORT: "5432"
-              # N8N_DB_POSTGRESDB_DATABASE: "n8n"
-              # N8N_DB_POSTGRESDB_USER: "n8n"
-              # N8N_DB_POSTGRESDB_PASSWORD: "n8n-password"
-              
-              # Enable webhooks
-              N8N_WEBHOOK_URL: "https://n8n.syscd.tech/"
-              
-              # Enable SSL
-              # N8N_WEBHOOK_TUNNEL_URL: "https://n8n.syscd.tech/"
-              
-              # Set timezone
-              TZ: "UTC"
-              
-            # Deployment strategy
-            deploymentStrategy:
-              type: "Recreate"
-            
-            # Number of replicas (for non-scaling deployment)
-            replicaCount: 1
-            
-            # Probes for healthchecks
-            livenessProbe:
-              httpGet:
-                path: /healthz
-                port: http
-              initialDelaySeconds: 30
-              periodSeconds: 10
-            
-            readinessProbe:
-              httpGet:
-                path: /healthz
-                port: http
-              initialDelaySeconds: 30
-              periodSeconds: 10
-          
-          # Advanced scaling options
-          scaling:
-            enabled: false
-            # Redis configuration for queue mode (required for scaling)
-            # redis:
-            #   enabled: true
-            #   password: "your-redis-password"
-            
-            # Worker configuration
-            # worker:
-            #   count: 2
-            #   resources:
-            #     requests:
-            #       cpu: 200m
-            #       memory: 256Mi
-            #     limits:
-            #       cpu: 1000m
-            #       memory: 1Gi
-            
-            # Webhook configuration (for dedicated webhook instances)
-            # webhook:
-            #   enabled: false
-            #   replicaCount: 1
-          
-          # Service annotations
-          service:
-            annotations:
-              teleport.dev/name: n8n 
+            auth:
+              enabled: false
+            primary:
+              kind: Deployment
+              persistence:
+                enabled: false
+              resources:
+                requests:
+                  memory: 256Mi
+                  cpu: 100m
