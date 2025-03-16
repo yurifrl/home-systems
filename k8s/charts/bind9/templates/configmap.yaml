@@ -46,8 +46,8 @@ data:
         type master;
         file "/etc/bind/syscd.dev.zone";
         journal "/var/lib/bind/syscd.dev.zone.jnl";
-        update-policy {
-            grant rfc2136_tsig_secret zonesub ANY;
+        allow-transfer {
+            key "rfc2136_tsig_secret";
         };
     };
     # Include the keys configuration, it will come from a secret previously created
