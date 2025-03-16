@@ -22,7 +22,7 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: open-webui
+            - name: openwebui
               service:
                 name: open-webui
                 namespace: open-webui
