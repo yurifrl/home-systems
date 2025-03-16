@@ -2,6 +2,7 @@ apiVersion: externaldns.k8s.io/v1alpha1
 kind: DNSEndpoint
 metadata:
   name: dnsendpoints
+  namespace: external-dns
 spec:
   endpoints:
   - dnsName: "up.syscd.tech"
