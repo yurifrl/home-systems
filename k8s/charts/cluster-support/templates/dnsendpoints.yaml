@@ -20,3 +20,44 @@ spec:
     recordTTL: 300
     targets:
     - "b31e4822-8b42-44fa-b6ca-7feb86a56ec8.cfargotunnel.com"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: external-dns
+rules:
+- apiGroups: ["externaldns.k8s.io"]
+  resources: ["dnsendpoints"]
+  verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["services", "endpoints", "pods"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: external-dns-cloudflare
+subjects:
+- kind: ServiceAccount
+  name: cloudflare-external-dns
+  namespace: external-dns
+roleRef:
+  kind: ClusterRole
+  name: external-dns
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: external-dns-tailscale
+subjects:
+- kind: ServiceAccount
+  name: tailscale-external-dns
+  namespace: external-dns
+roleRef:
+  kind: ClusterRole
+  name: external-dns
+  apiGroup: rbac.authorization.k8s.io
