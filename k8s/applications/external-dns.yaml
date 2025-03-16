@@ -1,3 +1,5 @@
+# https://github.com/bitnami/charts/blob/main/bitnami/external-dns/README.md
+#
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -74,7 +76,7 @@ spec:
             secretName: cloudflare-api-token-secret
             proxied: false
           extraArgs:
-            service-type-filter: LoadBalancer            
+            service-type-filter: LoadBalancer
     # RFC2136 DNS (.dev)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
@@ -101,8 +103,6 @@ spec:
             zone: syscd.dev
             tsigAxfr: true
             tsigKeyname: rfc2136_tsig_secret # default
-          # extraArgs:
-          #   service-type-filter: LoadBalancer
     # # Pi-hole DNS
     # - repoURL: registry-1.docker.io/bitnamicharts
     #   chart: external-dns
@@ -126,4 +126,3 @@ spec:
     #         secretName: pihole-secret
     #       # extraArgs:
     #       #   service-type-filter: LoadBalancer
-# https://github.com/bitnami/charts/blob/main/bitnami/external-dns/README.md
