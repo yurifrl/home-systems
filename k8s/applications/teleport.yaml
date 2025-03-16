@@ -14,26 +14,12 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-    managedNamespaceMetadata:
-      labels:
-        istio.io/dataplane-mode: ambient      
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/support
       helm:
         valuesObject:
-          virtualServices:
-            # This is techicaly not used, it's used to create the cloudflare entry
-            - name: teleport-cluster
-              hostnameOverride: syscd.xyz
-              service:
-                name: teleport-cluster
-                namespace: teleport
-                port: 443
-              annotations:
-                external-dns.alpha.kubernetes.io/hostname: syscd.xyz
-                external-dns.alpha.kubernetes.io/target: "1b664006-2417-4072-877f-45697ffa642d.cfargotunnel.com"
           persistentVolumeClaims:
             - name: teleport-tp1-data
               storage: 10Gi
@@ -84,11 +70,8 @@ spec:
           proxyListenerMode: multiplex
 
 # k -n teleport describe teleportusers $USER
-
 # k -n teleport get pod -l app.kubernetes.io/component=auth
 # k -n teleport exec -it $POD_NAME -- tctl users reset $USER
-
-
 
 # Docs
 
