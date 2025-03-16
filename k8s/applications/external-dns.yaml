@@ -91,6 +91,9 @@ spec:
           txtOwnerId: syscd-rfc2136
           policy: sync
           interval: 1m
+          excludeDomains:
+            - syscd.tech
+            - syscd.live
           domainFilters:
             - syscd.dev
           sources:
