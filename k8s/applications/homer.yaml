@@ -70,6 +70,12 @@ spec:
                     - name: "Applications"
                       icon: "fas fa-cloud"
                       items:
+                        - name: "OpenWebUI"
+                          icon: "fas fa-robot"
+                          tag: "ai"
+                          url: "https://openwebui.syscd.live"
+                          target: "_blank"
+
                         - name: "Home Assistant"
                           icon: "fas fa-home"
                           tag: "home-automation"
@@ -97,6 +103,12 @@ spec:
                     - name: "Monitoring"
                       icon: "fas fa-chart-line"
                       items:
+                        - name: "Gatus"
+                          icon: "fas fa-heartbeat"
+                          tag: "monitoring"
+                          url: "https://up.syscd.live"
+                          target: "_blank"
+
                         - name: "Grafana"
                           icon: "fas fa-chart-area"
                           tag: "monitoring"
