@@ -7,8 +7,6 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/hostname: "*.syscd.live,*.syscd.xyz"
     external-dns.alpha.kubernetes.io/target: "b31e4822-8b42-44fa-b6ca-7feb86a56ec8.cfargotunnel.com"
-    # I think this works in the vs https://github.com/kubernetes-sigs/external-dns/issues/2311
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
 spec:
   selector:
     istio: gateway
@@ -41,7 +39,6 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
     external-dns.alpha.kubernetes.io/target: "istio-system-istio-gateway.tailcecc0.ts.net"
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
 spec:
   selector:
     istio: gateway

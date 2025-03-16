@@ -34,7 +34,7 @@ spec:
               name: externaldns-pihole
             - targetName: tsig-secret
               name: externaldns-tsig
-    # Cloudflare (.live and .xyz)
+    # Cloudflare (.live)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
       targetRevision: "*"
@@ -47,6 +47,24 @@ spec:
           interval: 1m
           domainFilters:
             - syscd.live
+          sources:
+            - istio-gateway
+            - istio-virtualservice
+          provider: cloudflare
+          cloudflare:
+            secretName: cloudflare-api-token-secret
+            proxied: true
+    # Tailscale (.tech)
+    - repoURL: registry-1.docker.io/bitnamicharts
+      chart: external-dns
+      targetRevision: "*"
+      helm:
+        releaseName: tailscale
+        valuesObject:
+          txtOwnerId: syscd-tailscale
+          policy: sync
+          interval: 1m
+          domainFilters:
             - syscd.tech
           sources:
             - istio-gateway
@@ -54,30 +72,7 @@ spec:
           provider: cloudflare
           cloudflare:
             secretName: cloudflare-api-token-secret
-            # proxied: true
-    # # Might work on the virtual service
-    # # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
-    # # Tailscale (.tech)
-    # - repoURL: registry-1.docker.io/bitnamicharts
-    #   chart: external-dns
-    #   targetRevision: "*"
-    #   helm:
-    #     releaseName: tailscale
-    #     valuesObject:
-    #       txtOwnerId: syscd-tailscale
-    #       policy: sync
-    #       interval: 1m
-    #       domainFilters:
-    #         - syscd.tech
-    #       sources:
-    #         - istio-gateway
-    #         - istio-virtualservice
-    #       provider: cloudflare
-    #       cloudflare:
-    #         secretName: cloudflare-api-token-secret
-    #         proxied: false
-    #       extraArgs:
-    #         service-type-filter: LoadBalancer
+            proxied: false
     # RFC2136 DNS (.dev)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
@@ -98,11 +93,11 @@ spec:
             - istio-virtualservice
           provider: rfc2136
           rfc2136:
-            secretName: tsig-secret # Secret with key rfc2136_tsig_secret
             host: bind9.bind9.svc.cluster.local
             zone: syscd.dev
+            secretName: tsig-secret
+            tsigKeyname: rfc2136_tsig_secret
             tsigAxfr: true
-            tsigKeyname: rfc2136_tsig_secret # default
     # # Pi-hole DNS
     # - repoURL: registry-1.docker.io/bitnamicharts
     #   chart: external-dns
