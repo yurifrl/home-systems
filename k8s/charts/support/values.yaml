@@ -57,3 +57,4 @@ services: []
 externalSecrets: []
   # - name: teleport-agent-token      # This matches the 1Password item name
   #   namespace: teleport             # Kubernetes namespace
+  #   decodingStrategy: None          # Decoding strategy (default: None)
