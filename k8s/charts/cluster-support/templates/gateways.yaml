@@ -1,64 +1,3 @@
-# Argo tunnel domain
-apiVersion: networking.istio.io/v1alpha3
-kind: Gateway
-metadata:
-  name: dev
-  namespace: istio-system
-  annotations:
-    external-dns.alpha.kubernetes.io/hostname: "*.syscd.dev"
-spec:
-  selector:
-    istio: gateway
-  servers:
-    - port:
-        number: 80
-        name: http
-        protocol: HTTP
-      hosts:
-        - "*.syscd.dev"
-      tls:
-        httpsRedirect: true  # Force HTTPS redirect
-    - port:
-        number: 443
-        name: https
-        protocol: HTTPS
-      hosts:
-        - "*.syscd.dev"
-      tls:
-        mode: SIMPLE
-        credentialName: syscd-tls  # Updated to match the new certificate secret name
----
-# Tailscale domain
-apiVersion: networking.istio.io/v1alpha3
-kind: Gateway
-metadata:
-  name: tailscale
-  namespace: istio-system
-  annotations:
-    external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
-    external-dns.alpha.kubernetes.io/target: "istio-system-istio-gateway.tailcecc0.ts.net"
-spec:
-  selector:
-    istio: gateway
-  servers:
-    - port:
-        number: 80
-        name: http
-        protocol: HTTP
-      hosts:
-        - "*.syscd.tech"
-      tls:
-        httpsRedirect: true  # Force HTTPS redirect
-    - port:
-        number: 443
-        name: https
-        protocol: HTTPS
-      hosts:
-        - "*.syscd.tech"
-      tls:
-        mode: SIMPLE
-        credentialName: syscd-tls  # Updated to match the new certificate secret name        
----
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
@@ -90,4 +29,65 @@ spec:
       tls:
         mode: SIMPLE
         credentialName: gateway-public-tls
+---
+# Tailscale domain
 # https://medium.com/@mattiaforc/zero-trust-kubernetes-ingress-with-tailscale-operator-cert-manager-and-external-dns-8f42272f8647
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: tailscale
+  namespace: istio-system
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
+    external-dns.alpha.kubernetes.io/target: "istio-system-istio-gateway.tailcecc0.ts.net"
+spec:
+  selector:
+    istio: gateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*.syscd.tech"
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - "*.syscd.tech"
+      tls:
+        mode: SIMPLE
+        credentialName: syscd-tls
+---
+# Argo tunnel domain
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: dev
+  namespace: istio-system
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "*.syscd.dev"
+spec:
+  selector:
+    istio: gateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*.syscd.dev"
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - "*.syscd.dev"
+      tls:
+        mode: SIMPLE
+        credentialName: syscd-tls
