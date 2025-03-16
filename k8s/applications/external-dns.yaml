@@ -50,7 +50,6 @@ spec:
           sources:
             - istio-gateway
             - istio-virtualservice
-            - crd
           provider: cloudflare
           cloudflare:
             secretName: cloudflare-api-token-secret
@@ -70,7 +69,6 @@ spec:
           sources:
             - istio-gateway
             - istio-virtualservice
-            - crd
           provider: cloudflare
           cloudflare:
             secretName: cloudflare-api-token-secret
