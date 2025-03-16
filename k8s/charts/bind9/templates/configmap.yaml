@@ -11,6 +11,9 @@ data:
       192.168.0.0/16;    # All local networks in 192.168.x.x range
       198.19.0.0/16;     # Broader network range
       # 10.0.0.0/8;        # All kubernetes and internal networks
+      10.244.0.0/16;     # Pod network
+      10.96.0.0/12;      # Service network
+      127.0.0.1;         # Localhost
     };
 
     options {
@@ -47,12 +50,20 @@ data:
         type master;
         file "/etc/bind/syscd.dev.zone";
         journal "/var/lib/bind/syscd.dev.zone.jnl";
+        # Explicitly allow queries for this zone
+        allow-query { any; };
+        # Allow transfers using TSIG key
         allow-transfer {
             key "rfc2136_tsig_secret";
         };
-        update-policy {
-            grant rfc2136_tsig_secret zonesub ANY;
+        # Explicit allow-update directive for RFC2136
+        allow-update {
+            key "rfc2136_tsig_secret";
         };
+        # Remove update-policy which may conflict with allow-update
+        # update-policy {
+        #     grant rfc2136_tsig_secret zonesub ANY;
+        # };
     };
     # Include the keys configuration, it will come from a secret previously created
     include "/etc/bind/keys.conf";
