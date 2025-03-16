@@ -23,6 +23,18 @@ data:
         localhost;
       };
       
+      # Allow queries from internal networks
+      allow-query {
+        internal;
+        localhost;
+      };
+      
+      # Allow cache access from internal networks
+      allow-query-cache {
+        internal;
+        localhost;
+      };
+      
       forwarders {
         1.1.1.1;
         1.0.0.1;
