@@ -54,7 +54,7 @@ spec:
           cloudflare:
             secretName: cloudflare-api-token-secret
             proxied: true
-    # Tailscale (.tech)
+    # Tailscale (.tech), there need to be two because tailscale can't be proxied
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
       targetRevision: "*"
