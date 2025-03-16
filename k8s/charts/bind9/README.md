@@ -9,13 +9,17 @@
 
 Troubleshoot:
 
-```bash
-k -n external-dns logs -l app.kubernetes.io/instance=rfc2136
-k -n bind9 logs -l app=bind9
 
 # Secrets
 k -n external-dns get secrets tsig-secret -ojsonpath="{.data.rfc2136_tsig_secret}" | base64 -d
 k -n bind9 get secrets bind9-keys -ojsonpath="{.data.keys\.conf}" | base64 -d
+
+
+```bash
+Get logs and fix the issue
+
+k -n external-dns logs -l app.kubernetes.io/instance=rfc2136
+k -n bind9 logs -l app=bind9
 
 # Fails
 nslookup ha.syscd.dev 192.168.68.200

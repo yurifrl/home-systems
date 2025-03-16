@@ -21,6 +21,20 @@ data:
         internal;              # Uses your existing ACL
         localhost;
       };
+
+      # Allow queries from all internal clients
+      allow-query {
+        internal;
+        localhost;
+      };
+      
+      # Allow cache queries 
+      allow-query-cache {
+        internal;
+        localhost;
+      };
+
+
       
       forwarders {
         1.1.1.1;
