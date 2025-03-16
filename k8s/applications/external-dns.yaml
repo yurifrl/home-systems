@@ -43,30 +43,10 @@ spec:
         valuesObject:
           crd.create: false
           txtOwnerId: syscd-cloudflare
-          policy: upsert-only
+          policy: syncd
           interval: 1m
           domainFilters:
             - syscd.live
-          sources:
-            - istio-gateway
-            - istio-virtualservice
-          provider: cloudflare
-          cloudflare:
-            secretName: cloudflare-api-token-secret
-            proxied: true
-    # Might work on the virtual service
-    # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
-    # Tailscale (.tech)
-    - repoURL: registry-1.docker.io/bitnamicharts
-      chart: external-dns
-      targetRevision: "*"
-      helm:
-        releaseName: tailscale
-        valuesObject:
-          txtOwnerId: syscd-tailscale
-          policy: sync
-          interval: 1m
-          domainFilters:
             - syscd.tech
           sources:
             - istio-gateway
@@ -74,9 +54,30 @@ spec:
           provider: cloudflare
           cloudflare:
             secretName: cloudflare-api-token-secret
-            proxied: false
-          extraArgs:
-            service-type-filter: LoadBalancer
+            # proxied: true
+    # # Might work on the virtual service
+    # # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    # # Tailscale (.tech)
+    # - repoURL: registry-1.docker.io/bitnamicharts
+    #   chart: external-dns
+    #   targetRevision: "*"
+    #   helm:
+    #     releaseName: tailscale
+    #     valuesObject:
+    #       txtOwnerId: syscd-tailscale
+    #       policy: sync
+    #       interval: 1m
+    #       domainFilters:
+    #         - syscd.tech
+    #       sources:
+    #         - istio-gateway
+    #         - istio-virtualservice
+    #       provider: cloudflare
+    #       cloudflare:
+    #         secretName: cloudflare-api-token-secret
+    #         proxied: false
+    #       extraArgs:
+    #         service-type-filter: LoadBalancer
     # RFC2136 DNS (.dev)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
