@@ -10,8 +10,7 @@ data:
     acl internal {
       192.168.0.0/16;    # All local networks in 192.168.x.x range
       198.19.0.0/16;     # Broader network range
-      10.0.0.0/8;        # All kubernetes and internal networks
-      10.244.0.0/16;     # Specific pod CIDR range
+      # 10.0.0.0/8;        # All kubernetes and internal networks
     };
 
     options {
@@ -20,18 +19,6 @@ data:
       recursion yes;           # Enable recursion
       allow-recursion {        # Only allow internal networks to use recursion
         internal;              # Uses your existing ACL
-        localhost;
-      };
-      
-      # Allow queries from internal networks
-      allow-query {
-        internal;
-        localhost;
-      };
-      
-      # Allow cache access from internal networks
-      allow-query-cache {
-        internal;
         localhost;
       };
       
@@ -48,6 +35,9 @@ data:
         journal "/var/lib/bind/syscd.dev.zone.jnl";
         allow-transfer {
             key "rfc2136_tsig_secret";
+        };
+        update-policy {
+            grant rfc2136_tsig_secret zonesub ANY;
         };
     };
     # Include the keys configuration, it will come from a secret previously created
