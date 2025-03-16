@@ -5,7 +5,7 @@ metadata:
   name: cloudflare
   namespace: istio-system
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: "*.syscd.live,*.syscd.xyz"
+    external-dns.alpha.kubernetes.io/hostname: "*.syscd.live"
     external-dns.alpha.kubernetes.io/target: "b31e4822-8b42-44fa-b6ca-7feb86a56ec8.cfargotunnel.com"
 spec:
   selector:

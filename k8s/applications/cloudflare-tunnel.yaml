@@ -40,12 +40,12 @@ spec:
               - hostname: "syscd.xyz"
                 service: https://teleport.teleport.svc.cluster.local
                 originRequest:
-                  noTLSVerify: true    
+                  noTLSVerify: true
               - hostname: "*.syscd.xyz"
                 # service: http://istio-gateway.istio-system.svc.cluster.local:80
                 service: https://teleport.teleport.svc.cluster.local
                 originRequest:
-                  noTLSVerify: true                
+                  noTLSVerify: true
               - hostname: "argocd.syscd.live"
                 service: http://argocd-server.argocd.svc.cluster.local:80
               - hostname: "*.syscd.live"
@@ -61,4 +61,4 @@ spec:
 # https://github.com/cloudflare/helm-charts/tree/main/charts/cloudflare-tunnel
 # cloudflared tunnel login
 # cloudflared tunnel create nixos-1
-# kubectl -n cloudflare-tunnel create secret generic cloudflare-tunnel-secret --from-file=credentials.json=/home/nixos/.cloudflared/...  
+# kubectl -n cloudflare-tunnel create secret generic cloudflare-tunnel-secret --from-file=credentials.json=/home/nixos/.cloudflared/...
