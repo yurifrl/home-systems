@@ -1,0 +1,16 @@
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: gatus-endpoints
+spec:
+  endpoints:
+  - dnsName: "up.syscd.tech"
+    recordType: CNAME
+    recordTTL: 300
+    targets:
+    - "digitalocean-nixos-01.tailcecc0.ts.net"
+  - dnsName: "up.syscd.live"
+    recordType: CNAME
+    recordTTL: 300
+    targets:
+    - "3b90d790-0a11-46ae-9421-d195cc828947.cfargotunnel.com"
