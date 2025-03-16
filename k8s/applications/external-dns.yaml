@@ -43,7 +43,7 @@ spec:
         valuesObject:
           crd.create: false
           txtOwnerId: syscd-cloudflare
-          policy: syncd
+          policy: sync
           interval: 1m
           domainFilters:
             - syscd.live
