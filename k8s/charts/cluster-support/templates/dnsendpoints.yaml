@@ -18,4 +18,4 @@ spec:
     recordType: CNAME
     recordTTL: 300
     targets:
-    - "3b90d790-0a11-46ae-9421-d195cc828947.cfargotunnel.com"
+    - "b31e4822-8b42-44fa-b6ca-7feb86a56ec8.cfargotunnel.com"
