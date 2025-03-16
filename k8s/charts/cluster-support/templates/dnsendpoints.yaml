@@ -27,7 +27,7 @@ metadata:
   name: external-dns
 rules:
 - apiGroups: ["externaldns.k8s.io"]
-  resources: ["dnsendpoints"]
+  resources: ["dnsendpoints", "dnsendpoints/status"]
   verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
 - apiGroups: [""]
   resources: ["services", "endpoints", "pods"]
