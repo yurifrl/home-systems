@@ -87,7 +87,7 @@ spec:
           registry: txt
           txtPrefix: external-dns-
           txtOwnerId: syscd-rfc2136
-          policy: upsert-only
+          policy: sync
           interval: 1m
           domainFilters:
             - syscd.dev
@@ -100,7 +100,7 @@ spec:
             host: bind9.bind9.svc.cluster.local
             zone: syscd.dev
             tsigAxfr: true
-            tsigKeyname: externaldns-key
+            tsigKeyname: rfc2136_tsig_secret
           # extraArgs:
           #   service-type-filter: LoadBalancer
     # # Pi-hole DNS
