@@ -1,3 +1,4 @@
+# Argo tunnel domain
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
@@ -62,7 +63,6 @@ spec:
         mode: SIMPLE
         credentialName: syscd-tls
 ---
-# Argo tunnel domain
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
