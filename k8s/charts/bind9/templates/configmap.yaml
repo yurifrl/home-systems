@@ -49,9 +49,6 @@ data:
         allow-transfer {
             key "rfc2136_tsig_secret";
         };
-        allow-update {
-            key "rfc2136_tsig_secret";
-        }; 
         update-policy {
             grant rfc2136_tsig_secret zonesub ANY;
         };
