@@ -32,7 +32,7 @@ spec:
               name: externaldns-pihole
             - targetName: tsig-secret
               name: externaldns-tsig
-    # Cloudflare
+    # Cloudflare (.live and .xyz)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
       targetRevision: "*"
@@ -54,7 +54,7 @@ spec:
             proxied: true
     # Might work on the virtual service
     # external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
-    # Tailscale
+    # Tailscale (.tech)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
       targetRevision: "*"
@@ -75,7 +75,7 @@ spec:
             proxied: false
           extraArgs:
             service-type-filter: LoadBalancer            
-    # RFC2136 DNS
+    # RFC2136 DNS (.dev)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
       targetRevision: "*"
