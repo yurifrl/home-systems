@@ -47,9 +47,10 @@ data:
             key "rfc2136_tsig_secret";
             internal;
         };
-        allow-update {
-            key "rfc2136_tsig_secret"; 
-        };
+        # Is either allow-update or update-policy, not both
+        # allow-update {
+        #     key "rfc2136_tsig_secret"; 
+        # };
         update-policy {
             grant rfc2136_tsig_secret zonesub ANY;
         };
