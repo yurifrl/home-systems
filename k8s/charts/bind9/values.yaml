@@ -1,5 +1,7 @@
 persistence:
-  size: 1Gi  # Default size for the PVC
+  enabled: true     # Enable persistence by default
+  size: 1Gi         # Default size for the PVC
+  storageClass: ""  # Empty string means to use the default storage class
 
 image:
   repository: ubuntu/bind9
