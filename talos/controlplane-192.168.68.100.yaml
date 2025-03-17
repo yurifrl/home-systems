@@ -219,8 +219,8 @@ machine:
   #
   #             # # Enable mutual TLS authentication with the registry.
   #             # clientIdentity:
-  #             #     crt: LS0tIEVYQU1QTEUgQ0VSVElGSUNBVEUgLS0t
-  #             #     key: <<REDACTED>>
+  #             #     crt: op://kubernetes/talos/MACHINE_CA_CRT
+  #             #     key: op://kubernetes/talos/MACHINE_CA_KEY
   #
   #         # # The auth configuration for this registry.
   #         # auth:

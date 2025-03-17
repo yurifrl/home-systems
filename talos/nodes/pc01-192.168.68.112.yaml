@@ -232,8 +232,8 @@ machine:
   #
   #             # # Enable mutual TLS authentication with the registry.
   #             # clientIdentity:
-  #             #     crt: LS0tIEVYQU1QTEUgQ0VSVElGSUNBVEUgLS0t
-  #             #     key: <<REDACTED>>
+  #             #     crt: op://kubernetes/talos/MACHINE_CA_CRT
+  #             #     key: op://kubernetes/talos/MACHINE_CA_KEY
   #
   #         # # The auth configuration for this registry.
   #         # auth:
@@ -501,14 +501,14 @@ cluster:
 
   # # AggregatorCA example.
   # aggregatorCA:
-  #     crt: LS0tIEVYQU1QTEUgQ0VSVElGSUNBVEUgLS0t
-  #     key: <<REDACTED>>
+  #     crt: op://kubernetes/talos/CLUSTER_AGGREGATORCA_CRT
+  #     key: op://kubernetes/talos/CLUSTER_AGGREGATORCA_KEY
 
   # # The base64 encoded private key for service account token generation.
 
   # # AggregatorCA example.
   # serviceAccount:
-  #     key: <<REDACTED>>
+  #     key: op://kubernetes/talos/CLUSTER_SERVICEACCOUNT_KEY
 
   # # API server specific configuration options.
   apiServer:
@@ -591,8 +591,8 @@ cluster:
   #     image: gcr.io/etcd-development/etcd:v3.5.18 # The container image used to create the etcd service.
   #     # The `ca` is the root certificate authority of the PKI.
   #     ca:
-  #         crt: LS0tIEVYQU1QTEUgQ0VSVElGSUNBVEUgLS0t
-  #         key: <<REDACTED>>
+  #         crt: op://kubernetes/talos/CLUSTER_CA_CRT
+  #         key: op://kubernetes/talos/CLUSTER_CA_KEY
   #     # Extra arguments to supply to etcd.
   #     extraArgs:
   #         election-timeout: "5000"
