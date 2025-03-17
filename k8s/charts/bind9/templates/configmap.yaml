@@ -27,19 +27,6 @@ data:
         1.0.0.1;
         8.8.8.8;
       };
-      
-      # Allow DNS queries from internal networks
-      allow-query {
-        internal;
-        localhost;
-      };
-      
-      # Setting to YES resolves the REFUSED error for external domains
-      dnssec-validation auto;
-      
-      # Helps with caching and performance
-      max-cache-ttl 86400;
-      max-ncache-ttl 86400;
     };
 
     zone "syscd.dev" IN {
