@@ -29,10 +29,10 @@ data:
       };
       
       # Allow DNS queries from internal networks
-      allow-query {
-        internal;
-        localhost;
-      };
+      allow-query { any; }; # Test
+      
+      # Allow cache queries from internal networks
+      allow-query-cache { any;}; # Test
       
       # Setting to YES resolves the REFUSED error for external domains
       dnssec-validation auto;
@@ -53,6 +53,7 @@ data:
         allow-update {
           key "rfc2136_tsig_secret";
         };
+        allow-query { any; }; # Test
         # update-policy {
         #     grant rfc2136_tsig_secret zonesub ANY;
         # };
