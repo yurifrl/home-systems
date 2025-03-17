@@ -10,7 +10,6 @@ data:
     acl internal {
       192.168.0.0/16;    # All local networks in 192.168.x.x range
       198.19.0.0/16;     # Broader network range
-      127.0.0.1/8;       # Localhost
       # 10.0.0.0/8;        # All kubernetes and internal networks (I know that for what I want it at works without this)
     };
 
@@ -20,18 +19,14 @@ data:
       recursion yes;           # Enable recursion
       allow-recursion {        # Only allow internal networks to use recursion
         internal;              # Uses your existing ACL
+        localhost;
       };
-      
-      allow-query { internal; };
       
       forwarders {
         1.1.1.1;
         1.0.0.1;
         8.8.8.8;
       };
-      
-      forward only;
-      allow-transfer { none; };
     };
 
     zone "syscd.dev" IN {
