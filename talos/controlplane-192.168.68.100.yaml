@@ -406,8 +406,8 @@ machine:
   #     exampleTaint: exampleTaintValue:NoSchedule
 # Provides cluster specific configuration options.
 cluster:
-  id: sMo2fr1PNGcRWVyFRpfYEOj9I_ZkzhQuHIJrNzPt_jU= # Globally unique identifier for this cluster (base64 encoded random 32 bytes).
-  secret: <<REDACTED>> # Shared secret of cluster (base64 encoded random 32 bytes).
+  id: op://kubernetes/talos/CLUSTER_ID # Globally unique identifier for this cluster (base64 encoded random 32 bytes).
+  secret: op://kubernetes/talos/CLUSTER_SECRET # Shared secret of cluster (base64 encoded random 32 bytes).
   # Provides control plane specific configuration options.
   controlPlane:
     endpoint: https://192.168.68.100:6443 # Endpoint is the canonical controlplane endpoint, which can be an IP address or a DNS hostname.
@@ -562,7 +562,7 @@ cluster:
   # # A key used for the [encryption of secret data at rest](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/).
 
   # # Decryption secret example (do not use in production!).
-  # aescbcEncryptionSecret: <<REDACTED>>
+  # aescbcEncryptionSecret: op://kubernetes/talos/AESCBC_ENCRYPTION_SECRET
 
   # # Core DNS specific configuration options.
   # coreDNS:
