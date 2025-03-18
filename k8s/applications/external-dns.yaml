@@ -96,11 +96,12 @@ spec:
             host: bind9.bind9.svc.cluster.local
             port: 53
             zones:
-              - syscd.dev
+              - syscd.dev.
             secretName: tsig-secret
             tsigKeyname: externaldns-key
             tsigSecretAlg: hmac-sha256
             tsigAxfr: false
+            minTTL: 60s
     # # Pi-hole DNS
     # - repoURL: registry-1.docker.io/bitnamicharts
     #   chart: external-dns
