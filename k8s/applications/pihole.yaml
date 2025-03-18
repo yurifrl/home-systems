@@ -46,3 +46,17 @@ spec:
           monitoring:
             podMonitor:
               enabled: true
+          # Configure DNS upstream servers
+          ftl:
+            dnsmasq_listening: all
+            dns:
+              upstream:
+                - 8.8.8.8
+                - 8.8.4.4
+          # Allow the pod to initiate outbound connections
+          podDnsConfig:
+            enabled: true
+            policy: "None"
+            nameservers:
+              - 8.8.8.8
+              - 1.1.1.1
