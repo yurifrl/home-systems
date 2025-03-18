@@ -38,14 +38,6 @@ spec:
             enabled: false
           admin:
             existingSecret: "pihole-admin"
-          # Network troubleshooting options
-          hostNetwork: true
-          # Add extra capabilities for network access
-          securityContext:
-            capabilities:
-              add:
-                - NET_ADMIN
-                - NET_RAW
           # Disable probes
           # probes:
           #   liveness:
@@ -62,8 +54,6 @@ spec:
             loadBalancerIP: 192.168.68.203
             annotations:
               metallb.universe.tf/allow-shared-ip: pihole-svc
-          podDnsConfig:
-            enabled: false
           monitoring:
             podMonitor:
               enabled: true
