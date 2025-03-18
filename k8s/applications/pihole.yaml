@@ -38,9 +38,6 @@ spec:
             enabled: false
           admin:
             existingSecret: "pihole-admin"
-          hostNetwork: false
-          dnsHostPort:
-            enabled: false
           serviceWeb:
             loadBalancerIP: 192.168.68.203
             annotations:
@@ -48,6 +45,7 @@ spec:
             type: LoadBalancer              
           serviceDns:
             type: LoadBalancer
+            port: 5353
             loadBalancerIP: 192.168.68.203
             annotations:
               metallb.universe.tf/allow-shared-ip: pihole-svc
