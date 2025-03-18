@@ -1,0 +1,19 @@
+services:
+  bind9:
+    image: ubuntu/bind9:latest
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    volumes:
+      - ./config/named.conf:/etc/bind/named.conf
+      - ./config/keys.conf:/etc/bind/keys.conf
+      - ./zones:/etc/bind/zones
+      # - bind9_cache:/var/cache/bind
+      # - bind9_lib:/var/lib/bind
+    # restart: unless-stopped
+    environment:
+      - TZ=UTC
+
+# volumes:
+#   bind9_cache:
+#   bind9_lib: 

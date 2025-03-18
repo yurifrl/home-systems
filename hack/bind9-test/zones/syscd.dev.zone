@@ -1,0 +1,13 @@
+$TTL 60	; 1 minute
+syscd.dev.		IN SOA	ns.syscd.dev. root.syscd.dev. (
+				17         ; serial
+				60         ; refresh (1 minute)
+				60         ; retry (1 minute)
+				60         ; expire (1 minute)
+				60         ; minimum (1 minute)
+				)
+			NS	ns.syscd.dev.
+httpbin.syscd.dev.	A	192.168.68.201
+ns.syscd.dev.		A	127.0.0.1
+test.syscd.dev.		A	192.168.1.10
+www.syscd.dev.		A	192.168.1.20

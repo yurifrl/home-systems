@@ -1,7 +1,0 @@
-tunnel: 200657c8-9e02-4a8b-9373-a9a83ac488d7
-credentials-file: /etc/cloudflared/config.json
-
-ingress:
-  - hostname: up.syscd.live
-    service: http://uptime-kuma:3001
-  - service: http_status:404
