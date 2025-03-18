@@ -94,11 +94,13 @@ spec:
           provider: rfc2136
           rfc2136:
             host: bind9.bind9.svc.cluster.local
+            port: 53
             zones:
               - syscd.dev
             secretName: tsig-secret
             tsigKeyname: externaldns-key
             tsigSecretAlg: hmac-sha256
+            tsigAxfr: false
     # # Pi-hole DNS
     # - repoURL: registry-1.docker.io/bitnamicharts
     #   chart: external-dns
