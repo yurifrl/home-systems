@@ -97,8 +97,7 @@ spec:
             zones:
               - syscd.dev
             secretName: tsig-secret
-            tsigKeyname: externaldns-key
-            # tsigAxfr: true
+            tsigKeyname: rfc2136_tsig_secret
     # # Pi-hole DNS
     # - repoURL: registry-1.docker.io/bitnamicharts
     #   chart: external-dns

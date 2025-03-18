@@ -33,11 +33,11 @@ data:
         file "/etc/bind/syscd.dev.zone";
         journal "/var/lib/bind/syscd.dev.zone.jnl";
         allow-transfer {
-            key "externaldns-key";
+            key "rfc2136_tsig_secret";
         };
         # Is either allow-update or update-policy, not both
         update-policy {
-            grant externaldns-key zonesub ANY;
+            grant rfc2136_tsig_secret zonesub ANY;
         };
     };
     # Include the keys configuration, it will come from a secret previously created
