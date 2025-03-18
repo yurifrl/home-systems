@@ -34,45 +34,45 @@ spec:
               name: externaldns-pihole
             - targetName: tsig-secret
               name: externaldns-tsig
-    # Cloudflare (.live)
-    - repoURL: registry-1.docker.io/bitnamicharts
-      chart: external-dns
-      targetRevision: "*"
-      helm:
-        releaseName: cloudflare
-        valuesObject:
-          crd.create: false
-          txtOwnerId: syscd-cloudflare
-          policy: sync
-          interval: 1m
-          domainFilters:
-            - syscd.live
-          sources:
-            - istio-gateway
-            - istio-virtualservice
-          provider: cloudflare
-          cloudflare:
-            secretName: cloudflare-api-token-secret
-            proxied: true
-    # Tailscale (.tech), there need to be two because tailscale can't be proxied I the annotation to disable proxie only work on virtualservices
-    - repoURL: registry-1.docker.io/bitnamicharts
-      chart: external-dns
-      targetRevision: "*"
-      helm:
-        releaseName: tailscale
-        valuesObject:
-          txtOwnerId: syscd-tailscale
-          policy: sync
-          interval: 1m
-          domainFilters:
-            - syscd.tech
-          sources:
-            - istio-gateway
-            - istio-virtualservice
-          provider: cloudflare
-          cloudflare:
-            secretName: cloudflare-api-token-secret
-            proxied: false
+    # # Cloudflare (.live)
+    # - repoURL: registry-1.docker.io/bitnamicharts
+    #   chart: external-dns
+    #   targetRevision: "*"
+    #   helm:
+    #     releaseName: cloudflare
+    #     valuesObject:
+    #       crd.create: false
+    #       txtOwnerId: syscd-cloudflare
+    #       policy: sync
+    #       interval: 1m
+    #       domainFilters:
+    #         - syscd.live
+    #       sources:
+    #         - istio-gateway
+    #         - istio-virtualservice
+    #       provider: cloudflare
+    #       cloudflare:
+    #         secretName: cloudflare-api-token-secret
+    #         proxied: true
+    # # Tailscale (.tech), there need to be two because tailscale can't be proxied I the annotation to disable proxie only work on virtualservices
+    # - repoURL: registry-1.docker.io/bitnamicharts
+    #   chart: external-dns
+    #   targetRevision: "*"
+    #   helm:
+    #     releaseName: tailscale
+    #     valuesObject:
+    #       txtOwnerId: syscd-tailscale
+    #       policy: sync
+    #       interval: 1m
+    #       domainFilters:
+    #         - syscd.tech
+    #       sources:
+    #         - istio-gateway
+    #         - istio-virtualservice
+    #       provider: cloudflare
+    #       cloudflare:
+    #         secretName: cloudflare-api-token-secret
+    #         proxied: false
     # RFC2136 DNS (.dev)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
@@ -94,28 +94,29 @@ spec:
           provider: rfc2136
           rfc2136:
             host: bind9.bind9.svc.cluster.local
-            zone: syscd.dev
+            zones:
+              - syscd.dev
             secretName: tsig-secret
             tsigKeyname: rfc2136_tsig_secret
             tsigAxfr: true
-    # Pi-hole DNS
-    - repoURL: registry-1.docker.io/bitnamicharts
-      chart: external-dns
-      targetRevision: "*"
-      helm:
-        releaseName: pihole
-        valuesObject:
-          crd.create: false
-          logLevel: debug
-          txtOwnerId: syscd-pihole
-          policy: sync
-          interval: 1m
-          domainFilters:
-            - syscd.dev
-          sources:
-            - istio-gateway
-            - istio-virtualservice
-          provider: pihole
-          pihole:
-            server: "http://pihole-web.pihole.svc.cluster.local"
-            secretName: pihole-secret
+    # # Pi-hole DNS
+    # - repoURL: registry-1.docker.io/bitnamicharts
+    #   chart: external-dns
+    #   targetRevision: "*"
+    #   helm:
+    #     releaseName: pihole
+    #     valuesObject:
+    #       crd.create: false
+    #       logLevel: debug
+    #       txtOwnerId: syscd-pihole
+    #       policy: sync
+    #       interval: 1m
+    #       domainFilters:
+    #         - syscd.dev
+    #       sources:
+    #         - istio-gateway
+    #         - istio-virtualservice
+    #       provider: pihole
+    #       pihole:
+    #         server: "http://pihole-web.pihole.svc.cluster.local"
+    #         secretName: pihole-secret
