@@ -46,23 +46,3 @@ spec:
           monitoring:
             podMonitor:
               enabled: true
-          # Correct environment variable configuration
-          extraEnvVars:
-            - name: FTLCONF_dns_listeningMode
-              value: "all"
-            - name: FTLCONF_dns_upstreams
-              value: "8.8.8.8,8.8.4.4"
-          # Advanced configuration for DNS capabilities
-          extraSecurityContext:
-            capabilities:
-              add:
-                - NET_ADMIN
-                - SYS_NICE
-                - SYS_TIME
-          # Keep pod DNS configuration
-          podDnsConfig:
-            enabled: true
-            policy: "None"
-            nameservers:
-              - 8.8.8.8
-              - 1.1.1.1
