@@ -94,7 +94,6 @@ spec:
           provider: rfc2136
           rfc2136:
             host: bind9.bind9.svc.cluster.local
-            port: 53
             zones:
               - syscd.dev
             secretName: tsig-secret
@@ -118,5 +117,6 @@ spec:
             - istio-virtualservice
           provider: pihole
           pihole:
-            server: "http://pihole-web.pihole.svc.cluster.local"
+            server: pihole-web.pihole.svc.cluster.local
             secretName: pihole-secret
+            tlsSkipVerify: false
