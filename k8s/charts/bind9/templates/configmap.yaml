@@ -21,6 +21,9 @@ data:
         localhost;
       };
       
+      allow-update { none; };    # Default policy
+      allow-update-forwarding { none; };  # Default policy for update forwarding
+      
       forwarders {
         1.1.1.1;
         1.0.0.1;
@@ -34,6 +37,8 @@ data:
         journal "/var/lib/bind/syscd.dev.zone.jnl";
         allow-transfer {
             key "externaldns-key";
+            localhost;
+            127.0.0.1;
         };
         # Is either allow-update or update-policy, not both
         update-policy {

@@ -100,7 +100,7 @@ spec:
             secretName: tsig-secret
             tsigKeyname: externaldns-key
             tsigSecretAlg: hmac-sha256
-            tsigAxfr: false
+            tsigAxfr: true
             minTTL: 60s
     # # Pi-hole DNS
     # - repoURL: registry-1.docker.io/bitnamicharts
