@@ -7,7 +7,7 @@ services:
     volumes:
       - ./config/named.conf:/etc/bind/named.conf
       - ./config/keys.conf:/etc/bind/keys.conf
-      - ./zones:/etc/bind/zones
+      - ./zones/syscd.dev.zone:/etc/bind/syscd.dev.zone
       # - bind9_cache:/var/cache/bind
       # - bind9_lib:/var/lib/bind
     # restart: unless-stopped
