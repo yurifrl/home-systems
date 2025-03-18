@@ -93,11 +93,14 @@ spec:
             - istio-virtualservice
           provider: rfc2136
           rfc2136:
-            host: bind9.bind9.svc.cluster.local
+            host: 192.168.68.200
             zones:
               - syscd.dev
             secretName: tsig-secret
             tsigKeyname: externaldns-key
+            tsigSecretAlg: hmac-sha256
+            tsigAxfr: true  # Make sure this is set properly
+            minTTL: 60s     # Match your manual TTL
     # # Pi-hole DNS
     # - repoURL: registry-1.docker.io/bitnamicharts
     #   chart: external-dns
