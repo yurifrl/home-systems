@@ -31,7 +31,7 @@ data:
     zone "syscd.dev" IN {
         type master;
         file "/etc/bind/syscd.dev.zone";
-        journal "/var/lib/bind/syscd.dev.zone.jnl";
+        # journal "/var/lib/bind/syscd.dev.zone.jnl";
         allow-transfer {
             key "rfc2136_tsig_secret";
         };
@@ -45,14 +45,14 @@ data:
 
   syscd.dev.zone: |
     $TTL 60 ; 1 minute
-    @       IN      SOA    syscd.dev. root.syscd.dev. (
-                           16         ; serial
-                           60         ; refresh (1 minute)
-                           60         ; retry (1 minute)
-                           60         ; expire (1 minute)
-                           60         ; minimum (1 minute)
-                           )
-    @       IN      NS      ns.syscd.dev.
-    ns      IN      A       {{ .Values.loadBalancerIP }}
+    syscd.dev               IN SOA  syscd.dev. root.syscd.dev. (
+                                    16         ; serial
+                                    60         ; refresh (1 minute)
+                                    60         ; retry (1 minute)
+                                    60         ; expire (1 minute)
+                                    60         ; minimum (1 minute)
+                                    )
+                            NS      ns.syscd.dev.
+    ns                      A       {{ .Values.loadBalancerIP }}
 
 #  Validate zone con: kubectl -n bind9 exec -it deployment/bind9 -- named-checkzone syscd.dev /etc/bind/syscd.dev.zone
