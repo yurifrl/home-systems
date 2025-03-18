@@ -11,7 +11,7 @@ Troubleshoot:
 
 
 # Secrets
-k -n external-dns get secrets tsig-secret -ojsonpath="{.data.rfc2136_tsig_secret}" | base64 -d
+k -n external-dns get secrets tsig-secret -ojsonpath="{.data.externaldns-key}" | base64 -d
 k -n bind9 get secrets bind9-keys -ojsonpath="{.data.keys\.conf}" | base64 -d
 
 
