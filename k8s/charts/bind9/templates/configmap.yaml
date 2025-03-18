@@ -45,6 +45,15 @@ data:
       # # Helps with caching and performance
       # max-cache-ttl 86400;
       # max-ncache-ttl 86400;
+      
+      # Enable RFC2136 dynamic updates
+      allow-update-forwarding { any; };
+      
+      # Allow DNS notify operations
+      allow-notify { any; };
+      
+      # Enable dnssec validation for security
+      dnssec-validation auto;
     };
 
     zone "syscd.dev" IN {
@@ -54,10 +63,13 @@ data:
         allow-transfer {
             key "rfc2136_tsig_secret";
         };
-        # Is either allow-update or update-policy, not both
-        allow-update {
-          key "rfc2136_tsig_secret";
+        # Replace allow-update with update-policy which is more specific and reliable
+        update-policy {
+          grant "rfc2136_tsig_secret" zonesub ANY;
         };
+        # allow-update {
+        #   key "rfc2136_tsig_secret";
+        # };
         # allow-query {
         #   any;                # Allow queries for this zone from anywhere
         # };
