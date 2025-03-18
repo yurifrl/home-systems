@@ -36,8 +36,8 @@ data:
             key "externaldns-key";
         };
         # Is either allow-update or update-policy, not both
-        allow-update {
-            key "externaldns-key";
+        update-policy {
+            grant externaldns-key zonesub ANY;
         };
     };
     # Include the keys configuration, it will come from a secret previously created
