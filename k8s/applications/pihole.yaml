@@ -38,12 +38,9 @@ spec:
             enabled: false
           admin:
             existingSecret: "pihole-admin"
-          # Disable probes
-          # probes:
-          #   liveness:
-          #     enabled: false
-          #   readiness:
-          #     enabled: false
+          hostNetwork: false
+          dnsHostPort:
+            enabled: false
           serviceWeb:
             loadBalancerIP: 192.168.68.203
             annotations:
