@@ -52,11 +52,18 @@ spec:
               enabled: false
             readiness:
               enabled: false
+          serviceWeb:
+            loadBalancerIP: 192.168.68.203
+            annotations:
+              metallb.universe.tf/allow-shared-ip: pihole-svc
+            type: LoadBalancer              
           serviceDns:
             type: LoadBalancer
             loadBalancerIP: 192.168.68.203
             annotations:
               metallb.universe.tf/allow-shared-ip: pihole-svc
+          podDnsConfig:
+            enabled: false
           monitoring:
             podMonitor:
               enabled: true
