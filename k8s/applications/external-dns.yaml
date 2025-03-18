@@ -98,6 +98,7 @@ spec:
               - syscd.dev
             secretName: tsig-secret
             tsigKeyname: externaldns-key
+            tsigSecretAlg: hmac-sha256
     # # Pi-hole DNS
     # - repoURL: registry-1.docker.io/bitnamicharts
     #   chart: external-dns
