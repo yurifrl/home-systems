@@ -35,7 +35,7 @@ spec:
       helm:
         valuesObject:
           persistentVolumeClaim:
-            enabled: false
+            enabled: true
           admin:
             existingSecret: "pihole-admin"
           serviceDns:
@@ -46,14 +46,20 @@ spec:
           monitoring:
             podMonitor:
               enabled: true
-          # Configure DNS upstream servers
-          ftl:
-            dnsmasq_listening: all
-            dns:
-              upstream:
-                - 8.8.8.8
-                - 8.8.4.4
-          # Allow the pod to initiate outbound connections
+          # Correct environment variable configuration
+          extraEnvVars:
+            - name: FTLCONF_dns_listeningMode
+              value: "all"
+            - name: FTLCONF_dns_upstreams
+              value: "8.8.8.8,8.8.4.4"
+          # Advanced configuration for DNS capabilities
+          extraSecurityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - SYS_NICE
+                - SYS_TIME
+          # Keep pod DNS configuration
           podDnsConfig:
             enabled: true
             policy: "None"
