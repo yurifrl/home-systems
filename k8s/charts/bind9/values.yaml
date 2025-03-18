@@ -1,5 +1,5 @@
 persistence:
-  enabled: true     # Enable persistence by default
+  enabled: false     # Enable persistence by default
   size: 1Gi         # Default size for the PVC
   storageClass: ""  # Empty string means to use the default storage class
 
