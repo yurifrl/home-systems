@@ -69,7 +69,6 @@ spec:
             privileged: true
             allowPrivilegeEscalation: true
             runAsUser: 0
-            fsGroup: 0
       volumes:
         - name: config
           configMap:
