@@ -98,26 +98,24 @@ spec:
             secretName: tsig-secret
             tsigKeyname: rfc2136_tsig_secret
             tsigAxfr: true
-    # # Pi-hole DNS
-    # - repoURL: registry-1.docker.io/bitnamicharts
-    #   chart: external-dns
-    #   targetRevision: "*"
-    #   helm:
-    #     releaseName: pihole
-    #     valuesObject:
-    #       crd.create: false
-    #       logLevel: debug
-    #       txtOwnerId: syscd-pihole
-    #       policy: sync
-    #       interval: 1m
-    #       domainFilters:
-    #         - syscd.dev
-    #       sources:
-    #         - istio-gateway
-    #         - istio-virtualservice
-    #       provider: pihole
-    #       pihole:
-    #         server: "http://pihole-web.pihole.svc.cluster.local"
-    #         secretName: pihole-secret
-    #       # extraArgs:
-    #       #   service-type-filter: LoadBalancer
+    # Pi-hole DNS
+    - repoURL: registry-1.docker.io/bitnamicharts
+      chart: external-dns
+      targetRevision: "*"
+      helm:
+        releaseName: pihole
+        valuesObject:
+          crd.create: false
+          logLevel: debug
+          txtOwnerId: syscd-pihole
+          policy: sync
+          interval: 1m
+          domainFilters:
+            - syscd.dev
+          sources:
+            - istio-gateway
+            - istio-virtualservice
+          provider: pihole
+          pihole:
+            server: "http://pihole-web.pihole.svc.cluster.local"
+            secretName: pihole-secret
