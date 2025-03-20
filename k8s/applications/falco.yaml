@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: falco
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: falco
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    # Add virtual service configuration
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: falco
+              service:
+                name: falco
+                namespace: falco
+                port: 8765
+
+    # Falco Helm chart installation
+    - repoURL: https://falcosecurity.github.io/charts
+      chart: falco
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          # Configuration for proper driver loading in Kubernetes
+          driver:
+            kind: ebpf
