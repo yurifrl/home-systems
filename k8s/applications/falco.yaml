@@ -39,3 +39,5 @@ spec:
             kind: ebpf
           falcosidekick:
             enabled: true
+            webui:
+              enabled: true
