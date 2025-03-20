@@ -37,3 +37,5 @@ spec:
           # Configuration for proper driver loading in Kubernetes
           driver:
             kind: ebpf
+          falcosidekick:
+            enabled: true
