@@ -26,7 +26,7 @@ spec:
               service:
                 name: falco
                 namespace: falco
-                port: 8765
+                port: 2802
 
     # Falco Helm chart installation
     - repoURL: https://falcosecurity.github.io/charts
@@ -34,7 +34,6 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
-          # Configuration for proper driver loading in Kubernetes
           driver:
             kind: ebpf
           falcosidekick:
