@@ -38,6 +38,8 @@ spec:
             kind: ebpf
           serviceMonitor:
             enabled: true
+          prometheusRules:
+            enabled: true
           falcosidekick:
             enabled: true
             webui:
