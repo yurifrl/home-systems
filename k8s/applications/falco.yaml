@@ -24,7 +24,7 @@ spec:
           virtualServices:
             - name: falco
               service:
-                name: falco
+                name: falco-falcosidekick-ui
                 namespace: falco
                 port: 2802
 
