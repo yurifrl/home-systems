@@ -40,3 +40,4 @@ spec:
             enabled: true
             webui:
               enabled: true
+              storageEnabled: false
