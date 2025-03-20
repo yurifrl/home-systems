@@ -40,4 +40,5 @@ spec:
             enabled: true
             webui:
               enabled: true
-              storageEnabled: false
+              redis:
+                storageEnabled: false
