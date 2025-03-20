@@ -36,6 +36,8 @@ spec:
         valuesObject:
           driver:
             kind: ebpf
+          serviceMonitor:
+            enabled: true
           falcosidekick:
             enabled: true
             webui:
