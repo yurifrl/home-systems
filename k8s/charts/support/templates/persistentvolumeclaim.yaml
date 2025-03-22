@@ -6,12 +6,12 @@ metadata:
   namespace: {{ $.Release.Namespace }}
 spec:
   accessModes:
-    {{- toYaml .accessModes | nindent 4 }}
+    - {{ .accessMode | default "ReadWriteOnce" }}
   resources:
     requests:
       storage: {{ .storage | default "10Gi" }}
   volumeMode: Filesystem
-  storageClassName: {{ .storageClassName | default "local-path" }}
+  storageClassName: "local-path"
   volumeName: {{ .volumeName | required "volumeName is required" }}
 ---
 {{- end }}

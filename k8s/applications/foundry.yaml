@@ -30,8 +30,6 @@ spec:
             - name: foundry-secrets
           persistentVolumeClaims:
             - name: foundry-data
-              accessModes:
-                - ReadWriteOnce
               volumeName: foundry-data
           persistentVolumes:
             - name: foundry-data
