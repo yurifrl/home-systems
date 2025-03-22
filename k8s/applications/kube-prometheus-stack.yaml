@@ -209,7 +209,7 @@ spec:
               # The name of the AlertmanagerConfig resource which is used to generate the
               # Alertmanager configuration.
               alertmanagerConfiguration:
-                name: alertmanager-config # k8s/charts/cluster-support/templates/alertmanagerconfig.yaml
+                name: alertmanager-config # k8s/charts/support-cluster/templates/alertmanagerconfig.yaml
 
               resources:
                 limits:
