@@ -146,11 +146,11 @@ data:
   admin.enabled: "true"
   application.instanceLabelKey: argocd.argoproj.io/instance
   application.sync.impersonation.enabled: "false"
-  exec.enabled: "false"
+  exec.enabled: "true"
   server.rbac.log.enforce.enable: "false"
   statusbadge.enabled: "false"
   timeout.hard.reconciliation: 0s
-  timeout.reconciliation: 180s
+  timeout.reconciliation: 18s
   url: https://argocd.example.com
 ---
 # Source: argo-cd/templates/argocd-configs/argocd-cmd-params-cm.yaml
@@ -24018,6 +24018,12 @@ rules:
     verbs:
       - get     # supports viewing pod logs from UI
   - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+    verbs:
+      - create
+  - apiGroups:
       - argoproj.io
     resources:
       - applications
@@ -24374,6 +24380,12 @@ rules:
   verbs:
   - create
   - list
+- apiGroups:
+  - ""
+  resources:
+  - pods/exec
+  verbs:
+  - create
 ---
 # Source: argo-cd/templates/dex/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -25270,7 +25282,7 @@ spec:
     metadata:
       annotations:
         checksum/cmd-params: 4e574934a7af84ff5dd03436a54183890af39cdd8a9c63710a1b35244b1c08fc
-        checksum/cm: 7a1e7eb9be3ad316d5c9e0d928c19a22e0a29d158b02d7a10071dc13fe03d129
+        checksum/cm: efd1c10a969d16b2ff935d3c3dc57dc142abdbe6e73fe9b430047d317ef172d4
       labels:
         helm.sh/chart: argo-cd-7.8.13
         app.kubernetes.io/name: argocd-repo-server
@@ -25659,7 +25671,7 @@ spec:
     metadata:
       annotations:
         checksum/cmd-params: 4e574934a7af84ff5dd03436a54183890af39cdd8a9c63710a1b35244b1c08fc
-        checksum/cm: 7a1e7eb9be3ad316d5c9e0d928c19a22e0a29d158b02d7a10071dc13fe03d129
+        checksum/cm: efd1c10a969d16b2ff935d3c3dc57dc142abdbe6e73fe9b430047d317ef172d4
       labels:
         helm.sh/chart: argo-cd-7.8.13
         app.kubernetes.io/name: argocd-server
@@ -26361,7 +26373,7 @@ spec:
     metadata:
       annotations:
         checksum/cmd-params: 4e574934a7af84ff5dd03436a54183890af39cdd8a9c63710a1b35244b1c08fc
-        checksum/cm: 7a1e7eb9be3ad316d5c9e0d928c19a22e0a29d158b02d7a10071dc13fe03d129
+        checksum/cm: efd1c10a969d16b2ff935d3c3dc57dc142abdbe6e73fe9b430047d317ef172d4
       labels:
         helm.sh/chart: argo-cd-7.8.13
         app.kubernetes.io/name: argocd-application-controller
