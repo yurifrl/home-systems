@@ -1,4 +1,4 @@
-{{- if and .Values.tailscale .Values.tailscale.enabled }}
+{{- if and .Values.tailscale .Values.features.tailscale }}
 {{- range .Values.tailscale.connectors }}
 ---
 apiVersion: tailscale.com/v1alpha1
