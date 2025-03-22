@@ -1,4 +1,3 @@
-jsonDashboardsEnabled: false
 grafanaComDashboards:
   - id: 1860
     name: node-exporter-latest
@@ -14,3 +13,7 @@ grafanaComDashboards:
     name: prometheus-blackbox-exporter
   - id: 17375
     name: k8s-resource-monitoring
+
+## Toglles
+jsonDashboardsEnabled: false
+grafanaComDashboardsEnabled: false
