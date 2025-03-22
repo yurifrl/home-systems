@@ -29,31 +29,31 @@ spec:
                   port: 3000
             externalSecrets:
               - name: grafana-credentials
-      - path: k8s/charts/support-grafana
-        repoURL: https://github.com/yurifrl/home-systems.git
-        targetRevision: HEAD
-      - chart: kubernetes-mixin # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
-        repoURL: https://charts.portefaix.xyz
-        targetRevision: "*"
-        helm:
-          valuesObject:
-            prometheusRule:
-              alerts:
-                enabled: false
-              rules:
-                enabled: false
-      - chart: kube-state-metrics-mixin # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
-        repoURL: https://charts.portefaix.xyz
-        targetRevision: "*"
-        helm:
-          valuesObject:
-            grafanaDashboard:
-              enabled: true
-            monitor:
-              enabled: false
-      - chart: kube-state-metrics # https://github.com/kubernetes/kube-state-metrics
-        repoURL: https://prometheus-community.github.io/helm-charts
-        targetRevision: "*"      
+      # - path: k8s/charts/support-grafana
+      #   repoURL: https://github.com/yurifrl/home-systems.git
+      #   targetRevision: HEAD
+      # - chart: kubernetes-mixin # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
+      #   repoURL: https://charts.portefaix.xyz
+      #   targetRevision: "*"
+      #   helm:
+      #     valuesObject:
+      #       prometheusRule:
+      #         alerts:
+      #           enabled: false
+      #         rules:
+      #           enabled: false
+      # - chart: kube-state-metrics-mixin # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
+      #   repoURL: https://charts.portefaix.xyz
+      #   targetRevision: "*"
+      #   helm:
+      #     valuesObject:
+      #       grafanaDashboard:
+      #         enabled: true
+      #       monitor:
+      #         enabled: false
+      # - chart: kube-state-metrics # https://github.com/kubernetes/kube-state-metrics
+      #   repoURL: https://prometheus-community.github.io/helm-charts
+      #   targetRevision: "*"
       - repoURL: https://github.com/dotdc/grafana-dashboards-kubernetes
         targetRevision: HEAD
         path: .
