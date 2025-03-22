@@ -5,7 +5,7 @@ metadata:
   name: {{ .name | required "name is required" }}
   namespace: {{ $.Release.Namespace }}
 spec:
-  storageClassName: {{ .storageClass | default "local-storage" }}
+  storageClassName: {{ .storageClass | default "local-path" }}
   capacity:
     storage: {{ .size | default "10Gi" }}
   accessModes:
