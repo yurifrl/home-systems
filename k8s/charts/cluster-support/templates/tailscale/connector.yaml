@@ -1,9 +1,16 @@
-{{- range .Values.connectors }}
+{{- if and .Values.tailscale .Values.tailscale.enabled }}
+{{- range .Values.tailscale.connectors }}
 ---
 apiVersion: tailscale.com/v1alpha1
 kind: Connector
 metadata:
   name: {{ required "hostname must be set" .hostname }}
+  namespace: {{ $.Release.Namespace | default .namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+  {{- if .annotations }}
+    {{- toYaml .annotations | nindent 4 }}
+  {{- end }}
 spec:
   hostname: {{ required "hostname must be set" .hostname }}
   tags:
@@ -16,4 +23,5 @@ spec:
     {{- range .advertiseRoutes }}
     - {{ . | quote }}
     {{- end }}
+{{- end }}
 {{- end }}

@@ -1,4 +1,0 @@
-apiVersion: v2
-name: support-tailscale
-description: Extra resource for tailscale operator
-version: 1.0.0

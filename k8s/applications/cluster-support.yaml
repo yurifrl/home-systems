@@ -26,29 +26,6 @@ spec:
       targetRevision: HEAD
       path: k8s/charts/cluster-support
   
-    # Prometheus
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: prometheus
-              service:
-                name: kube-prometheus-stack-prometheus
-                namespace: monitoring
-                port: 9090
-            - name: alertmanager
-              service:
-                name: kube-prometheus-stack-alertmanager
-                namespace: monitoring
-                port: 9093
-            # - name: grafana
-            #   service:
-            #     name: kube-prometheus-stack-grafana
-            #     namespace: monitoring
-            #     port: 80
-    # Pyrra
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/support
@@ -60,3 +37,13 @@ spec:
                 name: pyrra
                 namespace: monitoring
                 port: 9099
+            - name: prometheus
+              service:
+                name: kube-prometheus-stack-prometheus
+                namespace: monitoring
+                port: 9090
+            - name: alertmanager
+              service:
+                name: kube-prometheus-stack-alertmanager
+                namespace: monitoring
+                port: 9093
