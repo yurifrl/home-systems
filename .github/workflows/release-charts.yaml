@@ -33,20 +33,26 @@ jobs:
         run: |
           # Find all chart directories
           for chart in k8s/charts/*; do
-            if [ -d "$chart" ]; then
-              echo "Testing chart: $chart"
-              
-              # Run unit tests if they exist
-              if [ -d "$chart/tests" ]; then
-                echo "Running unit tests for $chart"
-                helm template -f "$chart/values-full.yaml" "$chart" > /dev/null || exit 1
-                helm unittest "$chart" || exit 1
-              else
-                # Run helm template to validate chart
-                helm template "$chart" > /dev/null || exit 1
-                
-                echo "No tests found for $chart, skipping unit tests"
-              fi
+            # Skip if not a directory
+            [ -d "$chart" ] || continue
+            
+            echo "Testing chart: $chart"
+            
+            # Run helm template with values-full.yaml if it exists
+            if [ -f "$chart/values-full.yaml" ]; then
+              echo "Using full values file for templating"
+              helm template "$chart" -f "$chart/values-full.yaml" > /dev/null || exit 1
+            else
+              echo "Using default templating"
+              helm template "$chart" > /dev/null || exit 1
+            fi
+            
+            # Run unit tests if they exist
+            if [ -d "$chart/tests" ]; then
+              echo "Running unit tests for $chart"
+              helm unittest "$chart" || exit 1
+            else
+              echo "No tests found for $chart, skipping unit tests"
             fi
           done
 
@@ -79,16 +85,17 @@ jobs:
         run: |
           # For each chart directory
           for chart in k8s/charts/*; do
-            if [ -d "$chart" ]; then
-              chart_name=$(basename $chart)
-              
-              # Package the chart
-              helm package "$chart"
-              
-              # Get the version from Chart.yaml
-              version=$(helm show chart "$chart" | grep '^version:' | cut -d' ' -f2)
-              
-              # Push to GHCR
-              helm push "${chart_name}-${version}.tgz" "oci://${REGISTRY}/${OWNER}/charts"
-            fi
+            # Skip if not a directory
+            [ -d "$chart" ] || continue
+            
+            chart_name=$(basename $chart)
+            
+            # Package the chart
+            helm package "$chart"
+            
+            # Get the version from Chart.yaml
+            version=$(helm show chart "$chart" | grep '^version:' | cut -d' ' -f2)
+            
+            # Push to GHCR
+            helm push "${chart_name}-${version}.tgz" "oci://${REGISTRY}/${OWNER}/charts"
           done 
