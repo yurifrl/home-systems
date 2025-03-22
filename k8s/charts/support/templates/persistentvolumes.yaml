@@ -21,6 +21,6 @@ spec:
             - key: syscd.dev/storage
               operator: In
               values:
-                - {{ .nodeName | default "nixos-1" }}
+                - {{ .nodeName | default "tp1" }}
 ---
 {{- end }}
