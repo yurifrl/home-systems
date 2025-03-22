@@ -51,11 +51,16 @@ spec:
   datasource:
     name: Quickwit
     type: quickwit-quickwit-datasource
+    access: proxy
     url: http://quickwit-searcher.quickwit.svc.cluster.local:7280/api/v1
     jsonData:
+      # Required fields for Quickwit datasource
       index: otel-traces-v0_7
       logMessageField: body.message
       logLevelField: severity_text
+      # Adding additional fields that may be required
+      timeField: timestamp
+      queryType: logs
   plugins:
     - name: quickwit-quickwit-datasource
       version: 0.4.5
