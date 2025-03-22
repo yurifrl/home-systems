@@ -1,25 +1,7 @@
 suite: test support-tailscale chart
 templates:
-  - externalsecrets.yaml
   - connector.yaml
 tests:
-  - it: should render externalsecrets correctly
-    template: externalsecrets.yaml
-    values:
-      - ../test.yaml
-    asserts:
-      - isKind:
-          of: ExternalSecret
-      - equal:
-          path: spec.target.name
-          value: tailscale-operator-oauth
-      - equal:
-          path: spec.refreshInterval
-          value: 1h0m0s
-      - equal:
-          path: spec.dataFrom[0].extract.key
-          value: test/test/tailscale-operator
-
   - it: should render connector correctly
     template: connector.yaml
     values:
