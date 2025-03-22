@@ -1,0 +1,25 @@
+suite: test services template
+templates:
+  - services.yaml
+tests:
+  - it: should create a basic service
+    set:
+      services:
+        - name: test-service
+          port: 80
+          targetPort: 8080
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: test-service
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8080
+      - equal:
+          path: spec.selector.app
+          value: test-service 

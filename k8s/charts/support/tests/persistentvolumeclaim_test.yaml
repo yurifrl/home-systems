@@ -1,0 +1,29 @@
+suite: test persistentvolumeclaim template
+templates:
+  - persistentvolumeclaim.yaml
+tests:
+  - it: should create a basic pvc
+    set:
+      persistentVolumeClaims:
+        - name: test-pvc
+          volumeName: test-volume
+          storage: 10Gi
+          accessMode: ReadWriteOnce
+    asserts:
+      - isKind:
+          of: PersistentVolumeClaim
+      - equal:
+          path: metadata.name
+          value: test-pvc
+      - equal:
+          path: spec.storageClassName
+          value: local-path
+      - equal:
+          path: spec.resources.requests.storage
+          value: 10Gi
+      - equal:
+          path: spec.volumeName
+          value: test-volume
+      - equal:
+          path: spec.accessModes[0]
+          value: ReadWriteOnce 

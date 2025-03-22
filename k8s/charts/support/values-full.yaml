@@ -1,0 +1,119 @@
+# Global settings
+global:
+  domains:
+    live: true
+    tech: true
+    xyz: true
+    dev: true
+
+# Deployments
+deployments:
+  - name: web-app
+    namespace: default
+    replicas: 3
+    image:
+      repository: nginx
+      tag: 1.21.0
+      pullPolicy: Always
+    containerPort: 80
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 80
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+      successThreshold: 1
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 80
+      initialDelaySeconds: 10
+      periodSeconds: 5
+    env:
+      - name: ENV_VAR_1
+        value: "value1"
+      - name: ENV_VAR_2
+        value: "value2"
+    envFrom:
+      - configMapRef:
+          name: app-config
+      - secretRef:
+          name: app-secrets
+    volumeMounts:
+      - name: data-volume
+        mountPath: /data
+      - name: config-volume
+        mountPath: /config
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    nodeSelector:
+      disktype: ssd
+      role: app
+    volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: data-pvc
+      - name: config-volume
+        configMap:
+          name: app-config
+
+# Services
+services:
+  - name: web-service
+    namespace: default
+    port: 80
+    targetPort: 8080
+    nodePort: 30080
+    type: ClusterIP
+
+# VirtualServices (also used for Probes)
+virtualServices:
+  - name: web-frontend
+    namespace: default
+    service:
+      name: web-service
+      namespace: default
+      port: 80
+    domains:
+      live: true
+      tech: true
+      xyz: false
+      dev: true
+
+# PersistentVolumes
+persistentVolumes:
+  - name: data-pv
+    namespace: default
+    storageClass: local-path
+    size: 10Gi
+    accessMode: ReadWriteOnce
+    reclaimPolicy: Retain
+    path: /data/storage
+    nodeName: worker1
+
+# PersistentVolumeClaims
+persistentVolumeClaims:
+  - name: data-pvc
+    namespace: default
+    volumeName: data-pv
+    storage: 10Gi
+    accessMode: ReadWriteOnce
+
+# ExternalSecrets
+externalSecrets:
+  - name: app-secrets
+    namespace: default
+    refreshInterval: 1h
+    targetName: app-secrets-k8s
+    key: app/secrets
+    decodingStrategy: Base64
+    annotations:
+      app.kubernetes.io/managed-by: external-secrets
+      app.kubernetes.io/component: secrets 
