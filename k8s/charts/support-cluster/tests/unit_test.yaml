@@ -1,9 +1,9 @@
-suite: test support-tailscale chart
+suite: test support-cluster chart
 templates:
-  - connector.yaml
+  - tailscale/connector.yaml
 tests:
   - it: should render connector correctly
-    template: connector.yaml
+    template: tailscale/connector.yaml
     values:
       - ../test.yaml
     asserts:
@@ -11,10 +11,10 @@ tests:
           of: Connector
       - equal:
           path: spec.hostname
-          value: tailscale
+          value: tailscale-1
       - equal:
           path: spec.subnetRouter.advertiseRoutes[0]
-          value: "10.0.0.0/16"
+          value: "10.244.0.0/16"
       - contains:
           path: spec.tags
           content: tag:k8s 
