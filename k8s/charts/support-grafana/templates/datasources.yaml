@@ -81,24 +81,24 @@ spec:
   plugins:
     - name: grafana-mqtt-datasource
       version: 1.1.0-beta.3
-# ---
-# apiVersion: grafana.integreatly.org/v1beta1
-# kind: GrafanaDatasource
-# metadata:
-#   name: influxdb
-# spec:
-#   instanceSelector:
-#     matchLabels:
-#       dashboards: grafana
-#   datasource:
-#     name: InfluxDB
-#     type: influxdb
-#     access: proxy
-#     url: http://influxdb-influxdb2.influxdb.svc.cluster.local
-#     secureJsonData:
-#       token: admin
-#     jsonData:
-#       version: Flux
-#       organization: home-systems
-#       defaultBucket: default
-#       tlsSkipVerify: true
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: influxdb
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb-influxdb2.influxdb.svc.cluster.local
+    secureJsonData:
+      token: iyU199FY9L7B9zVDSeK9GhnbfYnN_NjB4AQLhz1TxbAzm1uITCH6-YqKhqh3Or9LlkV3ybUYbJMY9QkCCH53Rw==
+    jsonData:
+      version: Flux
+      organization: home-systems
+      defaultBucket: default
+      tlsSkipVerify: true
