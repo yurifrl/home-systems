@@ -11,5 +11,6 @@ spec:
       port: {{ .port | required "port is required" }}
       protocol: TCP
       targetPort: {{ .targetPort | default "http" }}
-  selector: {{ toYaml .selector | nindent 4 }}
+  selector:
+    app: {{ .name }}
 {{- end }}

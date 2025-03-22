@@ -37,6 +37,7 @@ spec:
           services:
             - name: foundry
               port: 30000
+              targetPort: http
           deployments:
             - name: foundry
               image:
