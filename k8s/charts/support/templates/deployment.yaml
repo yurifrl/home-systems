@@ -16,6 +16,7 @@ spec:
         app: {{ .name }}
     spec:
       nodeSelector: {{ toYaml .nodeSelector | nindent 8 }}
+      volumes: {{ toYaml .volumes | nindent 8 }}
       containers:
         - name: {{ .name }}
           image: "{{ .image.repository }}:{{ .image.tag }}"
@@ -30,7 +31,6 @@ spec:
           envFrom: {{ toYaml .envFrom | nindent 12 }}
           volumeMounts: {{ toYaml .volumeMounts | nindent 12 }}
           resources: {{ toYaml .resources | nindent 12 }}
-      volumes: {{ toYaml .volumes | nindent 8 }}
 ---
 {{- end }}
 {{- end }} 
