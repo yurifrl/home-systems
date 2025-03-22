@@ -5,10 +5,10 @@ tasks:
     desc: "Inject 1Password secrets into Talos YAML files"
     cmds:
       - mkdir -p talos/op/nodes
-      - op inject -i -f talos/controlplane-192.168.68.100.yaml -o talos/op/controlplane-192.168.68.100.yaml
-      - op inject -i -f talos/nodes/tp4-192.168.68.114.yaml -o talos/op/nodes/tp4-192.168.68.114.yaml
-      - op inject -i -f talos/nodes/tp1-192.168.68.107.yaml -o talos/op/nodes/tp1-192.168.68.107.yaml
-      - op inject -i -f talos/nodes/pc01-192.168.68.112.yaml -o talos/op/nodes/pc01-192.168.68.112.yaml
+      - op inject -f -i talos/controlplane-192.168.68.100.yaml -o talos/op/controlplane-192.168.68.100.yaml
+      - op inject -f -i talos/nodes/tp4-192.168.68.114.yaml -o talos/op/nodes/tp4-192.168.68.114.yaml
+      - op inject -f -i talos/nodes/tp1-192.168.68.107.yaml -o talos/op/nodes/tp1-192.168.68.107.yaml
+      - op inject -f -i talos/nodes/pc01-192.168.68.112.yaml -o talos/op/nodes/pc01-192.168.68.112.yaml
 
   apply:
     cmds:

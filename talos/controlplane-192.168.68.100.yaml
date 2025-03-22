@@ -5,11 +5,11 @@ persist: true
 # Provides machine specific configuration options.
 machine:
   type: init # Defines the role of the machine within the cluster.
-  token: op://kubernetes/talos/MACHINE_TOKEN
+  token: "op://kubernetes/talos/MACHINE_TOKEN"
   # The root certificate authority of the PKI.
   ca:
-    crt: op://kubernetes/talos/MACHINE_CA_CRT
-    key: op://kubernetes/talos/MACHINE_CA_KEY
+    crt: "op://kubernetes/talos/MACHINE_CA_CRT"
+    key: "op://kubernetes/talos/MACHINE_CA_KEY"
   # Extra certificate subject alternative names for the machine's certificate.
   certSANs: []
   #   # Uncomment this to enable SANs.
@@ -219,8 +219,8 @@ machine:
   #
   #             # # Enable mutual TLS authentication with the registry.
   #             # clientIdentity:
-  #             #     crt: op://kubernetes/talos/MACHINE_CA_CRT
-  #             #     key: op://kubernetes/talos/MACHINE_CA_KEY
+  #             #     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
+  #             #     key: "op://kubernetes/talos/MACHINE_CA_KEY"
   #
   #         # # The auth configuration for this registry.
   #         # auth:
@@ -406,8 +406,8 @@ machine:
   #     exampleTaint: exampleTaintValue:NoSchedule
 # Provides cluster specific configuration options.
 cluster:
-  id: op://kubernetes/talos/CLUSTER_ID # Globally unique identifier for this cluster (base64 encoded random 32 bytes).
-  secret: op://kubernetes/talos/CLUSTER_SECRET # Shared secret of cluster (base64 encoded random 32 bytes).
+  id: "op://kubernetes/talos/CLUSTER_ID"
+  secret: "op://kubernetes/talos/CLUSTER_SECRET"
   # Provides control plane specific configuration options.
   controlPlane:
     endpoint: https://192.168.68.100:6443 # Endpoint is the canonical controlplane endpoint, which can be an IP address or a DNS hostname.
@@ -424,19 +424,19 @@ cluster:
     # The service subnet CIDR.
     serviceSubnets:
       - 10.96.0.0/12
-  token: op://kubernetes/talos/CLUSTER_TOKEN
-  secretboxEncryptionSecret: op://kubernetes/talos/CLUSTER_SECRETBOXENCRYPTIONSECRET
+  token: "op://kubernetes/talos/CLUSTER_TOKEN"
+  secretboxEncryptionSecret: "op://kubernetes/talos/CLUSTER_SECRETBOXENCRYPTIONSECRET"
   # The base64 encoded root certificate authority used by Kubernetes.
   ca:
-    crt: op://kubernetes/talos/CLUSTER_CA_CRT
-    key: op://kubernetes/talos/CLUSTER_CA_KEY
+    crt: "op://kubernetes/talos/CLUSTER_CA_CRT"
+    key: "op://kubernetes/talos/CLUSTER_CA_KEY"
   # The base64 encoded aggregator certificate authority used by Kubernetes for front-proxy certificate generation.
   aggregatorCA:
-    crt: op://kubernetes/talos/CLUSTER_AGGREGATORCA_CRT
-    key: op://kubernetes/talos/CLUSTER_AGGREGATORCA_KEY
+    crt: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_CRT"
+    key: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_KEY"
   # The base64 encoded private key for service account token generation.
   serviceAccount:
-    key: op://kubernetes/talos/CLUSTER_SERVICEACCOUNT_KEY
+    key: "op://kubernetes/talos/CLUSTER_SERVICEACCOUNT_KEY"
   # API server specific configuration options.
   apiServer:
     image: registry.k8s.io/kube-apiserver:v1.32.1 # The container image used in the API server manifest.
@@ -499,8 +499,8 @@ cluster:
   etcd:
     # The `ca` is the root certificate authority of the PKI.
     ca:
-      crt: op://kubernetes/talos/CLUSTER_ETCD_CA_CRT
-      key: op://kubernetes/talos/CLUSTER_ETCD_CA_KEY
+      crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
+      key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
 
     # # The container image used to create the etcd service.
     # image: gcr.io/etcd-development/etcd:v3.5.17
@@ -562,7 +562,7 @@ cluster:
   # # A key used for the [encryption of secret data at rest](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/).
 
   # # Decryption secret example (do not use in production!).
-  # aescbcEncryptionSecret: op://kubernetes/talos/AESCBC_ENCRYPTION_SECRET
+  # aescbcEncryptionSecret: "op://kubernetes/talos/AESCBC_ENCRYPTION_SECRET"
 
   # # Core DNS specific configuration options.
   # coreDNS:
@@ -592,5 +592,5 @@ apiVersion: v1alpha1
 kind: ExtensionServiceConfig
 name: tailscale
 environment:
-  - TS_AUTHKEY=op://kubernetes/talos/TS_AUTHKEY
+  - TS_AUTHKEY="op://kubernetes/talos/TS_AUTHKEY"
   - TS_ROUTES=10.96.0.0/12,192.168.68.0/24
