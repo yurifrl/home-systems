@@ -20,3 +20,8 @@ resources:
   requests:
     cpu: 10m
     memory: 50Mi 
+
+nodeSelector:
+  syscd.dev/storage: tp1
+persistence:
+  volumeName: appdaemon-tp1-data
