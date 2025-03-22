@@ -1,3 +1,4 @@
+# k -n monitoring exec -it $POD -- grafana-cli plugins list-remote
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
 metadata:
@@ -31,33 +32,50 @@ spec:
     jsonData:
       timeInterval: 30s
       tlsSkipVerify: true
-# ---
-# apiVersion: grafana.integreatly.org/v1beta1
-# kind: GrafanaDatasource
-# metadata:
-#   name: quickwit
-# spec:
-#   instanceSelector:
-#     matchLabels:
-#       dashboards: grafana
-#   # https://github.com/M0NsTeRRR/homelabv3-infra/blob/main/argocd/monitoring/quickwit/manifests/03_datasource.yaml
-#   # https://github.com/matter-labs/era-observability/blob/main/etc/grafana/provisioning/datasources/datasource.yml
-#   # https://github.com/tbrockman/browser-extension-for-opentelemetry/blob/main/config/grafana-datasources.yaml
-#   # https://github.com/FNNDSC/charts/blob/master/testing/observe/prom-stack.yaml
-#   # https://github.com/serenditree/stem/blob/dev/charts/terra/scope/values.yaml
-#   # https://github.com/jbwittner/k8s_deploy/blob/main/gitops/apps/monitoring/release.yaml
-#   # https://github.com/felixz92/infrastructure/blob/main/infrastructure/observability/base/grafana/datasources.yaml
-#   datasource:
-#     name: Quickwit
-#     type: quickwit-quickwit-datasource
-#     url: http://quickwit-searcher.quickwit.svc.cluster.local:7280/api/v1
-#     jsonData:
-#       index: otel-traces-v0_7
-#       logMessageField: body.message
-#       logLevelField: severity_text
-#   plugins:
-#     - name: quickwit-quickwit-datasource
-#       version: 0.4.6
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: quickwit
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  # https://github.com/M0NsTeRRR/homelabv3-infra/blob/main/argocd/monitoring/quickwit/manifests/03_datasource.yaml
+  # https://github.com/matter-labs/era-observability/blob/main/etc/grafana/provisioning/datasources/datasource.yml
+  # https://github.com/tbrockman/browser-extension-for-opentelemetry/blob/main/config/grafana-datasources.yaml
+  # https://github.com/FNNDSC/charts/blob/master/testing/observe/prom-stack.yaml
+  # https://github.com/serenditree/stem/blob/dev/charts/terra/scope/values.yaml
+  # https://github.com/jbwittner/k8s_deploy/blob/main/gitops/apps/monitoring/release.yaml
+  # https://github.com/felixz92/infrastructure/blob/main/infrastructure/observability/base/grafana/datasources.yaml
+  datasource:
+    name: Quickwit
+    type: quickwit-quickwit-datasource
+    url: http://quickwit-searcher.quickwit.svc.cluster.local:7280/api/v1
+    jsonData:
+      index: otel-traces-v0_7
+      logMessageField: body.message
+      logLevelField: severity_text
+  plugins:
+    - name: quickwit-quickwit-datasourc
+      version: 0.4.5
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: mqtt
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: MQTT
+    type: grafana-mqtt-datasource
+    access: proxy
+    url: tcp://mosquitto.mosquitto.svc.cluster.local:1883
+  plugins:
+    - name: grafana-mqtt-datasource
+      version: 1.1.0-beta.3
 # ---
 # apiVersion: grafana.integreatly.org/v1beta1
 # kind: GrafanaDatasource
@@ -79,20 +97,3 @@ spec:
 #       organization: home-systems
 #       defaultBucket: default
 #       tlsSkipVerify: true
-# ---
-# apiVersion: grafana.integreatly.org/v1beta1
-# kind: GrafanaDatasource
-# metadata:
-#   name: mqtt
-# spec:
-#   instanceSelector:
-#     matchLabels:
-#       dashboards: grafana
-#   datasource:
-#     name: MQTT
-#     type: grafana-mqtt-datasource
-#     access: proxy
-#     url: tcp://mosquitto.mosquitto.svc.cluster.local:1883
-#   plugins:
-#     - name: grafana-mqtt-datasource
-#       version: 1.1.0-beta.2    
