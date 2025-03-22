@@ -1,0 +1,65 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: foundry
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: foundry
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: foundry
+              service:
+                name: foundry
+                namespace: foundry
+                port: 30000
+          externalSecrets:
+            - name: foundry-secrets
+          persistentVolumeClaims:
+            - name: foundry-data
+              storage: 10Gi
+              storageClassName: local-path
+              accessModes:
+                - ReadWriteOnce
+          persistentVolumes:
+            - name: foundry-data
+              path: /var/mnt/storage/foundry-data
+              size: 10Gi
+              storageClass: local-path
+              accessMode: ReadWriteOnce
+              nodeName: tp1
+
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/simple
+      helm:
+        valuesObject:
+          image:
+            repository: felddy/foundryvtt
+            tag: release
+          service:
+            type: ClusterIP
+            port: 30000
+          envFrom:
+            - secretRef:
+                name: foundry-secrets
+          volumes:
+            - name: foundry-data
+              persistentVolumeClaim:
+                claimName: foundry-data
+          volumeMounts:
+            - name: foundry-data
+              mountPath: "/data" 
