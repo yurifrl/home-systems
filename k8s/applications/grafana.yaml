@@ -64,6 +64,8 @@ spec:
           valuesObject:
             fullnameOverride: grafana-operator
             nameOverride: grafana
+            nodeSelector:
+              beta.kubernetes.io/arch: amd64
             grafana:
               labels:
                 dashboards: "grafana"
