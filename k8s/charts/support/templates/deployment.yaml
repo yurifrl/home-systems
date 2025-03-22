@@ -1,5 +1,6 @@
 {{- if .Values.deployments -}}
 {{- range .Values.deployments }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,6 +32,5 @@ spec:
           envFrom: {{ toYaml .envFrom | nindent 12 }}
           volumeMounts: {{ toYaml .volumeMounts | nindent 12 }}
           resources: {{ toYaml .resources | nindent 12 }}
----
 {{- end }}
 {{- end }} 
