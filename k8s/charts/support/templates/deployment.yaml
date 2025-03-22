@@ -1,10 +1,10 @@
-{{- range .Values.deployments }}
+{{- range .Values.deployments | default (list) }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .name }}
-  namespace: {{ $.Release.Namespace }}
+  namespace: {{ $.Release.Namespace | default .namespace }}
 spec:
   replicas: {{ .replicas | default 1 }}
   selector:

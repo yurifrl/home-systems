@@ -1,0 +1,22 @@
+suite: test probes template
+templates:
+  - probes.yaml
+tests:
+  - it: should create probes
+    set:
+      virtualServices:
+        - name: test-service
+          service:
+            name: test
+    asserts:
+      - isKind:
+          of: Probe
+      - equal:
+          path: metadata.name
+          value: test-service
+      - equal:
+          path: metadata.labels.probe
+          value: test-service
+      - equal:
+          path: spec.prober.url
+          value: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115 

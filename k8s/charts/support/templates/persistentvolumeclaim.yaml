@@ -1,9 +1,10 @@
-{{- range .Values.persistentVolumeClaims }}
+{{- range .Values.persistentVolumeClaims | default (list) }}
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ .name | required "name is required" }}
-  namespace: {{ $.Release.Namespace }}
+  namespace: {{ $.Release.Namespace | default .namespace }}
 spec:
   accessModes:
     - {{ .accessMode | default "ReadWriteOnce" }}
@@ -13,5 +14,4 @@ spec:
   volumeMode: Filesystem
   storageClassName: "local-path"
   volumeName: {{ .volumeName | required "volumeName is required" }}
----
 {{- end }}

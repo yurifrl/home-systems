@@ -1,9 +1,10 @@
 {{- range .Values.persistentVolumes | default (list) }}
+---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: {{ .name | required "name is required" }}
-  namespace: {{ $.Release.Namespace }}
+  namespace: {{ $.Release.Namespace | default .namespace }}
 spec:
   storageClassName: {{ .storageClass | default "local-path" }}
   capacity:
@@ -22,5 +23,4 @@ spec:
               operator: In
               values:
                 - {{ .nodeName | default "tp1" }}
----
 {{- end }}

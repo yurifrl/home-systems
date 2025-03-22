@@ -25,17 +25,17 @@ tests:
       - equal:
           path: spec.replicas
           value: 1
-      - notExists:
+      - isNullOrEmpty:
           path: spec.template.spec.nodeSelector
-      - notExists:
+      - isNullOrEmpty:
           path: spec.template.spec.containers[0].env
-      - notExists:
+      - isNullOrEmpty:
           path: spec.template.spec.containers[0].envFrom
-      - notExists:
+      - isNullOrEmpty:
           path: spec.template.spec.containers[0].volumeMounts
-      - notExists:
+      - isNullOrEmpty:
           path: spec.template.spec.containers[0].resources
-      - notExists:
+      - isNullOrEmpty:
           path: spec.template.spec.volumes
 
   - it: should set custom replicas and image pull policy
