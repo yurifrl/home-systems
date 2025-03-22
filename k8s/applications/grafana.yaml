@@ -39,11 +39,10 @@ spec:
           valuesObject:
             fullnameOverride: grafana-operator
             nameOverride: grafana
-            nodeSelector:
-              kubernetes.io/arch: amd64
             grafana:
               nodeSelector:
-                kubernetes.io/arch: amd64
+                # kubernetes.io/arch: amd64
+                kubernetes.io/arch: arm64
               labels:
                 dashboards: "grafana"
               config:
