@@ -41,6 +41,7 @@ spec:
               storageClass: local-path
               accessMode: ReadWriteOnce
               nodeName: tp1
+              volumeName: foundry-data
           services:
             - name: foundry
               port: 30000

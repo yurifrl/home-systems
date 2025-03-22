@@ -9,9 +9,9 @@ spec:
     {{- toYaml .accessModes | nindent 4 }}
   resources:
     requests:
-      storage: {{ .storage }}
+      storage: {{ .storage | required "storage is required" }}
   volumeMode: Filesystem
-  storageClassName: {{ .storageClassName }}
-  volumeName: {{ .volumeName }}
+  storageClassName: {{ .storageClassName | required "storageClassName is required" }}
+  volumeName: {{ .volumeName | required "volumeName is required" }}
 ---
 {{- end }}
