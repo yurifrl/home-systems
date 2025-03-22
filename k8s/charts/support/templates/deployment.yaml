@@ -1,4 +1,3 @@
-{{- if .Values.deployments -}}
 {{- range .Values.deployments }}
 ---
 apiVersion: apps/v1
@@ -33,4 +32,3 @@ spec:
           volumeMounts: {{ toYaml .volumeMounts | nindent 12 }}
           resources: {{ toYaml .resources | nindent 12 }}
 {{- end }}
-{{- end }} 
