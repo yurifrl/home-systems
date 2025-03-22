@@ -1,0 +1,34 @@
+{{- if .Values.deployments -}}
+{{- range .Values.deployments }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  replicas: {{ .replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+    spec:
+      nodeSelector: {{ toYaml .nodeSelector | nindent 8 }}
+      containers:
+        - name: {{ .name }}
+          image: "{{ .image.repository }}:{{ .image.tag }}"
+          imagePullPolicy: {{ .image.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: http
+              containerPort: {{ .containerPort }}
+              protocol: TCP
+          env: {{ toYaml .env | nindent 12 }}
+          envFrom: {{ toYaml .envFrom | nindent 12 }}
+          volumeMounts: {{ toYaml .volumeMounts | nindent 12 }}
+          resources: {{ toYaml .resources | nindent 12 }}
+      volumes: {{ toYaml .volumes | nindent 8 }}
+---
+{{- end }}
+{{- end }} 
