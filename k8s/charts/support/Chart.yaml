@@ -2,5 +2,5 @@ apiVersion: v2
 name: support
 description: A Helm chart for support services including PVCs and virtual services
 type: application
-version: 0.1.0
+version: 1.0.0
 appVersion: "1.0.0"
