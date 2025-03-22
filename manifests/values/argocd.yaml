@@ -105,5 +105,15 @@ notifications:
       effect: NoSchedule
       operator: Exists
 
+cm:
+    # -- Enable exec feature in Argo UI
+    ## Ref: https://argo-cd.readthedocs.io/en/latest/operator-manual/rbac/#exec-resource
+    exec.enabled: true
+
+    # -- Timeout to discover if a new manifests version got published to the repository
+    timeout.reconciliation: 18s
+
+    # -- Timeout to refresh application data as well as target manifests cache
+    timeout.hard.reconciliation: 0s
 
 # kubectl taint nodes nixos-1 node-role=nixos-1:NoSchedule
