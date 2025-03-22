@@ -29,9 +29,9 @@ spec:
                   port: 3000
             externalSecrets:
               - name: grafana-credentials
-      # - path: k8s/charts/support-grafana
-      #   repoURL: https://github.com/yurifrl/home-systems.git
-      #   targetRevision: HEAD
+      - path: k8s/charts/support-grafana
+        repoURL: https://github.com/yurifrl/home-systems.git
+        targetRevision: HEAD
       # - chart: kubernetes-mixin # https://artifacthub.io/packages/helm/portefaix-hub/kubernetes-mixin
       #   repoURL: https://charts.portefaix.xyz
       #   targetRevision: "*"
