@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ .name }}
+  name: {{ .name | required "name is required" }}
   namespace: {{ $.Release.Namespace }}
 spec:
   accessModes:
