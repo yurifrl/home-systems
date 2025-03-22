@@ -38,10 +38,10 @@ jobs:
             
             echo "Testing chart: $chart"
             
-            # Run helm template with values-full.yaml if it exists
-            if [ -f "$chart/values-full.yaml" ]; then
-              echo "Using full values file for templating"
-              helm template "$chart" -f "$chart/values-full.yaml" > /dev/null || exit 1
+            # Run helm template with test.yaml if it exists
+            if [ -f "$chart/test.yaml" ]; then
+              echo "Using test values file for templating"
+              helm template "$chart" -f "$chart/test.yaml" > /dev/null || exit 1
             else
               echo "Using default templating"
               helm template "$chart" > /dev/null || exit 1

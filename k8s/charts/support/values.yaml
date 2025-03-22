@@ -61,6 +61,47 @@ deployments: []
   #       cpu: 100m
   #       memory: 128Mi
 
+# StatefulSets configuration
+statefulSets: []
+  # - name: stateful-app               # Name of the statefulset
+  #   replicas: 1                      # Number of replicas
+  #   serviceName: stateful-svc        # Headless service name (defaults to statefulset name)
+  #   image:
+  #     repository: nginx              # Container image repository
+  #     tag: latest                    # Container image tag
+  #     pullPolicy: IfNotPresent       # Image pull policy
+  #   containerPort: 80                # Container port
+  #   env:                             # Environment variables
+  #     - name: ENV_VAR
+  #       value: "value"
+  #   envFrom:                         # Environment variables from sources
+  #     - secretRef:
+  #         name: secret-name
+  #   volumes:                         # Non-persistent volumes configuration
+  #     - name: config
+  #       configMap:
+  #         name: app-config
+  #   volumeMounts:                    # Volume mounts
+  #     - name: data
+  #       mountPath: /data
+  #     - name: config
+  #       mountPath: /config
+  #   volumeClaimTemplates:            # PVC templates for stable storage
+  #     - name: data
+  #       accessModes:
+  #         - ReadWriteOnce
+  #       storage: 10Gi
+  #       storageClassName: standard
+  #   nodeSelector:                    # Node selector
+  #     key: value
+  #   resources:                       # Resource limits and requests
+  #     limits:
+  #       cpu: 100m
+  #       memory: 128Mi
+  #     requests:
+  #       cpu: 100m
+  #       memory: 128Mi
+
 # Global settings
 global:
   domains:
