@@ -30,18 +30,12 @@ spec:
             - name: foundry-secrets
           persistentVolumeClaims:
             - name: foundry-data
-              storage: 10Gi
-              storageClassName: local-path
               accessModes:
                 - ReadWriteOnce
+              volumeName: foundry-data
           persistentVolumes:
             - name: foundry-data
               path: /var/mnt/storage/foundry-data
-              size: 10Gi
-              storageClass: local-path
-              accessMode: ReadWriteOnce
-              nodeName: tp1
-              volumeName: foundry-data
           services:
             - name: foundry
               port: 30000
