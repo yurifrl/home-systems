@@ -37,7 +37,7 @@ spec:
           services:
             - name: foundry
               port: 30000
-          deployments:
+          statefulSets:
             - name: foundry
               image:
                 repository: felddy/foundryvtt

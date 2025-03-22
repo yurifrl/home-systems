@@ -1,0 +1,50 @@
+{{- range .Values.statefulSets | default (list) }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace | default .namespace }}
+spec:
+  replicas: {{ .replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  serviceName: {{ .serviceName | default .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+    spec:
+      nodeSelector: {{ toYaml .nodeSelector | nindent 8 }}
+      volumes: {{ toYaml .volumes | nindent 8 }}
+      containers:
+        - name: {{ .name }}
+          image: "{{ .image.repository }}:{{ .image.tag }}"
+          imagePullPolicy: {{ .image.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: http
+              containerPort: {{ .containerPort }}
+              protocol: TCP
+          livenessProbe: {{ toYaml .livenessProbe | nindent 12 }}
+          readinessProbe: {{ toYaml .readinessProbe | nindent 12 }}
+          env: {{ toYaml .env | nindent 12 }}
+          envFrom: {{ toYaml .envFrom | nindent 12 }}
+          volumeMounts: {{ toYaml .volumeMounts | nindent 12 }}
+          resources: {{ toYaml .resources | nindent 12 }}
+  {{- if .volumeClaimTemplates }}
+  volumeClaimTemplates:
+    {{- range .volumeClaimTemplates }}
+    - metadata:
+        name: {{ .name }}
+      spec:
+        accessModes: {{ toYaml .accessModes | nindent 10 }}
+        {{- if .storageClassName }}
+        storageClassName: {{ .storageClassName }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .storage }}
+    {{- end }}
+  {{- end }}
+{{- end }} 
