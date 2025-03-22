@@ -29,7 +29,37 @@ virtualServices: []
   #     tech: false                    # Create private .syscd.tech domain (includes .xyz alias)
   #     xyz: true                      # Create private .syscd.xyz domain
 
-
+# Deployments configuration
+deployments: []
+  # - name: app-name                   # Name of the deployment
+  #   replicas: 1                      # Number of replicas
+  #   image:
+  #     repository: nginx              # Container image repository
+  #     tag: latest                    # Container image tag
+  #     pullPolicy: IfNotPresent       # Image pull policy
+  #   containerPort: 80                # Container port
+  #   env:                             # Environment variables
+  #     - name: ENV_VAR
+  #       value: "value"
+  #   envFrom:                         # Environment variables from sources
+  #     - secretRef:
+  #         name: secret-name
+  #   volumes:                         # Volumes configuration
+  #     - name: data
+  #       persistentVolumeClaim:
+  #         claimName: pvc-name
+  #   volumeMounts:                    # Volume mounts
+  #     - name: data
+  #       mountPath: /data
+  #   nodeSelector:                    # Node selector
+  #     key: value
+  #   resources:                       # Resource limits and requests
+  #     limits:
+  #       cpu: 100m
+  #       memory: 128Mi
+  #     requests:
+  #       cpu: 100m
+  #       memory: 128Mi
 
 # Global settings
 global:

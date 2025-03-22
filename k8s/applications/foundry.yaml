@@ -41,25 +41,25 @@ spec:
               storageClass: local-path
               accessMode: ReadWriteOnce
               nodeName: tp1
-
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/simple
-      helm:
-        valuesObject:
-          image:
-            repository: felddy/foundryvtt
-            tag: release
-          service:
-            type: ClusterIP
-            port: 30000
-          envFrom:
-            - secretRef:
-                name: foundry-secrets
-          volumes:
-            - name: foundry-data
-              persistentVolumeClaim:
-                claimName: foundry-data
-          volumeMounts:
-            - name: foundry-data
-              mountPath: "/data" 
+          services:
+            - name: foundry
+              port: 30000
+              targetPort: 30000
+          deployments:
+            - name: foundry
+              image:
+                repository: felddy/foundryvtt
+                tag: release
+              containerPort: 30000
+              envFrom:
+                - secretRef:
+                    name: foundry-secrets
+              volumes:
+                - name: foundry-data
+                  persistentVolumeClaim:
+                    claimName: foundry-data
+              volumeMounts:
+                - name: foundry-data
+                  mountPath: "/data"
+              nodeSelector:
+                syscd.dev/storage: tp1 

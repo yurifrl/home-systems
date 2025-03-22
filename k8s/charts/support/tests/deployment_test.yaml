@@ -1,0 +1,178 @@
+suite: test deployment template
+templates:
+  - deployment.yaml
+tests:
+  - it: should create a basic deployment with minimal configuration
+    set:
+      deployments:
+        - name: test-app
+          image:
+            repository: nginx
+            tag: latest
+          containerPort: 80
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: test-app
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: nginx:latest
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 80
+      - equal:
+          path: spec.replicas
+          value: 1
+      - notExists:
+          path: spec.template.spec.nodeSelector
+      - notExists:
+          path: spec.template.spec.containers[0].env
+      - notExists:
+          path: spec.template.spec.containers[0].envFrom
+      - notExists:
+          path: spec.template.spec.containers[0].volumeMounts
+      - notExists:
+          path: spec.template.spec.containers[0].resources
+      - notExists:
+          path: spec.template.spec.volumes
+
+  - it: should set custom replicas and image pull policy
+    set:
+      deployments:
+        - name: test-app
+          replicas: 3
+          image:
+            repository: nginx
+            tag: 1.19
+            pullPolicy: Always
+          containerPort: 8080
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.replicas
+          value: 3
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: nginx:1.19
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+
+  - it: should handle all environment variables configurations
+    set:
+      deployments:
+        - name: test-app
+          image:
+            repository: nginx
+            tag: latest
+          containerPort: 80
+          env:
+            - name: ENV_VAR_1
+              value: "value1"
+            - name: ENV_VAR_2
+              value: "value2"
+          envFrom:
+            - secretRef:
+                name: test-secret
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: ENV_VAR_1
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "value1"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: ENV_VAR_2
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: "value2"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].secretRef.name
+          value: test-secret
+
+  - it: should configure volumes and mounts
+    set:
+      deployments:
+        - name: test-app
+          image:
+            repository: nginx
+            tag: latest
+          containerPort: 80
+          volumes:
+            - name: data-volume
+              persistentVolumeClaim:
+                claimName: test-pvc
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: data-volume
+      - equal:
+          path: spec.template.spec.volumes[0].persistentVolumeClaim.claimName
+          value: test-pvc
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: data-volume
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /data
+
+  - it: should add nodeSelector and resource limits
+    set:
+      deployments:
+        - name: test-app
+          image:
+            repository: nginx
+            tag: latest
+          containerPort: 80
+          nodeSelector:
+            disktype: ssd
+            gpu: "true"
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.nodeSelector.disktype
+          value: ssd
+      - equal:
+          path: spec.template.spec.nodeSelector.gpu
+          value: "true"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 100m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 128Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 50m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 64Mi
+      
+  - it: should not render any deployment when deployment list is empty
+    set:
+      deployments: []
+    asserts:
+      - hasDocuments:
+          count: 0 

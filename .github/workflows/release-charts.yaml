@@ -12,7 +12,45 @@ env:
   OWNER: ${{ github.repository_owner }}
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.13.2
+
+      - name: Install Helm Unittest Plugin
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest.git
+
+      - name: Find and test charts
+        run: |
+          # Find all chart directories
+          for chart in k8s/charts/*; do
+            if [ -d "$chart" ]; then
+              echo "Testing chart: $chart"
+              
+              # Run helm template to validate chart
+              helm template "$chart" > /dev/null || exit 1
+              
+              # Run unit tests if they exist
+              if [ -d "$chart/tests" ]; then
+                echo "Running unit tests for $chart"
+                helm unittest "$chart" || exit 1
+              else
+                echo "No tests found for $chart, skipping unit tests"
+              fi
+            fi
+          done
+
   release:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
