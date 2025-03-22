@@ -37,7 +37,6 @@ spec:
           services:
             - name: foundry
               port: 30000
-              targetPort: http
           deployments:
             - name: foundry
               image:
@@ -56,3 +55,11 @@ spec:
                   mountPath: "/data"
               nodeSelector:
                 syscd.dev/storage: tp1 
+              livenessProbe:
+                httpGet:
+                  path: /
+                  port: http
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: http
