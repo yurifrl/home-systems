@@ -34,6 +34,14 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
+          # Set Vector role as Aggregator to collect logs from the cluster
+          role: "Aggregator"
+          
+          # API configuration for monitoring and management
+          api:
+            enabled: true
+            address: 0.0.0.0:8686
+          
           # Configure resources for Vector
           resources:
             requests:
@@ -44,15 +52,107 @@ spec:
               memory: 512Mi
           
           # Service monitor for Prometheus integration
-          monitoring:
+          podMonitor:
             enabled: true
-            serviceMonitor:
+            
+          # Vector configuration with sources, transforms, and sinks
+          customConfig:
+            data_dir: /vector-data-dir
+            
+            # API configuration
+            api:
               enabled: true
-         
+              address: 0.0.0.0:8686
+              
+            # Sources - collect logs from Kubernetes
+            sources:
+              kubernetes_logs:
+                type: kubernetes_logs
+                pod_annotation_fields:
+                  container_image: container_image
+                pod_label_fields:
+                  app: app
+                  
+              # Internal Vector metrics for self-monitoring
+              internal_metrics:
+                type: internal_metrics
+              
+              # Host metrics for system monitoring
+              host_metrics:
+                type: host_metrics
+                collectors:
+                  - cpu
+                  - disk
+                  - memory
+                  - network
+            
+            # Transforms - process and prepare logs and metrics
+            transforms:
+              # Parse and structure Kubernetes logs
+              remap_kubernetes:
+                type: remap
+                inputs: ["kubernetes_logs"]
+                source: |
+                  # Add structured metadata from Kubernetes
+                  .namespace = .kubernetes.pod_namespace
+                  .pod = .kubernetes.pod_name
+                  .container = .kubernetes.container_name
+                  # Structure the log message if it's in JSON format
+                  if is_string(.message) && starts_with(.message, "{") {
+                    parsed = parse_json!(.message) ?? .message
+                    if is_object(parsed) {
+                      .parsed = parsed
+                    }
+                  }
+              
+              # Convert some logs to metrics
+              logs_to_metrics:
+                type: log_to_metric
+                inputs: ["remap_kubernetes"]
+                metrics:
+                  - type: counter
+                    name: log_lines_total
+                    field: message
+                    tags:
+                      namespace: "${namespace}"
+                      pod: "${pod}"
+                      container: "${container}"
+                      
+            # Sinks - where to send the processed data
+            sinks:
+              # Send logs to Loki
+              loki:
+                type: loki
+                inputs: ["remap_kubernetes"]
+                endpoint: http://loki-single-binary.monitoring.svc.cluster.local:3100
+                encoding:
+                  codec: json
+                labels:
+                  namespace: "{{ namespace }}"
+                  pod: "{{ pod }}"
+                  container: "{{ container }}"
+                  app: "{{ kubernetes.pod_labels.app }}"
+                batch:
+                  max_bytes: 2049000
+                
+              # Send metrics to Prometheus
+              prometheus:
+                type: prometheus_exporter
+                inputs: ["internal_metrics", "host_metrics", "logs_to_metrics"]
+                address: 0.0.0.0:9598
+                
+              # Console output for debugging
+              console:
+                type: console
+                inputs: ["remap_kubernetes"]
+                encoding:
+                  codec: json
           
-          # No need for persistence since we're using emptyDir
-          persistence:
-            enabled: false
-            size: 10Gi
-            storageClass: local-path
-          
+          # Configure service to expose the Prometheus metrics
+          service:
+            enabled: true
+            ports:
+              - name: prom-exporter
+                port: 9598
+                targetPort: 9598
+                protocol: TCP
