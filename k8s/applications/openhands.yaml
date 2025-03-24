@@ -34,6 +34,10 @@ spec:
           deployments:
             - name: openhands
               replicas: 1
+              hostAliases:
+                - ip: "127.0.0.1"
+                  hostnames:
+                    - "host.docker.internal"
               containers:
                 - name: openhands
                   image: docker.all-hands.dev/all-hands-ai/openhands:0.29
