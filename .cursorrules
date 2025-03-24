@@ -1,8 +1,0 @@
-{
-    "rules": [
-        {
-            "pattern": "**/*",
-            "directive": "Never remove, modify, or change any comments in the code. This includes both inline comments (starting with //) and block comments (/* */). Preserve all comment positions and indentation exactly as they are."
-        }
-    ]
-} 
