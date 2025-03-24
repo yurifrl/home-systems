@@ -41,22 +41,11 @@ spec:
                   value: "docker.all-hands.dev/all-hands-ai/runtime:0.29-nikolaik"
                 - name: LOG_ALL_EVENTS
                   value: "true"
-              # volumeMounts:
-              #   - name: docker-sock
-              #     mountPath: /var/run/docker.sock
-              #   - name: openhands-state
-              #     mountPath: /.openhands-state
-          #     volumes:
-          #       - name: docker-sock
-          #         hostPath:
-          #           path: /var/run/docker.sock
-          #           type: Socket
-          #       - name: openhands-state
-          #         persistentVolumeClaim:
-          #           claimName: openhands-state
-          # persistentVolumeClaims:
-          #   - name: openhands-state
-          #     accessModes:
-          #       - ReadWriteOnce
-          #     storage: 10Gi
-          #     storageClassName: local-path
+              volumeMounts:
+                - name: docker-sock
+                  mountPath: /var/run/docker.sock
+              volumes:
+                - name: docker-sock
+                  hostPath:
+                    path: /var/run/docker.sock
+                    type: Socket
