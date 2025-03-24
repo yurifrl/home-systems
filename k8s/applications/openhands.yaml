@@ -28,6 +28,9 @@ spec:
                 name: openhands
                 namespace: openhands
                 port: 3000
+          services:
+            - name: openhands
+              port: 3000
           deployments:
             - name: openhands
               replicas: 1
