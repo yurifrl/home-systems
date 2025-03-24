@@ -47,9 +47,9 @@ spec:
                       value: docker.all-hands.dev/all-hands-ai/runtime:0.29-nikolaik
                     - name: LOG_ALL_EVENTS
                       value: "true"
+                    - name: DOCKER_HOST
+                      value: "tcp://localhost:2375"
                   volumeMounts:
-                    - name: docker-sock
-                      mountPath: /var/run/docker.sock
                     - name: openhands-state
                       mountPath: /.openhands-state
                 - name: dind
@@ -59,12 +59,13 @@ spec:
                   env:
                     - name: DOCKER_TLS_CERTDIR
                       value: ""
-                  volumeMounts:
-                    - name: docker-sock
-                      mountPath: /var/run/docker.sock
+                  args:
+                    - "--host=tcp://0.0.0.0:2375"
+                    - "--host=unix:///var/run/docker.sock"
+                  ports:
+                    - containerPort: 2375
+                      protocol: TCP
               volumes:
-                - name: docker-sock
-                  emptyDir: {}
                 - name: openhands-state
                   persistentVolumeClaim:
                     claimName: openhands-state
