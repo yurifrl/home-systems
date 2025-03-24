@@ -13,5 +13,5 @@ spec:
       storage: {{ .storage | default "10Gi" }}
   volumeMode: Filesystem
   storageClassName: "local-path"
-  volumeName: {{ .volumeName | required "volumeName is required" }}
+  volumeName: {{ .volumeName }}
 {{- end }}
