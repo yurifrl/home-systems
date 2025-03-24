@@ -1,0 +1,62 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openhands
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openhands
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: openhands
+              service:
+                name: openhands
+                namespace: openhands
+                port: 3000
+          deployments:
+            - name: openhands
+              replicas: 1
+              image:
+                repository: docker.all-hands.dev/all-hands-ai/openhands
+                tag: "0.29"
+                pullPolicy: Always
+              containerPort: 3000
+              env:
+                - name: SANDBOX_RUNTIME_CONTAINER_IMAGE
+                  value: "docker.all-hands.dev/all-hands-ai/runtime:0.29-nikolaik"
+                - name: LOG_ALL_EVENTS
+                  value: "true"
+              # volumeMounts:
+              #   - name: docker-sock
+              #     mountPath: /var/run/docker.sock
+              #   - name: openhands-state
+              #     mountPath: /.openhands-state
+          #     volumes:
+          #       - name: docker-sock
+          #         hostPath:
+          #           path: /var/run/docker.sock
+          #           type: Socket
+          #       - name: openhands-state
+          #         persistentVolumeClaim:
+          #           claimName: openhands-state
+          # persistentVolumeClaims:
+          #   - name: openhands-state
+          #     accessModes:
+          #       - ReadWriteOnce
+          #     storage: 10Gi
+          #     storageClassName: local-path
