@@ -36,7 +36,7 @@ spec:
               replicas: 1
               containers:
                 - name: openhands
-                  image: "docker.all-hands.dev/all-hands-ai/openhands:0.29"
+                  image: docker.all-hands.dev/all-hands-ai/openhands:0.29
                   imagePullPolicy: Always
                   ports:
                     - name: http
@@ -44,21 +44,26 @@ spec:
                       protocol: TCP
                   env:
                     - name: SANDBOX_RUNTIME_CONTAINER_IMAGE
-                      value: "docker.all-hands.dev/all-hands-ai/runtime:0.29-nikolaik"
+                      value: docker.all-hands.dev/all-hands-ai/runtime:0.29-nikolaik
                     - name: LOG_ALL_EVENTS
                       value: "true"
                   volumeMounts:
                     - name: docker-sock
                       mountPath: /var/run/docker.sock
-                - name: docker
-                  image: "docker:dind"
+                    - name: openhands-state
+                      mountPath: /.openhands-state
                   securityContext:
                     privileged: true
-                  volumeMounts:
-                    - name: docker-sock
-                      mountPath: /var/run/docker.sock
               volumes:
                 - name: docker-sock
                   hostPath:
                     path: /var/run/docker.sock
-                    type: Socket
+                - name: openhands-state
+                  persistentVolumeClaim:
+                    claimName: openhands-state
+          persistentVolumeClaims:
+            - name: openhands-state
+              accessModes:
+                - ReadWriteOnce
+              storage: 10Gi
+              storageClassName: local-path
