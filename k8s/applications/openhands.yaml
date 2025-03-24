@@ -49,9 +49,6 @@ spec:
                       value: "true"
                     - name: DOCKER_HOST
                       value: "tcp://localhost:2375"
-                  volumeMounts:
-                    - name: openhands-state
-                      mountPath: /.openhands-state
                 - name: dind
                   image: "docker:dind"
                   securityContext:
@@ -65,13 +62,3 @@ spec:
                   ports:
                     - containerPort: 2375
                       protocol: TCP
-              volumes:
-                - name: openhands-state
-                  persistentVolumeClaim:
-                    claimName: openhands-state
-          persistentVolumeClaims:
-            - name: openhands-state
-              accessModes:
-                - ReadWriteOnce
-              storage: 10Gi
-              storageClassName: local-path
