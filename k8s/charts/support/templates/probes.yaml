@@ -1,3 +1,4 @@
+{{- if .Values.probes.enabled }}
 {{- range .Values.virtualServices | default (list) }}
 ---
 apiVersion: monitoring.coreos.com/v1
@@ -18,4 +19,5 @@ spec:
     staticConfig:
       static:
         {{- include "support.hosts" (merge . (dict "Values" $.Values)) | nindent 8 }}
+{{- end }}
 {{- end }}
