@@ -16,6 +16,7 @@ spec:
     automated: {}
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
   ignoreDifferences:
     - group: actions.github.com
       kind: AutoscalingListener
