@@ -41,3 +41,7 @@ spec:
     - chart: gha-runner-scale-set
       repoURL: ghcr.io/actions/actions-runner-controller-charts
       targetRevision: "*"
+      helm:
+        valuesObject:
+          controllerServiceAccount:
+            name: gha-runner-gha-rs-controller
