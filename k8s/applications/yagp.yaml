@@ -7,7 +7,7 @@ spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: monitoring
+    namespace: yagp
   syncPolicy:
     automated:
       prune: true
@@ -15,6 +15,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
   source:
-    repoURL: docker-registry.syscd.tech/charts
+    repoURL: docker-registry.docker-registry.svc.cluster.local/charts
     chart: yagp
     targetRevision: 0.1.0
