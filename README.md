@@ -19,3 +19,10 @@ Not sure if can help
 [Installing Monkale CoreDNS Manager Operator on Single-Node Talos | by Nicholas | Medium](https://medium.com/@nikolay-udovik/installing-monkale-coredns-manager-operator-on-single-node-talos-16f8be900585)
 [How to run a dns server on hostNetwork for external requests? · siderolabs/talos · Discussion #9921](https://github.com/siderolabs/talos/discussions/9921)
 the are something on using local registry here [How to start Host DNS? · siderolabs/talos · Discussion #9434](https://github.com/siderolabs/talos/discussions/9434)
+
+## Add new domain checklist
+
+- [ ] Add dns entry in cloudflare
+- [ ] Add the domain in cloudflare tunnel
+- [ ] Add the domain in istio ingress gateway
+- [ ] Add the domain in istio virtual service
