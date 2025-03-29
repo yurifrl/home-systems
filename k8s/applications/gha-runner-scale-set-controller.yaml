@@ -43,6 +43,7 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
+          githubConfigSecret: gha-runner-github-secret
           controllerServiceAccount:
             namespace: gha-runner
             name: gha-runner-gha-rs-controller
