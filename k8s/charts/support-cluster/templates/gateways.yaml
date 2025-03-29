@@ -18,6 +18,7 @@ spec:
       hosts:
         - "*.syscd.live"
         - "*.syscd.xyz"
+        - "*.monaddaydream.com"
     - port:
         number: 443
         name: https
@@ -25,6 +26,7 @@ spec:
       hosts:
         - "*.syscd.live"
         - "*.syscd.xyz"
+        - "*.monaddaydream.com"
       tls:
         mode: SIMPLE
         credentialName: gateway-public-tls
