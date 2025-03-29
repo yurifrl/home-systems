@@ -44,4 +44,5 @@ spec:
       helm:
         valuesObject:
           controllerServiceAccount:
+            namespace: gha-runner
             name: gha-runner-gha-rs-controller
