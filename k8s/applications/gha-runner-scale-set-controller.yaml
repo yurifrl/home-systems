@@ -38,7 +38,7 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
-          githubConfigUrl: https://github.com/yurifrl/yagp
+          githubConfigUrl: https://github.com/yurifrl
           githubConfigSecret: gha-runner-github-secret
           controllerServiceAccount:
             namespace: gha-runner
