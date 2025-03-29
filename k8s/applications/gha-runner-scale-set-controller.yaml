@@ -35,8 +35,7 @@ spec:
       repoURL: ghcr.io/actions/actions-runner-controller-charts
       targetRevision: "*"
       valuesObject:
-        serviceAccount:
-          create: true
+        githubConfigUrl: https://github.com/yurifrl/yagp
 
     - chart: gha-runner-scale-set
       repoURL: ghcr.io/actions/actions-runner-controller-charts
