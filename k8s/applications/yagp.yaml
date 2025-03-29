@@ -18,3 +18,7 @@ spec:
     repoURL: ghcr.io/yurifrl/yagp/charts
     chart: yagp
     targetRevision: "*"
+    helm:
+      valuesObject:
+        image:
+          tag: "latest"
