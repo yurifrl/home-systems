@@ -20,9 +20,6 @@ spec:
   ignoreDifferences:
     - group: actions.github.com
       kind: AutoscalingListener
-      jsonPointers:
-        - /spec
-        - /status
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
