@@ -37,8 +37,8 @@ spec:
       repoURL: ghcr.io/actions/actions-runner-controller-charts
       targetRevision: "*"
       helm:
+        releaseName: gha-runner-yagp
         valuesObject:
-          releaseName: gha-runner-yagp
           githubConfigUrl: https://github.com/yurifrl/yagp
           githubConfigSecret: gha-runner-github-secret
           controllerServiceAccount:
