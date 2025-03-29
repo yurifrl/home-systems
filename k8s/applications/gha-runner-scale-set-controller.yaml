@@ -1,0 +1,35 @@
+# This is the main application that manages the actions-runner-controller
+# https://github.com/actions/actions-runner-controller/blob/8b36ea90ebe81710fcdcb4f96424b43203d24f1e/charts/gha-runner-scale-set/templates/autoscalingrunnerset.yaml
+# https://github.com/actions/actions-runner-controller/blob/master/docs/gha-runner-scale-set-controller/README.md
+# https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners-with-actions-runner-controller/quickstart-for-actions-runner-controller
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gha-runner-scale-set-controller
+  namespace: argocd
+spec:
+  project: tooling
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gha-runner-scale-set-controller
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+  ignoreDifferences:
+    - group: actions.github.com
+      kind: AutoscalingListener
+      jsonPointers:
+        - /spec
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: gha-runner-scale-set-controller-github-secret
+
+    - chart: gha-runner-scale-set-controller
+      repoURL: ghcr.io/actions/actions-runner-controller-charts
+      targetRevision: "*"
