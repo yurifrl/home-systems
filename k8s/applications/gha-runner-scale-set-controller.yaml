@@ -44,11 +44,11 @@ spec:
           controllerServiceAccount:
             namespace: gha-runner
             name: gha-runner-gha-rs-controller
-        containerMode:
-          type: kubernetes
-          kubernetesModeWorkVolumeClaim:
-            accessModes: ["ReadWriteOnce"]
-            storageClassName: openebs-hostpath
-            resources:
-              requests:
-                storage: 5Gi
+          containerMode:
+            type: kubernetes
+            kubernetesModeWorkVolumeClaim:
+              accessModes: ["ReadWriteOnce"]
+              storageClassName: openebs-hostpath
+              resources:
+                requests:
+                  storage: 5Gi
