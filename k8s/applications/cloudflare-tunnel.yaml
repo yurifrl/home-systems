@@ -50,6 +50,8 @@ spec:
                 service: http://argocd-server.argocd.svc.cluster.local:80
               - hostname: "*.syscd.live"
                 service: http://istio-gateway.istio-system.svc.cluster.local:80
+              - hostname: "*.monaddaydream.com"
+                service: http://istio-gateway.istio-system.svc.cluster.local:80
           resources:
             limits:
               cpu: 100m
