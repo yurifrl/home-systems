@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Don't write comments unless you are explicitly told to
+- Favor refactor over creating new code
+- Try to write the least code you can, less is more
+- Be assertive and precise not verbose
+- Less code is better code, it's easier to understand
+- Unless told so, dont touch in non functional parts of the code, like logging or comments
+- Favor const
