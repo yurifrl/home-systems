@@ -15,6 +15,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
   source:
-    repoURL: http://docker-registry.docker-registry.svc.cluster.local:5000/charts
+    repoURL: docker-registry.docker-registry.svc.cluster.local:5000/charts
     chart: yagp
     targetRevision: 0.1.0
