@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: caloriesai
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: caloriesai
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  source:
+    repoURL: ghcr.io/yurifrl/charts
+    chart: caloriesai
+    targetRevision: "*"
+    helm:
+      valuesObject:
+        image:
+          tag: "latest"
