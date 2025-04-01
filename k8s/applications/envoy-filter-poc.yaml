@@ -14,6 +14,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio-injection: enabled
   sources:
     - repoURL: ghcr.io/yurifrl/charts
       chart: envoy-filter-poc
