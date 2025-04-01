@@ -1,13 +1,13 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: auth-interceptor-poc
+  name: envoy-filter-poc
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: auth-interceptor-poc
+    namespace: envoy-filter-poc
   syncPolicy:
     automated:
       prune: true
@@ -16,7 +16,7 @@ spec:
       - CreateNamespace=true
   source:
     repoURL: ghcr.io/yurifrl/charts
-    chart: auth-interceptor-poc
+    chart: envoy-filter-poc
     targetRevision: "*"
     helm:
       valuesObject:
