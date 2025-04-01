@@ -15,12 +15,10 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
-    - repoURL: https://github.com/yurifrl/envoy-filter-poc
-      targetRevision: "main"
+    - repoURL: ghcr.io/yurifrl/charts
+      chart: envoy-filter-poc
       helm:
-      valuesObject:
-        image:
-          tag: "latest"
+        valuesObject:
           gateways:
             - istio-system/dev
             - istio-system/cloudflare
