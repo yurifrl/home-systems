@@ -17,6 +17,7 @@ spec:
   sources:
     - repoURL: ghcr.io/yurifrl/charts
       chart: envoy-filter-poc
+      targetRevision: "*"
       helm:
         valuesObject:
           gateways:
