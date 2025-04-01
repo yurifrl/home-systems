@@ -26,3 +26,4 @@ spec:
             - istio-system/tailscale
           hosts:
             - envoy-filter-poc.syscd.live
+            - envoy-filter-poc.syscd.tech
