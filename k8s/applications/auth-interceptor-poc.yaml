@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: auth-interceptor-poc
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: auth-interceptor-poc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  source:
+    repoURL: ghcr.io/yurifrl/charts
+    chart: auth-interceptor-poc
+    targetRevision: "*"
+    helm:
+      valuesObject:
+        image:
+          tag: "latest"
