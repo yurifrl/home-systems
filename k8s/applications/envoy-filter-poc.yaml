@@ -14,11 +14,16 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-  source:
-    repoURL: ghcr.io/yurifrl/charts
-    chart: envoy-filter-poc
-    targetRevision: "*"
-    helm:
+  sources:
+    - repoURL: https://github.com/yurifrl/envoy-filter-poc
+      targetRevision: "main"
+      helm:
       valuesObject:
         image:
           tag: "latest"
+          gateways:
+            - istio-system/dev
+            - istio-system/cloudflare
+            - istio-system/tailscale
+          hosts:
+            - envoy-filter-poc.syscd.live
