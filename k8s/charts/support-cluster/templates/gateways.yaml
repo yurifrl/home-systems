@@ -30,14 +30,6 @@ spec:
       tls:
         mode: SIMPLE
         credentialName: gateway-public-tls
-    - port:
-        number: 443
-        name: http3-udp
-        protocol: UDP
-      hosts:
-        - "*.syscd.live"
-        - "*.syscd.xyz"
-        - "*.monaddaydream.com"
 ---
 # Tailscale domain
 # https://medium.com/@mattiaforc/zero-trust-kubernetes-ingress-with-tailscale-operator-cert-manager-and-external-dns-8f42272f8647
