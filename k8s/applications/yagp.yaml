@@ -24,5 +24,9 @@ spec:
           tag: "latest"
         gateways:
           - istio-system/cloudflare
+          - istio-system/tailscale
         hosts:
           - yagp.monaddaydream.com
+          - yagp.syscd.live
+          - yagp.syscd.tech
+          
