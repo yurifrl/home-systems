@@ -38,9 +38,6 @@ spec:
         - "*.syscd.live"
         - "*.syscd.xyz"
         - "*.monaddaydream.com"
-      tls:
-        mode: SIMPLE
-        credentialName: gateway-public-tls
 ---
 # Tailscale domain
 # https://medium.com/@mattiaforc/zero-trust-kubernetes-ingress-with-tailscale-operator-cert-manager-and-external-dns-8f42272f8647
