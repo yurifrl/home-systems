@@ -15,10 +15,14 @@ spec:
     syncOptions:
       - CreateNamespace=true
   source:
-    repoURL: ghcr.io/yurifrl/yagp/charts
+    repoURL: ghcr.io/yurifrl/charts
     chart: yagp
     targetRevision: "*"
     helm:
       valuesObject:
         image:
           tag: "latest"
+        gateways:
+          - istio-system/cloudflare
+        hosts:
+          - yagp.monaddaydream.com
