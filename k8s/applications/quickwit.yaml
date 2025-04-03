@@ -31,7 +31,7 @@ spec:
     # PostgreSQL deployment
     - repoURL: https://charts.bitnami.com/bitnami
       chart: postgresql
-      targetRevision: "12.1.9"
+      targetRevision: "*"
       helm:
         releaseName: quickwit-postgres
         values: |
