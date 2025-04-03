@@ -34,7 +34,6 @@ spec:
       chart: postgresql
       targetRevision: "*"
       helm:
-        releaseName: quickwit-postgres
         values: |
           auth:
             username: quickwit
@@ -50,7 +49,6 @@ spec:
               limits:
                 memory: 512Mi
                 cpu: 500m
-          fullnameOverride: quickwit-postgres
     
     # # OpenTelemetry Collector deployment
     # - repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
