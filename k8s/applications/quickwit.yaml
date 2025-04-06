@@ -123,7 +123,7 @@ spec:
                 cpu: 666m
                 memory: 2730Mi
             environment:
-              QW_METASTORE_URI: postgres://quickwit:quickwit-password123@quickwit-postgres-hl:5432/quickwit-metastore
+              QW_METASTORE_URI: postgres://quickwit:quickwit-password123@postgresql:5432/quickwit-metastore
               # QW_ENABLE_OPENTELEMETRY_OTLP_EXPORTER: "true"
               # OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:7281"
             extraEnvFrom:
