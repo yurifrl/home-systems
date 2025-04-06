@@ -86,50 +86,50 @@ spec:
         valuesObject:
           serviceMonitor:
             enabled: true
-        searcher:
-          replicaCount: 1
-          extraEnv:
-            QW_DISABLE_TELEMETRY: 1
-        indexer:
-          replicaCount: 1
-          extraEnv:
-            QW_DISABLE_TELEMETRY: 1
-        control_plane:
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 666m
-              memory: 2730Mi
-        janitor:
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 666m
-              memory: 2730Mi
-        metastore:
-          replicaCount: 1
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 666m
-              memory: 2730Mi
-          environment:
-            QW_METASTORE_URI: postgres://quickwit:quickwit-password123@quickwit-postgres-hl:5432/quickwit-metastore
-            # QW_ENABLE_OPENTELEMETRY_OTLP_EXPORTER: "true"
-            # OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:7281"
-          extraEnvFrom:
-            - secretRef:
-                name: quickwit
-        # config:
-        #   default_index_root_uri: gs://todo
-        #   storage:
-        #     s3:
-        #       flavor: gcs
-        #       region: us-east4
-        #       endpoint: https://storage.googleapis.com
+          searcher:
+            replicaCount: 1
+            extraEnv:
+              QW_DISABLE_TELEMETRY: 1
+          indexer:
+            replicaCount: 1
+            extraEnv:
+              QW_DISABLE_TELEMETRY: 1
+          control_plane:
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 666m
+                memory: 2730Mi
+          janitor:
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 666m
+                memory: 2730Mi
+          metastore:
+            replicaCount: 1
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 666m
+                memory: 2730Mi
+            environment:
+              QW_METASTORE_URI: postgres://quickwit:quickwit-password123@quickwit-postgres-hl:5432/quickwit-metastore
+              # QW_ENABLE_OPENTELEMETRY_OTLP_EXPORTER: "true"
+              # OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:7281"
+            extraEnvFrom:
+              - secretRef:
+                  name: quickwit
+          # config:
+          #   default_index_root_uri: gs://todo
+          #   storage:
+          #     s3:
+          #       flavor: gcs
+          #       region: us-east4
+          #       endpoint: https://storage.googleapis.com
