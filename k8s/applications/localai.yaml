@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: localai
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: localai
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  source:
+    repoURL: https://go-skynet.github.io/helm-charts/
+    chart: local-ai
+    targetRevision: "*"
+    helm:
+      valuesObject:
+        # Default values, can be customized as needed
+        image:
+          tag: "latest" 
