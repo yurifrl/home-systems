@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: coder
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: coder
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: coder
+              service:
+                name: coder
+                namespace: coder
+                port: 80
+
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: postgresql
+      targetRevision: "12.1.9" 
+      helm:
+        values: |
+          auth:
+            username: coder
+            password: coder-password123
+            database: coder-metastore
+          primary:
+            persistence:
+              enabled: false
+            resources:
+              requests:
+                memory: 256Mi
+                cpu: 250m
+              limits:
+                memory: 512Mi
+                cpu: 500m
+
+    - repoURL: https://helm.coder.com/v2
+      chart: coder
+      targetRevision: 2.20.2 
+      helm:
+        valuesObject:
+          coder:
+            env:
+              - name: CODER_PG_CONNECTION_URL
+                value: "postgresql://coder:coder-password123@postgresql.quickwit.svc.cluster.local:5432/coder-metastore"
+
+              - name: CODER_OAUTH2_GITHUB_DEFAULT_PROVIDER_ENABLE
+                value: "false"
+
+              - name: CODER_ACCESS_URL
+                value: "https://coder.sysncd.live"
