@@ -50,9 +50,6 @@ spec:
       targetRevision: "2.2.1"
       helm:
         valuesObject:
-          image:
-            repository: koenkk/zigbee2mqtt
-            tag: latest-dev
           statefulset:
             nodeSelector:
               syscd.dev/storage: tp1
