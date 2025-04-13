@@ -52,7 +52,7 @@ spec:
         valuesObject:
           statefulset:
             nodeSelector:
-              syscd.dev/storage: tp2
+              syscd.dev/storage: tp4
             resources:
               requests:
                 memory: "128Mi"
