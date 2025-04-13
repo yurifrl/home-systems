@@ -51,6 +51,8 @@ spec:
       helm:
         valuesObject:
           statefulset:
+            nodeSelector:
+              syscd.dev/storage: tp2
             resources:
               requests:
                 memory: "128Mi"
