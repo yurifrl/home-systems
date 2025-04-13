@@ -51,8 +51,8 @@ spec:
       helm:
         valuesObject:
           statefulset:
-            nodeSelector:
-              syscd.dev/storage: tp1
+            # nodeSelector:
+            #   syscd.dev/storage: tp1
             resources:
               requests:
                 memory: "128Mi"
@@ -61,7 +61,7 @@ spec:
                 memory: "256Mi"
                 cpu: "200m"
             storage:
-              enabled: true
+              enabled: false
               size: 5Gi
               storageClassName: local-path
               existingVolume: zigbee2mqtt-tp1-data
