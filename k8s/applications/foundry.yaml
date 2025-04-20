@@ -61,18 +61,13 @@ spec:
        
                 - name: gcsfuse
                   image: ghcr.io/yurifrl/dockerfiles/gcsfuse:latest
+                  command: ["gcsfuse"]
+                  args: ["-o", "nonempty,allow_other", "--foreground", "${GCS_BUCKET}", "/bucketData"]
                   securityContext:
                     privileged: true
                     capabilities:
                       add:
                         - SYS_ADMIN
-                  lifecycle:
-                    postStart:
-                      exec:
-                        command: ["gcsfuse", "-o", "nonempty,allow_other", "${GCS_BUCKET}", "/bucketData"]
-                    preStop:
-                      exec:
-                        command: ["fusermount", "-u", "/bucketData"]
                   volumeMounts:
                     - name: foundry-data
                       mountPath: "/bucketData"
