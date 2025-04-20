@@ -25,10 +25,12 @@ spec:
         - name: {{ .name }}
           image: "{{ .image.repository }}:{{ .image.tag }}"
           imagePullPolicy: {{ .image.pullPolicy | default "Always" }}
+          {{- if .containerPort }}
           ports:
             - name: http
               containerPort: {{ .containerPort }}
               protocol: TCP
+          {{- end }}
           livenessProbe: {{ toYaml .livenessProbe | nindent 12 }}
           readinessProbe: {{ toYaml .readinessProbe | nindent 12 }}
           env: {{ toYaml .env | nindent 12 }}
