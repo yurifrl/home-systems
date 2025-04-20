@@ -62,7 +62,7 @@ spec:
                 - name: gcsfuse
                   image: ghcr.io/yurifrl/dockerfiles/gcsfuse:latest
                   command: ["gcsfuse"]
-                  args: ["-o", "nonempty,allow_other", "--foreground", "${GCS_BUCKET}", "/bucketData"]
+                  args: ["-o", "nonempty,allow_other", "${GCS_BUCKET}", "/bucketData"]
                   securityContext:
                     privileged: true
                     capabilities:
