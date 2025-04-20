@@ -69,13 +69,13 @@ spec:
                   lifecycle:
                     postStart:
                       exec:
-                        command: ["sh", "-c", "mkdir -p /data/bucket && gcsfuse -o nonempty ${GCS_BUCKET} /data/bucket"]
+                        command: ["sh", "-c", "mkdir -p /bucketData && gcsfuse -o nonempty ${GCS_BUCKET} /bucketData"]
                     preStop:
                       exec:
-                        command: ["fusermount", "-u", "/data/bucket"]
+                        command: ["fusermount", "-u", "/bucketData"]
                   volumeMounts:
                     - name: foundry-data
-                      mountPath: "/data"
+                      mountPath: "/bucketData"
                     - name: gcs-creds
                       mountPath: "/foundry-sa-key.json"
                       subPath: foundry-sa-key.json
