@@ -113,7 +113,7 @@ spec:
                 - -c
                 - |
                   mkdir -p /mnt/gcs && \
-                  gcsfuse --key-file /gcp/key.json syscd-foundry-9a54f782-ea41-4c70-9976-c8f4ab72bc31 /mnt/gcs && \
+                  gcsfuse --key-file=/gcp/key.json syscd-foundry-9a54f782-ea41-4c70-9976-c8f4ab72bc31 /mnt/gcs && \
                   while true; do sleep 3600; done
               securityContext:
                 privileged: true
