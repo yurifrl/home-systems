@@ -30,7 +30,7 @@ spec:
               service:
                 name: gcsproxy
                 namespace: foundry
-                port: 8081
+                port: 8080
           externalSecrets:
             - name: foundry-secrets
           persistentVolumeClaims:
@@ -43,7 +43,7 @@ spec:
             - name: foundry
               port: 30000
             - name: gcsproxy
-              port: 8081
+              port: 8080
           statefulSets:
             - name: foundry
               image:
@@ -87,39 +87,15 @@ spec:
             #  curl -X GET http://gcsproxy:8081/<BUCKET>/legends-of-barovia-founrdyvvt/module.json
             - name: gcsproxy
               image:
-                repository: ghcr.io/yurifrl/gcsproxy
+                repository: ghcr.io/yurifrl/dockerfiles/gcsproxy
                 tag: latest
-              containerPort: 8081
+              containerPort: 8080
               env:
-                - name: GOOGLE_APPLICATION_CREDENTIALS
-                  value: /gcp/creds.json
-              volumes:
-                - name: foundry-sa-key
-                  secret:
-                    secretName: foundry-secrets
-                    items:
-                      - key: foundry-sa-key.json
-                        path: creds.json
-              volumeMounts:
-                - name: foundry-sa-key
-                  mountPath: /gcp
-                  readOnly: true
-            - name: gcsfuse
-              image:
-                repository:  blue1st/gcsfuse
-                tag: latest
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  mkdir -p /mnt/gcs && \
-                  gcsfuse --key-file=/gcp/key.json syscd-foundry-9a54f782-ea41-4c70-9976-c8f4ab72bc31 /mnt/gcs && \
-                  while true; do sleep 3600; done
-              securityContext:
-                privileged: true
-                capabilities:
-                  add:
-                    - SYS_ADMIN
+                - name: GCS_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: foundry-secrets
+                      key: gcs-bucket
               volumes:
                 - name: foundry-sa-key
                   secret:
@@ -127,12 +103,9 @@ spec:
                     items:
                       - key: foundry-sa-key.json
                         path: key.json
-                - name: gcs-mount
-                  emptyDir: {}
               volumeMounts:
                 - name: foundry-sa-key
-                  mountPath: /gcp
+                  mountPath: /key.json
+                  subPath: key.json
                   readOnly: true
-                - name: gcs-mount
-                  mountPath: /mnt/gcs
          
