@@ -104,4 +104,38 @@ spec:
                 - name: foundry-sa-key
                   mountPath: /gcp
                   readOnly: true
+            - name: gcsfuse
+              image:
+                repository: gcr.io/google.com/cloudsdktool/cloud-sdk
+                tag: alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  apk add --no-cache fuse && \
+                  curl -L https://github.com/GoogleCloudPlatform/gcsfuse/releases/latest/download/gcsfuse_linux_amd64 -o /usr/local/bin/gcsfuse && \
+                  chmod +x /usr/local/bin/gcsfuse && \
+                  mkdir -p /mnt/gcs && \
+                  gcsfuse --key-file /gcp/key.json syscd-foundry-9a54f782-ea41-4c70-9976-c8f4ab72bc31 /mnt/gcs && \
+                  while true; do sleep 3600; done
+              securityContext:
+                privileged: true
+                capabilities:
+                  add:
+                    - SYS_ADMIN
+              volumes:
+                - name: foundry-sa-key
+                  secret:
+                    secretName: foundry-secrets
+                    items:
+                      - key: foundry-sa-key.json
+                        path: key.json
+                - name: gcs-mount
+                  emptyDir: {}
+              volumeMounts:
+                - name: foundry-sa-key
+                  mountPath: /gcp
+                  readOnly: true
+                - name: gcs-mount
+                  mountPath: /mnt/gcs
          
