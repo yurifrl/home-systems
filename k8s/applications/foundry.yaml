@@ -69,7 +69,7 @@ spec:
                   lifecycle:
                     postStart:
                       exec:
-                        command: ["sh", "-c", "mkdir -p /bucketData && gcsfuse -o nonempty ${GCS_BUCKET} /bucketData"]
+                        command: ["gcsfuse", "-o", "nonempty", "${GCS_BUCKET}", "/bucketData"]
                     preStop:
                       exec:
                         command: ["fusermount", "-u", "/bucketData"]
