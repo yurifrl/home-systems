@@ -120,24 +120,21 @@ spec:
             #  curl -X GET http://gcsproxy:8081/<BUCKET>/legends-of-barovia-founrdyvvt/module.json
             - name: gcsproxy
               image:
-                repository: gcr.io/google.com/cloudsdktool/cloud-sdk
+                repository: ghcr.io/yurifrl/gcsproxy
                 tag: latest
               containerPort: 8081
-              command:
-                - gcsproxy
-              args:
-                - -bucket=syscd-foundry-9a54f782-ea41-4c70-9976-c8f4ab72bc31
-                - -backend=gcs
-                - -credential=/secrets/foundry-sa-key.json
+              env:
+                - name: GOOGLE_APPLICATION_CREDENTIALS
+                  value: /gcp/creds.json
               volumes:
-                - name: gcs-creds
+                - name: foundry-sa-key
                   secret:
                     secretName: foundry-secrets
                     items:
                       - key: foundry-sa-key.json
-                        path: foundry-sa-key.json
+                        path: creds.json
               volumeMounts:
-                - name: gcs-creds
-                  mountPath: /secrets
+                - name: foundry-sa-key
+                  mountPath: /gcp
                   readOnly: true
          
