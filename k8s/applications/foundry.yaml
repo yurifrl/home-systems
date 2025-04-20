@@ -37,6 +37,8 @@ spec:
           services:
             - name: foundry
               port: 30000
+            - name: gcsproxy
+              port: 8081
           statefulSets:
             - name: foundry
               image:
@@ -63,3 +65,24 @@ spec:
                 httpGet:
                   path: /
                   port: http
+          deployments:
+            - name: gcsproxy
+              image:
+                repository: ghcr.io/yurifrl/gcsproxy
+                tag: latest
+              containerPort: 8081
+              env:
+                - name: GOOGLE_APPLICATION_CREDENTIALS
+                  value: /gcp/creds.json
+              volumes:
+                - name: foundry-sa-key
+                  secret:
+                    secretName: foundry-secrets
+                    items:
+                      - key: foundry-sa-key.json
+                        path: creds.json
+              volumeMounts:
+                - name: foundry-sa-key
+                  mountPath: /gcp
+                  readOnly: true
+         
