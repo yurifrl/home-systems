@@ -80,13 +80,16 @@ spec:
               command:
                 - gcsproxy
               args:
-                - -bucket=my-bucket
+                - -bucket=syscd-foundry-9a54f782-ea41-4c70-9976-c8f4ab72bc31
                 - -backend=gcs
                 - -credential=/secrets/key.json
               volumes:
                 - name: gcs-creds
                   secret:
-                    secretName: gcs-key
+                    secretName: foundry-secrets
+                    items:
+                      - key: foundry-sa-key.json
+                        path: key.json
               volumeMounts:
                 - name: gcs-creds
                   mountPath: /secrets
