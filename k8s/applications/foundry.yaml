@@ -108,6 +108,7 @@ spec:
               image:
                 repository: gcr.io/google.com/cloudsdktool/cloud-sdk
                 tag: alpine
+              containerPort: 9000
               command:
                 - /bin/sh
                 - -c
