@@ -58,10 +58,6 @@ spec:
                   volumeMounts:
                     - name: foundry-data
                       mountPath: "/data"
-                    - name: gcs-creds
-                      mountPath: "/foundry-sa-key.json"
-                      subPath: foundry-sa-key.json
-                      readOnly: true
                   livenessProbe:
                     httpGet:
                       path: /
@@ -70,8 +66,8 @@ spec:
                     httpGet:
                       path: /
                       port: http
-                - name: gcsproxy
-                  image: ghcr.io/yurifrl/dockerfiles/gcsproxy:latest
+                - name: gcsfuse
+                  image: ghcr.io/yurifrl/dockerfiles/gcsfuse:latest
                   securityContext:
                     privileged: true
                     capabilities:
@@ -80,7 +76,7 @@ spec:
                   lifecycle:
                     postStart:
                       exec:
-                        command: ["gcsfuse", "-o", "nonempty", "legends-of-barovia-founrdyvvt", "/data"]
+                        command: ["sh", "-c", "gcsfuse -o nonempty ${GCS_BUCKET} /data"]
                     preStop:
                       exec:
                         command: ["fusermount", "-u", "/data"]
@@ -94,6 +90,11 @@ spec:
                   env:
                     - name: GOOGLE_APPLICATION_CREDENTIALS
                       value: /foundry-sa-key.json
+                    - name: GCS_BUCKET
+                      valueFrom:
+                        secretKeyRef:
+                          name: foundry-secrets
+                          key: gcs-bucket
               nodeSelector:
                 syscd.dev/storage: tp1
               volumes:
