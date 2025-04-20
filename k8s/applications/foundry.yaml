@@ -57,9 +57,24 @@ spec:
                 - name: foundry-data
                   persistentVolumeClaim:
                     claimName: foundry-data
+                - name: gcs-creds
+                  secret:
+                    secretName: foundry-secrets
+                    items:
+                      - key: foundry-sa-key.json
+                        path: foundry-sa-key.json
+                - name: options-config
+                  configMap:
+                    name: foundry-options
               volumeMounts:
                 - name: foundry-data
                   mountPath: "/data"
+                - name: gcs-creds
+                  mountPath: "/data/Config"
+                  readOnly: true
+                - name: options-config
+                  mountPath: "/data/Config/options.json"
+                  subPath: options.json
               nodeSelector:
                 syscd.dev/storage: tp1 
               livenessProbe:
@@ -70,6 +85,37 @@ spec:
                 httpGet:
                   path: /
                   port: http
+          configMaps:
+            - name: foundry-options
+              data:
+                options.json: |
+                  {
+                    "awsConfig": "/data/Config/foundry-sa-key.json",
+                    "compressSocket": false,
+                    "compressStatic": false,
+                    "cssTheme": "foundry",
+                    "dataPath": "/data",
+                    "fullscreen": false,
+                    "hostname": null,
+                    "hotReload": false,
+                    "language": "en.core",
+                    "localHostname": null,
+                    "passwordSalt": null,
+                    "port": 30000,
+                    "protocol": null,
+                    "proxyPort": null,
+                    "proxySSL": false,
+                    "routePrefix": null,
+                    "sslCert": null,
+                    "sslKey": null,
+                    "telemetry": true,
+                    "updateChannel": "stable",
+                    "upnp": false,
+                    "upnpLeaseDuration": null,
+                    "world": null,
+                    "deleteNEDB": false,
+                    "serviceConfig": null
+                  }
           deployments:
             #  curl -X GET http://gcsproxy:8081/<BUCKET>/legends-of-barovia-founrdyvvt/module.json
             - name: gcsproxy
@@ -82,14 +128,14 @@ spec:
               args:
                 - -bucket=syscd-foundry-9a54f782-ea41-4c70-9976-c8f4ab72bc31
                 - -backend=gcs
-                - -credential=/secrets/key.json
+                - -credential=/secrets/foundry-sa-key.json
               volumes:
                 - name: gcs-creds
                   secret:
                     secretName: foundry-secrets
                     items:
                       - key: foundry-sa-key.json
-                        path: key.json
+                        path: foundry-sa-key.json
               volumeMounts:
                 - name: gcs-creds
                   mountPath: /secrets
