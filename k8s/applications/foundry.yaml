@@ -46,13 +46,56 @@ spec:
               port: 8080
           statefulSets:
             - name: foundry
-              image:
-                repository: felddy/foundryvtt
-                tag: release
-              containerPort: 30000
-              envFrom:
-                - secretRef:
-                    name: foundry-secrets
+              containers:
+                - name: foundry
+                  image: felddy/foundryvtt:release
+                  ports:
+                    - name: http
+                      containerPort: 30000
+                  envFrom:
+                    - secretRef:
+                        name: foundry-secrets
+                  volumeMounts:
+                    - name: foundry-data
+                      mountPath: "/data"
+                    - name: gcs-creds
+                      mountPath: "/foundry-sa-key.json"
+                      subPath: foundry-sa-key.json
+                      readOnly: true
+                  livenessProbe:
+                    httpGet:
+                      path: /
+                      port: http
+                  readinessProbe:
+                    httpGet:
+                      path: /
+                      port: http
+                - name: gcsproxy
+                  image: ghcr.io/yurifrl/dockerfiles/gcsproxy:latest
+                  securityContext:
+                    privileged: true
+                    capabilities:
+                      add:
+                        - SYS_ADMIN
+                  lifecycle:
+                    postStart:
+                      exec:
+                        command: ["gcsfuse", "-o", "nonempty", "legends-of-barovia-founrdyvvt", "/data"]
+                    preStop:
+                      exec:
+                        command: ["fusermount", "-u", "/data"]
+                  volumeMounts:
+                    - name: foundry-data
+                      mountPath: "/data"
+                    - name: gcs-creds
+                      mountPath: "/foundry-sa-key.json"
+                      subPath: foundry-sa-key.json
+                      readOnly: true
+                  env:
+                    - name: GOOGLE_APPLICATION_CREDENTIALS
+                      value: /foundry-sa-key.json
+              nodeSelector:
+                syscd.dev/storage: tp1
               volumes:
                 - name: foundry-data
                   persistentVolumeClaim:
@@ -66,27 +109,11 @@ spec:
                 - name: options-config
                   configMap:
                     name: foundry-options
-              volumeMounts:
-                - name: foundry-data
-                  mountPath: "/data"
-                - name: gcs-creds
-                  mountPath: "/foundry-sa-key.json"
-                  subPath: foundry-sa-key.json
-                  readOnly: true
-              nodeSelector:
-                syscd.dev/storage: tp1 
-              livenessProbe:
-                httpGet:
-                  path: /
-                  port: http
-              readinessProbe:
-                httpGet:
-                  path: /
-                  port: http
           deployments:
-            #  curl -X GET http://gcsproxy:8081/<BUCKET>/legends-of-barovia-founrdyvvt/module.json
+            # http://gcsproxy:8080/legends-of-barovia-founrdyvvt/module.json
             - name: gcsproxy
               image:
+                # https://github.com/yurifrl/dockerfiles
                 repository: ghcr.io/yurifrl/dockerfiles/gcsproxy
                 tag: latest
               containerPort: 8080
