@@ -129,3 +129,12 @@ externalSecrets: []
   # - name: teleport-agent-token      # This matches the 1Password item name
   #   namespace: teleport             # Kubernetes namespace
   #   decodingStrategy: None          # Decoding strategy (default: None)
+
+# ConfigMaps configuration
+configMaps: []
+  # - name: config-name
+  #   data:
+  #     key1: value1
+  #     key2: |
+  #       multiline
+  #       value
