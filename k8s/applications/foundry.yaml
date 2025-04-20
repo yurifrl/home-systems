@@ -58,14 +58,7 @@ spec:
                   volumeMounts:
                     - name: foundry-data
                       mountPath: "/data"
-                  livenessProbe:
-                    httpGet:
-                      path: /
-                      port: http
-                  readinessProbe:
-                    httpGet:
-                      path: /
-                      port: http
+       
                 - name: gcsfuse
                   image: ghcr.io/yurifrl/dockerfiles/gcsfuse:latest
                   securityContext:
@@ -76,10 +69,10 @@ spec:
                   lifecycle:
                     postStart:
                       exec:
-                        command: ["sh", "-c", "gcsfuse -o nonempty ${GCS_BUCKET} /data"]
+                        command: ["sh", "-c", "mkdir -p /data/bucket && gcsfuse -o nonempty ${GCS_BUCKET} /data/bucket"]
                     preStop:
                       exec:
-                        command: ["fusermount", "-u", "/data"]
+                        command: ["fusermount", "-u", "/data/bucket"]
                   volumeMounts:
                     - name: foundry-data
                       mountPath: "/data"
