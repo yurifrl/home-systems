@@ -26,6 +26,11 @@ spec:
                 name: foundry
                 namespace: foundry
                 port: 30000
+            - name: froudry-gcsproxy
+              service:
+                name: gcsproxy
+                namespace: foundry
+                port: 8081
           externalSecrets:
             - name: foundry-secrets
           persistentVolumeClaims:
@@ -66,6 +71,7 @@ spec:
                   path: /
                   port: http
           deployments:
+            #  curl -X GET http://gcsproxy:8081/<BUCKET>/legends-of-barovia-founrdyvvt/module.json
             - name: gcsproxy
               image:
                 repository: ghcr.io/yurifrl/gcsproxy
