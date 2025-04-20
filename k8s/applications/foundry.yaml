@@ -70,7 +70,7 @@ spec:
                 - name: foundry-data
                   mountPath: "/data"
                 - name: gcs-creds
-                  mountPath: "/data/Config/foundry-sa-key.json"
+                  mountPath: "/foundry-sa-key.json"
                   subPath: foundry-sa-key.json
                   readOnly: true
               nodeSelector:
