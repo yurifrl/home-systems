@@ -63,19 +63,21 @@ spec:
                   volumeMounts:
                     - name: foundry-data
                       mountPath: "/data"
+                    - name: bucket-data
+                      mountPath: "/bucket"
                       mountPropagation: "Bidirectional"
                 - name: gcsfuse
                   image: ghcr.io/yurifrl/dockerfiles/gcsfuse:latest
                   command: ["gcsfuse"]
-                  args: ["--foreground", "--implicit-dirs", "-o", "allow_other", "$(GCS_BUCKET)", "/data/Data/bucket"]
+                  args: ["--foreground", "--implicit-dirs", "-o", "allow_other", "$(GCS_BUCKET)", "/bucket"]
                   securityContext:
                     privileged: true
                     capabilities:
                       add:
                         - SYS_ADMIN
                   volumeMounts:
-                    - name: foundry-data
-                      mountPath: "/data"
+                    - name: bucket-data
+                      mountPath: "/bucket"
                       mountPropagation: "Bidirectional"
                     - name: gcs-creds
                       mountPath: "/foundry-sa-key.json"
@@ -95,6 +97,8 @@ spec:
                 - name: foundry-data
                   persistentVolumeClaim:
                     claimName: foundry-data
+                - name: bucket-data
+                  emptyDir: {}
                 - name: gcs-creds
                   secret:
                     secretName: foundry-secrets
