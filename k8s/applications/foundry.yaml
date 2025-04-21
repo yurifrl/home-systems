@@ -60,11 +60,10 @@ spec:
                       mountPath: "/data"
                     - name: bucket-data
                       mountPath: "/bucketData"
-       
                 - name: gcsfuse
                   image: ghcr.io/yurifrl/dockerfiles/gcsfuse:latest
                   command: ["gcsfuse"]
-                  args: ["--foreground", "-o", "allow_other", "$(GCS_BUCKET)", "/bucketData"]
+                  args: ["--foreground", "--implicit-dirs", "-o", "allow_other", "$(GCS_BUCKET)", "/bucketData"]
                   securityContext:
                     privileged: true
                     capabilities:
