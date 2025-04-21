@@ -58,18 +58,20 @@ spec:
                   volumeMounts:
                     - name: foundry-data
                       mountPath: "/data"
+                    - name: bucket-data
+                      mountPath: "/data/Data/bucket"
                 - name: gcsfuse
                   image: ghcr.io/yurifrl/dockerfiles/gcsfuse:latest
                   command: ["gcsfuse"]
-                  args: ["--foreground", "--implicit-dirs", "-o", "allow_other", "$(GCS_BUCKET)", "/data/Data/bucket"]
+                  args: ["--foreground", "--implicit-dirs", "-o", "allow_other", "$(GCS_BUCKET)", "/bucket"]
                   securityContext:
                     privileged: true
                     capabilities:
                       add:
                         - SYS_ADMIN
                   volumeMounts:
-                    - name: foundry-data
-                      mountPath: "/data"
+                    - name: bucket-data
+                      mountPath: "/bucket"
                     - name: gcs-creds
                       mountPath: "/foundry-sa-key.json"
                       subPath: foundry-sa-key.json
