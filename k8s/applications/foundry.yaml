@@ -55,6 +55,11 @@ spec:
                   envFrom:
                     - secretRef:
                         name: foundry-secrets
+                  securityContext:
+                    privileged: true
+                    capabilities:
+                      add:
+                        - SYS_ADMIN
                   volumeMounts:
                     - name: foundry-data
                       mountPath: "/data"
