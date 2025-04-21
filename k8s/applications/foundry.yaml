@@ -60,6 +60,7 @@ spec:
                       mountPath: "/data"
                     - name: bucket-data
                       mountPath: "/bucket"
+                      mountPropagation: "Bidirectional"
                 - name: gcsfuse
                   image: ghcr.io/yurifrl/dockerfiles/gcsfuse:latest
                   command: ["gcsfuse"]
@@ -72,6 +73,7 @@ spec:
                   volumeMounts:
                     - name: bucket-data
                       mountPath: "/bucket"
+                      mountPropagation: "Bidirectional"
                     - name: gcs-creds
                       mountPath: "/foundry-sa-key.json"
                       subPath: foundry-sa-key.json
