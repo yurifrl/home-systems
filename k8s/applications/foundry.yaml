@@ -59,7 +59,7 @@ spec:
                     - name: foundry-data
                       mountPath: "/data"
                     - name: bucket-data
-                      mountPath: "/bucketData"
+                      mountPath: "/data/Data/bucket"
                 - name: gcsfuse
                   image: ghcr.io/yurifrl/dockerfiles/gcsfuse:latest
                   command: ["gcsfuse"]
