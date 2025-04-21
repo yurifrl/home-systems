@@ -36,13 +36,9 @@ spec:
           persistentVolumeClaims:
             - name: foundry-data
               volumeName: foundry-data
-            - name: foundry-bucket
-              volumeName: foundry-bucket
           persistentVolumes:
             - name: foundry-data
               path: /var/mnt/storage/foundry-data
-            - name: foundry-bucket
-              path: /var/mnt/storage/foundry-bucket
           services:
             - name: foundry
               port: 30000
@@ -62,7 +58,7 @@ spec:
                   volumeMounts:
                     - name: foundry-data
                       mountPath: "/data"
-                    - name: foundry-bucket
+                    - name: bucket-data
                       mountPath: "/bucketData"
        
                 - name: gcsfuse
@@ -75,7 +71,7 @@ spec:
                       add:
                         - SYS_ADMIN
                   volumeMounts:
-                    - name: foundry-bucket
+                    - name: bucket-data
                       mountPath: "/bucketData"
                     - name: gcs-creds
                       mountPath: "/foundry-sa-key.json"
@@ -95,9 +91,8 @@ spec:
                 - name: foundry-data
                   persistentVolumeClaim:
                     claimName: foundry-data
-                - name: foundry-bucket
-                  persistentVolumeClaim:
-                    claimName: foundry-bucket
+                - name: bucket-data
+                  emptyDir: {}
                 - name: gcs-creds
                   secret:
                     secretName: foundry-secrets
