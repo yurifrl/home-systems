@@ -44,6 +44,7 @@ tasks:
         talosctl -n 192.168.68.100 upgrade --image factory.talos.dev/installer/ee21ef4a5ef808a9b7484cc0dda0f25075021691c8c09a276591eedb638ea1f9:v1.9.4 & \
         
         # https://factory.talos.dev/?arch=amd64&cmdline-set=true&extensions=-&extensions=siderolabs%2Fnvidia-container-toolkit-lts&extensions=siderolabs%2Fnonfree-kmod-nvidia-lts&platform=metal&target=metal&version=1.9.4
+        # https://factory.talos.dev/?arch=amd64&board=undefined&cmdline-set=true&extensions=-&extensions=siderolabs%2Fnvidia-container-toolkit-lts&extensions=siderolabs%2Ftailscale&extensions=siderolabs%2Fnonfree-kmod-nvidia-lts&platform=metal&secureboot=undefined&target=metal&version=1.9.5
         talosctl -n 192.168.68.112 upgrade --image factory.talos.dev/installer/af8eb82417d3deaa94d2ef19c3b590b0dac1b2549d0b9b35b3da2bc325de75f7:v1.9.4 & \
         
         # https://factory.talos.dev/?arch=arm64&board=turingrk1&cmdline-set=true&extensions=-&platform=metal&target=sbc&version=1.9.4
