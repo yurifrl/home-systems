@@ -1,30 +1,30 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: istio-ztunnel
-  namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-spec:
-  project: default
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: istio-system
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-  ignoreDifferences:
-    - group: apps
-      kind: DaemonSet
-      jsonPointers:
-        - /metadata/annotations
-  source:
-    repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: "1.24.3"
-    chart: ztunnel
-    helm:
-      valuesObject: {}
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: istio-ztunnel
+#   namespace: argocd
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "-1"
+# spec:
+#   project: default
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: istio-system
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true
+#       - ServerSideApply=true
+#   ignoreDifferences:
+#     - group: apps
+#       kind: DaemonSet
+#       jsonPointers:
+#         - /metadata/annotations
+#   source:
+#     repoURL: https://istio-release.storage.googleapis.com/charts
+#     targetRevision: "1.24.3"
+#     chart: ztunnel
+#     helm:
+#       valuesObject: {}
