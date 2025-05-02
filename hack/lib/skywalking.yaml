@@ -1,45 +1,45 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: skywalking
-#   namespace: argocd
-# spec:
-#   project: default
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: skywalking
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-#     syncOptions:
-#       - CreateNamespace=true
-#   sources:
-#     # Add virtual service configuration
-#     - repoURL: https://github.com/yurifrl/home-systems.git
-#       targetRevision: HEAD
-#       path: k8s/charts/support
-#       helm:
-#         valuesObject:
-#           virtualServices:
-#             - name: skywalking
-#               service:
-#                 name: skywalking-ui
-#                 namespace: skywalking
-#                 port: 8080
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: skywalking
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: skywalking
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    # Add virtual service configuration
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: skywalking
+              service:
+                name: skywalking-ui
+                namespace: skywalking
+                port: 8080
 
-#     # SkyWalking Helm chart installation
-#     - repoURL: oci://registry-1.docker.io/apache/skywalking-helm
-#       chart: skywalking
-#       targetRevision: "*"
-#       helm:
-#         valuesObject:
-#           # Required image tags - must be set explicitly
-#           oap:
-#             image:
-#               tag: 10.1.0
-#             storageType: elasticsearch
+    # SkyWalking Helm chart installation
+    - repoURL: oci://registry-1.docker.io/apache/skywalking-helm
+      chart: skywalking
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          # Required image tags - must be set explicitly
+          oap:
+            image:
+              tag: 10.1.0
+            storageType: elasticsearch
           
-#           ui:
-#             image:
-#               tag: 10.1.0
+          ui:
+            image:
+              tag: 10.1.0
