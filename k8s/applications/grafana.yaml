@@ -40,6 +40,13 @@ spec:
             fullnameOverride: grafana-operator
             nameOverride: grafana
             grafana:
+              resources:
+                limits:
+                  cpu: 1000m
+                  memory: 1Gi
+                requests:
+                  cpu: 500m
+                  memory: 512Mi
               nodeSelector:
                 # kubernetes.io/arch: amd64
                 kubernetes.io/arch: arm64
