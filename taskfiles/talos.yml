@@ -8,14 +8,14 @@ tasks:
       - op inject -f -i talos/controlplane-192.168.68.100.yaml -o talos/op/controlplane-192.168.68.100.yaml
       - op inject -f -i talos/nodes/tp4-192.168.68.114.yaml -o talos/op/nodes/tp4-192.168.68.114.yaml
       - op inject -f -i talos/nodes/tp1-192.168.68.107.yaml -o talos/op/nodes/tp1-192.168.68.107.yaml
-      - op inject -f -i talos/nodes/pc01-192.168.68.112.yaml -o talos/op/nodes/pc01-192.168.68.112.yaml
+      - op inject -f -i talos/nodes/pc01.yaml -o talos/op/nodes/pc01.yaml
 
   apply:
     cmds:
       - talosctl -n 192.168.68.100 apply-config -f talos/op/controlplane-192.168.68.100.yaml
       - talosctl -n 192.168.68.114 apply-config -f talos/op/nodes/tp4-192.168.68.114.yaml
       - talosctl -n 192.168.68.107 apply-config -f talos/op/nodes/tp1-192.168.68.107.yaml
-      - talosctl -n 192.168.68.112 apply-config -f talos/op/nodes/pc01-192.168.68.112.yaml
+      - talosctl -n 192.168.68.109 apply-config -f talos/op/nodes/pc01.yaml
 
   apply-controlplane:
     cmds:
@@ -28,8 +28,8 @@ tasks:
         # https://factory.talos.dev/?arch=amd64&cmdline-set=true&extensions=-&extensions=siderolabs%2Ftailscale&platform=metal&target=metal&version=1.9.4
         talosctl -n 192.168.68.100 upgrade --image factory.talos.dev/installer/4a0d65c669d46663f377e7161e50cfd570c401f26fd9e7bda34a0216b6f1922b:v1.9.4 & \
         
-        # https://factory.talos.dev/?arch=amd64&cmdline-set=true&extensions=-&extensions=siderolabs%2Fnvidia-container-toolkit-lts&extensions=siderolabs%2Ftailscale&extensions=siderolabs%2Fnonfree-kmod-nvidia-lts&platform=metal&target=metal&version=1.9.4
-        talosctl -n 192.168.68.112 upgrade --image factory.talos.dev/installer/928a5067f4e4e16157c96b7e855624d44022d6dce9e9ebaeb05f4b62e64b4b11:v1.9.4 & \
+        # https://factory.talos.dev/?arch=amd64&board=undefined&cmdline-set=true&extensions=-&extensions=siderolabs%2Fnvidia-container-toolkit-lts&extensions=siderolabs%2Fqemu-guest-agent&extensions=siderolabs%2Ftailscale&extensions=siderolabs%2Fnonfree-kmod-nvidia-lts&platform=metal&secureboot=undefined&target=metal&version=1.10.0
+        talosctl -n 192.168.68.109 upgrade --image factory.talos.dev/installer/928a5067f4e4e16157c96b7e855624d44022d6dce9e9ebaeb05f4b62e64b4b11:v1.9.4 & \
         
         # https://factory.talos.dev/?arch=arm64&board=turingrk1&cmdline-set=true&extensions=-&extensions=siderolabs%2Ftailscale&platform=metal&target=sbc&version=1.9.4
         talosctl -n 192.168.68.114 upgrade --image factory.talos.dev/installer/3616c4c824f2540c0a14da0cc8e6fc46143f2ca0cc75c9c6376a66e562894950:v1.9.4 & \
@@ -45,7 +45,7 @@ tasks:
         
         # https://factory.talos.dev/?arch=amd64&cmdline-set=true&extensions=-&extensions=siderolabs%2Fnvidia-container-toolkit-lts&extensions=siderolabs%2Fnonfree-kmod-nvidia-lts&platform=metal&target=metal&version=1.9.4
         # https://factory.talos.dev/?arch=amd64&board=undefined&cmdline-set=true&extensions=-&extensions=siderolabs%2Fnvidia-container-toolkit-lts&extensions=siderolabs%2Ftailscale&extensions=siderolabs%2Fnonfree-kmod-nvidia-lts&platform=metal&secureboot=undefined&target=metal&version=1.9.5
-        talosctl -n 192.168.68.112 upgrade --image factory.talos.dev/installer/af8eb82417d3deaa94d2ef19c3b590b0dac1b2549d0b9b35b3da2bc325de75f7:v1.9.4 & \
+        talosctl -n 192.168.68.109 upgrade --image factory.talos.dev/installer/af8eb82417d3deaa94d2ef19c3b590b0dac1b2549d0b9b35b3da2bc325de75f7:v1.9.4 & \
         
         # https://factory.talos.dev/?arch=arm64&board=turingrk1&cmdline-set=true&extensions=-&platform=metal&target=sbc&version=1.9.4
         talosctl -n 192.168.68.114 upgrade --image factory.talos.dev/installer/df156b82096feda49406ac03aa44e0ace524b7efe4e1f0e144a1e1ae3930f1c0:v1.9.4 & \
@@ -70,4 +70,4 @@ tasks:
       - sudo dd if=metal-amd64.raw of=/dev/disk5 bs=4M status=progress
       - sync
       - sudo diskutil unmountDisk /dev/disk5
-      - talosctl -n 192.168.68.112 apply-config -f talos/op/nodes/pc01.yaml -i
+      - talosctl -n 192.168.68.109 apply-config -f talos/op/nodes/pc01.yaml -i
