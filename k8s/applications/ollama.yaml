@@ -59,12 +59,8 @@ spec:
           # Resource requests/limits
           resources:
             requests:
-              cpu: 500m
-              memory: 2Gi
               nvidia.com/gpu: 1
             limits:
-              cpu: 1500m
-              memory: 8Gi
               nvidia.com/gpu: 1
 
           # Service configuration
