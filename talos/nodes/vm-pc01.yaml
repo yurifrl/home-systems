@@ -395,9 +395,9 @@ machine:
       - name: nvidia
         parameters:
           - NVreg_OpenRmEnableUnsupportedGpus=1
-      - name: nvidia_uvm
-      - name: nvidia_drm
       - name: nvidia_modeset
+      - name: nvidia_drm
+      - name: nvidia_uvm
   # # Configures the seccomp profiles for the machine.
   # seccompProfiles:
   #     - name: audit.json # The `name` field is used to provide the file name of the seccomp profile.
