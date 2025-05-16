@@ -541,7 +541,7 @@ cluster:
           token: "op://kubernetes/op-credentials/OP_CONNECT_TOKEN"
     - name: cluster-secret-store-onepassword
       contents: |
-        apiVersion: external-secrets.io/v1beta1
+        apiVersion: external-secrets.io/v1
         kind: ClusterSecretStore
         metadata:
           name: onepassword
