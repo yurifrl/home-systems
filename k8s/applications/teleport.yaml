@@ -81,9 +81,6 @@ spec:
             tokenName: teleport-agent-token
           kubeClusterName: syscd.xyz
           proxyAddr: syscd.xyz:443
-          # serviceAccount:
-          #   create: true
-          #   name: teleport-agent
           resources:
             limits:
               cpu: 500m
@@ -92,7 +89,7 @@ spec:
               cpu: 100m
               memory: 128Mi 
           discovery_service:
-            enabled: no
+            enabled: false
 
 # k -n teleport describe teleportusers $USER
 # k -n teleport get pod -l app.kubernetes.io/component=auth
