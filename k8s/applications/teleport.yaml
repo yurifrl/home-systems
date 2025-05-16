@@ -98,7 +98,7 @@ spec:
               uri: http://argocd-server.argocd.svc.cluster.local:80
               labels:
                 purpose: ci/cd
-            - name: home assistant
+            - name: home-assistant
               uri: http://home-assistant.home-assistant.svc.cluster.local:8080
               labels:
                 purpose: home automation
