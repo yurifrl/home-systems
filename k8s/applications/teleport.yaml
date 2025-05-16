@@ -97,6 +97,38 @@ spec:
               uri: http://home-assistant.home-assistant.svc.cluster.local:8080
               labels:
                 purpose: home automation
+            - name: homer
+              uri: http://homer.homer.svc.cluster.local:8080
+              labels:
+                purpose: dashboard
+            - name: grafana
+              uri: http://grafana-operator-grafana-service.monitoring.svc.cluster.local:3000
+              labels:
+                purpose: monitoring
+            - name: node-red
+              uri: http://node-red.node-red.svc.cluster.local:1880
+              labels:
+                purpose: automation
+            - name: zigbee2mqtt
+              uri: http://zigbee2mqtt.zigbee2mqtt.svc.cluster.local:8080
+              labels:
+                purpose: iot
+            - name: prometheus
+              uri: http://prometheus.prometheus.svc.cluster.local:9090
+              labels:
+                purpose: monitoring
+            - name: alertmanager
+              uri: http://alertmanager.alertmanager.svc.cluster.local:9093
+              labels:
+                purpose: monitoring
+            - name: promlens
+              uri: http://promlens.promlens.svc.cluster.local:8080
+              labels:
+                purpose: monitoring
+            - name: pyrra
+              uri: http://pyrra.pyrra.svc.cluster.local:8080
+              labels:
+                purpose: monitoring
 
 # k -n teleport describe teleportusers $USER
 # k -n teleport get pod -l app.kubernetes.io/component=auth
