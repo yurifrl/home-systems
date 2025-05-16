@@ -75,7 +75,7 @@ spec:
       helm:
         releaseName: teleport-agent
         valuesObject:
-          roles: "kube,app"
+          roles: kube,app # comma separated list
           joinParams:
             method: kubernetes
             tokenName: teleport-agent-token
