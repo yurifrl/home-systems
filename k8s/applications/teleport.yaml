@@ -79,7 +79,6 @@ spec:
 # https://goteleport.com/docs/enroll-resources/auto-discovery/kubernetes-applications/get-started/
 # https://goteleport.com/docs/reference/operator-resources/resources-teleport-dev-provisiontokens/
 # https://goteleport.com/docs/reference/agent-services/kubernetes-application-discovery
-# https://goteleport.com/docs/reference/helm-reference/teleport-kube-agent
 
     # - chart: teleport-kube-agent
     #   repoURL: https://charts.releases.teleport.dev
