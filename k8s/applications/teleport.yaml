@@ -72,6 +72,7 @@ spec:
     - chart: teleport-kube-agent
       repoURL: https://charts.releases.teleport.dev
       targetRevision: "*"
+      releaseName: teleport-agent
       helm:
         valuesObject:
           roles: "kube,app,discovery"
@@ -80,9 +81,9 @@ spec:
             tokenName: teleport-agent-token
           kubeClusterName: syscd.xyz
           proxyAddr: syscd.xyz:443
-          serviceAccount:
-            create: true
-            name: teleport-agent
+          # serviceAccount:
+          #   create: true
+          #   name: teleport-agent
           resources:
             limits:
               cpu: 500m
