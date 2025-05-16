@@ -72,8 +72,8 @@ spec:
     - chart: teleport-kube-agent
       repoURL: https://charts.releases.teleport.dev
       targetRevision: "*"
-      releaseName: teleport-agent
       helm:
+        releaseName: teleport-agent
         valuesObject:
           roles: "kube,app,discovery"
           joinParams:
