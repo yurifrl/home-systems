@@ -88,11 +88,6 @@ spec:
             requests:
               cpu: 100m
               memory: 128Mi 
-
-          teleportConfig:
-            discovery_service:
-              enabled: false
-
           apps:
             - name: argocd
               uri: http://argocd-server.argocd.svc.cluster.local:80
