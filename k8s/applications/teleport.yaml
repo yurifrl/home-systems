@@ -75,7 +75,7 @@ spec:
       helm:
         releaseName: teleport-agent
         valuesObject:
-          roles: "kube,app,discovery"
+          roles: "kube,app"
           joinParams:
             method: kubernetes
             tokenName: teleport-agent-token
