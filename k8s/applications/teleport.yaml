@@ -82,6 +82,7 @@ spec:
           proxyAddr: syscd.xyz:443
           serviceAccount:
             create: true
+            name: teleport-agent
           resources:
             limits:
               cpu: 500m
