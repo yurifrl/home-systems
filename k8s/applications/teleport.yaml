@@ -88,8 +88,12 @@ spec:
             requests:
               cpu: 100m
               memory: 128Mi 
-          discovery_service:
-            enabled: false
+
+          teleportConfig:
+            app_service:
+              debug_app: true
+            discovery_service:
+              enabled: false
 
 # k -n teleport describe teleportusers $USER
 # k -n teleport get pod -l app.kubernetes.io/component=auth
