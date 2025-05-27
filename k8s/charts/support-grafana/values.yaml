@@ -16,4 +16,4 @@ grafanaComDashboards:
 
 ## Toglles
 jsonDashboardsEnabled: false
-grafanaComDashboardsEnabled: false
+grafanaComDashboardsEnabled: true
