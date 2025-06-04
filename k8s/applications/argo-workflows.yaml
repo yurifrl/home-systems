@@ -50,15 +50,15 @@ spec:
             rbac:
               create: true
           controller:
-            workflowDefaults:
-              spec:
-                serviceAccountName: argo-workflows-all
+            # workflowDefaults:
+            #   spec:
+            #     serviceAccountName: argo-workflows-all
             workflowNamespaces:
               - argo-workflows
           useStaticCredentials: true
           server:
             extraArgs:
-              # - --auth-mode=sso
+              - --auth-mode=server
               - --auth-mode=client
               - --loglevel=debug
             sso:
