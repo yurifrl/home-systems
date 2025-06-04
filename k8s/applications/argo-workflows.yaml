@@ -27,6 +27,7 @@ spec:
           externalSecrets:
             - name: argo-workflows
               decodingStrategy: Auto
+            - name: argo-workflows-stock-checker
           virtualServices:
             - name: argo-workflows
               service:
@@ -50,9 +51,6 @@ spec:
             rbac:
               create: true
           controller:
-            # workflowDefaults:
-            #   spec:
-            #     serviceAccountName: argo-workflows-all
             workflowNamespaces:
               - argo-workflows
           useStaticCredentials: true
@@ -63,29 +61,3 @@ spec:
               - --loglevel=debug
             sso:
               enabled: false
-            # sso:
-            #   enabled: true
-            #   issuer: https://accounts.google.com
-            #   redirectUrl: https://argo-workflows.syscd.live/oauth2/callback
-            #   rbac:
-            #     enabled: true
-            #   scopes:
-            #     - email
-            #   clientId:
-            #     name: argo-workflows
-            #     key: SERVER_SSO_CLIENT_ID
-            #   clientSecret:
-            #     name: argo-workflows
-            #     key: SERVER_SSO_CLIENT_SECRET
-            # serviceAccount:
-            #     create: true
-            #     annotations:
-            #       eks.amazonaws.com/role-arn: arn:aws:iam::999999:role/argo-workflows
-          # artifactRepository:
-          #   archiveLogs: false
-          #   s3:
-          #     bucket: ????
-          #     region: us-east-1
-          #     useSDKCreds: true
-          #     endpoint: s3.amazonaws.com
-          #     roleArn: ???? 

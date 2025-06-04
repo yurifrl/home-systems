@@ -1,0 +1,3 @@
+stockChecker:
+  enabled: false  # Set to true to enable the stock checker
+  schedule: "*/15 * * * *"  # Check every 15 minutes by default
