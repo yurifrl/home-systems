@@ -17,11 +17,11 @@ spec:
         parameters:
           - name: products
       container:
-        image: nixery.dev/shell/curl/jq
-        command: ["/bin/sh", "-c"]
+        image: nixery.dev/shell/curl/jq/bash
+        command: ["/bin/bash", "-c"]
         args:
           - |
-            #!/bin/sh
+            #!/bin/bash
             set -e
 
             USER_AGENT="Mozilla/5.0"
