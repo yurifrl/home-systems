@@ -85,6 +85,11 @@ spec:
               # Trying to make a custom component
               hello_world:
               
+              # This is me trying to log the verisure component that i'm working on
+              logger:
+                logs:
+                  custom_components.verisure: debug
+
               # InfluxDB Integration
               influxdb:
                 api_version: 2
@@ -107,9 +112,6 @@ spec:
                 publish_attributes: true
                 publish_timestamps: true
 
-              logger:
-                logs:
-                  custom_components.verisure: debug
               prometheus:
                 namespace: hass
                 requires_auth: false
