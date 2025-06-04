@@ -96,7 +96,7 @@ spec:
 
               # MQTT Integration
               mqtt:
-                broker: mosquitto.mosquitto.svc.cluster.local
+                host: mosquitto.mosquitto.svc.cluster.local
                 port: 1883
                 discovery: true
                 discovery_prefix: homeassistant
