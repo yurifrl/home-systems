@@ -99,6 +99,10 @@ spec:
                 organization: home-systems
                 bucket: default
 
+              # # This does no longer work, needs to be setup in the interface 
+              # mqtt:
+              #   broker: mosquitto.mosquitto.svc.cluster.local
+
               prometheus:
                 namespace: hass
                 requires_auth: false
