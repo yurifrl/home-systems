@@ -97,6 +97,10 @@ spec:
               uri: http://argocd-server.argocd.svc.cluster.local:80
               labels:
                 purpose: ci/cd
+            - name: argo-workflows
+              uri: http://argo-workflows-server.argo-workflows.svc.cluster.local:2746
+              labels:
+                purpose: ci/cd
             - name: home-assistant
               uri: http://home-assistant.home-assistant.svc.cluster.local:8080
               labels:
