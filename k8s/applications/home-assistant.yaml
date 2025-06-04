@@ -56,9 +56,6 @@ spec:
             enabled: true
             existingVolume: home-assistant-tp1-data
             storageClass: local-path
-          service:
-            annotations:
-              teleport.dev/name: home-assistant
           initContainers:
             - name: init-hacs
               image: bash

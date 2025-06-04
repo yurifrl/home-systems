@@ -47,9 +47,6 @@ spec:
             # replicaDiskSoftAntiAffinity: false
             # storageOverProvisioningPercentage: 100
             # upgradeChecker: true
-          service:
-            annotations:
-              teleport.dev/name: longhorn
           global:
             cattle:
               systemDefaultRegistry: ""

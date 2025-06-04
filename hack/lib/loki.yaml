@@ -35,11 +35,8 @@ spec:
           deploymentMode: SingleBinary
           
           singleBinary:
-            service:
-              annotations:
-                teleport.dev/name: loki
             persistence:
-              enabled: true
+              enabled: false
               size: 10Gi
               type: emptyDir
           

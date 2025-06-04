@@ -60,5 +60,3 @@ spec:
           service:
             type: ClusterIP
             port: 8080
-            annotations:
-              teleport.dev/name: code-server
