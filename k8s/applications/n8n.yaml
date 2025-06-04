@@ -37,6 +37,24 @@ spec:
             replicaCount: 0
           sentinel:
             enabled: false
+    - repoURL: registry-1.docker.io
+      chart: bitnamicharts/postgresql
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          auth:
+            username: n8n
+            database: n8n
+          primary:
+            persistence:
+              enabled: false
+            resources:
+              requests:
+                memory: 256Mi
+                cpu: 100m
+                limits:
+                  memory: 512Mi
+                  cpu: 200m
     # Add virtual service configuration
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
@@ -56,9 +74,6 @@ spec:
                 port: 80                
           externalSecrets:
             - name: n8n
-              enabled: true
-              secretsManagerName: tooling/n8n/n8n
-              refreshInterval: 1h0m0s
     - repoURL: 8gears.container-registry.com/library
       chart: n8n
       targetRevision: "*"
@@ -69,12 +84,14 @@ spec:
               n8n:
                 editor_base_url: https://n8n.syscd.live
               executions_mode: queue
-              # db:
-              #   type: postgresdb
-              #   postgresdb:
-              #     host: .... 
-              #     user: n8n
-              webhook_url: n8n-webhook.mundial.bet
+              db:
+                type: postgresdb
+                postgresdb:
+                  host: n8n-postgresql
+                  port: 5432
+                  database: n8n
+                  user: n8n
+              webhook_url: n8n.syscd.live
               queue:
                 health:
                   check:
