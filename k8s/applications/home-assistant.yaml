@@ -82,6 +82,19 @@ spec:
               script: !include scripts.yaml
               scene: !include scenes.yaml
 
+              # MQTT Integration
+              mqtt:
+                broker: mosquitto.mosquitto.svc.cluster.local
+                port: 1883
+                discovery: true
+                discovery_prefix: homeassistant
+
+              # Enable Zigbee2MQTT integration through MQTT discovery
+              mqtt_statestream:
+                base_topic: homeassistant
+                publish_attributes: true
+                publish_timestamps: true
+
               hello_world:
               logger:
                 logs:
