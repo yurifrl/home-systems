@@ -1,10 +1,13 @@
 stockChecker:
   enabled: true
-  schedule: "0 9 * * *"
+  schedule: "0 */4 * * *"
   products:
     - name: "EAH-8"
       url: "https://br.store.ui.com/br/pt/category/all-door-access/products/eah-8"
       outOfStockText: "Esgotado"
-    - name: "UVC-AI-Pro"
-      url: "https://br.store.ui.com/br/pt/category/all-cameras-nvrs/products/uvc-ai-pro"
+    - name: "UA-HUB-GATE"
+      url: "https://br.store.ui.com/br/pt/category/all-door-access/products/ua-hub-gate"
+      outOfStockText: "Esgotado"
+    - name: "UVC-G4-PTZ"
+      url: "https://br.store.ui.com/br/pt/category/all-cameras-nvrs/products/uvc-g4-ptz"
       outOfStockText: "Esgotado"
