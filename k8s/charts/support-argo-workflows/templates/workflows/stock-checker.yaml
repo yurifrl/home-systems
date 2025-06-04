@@ -10,10 +10,10 @@ spec:
     - name: check-stock
       container:
         image: python:3.11-slim
-        command: [python]
+        command: ["/bin/sh", "-c"]
         args:
-          - -c
           - |
+            pip install --no-cache-dir requests && python - <<EOF
             import requests
             import json
             import os
@@ -39,6 +39,7 @@ spec:
             
             if __name__ == "__main__":
                 check_stock()
+            EOF
         env:
           - name: DISCORD_WEBHOOK
             valueFrom:
