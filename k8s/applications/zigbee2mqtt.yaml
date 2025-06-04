@@ -48,6 +48,7 @@ spec:
       # https://github.com/Koenkk/zigbee2mqtt-chart/issues/27
       # https://github.com/Koenkk/zigbee2mqtt-chart/pull/29
       targetRevision: "2.4.0"
+      # targetRevision: "2.1.3"
       helm:
         valuesObject:
           statefulset:
