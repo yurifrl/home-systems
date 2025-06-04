@@ -59,7 +59,7 @@ spec:
           server:
             extraArgs:
               # - --auth-mode=sso
-              - --auth-mode=static
+              - --auth-mode=client
               - --loglevel=debug
             sso:
               enabled: false
