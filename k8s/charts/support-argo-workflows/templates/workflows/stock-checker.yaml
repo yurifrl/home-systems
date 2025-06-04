@@ -2,12 +2,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
-  name: {{ .Release.Name }}-ubiquiti-stock-checker
+  name: {{ .Release.Name }}-stock-checker
   namespace: {{ .Release.Namespace }}
 spec:
   entrypoint: check-stock
+  arguments:
+    parameters:
+      - name: products
+        value: |
+          {{- .Values.stockChecker.products | toJson | nindent 10 }}
   templates:
     - name: check-stock
+      inputs:
+        parameters:
+          - name: products
       container:
         image: curlimages/curl:latest
         command: ["/bin/sh", "-c"]
@@ -16,7 +24,6 @@ spec:
             #!/bin/sh
             set -e
 
-            PRODUCT_URL="https://br.store.ui.com/br/pt/category/all-door-access/products/eah-8"
             USER_AGENT="Mozilla/5.0"
 
             # Function to send Discord notification
@@ -28,14 +35,33 @@ spec:
                 "$DISCORD_WEBHOOK" || echo "Failed to send Discord notification"
             }
 
-            # Check if product is in stock
-            echo "Checking stock for EAH-8..."
-            if ! curl -sA "$USER_AGENT" "$PRODUCT_URL" | grep -q "Esgotado"; then
-              echo "Product is in stock! Sending notification..."
-              notify_discord "🚨 EAH-8 is in stock! Check $PRODUCT_URL"
-            else
-              echo "Product is out of stock"
-            fi
+            # Function to check product stock
+            check_product() {
+              local name="$1"
+              local url="$2"
+              local out_of_stock_text="$3"
+
+              echo "Checking stock for $name..."
+              if ! curl -sA "$USER_AGENT" "$url" | grep -q "$out_of_stock_text"; then
+                echo "Product $name is in stock! Sending notification..."
+                notify_discord "🚨 $name is in stock! Check $url"
+              else
+                echo "Product $name is out of stock"
+              fi
+            }
+
+            # Parse products JSON and check each one
+            echo '{{`{{inputs.parameters.products}}`}}' | while read -r product; do
+              if [ -n "$product" ]; then
+                name=$(echo "$product" | jq -r '.name // empty')
+                url=$(echo "$product" | jq -r '.url // empty')
+                out_of_stock_text=$(echo "$product" | jq -r '.outOfStockText // empty')
+                
+                if [ -n "$name" ] && [ -n "$url" ] && [ -n "$out_of_stock_text" ]; then
+                  check_product "$name" "$url" "$out_of_stock_text"
+                fi
+              fi
+            done
         env:
           - name: DISCORD_WEBHOOK
             valueFrom:
@@ -47,12 +73,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: CronWorkflow
 metadata:
-  name: {{ .Release.Name }}-ubiquiti-stock-checker-cron
+  name: {{ .Release.Name }}-stock-checker-cron
   namespace: {{ .Release.Namespace }}
 spec:
   schedule: {{ .Values.stockChecker.schedule | default "*/15 * * * *" | quote }}
   concurrencyPolicy: Replace
   workflowSpec:
     workflowTemplateRef:
-      name: {{ .Release.Name }}-ubiquiti-stock-checker
+      name: {{ .Release.Name }}-stock-checker
+    arguments:
+      parameters:
+        - name: products
+          value: |
+            {{- .Values.stockChecker.products | toJson | nindent 12 }}
 {{- end }} 
