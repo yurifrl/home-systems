@@ -50,6 +50,3 @@ spec:
             serviceType: ClusterIP
             ingress:
               enabled: false 
-          service:
-            annotations:
-              teleport.dev/name: jaeger

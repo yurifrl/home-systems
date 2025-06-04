@@ -48,9 +48,6 @@ spec:
               cpu: 25m
             limits:
               memory: 500Mi
-          service:
-            annotations:
-              teleport.dev/name: homer
           configmap:
             config:
               # -- Store homer configuration as a ConfigMap

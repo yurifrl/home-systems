@@ -50,6 +50,3 @@ spec:
 
           nodeSelector:
             syscd.dev/storage: tp1
-          service:
-            annotations:
-              teleport.dev/name: node-red

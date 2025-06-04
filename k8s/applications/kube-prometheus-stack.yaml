@@ -30,9 +30,6 @@ spec:
       helm:
         valuesObject:
           prometheus:
-            service:
-              annotations:
-                teleport.dev/name: prometheus
             prometheusSpec:
               externalUrl: https://prometheus.syscd.live
               # Configure Alertmanager endpoint
@@ -147,9 +144,6 @@ spec:
             #     disable_signout_menu: true
             # plugins:
             #   - grafana-mqtt-datasource
-            # service:
-            #   annotations:
-            #     teleport.dev/name: grafana
             # resources:
             #   limits:
             #     cpu: 200m
@@ -189,9 +183,6 @@ spec:
             #           tlsSkipVerify: true
           alertmanager:
             enabled: true
-            service:
-              annotations:
-                teleport.dev/name: alertmanager
             alertmanagerSpec:
               externalUrl: https://alertmanager.syscd.live
 

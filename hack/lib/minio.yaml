@@ -88,6 +88,3 @@ spec:
               limits:
                 cpu: 500m
                 memory: 1Gi
-            service:
-              annotations:
-                teleport.dev/name: minio 
