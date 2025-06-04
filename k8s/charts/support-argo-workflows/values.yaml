@@ -1,5 +1,5 @@
 stockChecker:
-  enabled: false
+  enabled: true
   schedule: "*/15 * * * *"
   products:
     - name: "EAH-8"
