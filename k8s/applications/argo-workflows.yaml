@@ -27,7 +27,7 @@ spec:
           externalSecrets:
             - name: argo-workflows
               decodingStrategy: Auto
-          virtualService:
+          virtualServices:
             - name: argo-workflows
               service:
                 name: argo-workflows-server
