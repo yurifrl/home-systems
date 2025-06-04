@@ -4,7 +4,6 @@ metadata:
   name: hello-world
 spec:
   entrypoint: hello-world
-  serviceAccountName: argo-workflows # Set ServiceAccount
   templates:
     - name: hello-world
       container:
