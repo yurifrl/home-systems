@@ -16,15 +16,12 @@ spec:
       - ServerSideApply=true
       - CreateNamespace=true
   sources:
-    - path: charts/support-argo-workflows
-      repoURL: git@github.com:yurifrl/home-systems.git
+    - path: k8s/charts/support-argo-workflows
+      repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
-    - chart: argo-events
-      repoURL: https://argoproj.github.io/argo-helm
-      targetRevision: "*"
-    - repoURL: https://github.com/yurifrl/home-systems.git
+    - path: k8s/charts/support
+      repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
-      path: k8s/charts/support
       helm:
         valuesObject:
           externalSecrets:
@@ -36,6 +33,9 @@ spec:
                 name: argo-workflows-server
                 namespace: argo-workflows
                 port: 2746
+    - chart: argo-events
+      repoURL: https://argoproj.github.io/argo-helm
+      targetRevision: "*"
     - chart: argo-workflows
       repoURL: https://argoproj.github.io/argo-helm
       targetRevision: "*"
