@@ -9,37 +9,33 @@ spec:
   templates:
     - name: check-stock
       container:
-        image: python:3.11-slim
+        image: curlimages/curl:latest
         command: ["/bin/sh", "-c"]
         args:
           - |
-            pip install --no-cache-dir requests && python - <<EOF
-            import requests
-            import json
-            import os
-            
-            DISCORD_WEBHOOK = os.environ['DISCORD_WEBHOOK']
-            PRODUCT_URL = "https://br.store.ui.com/br/pt/category/all-door-access/products/eah-8"
-            
-            def check_stock():
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                }
-                
-                try:
-                    response = requests.get(PRODUCT_URL, headers=headers)
-                    if "Esgotado" not in response.text:
-                        notify_discord("🚨 EAH-8 is in stock! Check " + PRODUCT_URL)
-                except Exception as e:
-                    notify_discord(f"❌ Error checking stock: {str(e)}")
-            
-            def notify_discord(message):
-                payload = {"content": message}
-                requests.post(DISCORD_WEBHOOK, json=payload)
-            
-            if __name__ == "__main__":
-                check_stock()
-            EOF
+            #!/bin/sh
+            set -e
+
+            PRODUCT_URL="https://br.store.ui.com/br/pt/category/all-door-access/products/eah-8"
+            USER_AGENT="Mozilla/5.0"
+
+            # Function to send Discord notification
+            notify_discord() {
+              local message="$1"
+              curl -X POST \
+                -H "Content-Type: application/json" \
+                -d "{\"content\":\"$message\"}" \
+                "$DISCORD_WEBHOOK" || echo "Failed to send Discord notification"
+            }
+
+            # Check if product is in stock
+            echo "Checking stock for EAH-8..."
+            if ! curl -sA "$USER_AGENT" "$PRODUCT_URL" | grep -q "Esgotado"; then
+              echo "Product is in stock! Sending notification..."
+              notify_discord "🚨 EAH-8 is in stock! Check $PRODUCT_URL"
+            else
+              echo "Product is out of stock"
+            fi
         env:
           - name: DISCORD_WEBHOOK
             valueFrom:
