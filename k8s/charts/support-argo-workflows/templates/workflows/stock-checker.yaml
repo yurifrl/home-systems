@@ -24,6 +24,9 @@ spec:
             #!/bin/sh
             set -e
 
+            # Install jq
+            apk add --no-cache jq
+
             USER_AGENT="Mozilla/5.0"
 
             # Function to send Discord notification
@@ -51,7 +54,7 @@ spec:
             }
 
             # Parse products JSON and check each one
-            echo '{{`{{inputs.parameters.products}}`}}' | while read -r product; do
+            echo '{{`{{inputs.parameters.products}}`}}' | jq -c '.[]' | while read -r product; do
               if [ -n "$product" ]; then
                 name=$(echo "$product" | jq -r '.name // empty')
                 url=$(echo "$product" | jq -r '.url // empty')
