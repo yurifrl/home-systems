@@ -1,4 +1,0 @@
-# workflows:
-#   externalSecrets:
-#     - name: foo 
-#       key: bar 
