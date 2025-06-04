@@ -78,11 +78,11 @@ spec:
 
               local response
               if response=$(curl -sS -A "$USER_AGENT" "$url"); then
-                if ! echo "$response" | grep -q "$out_of_stock_text"; then
+                if echo "$response" | grep -q 'button.*variant="unavailable".*Esgotado.*disabled'; then
+                  log_warn "Product ${BOLD}$name${NC} is out of stock 😢"
+                else
                   log_success "Product ${BOLD}$name${NC} is in stock! 🎉"
                   notify_discord "🚨 $name is in stock! Check $url"
-                else
-                  log_warn "Product ${BOLD}$name${NC} is out of stock 😢"
                 fi
               else
                 log_error "Failed to fetch product page for ${BOLD}$name${NC}"
