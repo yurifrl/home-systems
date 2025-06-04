@@ -85,19 +85,6 @@ spec:
               # Trying to make a custom component
               hello_world:
               
-              # MQTT Integration
-              mqtt:
-                - host: mosquitto.mosquitto.svc.cluster.local
-                  port: 1883
-                  discovery: true
-                  discovery_prefix: homeassistant
-
-              # Enable Zigbee2MQTT integration through MQTT discovery
-              mqtt_statestream:
-                base_topic: homeassistant
-                publish_attributes: true
-                publish_timestamps: true
-
               # This is me trying to log the verisure component that i'm working on
               logger:
                 logs:
