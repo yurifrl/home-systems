@@ -17,25 +17,53 @@ spec:
         parameters:
           - name: products
       container:
-        image: curlimages/curl:latest
+        image: nixery.dev/shell/curl/jq
         command: ["/bin/sh", "-c"]
         args:
           - |
             #!/bin/sh
             set -e
 
-            # Install jq
-            apk add --no-cache jq
-
             USER_AGENT="Mozilla/5.0"
+
+            # ANSI color codes
+            RED='\033[0;31m'
+            GREEN='\033[0;32m'
+            YELLOW='\033[1;33m'
+            BLUE='\033[0;34m'
+            GRAY='\033[0;90m'
+            NC='\033[0m' # No Color
+            BOLD='\033[1m'
+
+            # Logging functions
+            log_info() {
+              echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')] ℹ️  INFO${NC}    $1"
+            }
+
+            log_success() {
+              echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')] ✅ SUCCESS${NC}  $1"
+            }
+
+            log_error() {
+              echo -e "${RED}[$(date '+%Y-%m-%d %H:%M:%S')] ❌ ERROR${NC}   $1"
+            }
+
+            log_warn() {
+              echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] ⚠️  WARN${NC}    $1"
+            }
 
             # Function to send Discord notification
             notify_discord() {
               local message="$1"
-              curl -X POST \
+              log_info "Sending Discord notification..."
+              if curl -sS -X POST \
                 -H "Content-Type: application/json" \
                 -d "{\"content\":\"$message\"}" \
-                "$DISCORD_WEBHOOK" || echo "Failed to send Discord notification"
+                "$DISCORD_WEBHOOK"; then
+                log_success "Discord notification sent"
+              else
+                log_error "Failed to send Discord notification"
+              fi
             }
 
             # Function to check product stock
@@ -44,14 +72,25 @@ spec:
               local url="$2"
               local out_of_stock_text="$3"
 
-              echo "Checking stock for $name..."
-              if ! curl -sA "$USER_AGENT" "$url" | grep -q "$out_of_stock_text"; then
-                echo "Product $name is in stock! Sending notification..."
-                notify_discord "🚨 $name is in stock! Check $url"
+              echo -e "\n${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+              log_info "Checking stock for ${BOLD}$name${NC}"
+              log_info "URL: ${GRAY}$url${NC}"
+
+              local response
+              if response=$(curl -sS -A "$USER_AGENT" "$url"); then
+                if ! echo "$response" | grep -q "$out_of_stock_text"; then
+                  log_success "Product ${BOLD}$name${NC} is in stock! 🎉"
+                  notify_discord "🚨 $name is in stock! Check $url"
+                else
+                  log_warn "Product ${BOLD}$name${NC} is out of stock 😢"
+                fi
               else
-                echo "Product $name is out of stock"
+                log_error "Failed to fetch product page for ${BOLD}$name${NC}"
               fi
             }
+
+            log_info "Starting stock checker..."
+            echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 
             # Parse products JSON and check each one
             echo '{{`{{inputs.parameters.products}}`}}' | jq -c '.[]' | while read -r product; do
@@ -65,6 +104,9 @@ spec:
                 fi
               fi
             done
+
+            echo -e "\n${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+            log_success "Stock check completed"
         env:
           - name: DISCORD_WEBHOOK
             valueFrom:
