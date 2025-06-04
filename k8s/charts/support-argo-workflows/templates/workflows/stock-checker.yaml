@@ -17,7 +17,7 @@ spec:
         parameters:
           - name: products
       container:
-        image: nixery.dev/arm64/shell/curl/jq/bash
+        image: nixery.dev/arm64/shell/curl/jq/bash/grep
         command: ["/bin/bash", "-c"]
         args:
           - |
