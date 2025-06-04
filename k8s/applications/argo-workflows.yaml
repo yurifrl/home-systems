@@ -1,0 +1,94 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-workflows
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo-workflows
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+  sources:
+    - path: charts/support-argo-workflows
+      repoURL: git@github.com:yurifrl/home-systems.git
+      targetRevision: HEAD
+    - chart: argo-events
+      repoURL: https://argoproj.github.io/argo-helm
+      targetRevision: "*"
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: argo-workflows-keys
+              decodingStrategy: Auto
+          virtualService:
+            - name: argo-workflows
+              service:
+                name: argo-workflows-server
+                namespace: argo-workflows
+                port: 2746
+    - chart: argo-workflows
+      repoURL: https://argoproj.github.io/argo-helm
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          crds:
+            install: true
+            keep: true
+          workflow:
+            serviceAccount:
+              create: true
+              name: argo-workflows
+              annotations:
+                eks.amazonaws.com/role-arn: arn:aws:iam::492684252576:role/argo-workflows
+            rbac:
+              create: true
+          controller:
+            workflowDefaults:
+              spec:
+                serviceAccountName: argo-workflows-all
+            workflowNamespaces:
+              - argo-workflows
+          useStaticCredentials: true
+          server:
+            extraArgs:
+              # - --auth-mode=sso
+              - --auth-mode=static
+              - --loglevel=debug
+            sso:
+              enabled: false
+            # sso:
+            #   enabled: true
+            #   issuer: https://accounts.google.com
+            #   redirectUrl: https://argo-workflows.syscd.live/oauth2/callback
+            #   rbac:
+            #     enabled: true
+            #   scopes:
+            #     - email
+            #   clientId:
+            #     name: argo-workflows
+            #     key: SERVER_SSO_CLIENT_ID
+            #   clientSecret:
+            #     name: argo-workflows
+            #     key: SERVER_SSO_CLIENT_SECRET
+            # serviceAccount:
+            #     create: true
+            #     annotations:
+            #       eks.amazonaws.com/role-arn: arn:aws:iam::999999:role/argo-workflows
+          # artifactRepository:
+          #   archiveLogs: false
+          #   s3:
+          #     bucket: ????
+          #     region: us-east-1
+          #     useSDKCreds: true
+          #     endpoint: s3.amazonaws.com
+          #     roleArn: ???? 

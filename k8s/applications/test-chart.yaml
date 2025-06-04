@@ -15,7 +15,7 @@
 #     syncOptions:
 #       - CreateNamespace=true
 #   source:
-#     repoURL: http://laptop-de-nsx000542.tailcecc0.ts.net:8000
+#     repoURL: https://github.com/yurifrl/home-systems.git
 #     chart: test-chart
 #     targetRevision: 0.1.0
 #     helm:

@@ -1,0 +1,4 @@
+apiVersion: v2
+name: support-argo-workflows
+description: Argo Workflows
+version: 1.0.0
