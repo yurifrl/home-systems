@@ -1,0 +1,61 @@
+{{- if .Values.stockChecker.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: {{ .Release.Name }}-ubiquiti-stock-checker
+  namespace: {{ .Release.Namespace }}
+spec:
+  entrypoint: check-stock
+  templates:
+    - name: check-stock
+      container:
+        image: python:3.11-slim
+        command: [python]
+        args:
+          - -c
+          - |
+            import requests
+            import json
+            import os
+            
+            DISCORD_WEBHOOK = os.environ['DISCORD_WEBHOOK']
+            PRODUCT_URL = "https://br.store.ui.com/br/pt/category/all-door-access/products/eah-8"
+            
+            def check_stock():
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+                
+                try:
+                    response = requests.get(PRODUCT_URL, headers=headers)
+                    if "Esgotado" not in response.text:
+                        notify_discord("🚨 EAH-8 is in stock! Check " + PRODUCT_URL)
+                except Exception as e:
+                    notify_discord(f"❌ Error checking stock: {str(e)}")
+            
+            def notify_discord(message):
+                payload = {"content": message}
+                requests.post(DISCORD_WEBHOOK, json=payload)
+            
+            if __name__ == "__main__":
+                check_stock()
+        env:
+          - name: DISCORD_WEBHOOK
+            valueFrom:
+              secretKeyRef:
+                name: argo-workflows-stock-checker
+                key: DISCORD_WEBHOOK_URL
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: {{ .Release.Name }}-ubiquiti-stock-checker-cron
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: {{ .Values.stockChecker.schedule | default "*/15 * * * *" | quote }}
+  concurrencyPolicy: Replace
+  workflowSpec:
+    workflowTemplateRef:
+      name: {{ .Release.Name }}-ubiquiti-stock-checker
+{{- end }} 
