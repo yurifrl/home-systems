@@ -67,12 +67,12 @@ spec:
           main:
             config:
               n8n:
-                editor_base_url: https://n8n.nsx.services
+                editor_base_url: https://n8n.syscd.live
               executions_mode: queue
               # db:
               #   type: postgresdb
               #   postgresdb:
-              #     host: nsx-global-pg-tooling.chsbp8d88md9.us-east-1.rds.amazonaws.com
+              #     host: .... 
               #     user: n8n
               webhook_url: n8n-webhook.mundial.bet
               queue:

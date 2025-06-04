@@ -1,0 +1,11 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ClusterWorkflowTemplate
+metadata:
+  name: cluster-template-hello-world
+spec:
+  entrypoint: hello-world
+  serviceAccountName: argo-workflows-admin
+  templates:
+  - name: hello-world
+    container:
+      image: hello-world
