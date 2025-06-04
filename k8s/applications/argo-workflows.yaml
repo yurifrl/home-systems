@@ -25,7 +25,7 @@ spec:
       helm:
         valuesObject:
           externalSecrets:
-            - name: argo-workflows-keys
+            - name: argo-workflows
               decodingStrategy: Auto
           virtualService:
             - name: argo-workflows
@@ -47,9 +47,6 @@ spec:
           workflow:
             serviceAccount:
               create: true
-              name: argo-workflows
-              annotations:
-                eks.amazonaws.com/role-arn: arn:aws:iam::492684252576:role/argo-workflows
             rbac:
               create: true
           controller:
