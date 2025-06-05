@@ -20,4 +20,4 @@ dig @127.0.0.1 google.com
 
 
 
-nsupdate -v -k config/keys.conf update.txt
+nsupdate -v -k config/keys.conf ./update.txt
