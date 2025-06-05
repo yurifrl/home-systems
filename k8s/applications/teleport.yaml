@@ -137,6 +137,10 @@ spec:
               uri: http://pyrra.pyrra.svc.cluster.local:8080
               labels:
                 purpose: monitoring
+            - name: influxdb
+              uri: http://influxdb-influxdb2.influxdb.svc.cluster.local:8086
+              labels:
+                purpose: monitoring
 
 # k -n teleport describe teleportusers $USER
 # k -n teleport get pod -l app.kubernetes.io/component=auth
