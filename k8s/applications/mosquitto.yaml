@@ -22,11 +22,28 @@ spec:
       name: mosquitto
       jsonPointers:
         - /spec/template/spec/hostUsers
-  source:
-    chart: mosquitto
-    targetRevision: "*"
-    repoURL: tccr.io/truecharts
-    helm:
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: mosquitto
+              service:
+                name: mosquitto
+                namespace: mosquitto
+                port: 1883
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          persistence:
+            data:
+              enabled: false
+            configinc:
+              enabled: false
       valuesObject:
         persistence:
           data:
