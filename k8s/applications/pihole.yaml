@@ -24,6 +24,8 @@ spec:
             enabled: false
           admin:
             existingSecret: "pihole-admin"
+          DNS1: "1.1.1.1"
+          DNS2: "1.0.0.1"
           serviceWeb:
             loadBalancerIP: 192.168.68.203
             annotations:
@@ -45,6 +47,9 @@ spec:
                 - SYS_NICE
                 - SYS_TIME
                 - CHOWN
+            fsGroup: 1000
+            runAsUser: 1000
+            runAsGroup: 1000
           adlists:
             - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
           
