@@ -27,9 +27,8 @@ data:
         8.8.8.8;
       };
 
-      dnssec-enable no;       # Disable DNSSEC for now
-      dnssec-validation no;   # Disable DNSSEC validation
-      allow-update { any; };  # Allow updates from any source temporarily for testing
+      allow-query { any; };    # Allow queries from any source
+      allow-update { any; };   # Allow updates from any source temporarily for testing
     };
 
     zone "syscd.dev" IN {
