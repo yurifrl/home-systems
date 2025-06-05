@@ -76,7 +76,9 @@ spec:
     # RFC2136 DNS (.dev)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
-      targetRevision: "8.7.7"
+      # external-dns 1.6.1 is broken https://github.com/kubernetes-sigs/external-dns/issues/5240
+      # targetRevision: "8.7.7"
+      targetRevision: "8.8.3"
       helm:
         releaseName: rfc2136
         valuesObject:
