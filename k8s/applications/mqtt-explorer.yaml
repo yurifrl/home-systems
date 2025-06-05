@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mqtt-explorer
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mqtt-explorer
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: mqtt-explorer
+              service:
+                name: mqtt-explorer
+                namespace: mqtt-explorer
+                port: 4000
+          services:
+            - name: mqtt-explorer
+              port: 4000
+          deployments:
+            - name: mqtt-explorer
+              image:
+                repository: smeagolworms4/mqtt-explorer
+                tag: latest
+              containerPort: 4000
