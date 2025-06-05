@@ -26,9 +26,6 @@ data:
         1.0.0.1;
         8.8.8.8;
       };
-
-      allow-query { any; };    # Allow queries from any source
-      allow-update { any; };   # Allow updates from any source temporarily for testing
     };
 
     zone "syscd.dev" IN {
