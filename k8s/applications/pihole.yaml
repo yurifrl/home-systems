@@ -47,11 +47,12 @@ spec:
                 - SYS_NICE
                 - SYS_TIME
                 - CHOWN
-            fsGroup: 1000
-            runAsUser: 1000
-            runAsGroup: 1000
-          adlists:
-            - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+          extraVolumes:
+            - name: etc-pihole
+              emptyDir: {}
+          extraVolumeMounts:
+            - name: etc-pihole
+              mountPath: /etc/pihole
           
     - repoURL: https://github.com/yurifrl/home-systems
       targetRevision: HEAD
