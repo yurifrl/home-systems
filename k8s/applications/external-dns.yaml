@@ -98,7 +98,6 @@ spec:
               - syscd.dev
             secretName: tsig-secret
             tsigKeyname: rfc2136_tsig_secret
-            tsigAxfr: false
     # # Pi-hole DNS
     # - repoURL: registry-1.docker.io/bitnamicharts
     #   chart: external-dns
