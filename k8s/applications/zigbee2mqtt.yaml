@@ -1,83 +1,83 @@
-# # https://www.reddit.com/r/homeassistant/comments/1b8qr52/mount_zigbee_usb_via_usbip_to_k3s_cluster_running/
-# # https://www.zigbee2mqtt.io/advanced/remote-adapter/connect_to_a_remote_adapter.html
-# # https://tubeszb.com/product/cc2652p7-zigbee-to-poe-coordinator-2023/
-# # https://github.com/vicsufer/homelab/blob/main/kluster-manifests/argocd-apps/smarthome/Application-zigbee2mqtt.yaml
-# # https://github.com/vFondevilla/k8s-homelab/blob/main/k8s/zigbee2mqtt/app.yaml
-# # https://github.com/Koenkk/zigbee2mqtt-chart
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: zigbee2mqtt
-#   namespace: argocd
-# spec:
-#   project: default
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: zigbee2mqtt
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: false
-#     syncOptions:
-#       - CreateNamespace=true
-#   sources:
-#     - repoURL: https://github.com/yurifrl/home-systems.git
-#       targetRevision: HEAD
-#       path: k8s/charts/support
-#       helm:
-#         valuesObject:
-#           virtualServices:
-#             - name: zigbee2mqtt
-#               service:
-#                 name: zigbee2mqtt
-#                 namespace: zigbee2mqtt
-#                 port: 8080
-#     - repoURL: https://github.com/yurifrl/home-systems.git
-#       targetRevision: HEAD
-#       path: k8s/charts/mqtt-exporter # https://github.com/kpetremann/mqtt-exporter
-#       helm:
-#         valuesObject:
-#           mqttBroker:
-#             address: "mosquitto.mosquitto.svc.cluster.local"
-#             port: 1883
+# https://www.reddit.com/r/homeassistant/comments/1b8qr52/mount_zigbee_usb_via_usbip_to_k3s_cluster_running/
+# https://www.zigbee2mqtt.io/advanced/remote-adapter/connect_to_a_remote_adapter.html
+# https://tubeszb.com/product/cc2652p7-zigbee-to-poe-coordinator-2023/
+# https://github.com/vicsufer/homelab/blob/main/kluster-manifests/argocd-apps/smarthome/Application-zigbee2mqtt.yaml
+# https://github.com/vFondevilla/k8s-homelab/blob/main/k8s/zigbee2mqtt/app.yaml
+# https://github.com/Koenkk/zigbee2mqtt-chart
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: zigbee2mqtt
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: zigbee2mqtt
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: zigbee2mqtt
+              service:
+                name: zigbee2mqtt
+                namespace: zigbee2mqtt
+                port: 8080
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/mqtt-exporter # https://github.com/kpetremann/mqtt-exporter
+      helm:
+        valuesObject:
+          mqttBroker:
+            address: "mosquitto.mosquitto.svc.cluster.local"
+            port: 1883
 
-#     - repoURL: https://charts.zigbee2mqtt.io
-#       chart: zigbee2mqtt
-#       # 2.1.0 is broken, here's reference
-#       # https://github.com/Koenkk/zigbee2mqtt/issues/23589
-#       # https://github.com/Koenkk/zigbee2mqtt-chart/issues/27
-#       # https://github.com/Koenkk/zigbee2mqtt-chart/pull/29
-#       targetRevision: "2.4.0"
-#       # targetRevision: "2.1.3"
-#       helm:
-#         valuesObject:
-#           statefulset:
-#             nodeSelector:
-#               syscd.dev/storage: tp1
-#             resources:
-#               requests:
-#                 memory: "128Mi"
-#                 cpu: "100m"
-#               limits:
-#                 memory: "256Mi"
-#                 cpu: "200m"
-#             storage:
-#               enabled: true
-#               size: 5Gi
-#               storageClassName: local-path
-#               existingVolume: zigbee2mqtt-tp1-data
-#           service:
-#             type: ClusterIP
-#           zigbee2mqtt:
-#             mqtt:
-#               server: "mqtt://mosquitto.mosquitto:1883"
-#             serial:
-#             # Location of SLZB-06P7
-#               port: tcp://192.168.68.111:6638
-#               baudrate: 115200
-#               adapter: zstack
-#             # Disable green led?
-#               disable_led: false
-#             # Set output power to max 20
-#             advanced:
-#               transmit_power: 20
+    - repoURL: https://charts.zigbee2mqtt.io
+      chart: zigbee2mqtt
+      # 2.1.0 is broken, here's reference
+      # https://github.com/Koenkk/zigbee2mqtt/issues/23589
+      # https://github.com/Koenkk/zigbee2mqtt-chart/issues/27
+      # https://github.com/Koenkk/zigbee2mqtt-chart/pull/29
+      targetRevision: "2.4.0"
+      # targetRevision: "2.1.3"
+      helm:
+        valuesObject:
+          statefulset:
+            nodeSelector:
+              syscd.dev/storage: tp1
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+            storage:
+              enabled: true
+              size: 5Gi
+              storageClassName: local-path
+              existingVolume: zigbee2mqtt-tp1-data
+          service:
+            type: ClusterIP
+          zigbee2mqtt:
+            mqtt:
+              server: "mqtt://mosquitto.mosquitto:1883"
+            serial:
+            # Location of SLZB-06P7
+              port: tcp://192.168.68.111:6638
+              baudrate: 115200
+              adapter: zstack
+            # Disable green led?
+              disable_led: false
+            # Set output power to max 20
+            advanced:
+              transmit_power: 20
