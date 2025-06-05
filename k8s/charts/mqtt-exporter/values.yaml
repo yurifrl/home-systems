@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: kpetrem/mqtt-exporter
-  tag: "1.6.1"
+  tag: "1.7.2"
   pullPolicy: IfNotPresent
 
 service:
