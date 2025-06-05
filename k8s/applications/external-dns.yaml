@@ -22,18 +22,6 @@ spec:
       labels:
         istio.io/dataplane-mode: ambient
   sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          externalSecrets:
-            - targetName: cloudflare-api-token-secret
-              name: externaldns-cloudflare
-            - targetName: pihole-secret
-              name: externaldns-pihole
-            - targetName: tsig-secret
-              name: externaldns-tsig
     # Cloudflare (.live)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
@@ -76,9 +64,9 @@ spec:
     # RFC2136 DNS (.dev)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
-      # external-dns 1.6.1 is broken https://github.com/kubernetes-sigs/external-dns/issues/5240
-      # targetRevision: "8.7.7"
-      targetRevision: "8.8.3"
+      # external-dns > 1.16.1 (chart > 8.8.3) is broken https://github.com/kubernetes-sigs/external-dns/issues/5240
+      # targetRevision: "8.8.3" # 1.17.0
+      targetRevision: "8.7.7" # 1.15.1
       helm:
         releaseName: rfc2136
         valuesObject:
@@ -122,3 +110,16 @@ spec:
     #         server: pihole-web.pihole.svc.cluster.local
     #         secretName: pihole-secret
     #         tlsSkipVerify: false
+
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - targetName: cloudflare-api-token-secret
+              name: externaldns-cloudflare
+            - targetName: pihole-secret
+              name: externaldns-pihole
+            - targetName: tsig-secret
+              name: externaldns-tsig
