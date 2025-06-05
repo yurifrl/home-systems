@@ -42,7 +42,7 @@ spec:
                 memory: "256Mi"
                 cpu: "200m"
             storage:
-              enabled: false
+              enabled: true
               size: 5Gi
               storageClassName: local-path
               existingVolume: zigbee2mqtt-tp1-data
@@ -50,8 +50,6 @@ spec:
             type: ClusterIP
           zigbee2mqtt:
             mqtt:
-              # server: "mqtt://mosquitto.mosquitto.svc.cluster.local:1883"
-              # server: "mqtt://mosquitto.mosquitto:1883"
               server: mqtt://mosquitto.mosquitto.svc.cluster.local:1883
             serial:
               # Location of SLZB-06P7
@@ -63,6 +61,10 @@ spec:
             # Set output power to max 20
             advanced:
               transmit_power: 20
+              #
+              pan_id: GENERATE
+              ext_pan_id: GENERATE
+              network_key: GENERATE
 
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
