@@ -34,36 +34,25 @@ spec:
                 name: mosquitto
                 namespace: mosquitto
                 port: 1883
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
           persistence:
             data:
               enabled: false
             configinc:
               enabled: false
-      valuesObject:
-        persistence:
-          data:
-            enabled: false
-          configinc:
-            enabled: false
-          mosquitto-config:
-            enabled: true
-            mountPath: "/mosquitto/config/mosquitto.conf"
-            subPath: "mosquitto.conf"
-            type: configmap
-            objectName: config
-            size: 2Gi
-        podOptions:
-          nodeSelector:
-            kubernetes.io/arch: arm64
-        resources:
-          limits:
-            cpu: 500m
-            memory: 512Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
+            mosquitto-config:
+              enabled: true
+              mountPath: "/mosquitto/config/mosquitto.conf"
+              subPath: "mosquitto.conf"
+              type: configmap
+              objectName: config
+              size: 2Gi
+          podOptions:
+            nodeSelector:
+              kubernetes.io/arch: arm64
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
