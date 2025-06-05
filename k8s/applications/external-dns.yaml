@@ -98,25 +98,25 @@ spec:
               - syscd.dev
             secretName: tsig-secret
             tsigKeyname: externaldns-key
-    # Pi-hole DNS
-    - repoURL: registry-1.docker.io/bitnamicharts
-      chart: external-dns
-      targetRevision: "*"
-      helm:
-        releaseName: pihole
-        valuesObject:
-          crd.create: false
-          logLevel: debug
-          txtOwnerId: syscd-pihole
-          policy: sync
-          interval: 1m
-          domainFilters:
-            - syscd.dev
-          sources:
-            - istio-gateway
-            - istio-virtualservice
-          provider: pihole
-          pihole:
-            server: pihole-web.pihole.svc.cluster.local
-            secretName: pihole-secret
-            tlsSkipVerify: false
+    # # Pi-hole DNS
+    # - repoURL: registry-1.docker.io/bitnamicharts
+    #   chart: external-dns
+    #   targetRevision: "*"
+    #   helm:
+    #     releaseName: pihole
+    #     valuesObject:
+    #       crd.create: false
+    #       logLevel: debug
+    #       txtOwnerId: syscd-pihole
+    #       policy: sync
+    #       interval: 1m
+    #       domainFilters:
+    #         - syscd.dev
+    #       sources:
+    #         - istio-gateway
+    #         - istio-virtualservice
+    #       provider: pihole
+    #       pihole:
+    #         server: pihole-web.pihole.svc.cluster.local
+    #         secretName: pihole-secret
+    #         tlsSkipVerify: false
