@@ -5,7 +5,7 @@
   ],
   "argocd": {
     "managerFilePatterns": [
-      "\\.yaml$"
+      "k8s/applications/.+\\.yaml$"
     ]
   },
   "packageRules": [
