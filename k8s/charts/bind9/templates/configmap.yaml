@@ -26,6 +26,8 @@ data:
         1.0.0.1;
         8.8.8.8;
       };
+
+      allow-transfer { key "rfc2136_tsig_secret"; };  # Allow zone transfers with TSIG key
     };
 
     zone "syscd.dev" IN {
