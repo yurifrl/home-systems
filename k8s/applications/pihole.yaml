@@ -15,20 +15,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
-    - repoURL: https://github.com/yurifrl/home-systems
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: pihole
-              service:
-                name: pihole-web
-                namespace: pihole
-                port: 80
-          externalSecrets:
-            - name: pihole-admin
-
     - repoURL: https://wolviecb.github.io/pihole-kubernetes
       chart: pihole
       targetRevision: "*"
@@ -61,3 +47,18 @@ spec:
                 - CHOWN
           adlists:
             - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+          
+    - repoURL: https://github.com/yurifrl/home-systems
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: pihole
+              service:
+                name: pihole-web
+                namespace: pihole
+                port: 80
+          externalSecrets:
+            - name: pihole-admin
+
