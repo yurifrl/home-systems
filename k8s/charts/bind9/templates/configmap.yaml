@@ -43,6 +43,9 @@ data:
         update-policy {
             grant rfc2136_tsig_secret zonesub ANY;
         };
+        # Allow batch updates
+        max-journal-size unlimited;
+        ixfr-from-differences yes;
     };
     # Include the keys configuration, it will come from a secret previously created
     include "/etc/bind/keys.conf";
