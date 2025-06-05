@@ -37,7 +37,8 @@ data:
         };
         # Is either allow-update or update-policy, not both
         update-policy {
-            grant rfc2136_tsig_secret zonesub ANY;
+            grant rfc2136_tsig_secret wildcard *.syscd.dev. ANY;
+            grant rfc2136_tsig_secret name syscd.dev. ANY;
         };
     };
     # Include the keys configuration, it will come from a secret previously created
