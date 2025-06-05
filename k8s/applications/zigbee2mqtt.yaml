@@ -42,7 +42,7 @@ spec:
                 memory: "256Mi"
                 cpu: "200m"
             storage:
-              enabled: false
+              enabled: true
               size: 5Gi
               storageClassName: local-path
               existingVolume: zigbee2mqtt-tp1-data
