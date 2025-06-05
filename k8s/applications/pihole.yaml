@@ -51,3 +51,13 @@ spec:
           monitoring:
             podMonitor:
               enabled: true
+          securityContext:
+            capabilities:
+              add:
+                - NET_BIND_SERVICE
+                - NET_RAW
+                - SYS_NICE
+                - SYS_TIME
+                - CHOWN
+          adlists:
+            - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
