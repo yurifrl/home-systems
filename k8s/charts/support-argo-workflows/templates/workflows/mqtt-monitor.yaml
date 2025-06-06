@@ -4,13 +4,6 @@ metadata:
   name: {{ .Release.Name }}-mqtt-monitor
   namespace: {{ .Release.Namespace }}
 spec:
-  entrypoint: monitor-distance
-  arguments:
-    parameters:
-      - name: mqtt_host
-        value: mosquitto.mosquitto.svc
-      - name: mqtt_port
-        value: "1883"
   templates:
     - name: monitor-distance
       dag:
@@ -19,12 +12,6 @@ spec:
             template: clone
           - name: run
             template: run
-            arguments:
-              parameters:
-                - name: mqtt_host
-                  value: "{{workflow.parameters.mqtt_host}}"
-                - name: mqtt_port
-                  value: "{{workflow.parameters.mqtt_port}}"
             dependencies: [clone]
             
     - name: clone
@@ -37,10 +24,6 @@ spec:
               revision: HEAD
               
     - name: run
-      inputs:
-        parameters:
-          - name: mqtt_host
-          - name: mqtt_port
       container:
         image: ghcr.io/astral/uv:latest
         workingDir: /workspace/automations
@@ -51,9 +34,9 @@ spec:
             python mqtt_watch.py
         env:
           - name: MQTT_HOST
-            value: "{{inputs.parameters.mqtt_host}}"
+            value: mosquitto.mosquitto.svc
           - name: MQTT_PORT
-            value: "{{inputs.parameters.mqtt_port}}"
+            value: "1883"
 
 ---
 apiVersion: argoproj.io/v1alpha1
