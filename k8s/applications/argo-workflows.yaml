@@ -28,6 +28,7 @@ spec:
             - name: argo-workflows
               decodingStrategy: Auto
             - name: argo-workflows-stock-checker
+            - name: ghcr-image-pull-secret
           virtualServices:
             - name: argo-workflows
               service:
