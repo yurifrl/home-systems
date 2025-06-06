@@ -17,7 +17,7 @@ spec:
       container:
         image: nixery.dev/arm64/shell/python311/uv
         workingDir: /workspace/automations
-        command: ["uv venv && . .venv/bin/activate && uv pip install -e . && uv run python mqtt_watch.py"]
+        command: ["uv", "pip", "install", "-e", ".", "--system", "&&", "uv", "run", "python", "mqtt_watch.py"]
         env:
           - name: MQTT_HOST
             value: mosquitto.mosquitto.svc
