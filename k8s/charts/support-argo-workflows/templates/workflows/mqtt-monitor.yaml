@@ -5,8 +5,6 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   entrypoint: monitor-distance
-  imagePullSecrets:
-    - name: ghcr-image-pull-secret
   templates:
     - name: monitor-distance
       inputs:
@@ -17,13 +15,9 @@ spec:
               repo: https://github.com/yurifrl/home-systems.git
               revision: HEAD
       container:
-        image: ghcr.io/astral/uv:latest
+        image: nixery.dev/arm64/shell/python311/uv
         workingDir: /workspace/automations
-        command: ["/bin/sh", "-c"]
-        args:
-          - |
-            uv pip install -e .
-            python mqtt_watch.py
+        command: ["uv venv && . .venv/bin/activate && uv pip install -e . && uv run python mqtt_watch.py"]
         env:
           - name: MQTT_HOST
             value: mosquitto.mosquitto.svc
