@@ -28,8 +28,6 @@ spec:
             - name: argo-workflows
               decodingStrategy: Auto
             - name: argo-workflows-stock-checker
-            - name: mqtt-credentials
-              decodingStrategy: Auto
           virtualServices:
             - name: argo-workflows
               service:
