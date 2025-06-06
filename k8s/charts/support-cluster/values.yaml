@@ -4,6 +4,7 @@ features:
   prometheusRules: false
   alertmanager: true
   tailscale: true
+  defaultServiceAccountWithImagePullSecret: true
 
 # Tailscale
 tailscale:
