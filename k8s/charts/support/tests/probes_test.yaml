@@ -4,6 +4,8 @@ templates:
 tests:
   - it: should create probes
     set:
+      probes:
+        enabled: true
       virtualServices:
         - name: test-service
           service:
