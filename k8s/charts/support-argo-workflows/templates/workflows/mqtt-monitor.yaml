@@ -5,6 +5,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   entrypoint: monitor-distance
+  imagePullSecrets:
+    - name: ghcr-image-pull-secret
   templates:
     - name: monitor-distance
       inputs:
