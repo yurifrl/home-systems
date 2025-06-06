@@ -18,7 +18,7 @@ spec:
         image: nixery.dev/arm64/shell/python311/uv
         workingDir: /workspace/automations
         command: ["/bin/sh", "-c"]
-        args: ["uv venv && . .venv/bin/activate && uv pip install -e . && uv run python mqtt_watch.py"]
+        args: ["uv venv && . .venv/bin/activate && uv pip install -e . && python -u mqtt_watch.py"]
         env:
           - name: MQTT_HOST
             value: mosquitto.mosquitto.svc
