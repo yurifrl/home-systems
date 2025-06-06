@@ -45,13 +45,14 @@ try:
     client.on_subscribe = on_subscribe
 
     print("Attempting to connect to broker...")
-    print("Host: mosquitto.syscd.tech")
+    print("Host: mosquitto-websockets.syscd.tech")
     print("Port: 443")
     print("Transport: WebSocket")
     
-    client.ws_set_options(path="/mqtt")
+    # Try with a simpler path
+    client.ws_set_options(path="/")
     client.tls_set()  # Enable TLS since we're using 443
-    client.connect("mosquitto.syscd.tech", 443, 60)
+    client.connect("mosquitto-websockets.syscd.tech", 443, 60)
     print("Starting loop...")
     client.loop_forever()
 except Exception as e:
