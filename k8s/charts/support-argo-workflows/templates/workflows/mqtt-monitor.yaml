@@ -25,13 +25,13 @@ spec:
           - name: MQTT_PORT
             value: "1883"
 
----
-apiVersion: argoproj.io/v1alpha1
-kind: Workflow
-metadata:
-  name: {{ .Release.Name }}-mqtt-monitor
-  namespace: {{ .Release.Namespace }}
-spec:
-  workflowTemplateRef:
-    name: {{ .Release.Name }}-mqtt-monitor
+# ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: Workflow
+# metadata:
+#   name: {{ .Release.Name }}-mqtt-monitor
+#   namespace: {{ .Release.Namespace }}
+# spec:
+#   workflowTemplateRef:
+#     name: {{ .Release.Name }}-mqtt-monitor
 
