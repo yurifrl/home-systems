@@ -28,7 +28,11 @@ def main():
     # Use WebSockets for external access, regular MQTT for in-cluster
     use_websockets = MQTT_PORT == 443
     
-    client = mqtt.Client(protocol=mqtt.MQTTv5, transport="websockets" if use_websockets else "tcp")
+    client = mqtt.Client(
+        protocol=mqtt.MQTTv5,
+        transport="websockets" if use_websockets else "tcp",
+        callback_api_version=mqtt.CallbackAPIVersion.VERSION2
+    )
     client.on_connect = on_connect
     client.on_message = on_message
 
