@@ -38,7 +38,7 @@ print("Starting MQTT Client...")
 print(f"Using MQTT version: {mqtt.MQTTv5}")
 
 try:
-    client = mqtt.Client(protocol=mqtt.MQTTv5)
+    client = mqtt.Client(protocol=mqtt.MQTTv5, transport="websockets")
     client.on_connect = on_connect
     client.on_message = on_message
     client.on_disconnect = on_disconnect
@@ -46,9 +46,12 @@ try:
 
     print("Attempting to connect to broker...")
     print("Host: mosquitto.syscd.tech")
-    print("Port: 1883")
+    print("Port: 443")
+    print("Transport: WebSocket")
     
-    client.connect("mosquitto.syscd.tech", 1883, 60)
+    client.ws_set_options(path="/mqtt")
+    client.tls_set()  # Enable TLS since we're using 443
+    client.connect("mosquitto.syscd.tech", 443, 60)
     print("Starting loop...")
     client.loop_forever()
 except Exception as e:

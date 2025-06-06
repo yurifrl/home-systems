@@ -70,3 +70,8 @@ spec:
                         host: mosquitto.mosquitto.svc.cluster.local
                         port:
                           number: 1883
+            - name: mosquitto-websockets
+              service:
+                name: mosquitto-websockets
+                namespace: mosquitto
+                port: 9001
