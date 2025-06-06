@@ -28,6 +28,8 @@ spec:
       repoURL: tccr.io/truecharts
       helm:
         valuesObject:
+          websockets:
+            enabled: true
           persistence:
             data:
               enabled: false
@@ -57,19 +59,6 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: mosquitto
-              service:
-                name: mosquitto
-                namespace: mosquitto
-                port: 1883
-              tcp:
-                - match:
-                    - port: 1883
-                  route:
-                    - destination:
-                        host: mosquitto.mosquitto.svc.cluster.local
-                        port:
-                          number: 1883
             - name: mosquitto-websockets
               service:
                 name: mosquitto-websockets
