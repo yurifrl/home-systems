@@ -62,3 +62,11 @@ spec:
                 name: mosquitto
                 namespace: mosquitto
                 port: 1883
+              tcp:
+                - match:
+                    - port: 1883
+                  route:
+                    - destination:
+                        host: mosquitto.mosquitto.svc.cluster.local
+                        port:
+                          number: 1883
