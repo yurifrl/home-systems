@@ -18,7 +18,7 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
   ignoreDifferences:
-    - group: actions.github.com
+    - group: "*" 
       kind: AutoscalingListener
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
