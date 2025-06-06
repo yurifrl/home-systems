@@ -1,5 +1,9 @@
 import paho.mqtt.client as mqtt
 import json
+import dotenv
+import os
+
+dotenv.load_dotenv()
 
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
@@ -19,5 +23,5 @@ client.on_message = on_message
 
 client.ws_set_options(path="/")
 client.tls_set()
-client.connect("mosquitto-websockets.syscd.tech", 443, 60)
+client.connect(os.getenv("MQTT_HOST"), int(os.getenv("MQTT_PORT")), 60)
 client.loop_forever() 
