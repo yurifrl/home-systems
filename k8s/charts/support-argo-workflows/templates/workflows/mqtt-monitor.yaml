@@ -4,17 +4,9 @@ metadata:
   name: {{ .Release.Name }}-mqtt-monitor
   namespace: {{ .Release.Namespace }}
 spec:
+  entrypoint: monitor-distance
   templates:
     - name: monitor-distance
-      dag:
-        tasks:
-          - name: clone
-            template: clone
-          - name: run
-            template: run
-            dependencies: [clone]
-            
-    - name: clone
       inputs:
         artifacts:
           - name: repo
@@ -22,8 +14,6 @@ spec:
             git:
               repo: https://github.com/yurifrl/home-systems.git
               revision: HEAD
-              
-    - name: run
       container:
         image: ghcr.io/astral/uv:latest
         workingDir: /workspace/automations
