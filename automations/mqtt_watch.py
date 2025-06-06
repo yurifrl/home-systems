@@ -46,9 +46,9 @@ try:
 
     print("Attempting to connect to broker...")
     print("Host: mosquitto.syscd.tech")
-    print("Port: 443")
+    print("Port: 1883")
     
-    client.connect("mosquitto.syscd.tech", 443, 60)
+    client.connect("mosquitto.syscd.tech", 1883, 60)
     print("Starting loop...")
     client.loop_forever()
 except Exception as e:

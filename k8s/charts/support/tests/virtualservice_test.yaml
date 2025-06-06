@@ -52,3 +52,38 @@ tests:
           value:
             - test-service.syscd.live
             - test-service.syscd.xyz
+
+  - it: should create virtualservice with tcp configuration
+    set:
+      virtualServices:
+        - name: test-service
+          service:
+            name: test
+            namespace: default
+            port: 1883
+          tcp:
+            - match:
+                - port: 1883
+              route:
+                - destination:
+                    host: test.default.svc.cluster.local
+                    port:
+                      number: 1883
+    asserts:
+      - isKind:
+          of: VirtualService
+      - equal:
+          path: metadata.name
+          value: test-service
+      - equal:
+          path: spec.tcp
+          value:
+            - match:
+                - port: 1883
+              route:
+                - destination:
+                    host: test.default.svc.cluster.local
+                    port:
+                      number: 1883
+      - notExists:
+          path: spec.http

@@ -17,10 +17,15 @@ spec:
     - istio-system/dev
     - istio-system/cloudflare
     - istio-system/tailscale
+  {{- if .tcp }}
+  tcp:
+    {{- toYaml .tcp | nindent 4 }}
+  {{- else }}
   http:
     - route:
         - destination:
             host: {{ .service.name }}.{{ .service.namespace }}.svc.cluster.local
             port:
               number: {{ .service.port }}
+  {{- end }}
 {{- end }}
