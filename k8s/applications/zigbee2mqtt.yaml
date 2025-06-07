@@ -65,9 +65,9 @@ spec:
               ## https://www.zigbee2mqtt.io/guide/configuration/zigbee-network.html#network-config
               ## https://github.com/Koenkk/zigbee2mqtt/issues/10858#issuecomment-1291567559
               #
-              pan_id: GENERATE
-              ext_pan_id: GENERATE
-              network_key: GENERATE
+              # pan_id: GENERATE
+              # ext_pan_id: GENERATE
+              # network_key: GENERATE
 
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
