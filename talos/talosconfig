@@ -1,0 +1,12 @@
+# -*- mode: yaml -*-
+# This file is YAML format
+context: talos-default
+contexts:
+    talos-default:
+        endpoints:
+            - 192.168.68.100
+        nodes:
+            - 192.168.68.100,192.168.68.114,192.168.68.107,192.168.68.104
+        ca: "op://kubernetes/talos/MACHINE_CA_CRT"
+        crt: "op://kubernetes/talos/TALOS_CLIENT_CRT"
+        key: "op://kubernetes/talos/TALOS_CLIENT_KEY"
