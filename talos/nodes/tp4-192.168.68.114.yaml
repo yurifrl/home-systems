@@ -196,7 +196,7 @@ machine:
   # Used to provide instructions for installations.
   install:
     disk: /dev/mmcblk0 # The disk used for installations.
-    image: siderolabs/sbc-rockchip # Allows for supplying the image used to perform the installation.
+    image: factory.talos.dev/metal-installer/3616c4c824f2540c0a14da0cc8e6fc46143f2ca0cc75c9c6376a66e562894950:v1.10.3 # Allows for supplying the image used to perform the installation.
     wipe: false # Indicates if the installation disk should be wiped at installation time.
 
     # # Look up disk using disk attributes like model, size, serial and others.

@@ -3,4 +3,5 @@ secrets
 .DS_Store
 *.env
 talos/op
+talos/op*
 keys.conf
