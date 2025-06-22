@@ -25,5 +25,5 @@ spec:
         - '.webhooks[]?.failurePolicy'
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: "*"
+    targetRevision: "1.16.0"
     chart: base
