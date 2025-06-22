@@ -54,6 +54,7 @@ spec:
             serial:
               # Location of SLZB-06P7
               port: tcp://192.168.68.111:6638
+              baudrate: 115200
               adapter: zstack
               # Disable green led?
               disable_led: false
@@ -61,6 +62,7 @@ spec:
             advanced:
               transmit_power: 20
               ## For the error "panId or extendedPanId already exists nearby"
+              ## https://www.smlight.tech/manual/slzb-06/guide/faq-and-lifehacks/#zigbee2mqtt-error-network-commissioning-timeout-panid-or-extendedpanid-already-exists-nearby
               ## https://www.zigbee2mqtt.io/guide/configuration/zigbee-network.html#network-config
               ## https://github.com/Koenkk/zigbee2mqtt/issues/10858#issuecomment-1291567559
               #
