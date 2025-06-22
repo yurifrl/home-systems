@@ -25,7 +25,7 @@ spec:
         - argocd-application-controller
   sources:
     - repoURL: https://istio-release.storage.googleapis.com/charts
-      targetRevision: "*"
+      targetRevision: "1.0.6"
       chart: gateway
       helm:
         valuesObject:
