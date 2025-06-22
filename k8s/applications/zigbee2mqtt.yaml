@@ -54,7 +54,6 @@ spec:
             serial:
               # Location of SLZB-06P7
               port: tcp://192.168.68.111:6638
-              baudrate: 115200
               adapter: zstack
               # Disable green led?
               disable_led: false
