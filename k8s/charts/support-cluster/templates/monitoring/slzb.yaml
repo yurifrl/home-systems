@@ -35,3 +35,33 @@ spec:
           annotations:
             summary: "SLZB Zigbee adapter is down"
             description: "The SLZB-06 Zigbee adapter has been unreachable for more than 5 minutes." 
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: slzb-zigbee-metrics
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+spec:
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+  selector:
+    matchLabels:
+      app: slzb-zigbee
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slzb-zigbee
+  namespace: monitoring
+  labels:
+    app: slzb-zigbee
+spec:
+  type: ExternalName
+  externalName: 192.168.68.111
+  ports:
+  - port: 80
+    name: http 
