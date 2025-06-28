@@ -61,7 +61,7 @@ spec:
             backupStorageLocation:
               - name: default
                 provider: gcp
-                bucket: syscd
+                bucket: syscd-backups-4b2339d2-ad04-4ba1-a184-dab578a2545d 
                 config:
                   serviceAccount: velero@syscd-443112.iam.gserviceaccount.com
 
