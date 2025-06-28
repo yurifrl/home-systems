@@ -15,13 +15,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          externalSecrets:
-            - name: velero-credentials
     - chart: velero
       repoURL: https://vmware-tanzu.github.io/helm-charts
       targetRevision: "*"
@@ -80,3 +73,11 @@ spec:
                   - home-assistant 
                   - zigbee2mqtt
                   - node-red
+
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: velero-credentials
