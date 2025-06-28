@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  copy:
+    desc: "Sync proxmox VM config files to the remote Proxmox host"
+    cmds:
+      - rsync -avz ./proxmox/ root@192.168.68.112:/etc/pve/qemu-server/ 
