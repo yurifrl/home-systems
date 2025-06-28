@@ -5,3 +5,4 @@ includes:
   argo: ./taskfiles/argo.yml
   # k8s: ./taskfiles/kubernetes.yml
   turing: ./taskfiles/turing.yml
+  proxmox: ./taskfiles/proxmox.yml
