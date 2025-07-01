@@ -32,7 +32,7 @@ spec:
     # PostgreSQL deployment
     - repoURL: https://charts.bitnami.com/bitnami
       chart: postgresql
-      targetRevision: "12.1.9" 
+      targetRevision: "16.7.15" 
       helm:
         values: |
           auth:
