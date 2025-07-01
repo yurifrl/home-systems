@@ -17,7 +17,7 @@ spec:
   sources:
     - repoURL: https://wolviecb.github.io/pihole-kubernetes
       chart: pihole
-      targetRevision: "*"
+      targetRevision: "2.19.12"
       helm:
         valuesObject:
           persistentVolumeClaim:
