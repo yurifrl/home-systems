@@ -24,7 +24,7 @@ spec:
         - /metadata/annotations
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: "1.26.1"
+    targetRevision: "1.26.2"
     chart: ztunnel
     helm:
       valuesObject: {}
