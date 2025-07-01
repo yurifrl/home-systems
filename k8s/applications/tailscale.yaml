@@ -28,7 +28,7 @@ spec:
 
     - repoURL: https://pkgs.tailscale.com/helmcharts
       chart: tailscale-operator
-      targetRevision: 1.8.4
+      targetRevision: 1.84.3
       helm:
         valuesObject:
           oauthSecretVolume:
