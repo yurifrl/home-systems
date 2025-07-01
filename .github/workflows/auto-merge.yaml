@@ -1,0 +1,69 @@
+name: Auto Merge on Approval
+
+on:
+  pull_request_review:
+    types: [submitted]
+  pull_request:
+    types: [labeled, unlabeled, ready_for_review]
+  status: {}
+  check_suite:
+    types: [completed]
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request || 
+                      (context.payload.review ? await github.rest.pulls.get({
+                        owner,
+                        repo,
+                        pull_number: context.payload.pull_request.number,
+                      }).data : null);
+            
+            if (!pr) {
+              console.log('No PR found in context');
+              return;
+            }
+            
+            // Get detailed PR info
+            const prDetails = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: pr.number,
+            });
+            
+            console.log(`PR #${pr.number} status:
+              Mergeable: ${prDetails.data.mergeable}
+            `);
+            
+            // If mergeable, attempt to merge
+            if (prDetails.data.mergeable) {
+              try {
+                await github.rest.pulls.merge({
+                  owner,
+                  repo,
+                  pull_number: pr.number,
+                  merge_method: 'squash',
+                });
+                
+                // Delete branch after successful merge
+                if (pr.head.ref !== 'main' && pr.head.ref !== 'master') {
+                  await github.rest.git.deleteRef({
+                    owner,
+                    repo,
+                    ref: `heads/${pr.head.ref}`,
+                  });
+                }
+                
+                console.log(`Successfully merged PR #${pr.number}`);
+              } catch (error) {
+                console.error(`Failed to merge PR #${pr.number}: ${error}`);
+              }
+            } else {
+              console.log(`PR #${pr.number} is not mergeable yet`);
+            }
