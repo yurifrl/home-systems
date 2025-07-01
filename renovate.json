@@ -7,13 +7,5 @@
     "managerFilePatterns": [
       "/k8s/applications/.+\\.yaml$/"
     ]
-  },
-  "packageRules": [
-    {
-      "matchManagers": [
-        "argocd"
-      ],
-      "enabled": true
-    }
-  ]
+  }
 }
