@@ -31,7 +31,7 @@ spec:
 
     - repoURL: https://helm.influxdata.com/
       chart: influxdb2
-      targetRevision: "*"
+      targetRevision: "2.1.2"
       helm:
         valuesObject:
           adminUser:
@@ -52,7 +52,7 @@ spec:
               memory: 512Mi
     - repoURL: https://helm.influxdata.com/
       chart: telegraf
-      targetRevision: "*"
+      targetRevision: "1.8.59"
       helm:
         valuesObject:
           config:

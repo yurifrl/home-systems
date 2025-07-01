@@ -36,10 +36,10 @@ spec:
                 port: 2746
     - chart: argo-events
       repoURL: https://argoproj.github.io/argo-helm
-      targetRevision: "*"
+      targetRevision: "2.4.15"
     - chart: argo-workflows
       repoURL: https://argoproj.github.io/argo-helm
-      targetRevision: "*"
+      targetRevision: "0.45.19"
       helm:
         valuesObject:
           crds:

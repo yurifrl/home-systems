@@ -36,7 +36,7 @@ spec:
               volumeName: node-red-tp1-data
     # https://github.com/SchwarzIT/node-red-chart
     - repoURL: https://schwarzit.github.io/node-red-chart
-      targetRevision: "*"
+      targetRevision: "0.35.0"
       chart: node-red
       helm:
         valuesObject:

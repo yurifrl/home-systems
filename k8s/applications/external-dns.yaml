@@ -25,7 +25,7 @@ spec:
     # Cloudflare (.live)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
-      targetRevision: "*"
+      targetRevision: "8.8.6"
       helm:
         releaseName: cloudflare
         valuesObject:
@@ -45,7 +45,7 @@ spec:
     # Tailscale (.tech), there need to be two because tailscale can't be proxied I the annotation to disable proxie only work on virtualservices
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
-      targetRevision: "*"
+      targetRevision: "8.8.6"
       helm:
         releaseName: tailscale
         valuesObject:
