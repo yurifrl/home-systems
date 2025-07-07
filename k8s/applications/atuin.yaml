@@ -1,0 +1,83 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: atuin
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: atuin
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: atuin
+              service:
+                name: atuin
+                namespace: atuin
+                port: 8888
+          externalSecrets:
+            - name: atuin-secrets
+          services:
+            - name: atuin
+              port: 8888
+              targetPort: 8888
+              selector:
+                app: atuin
+          deployments:
+            - name: atuin
+              image:
+                repository: ghcr.io/atuinsh/atuin
+                tag: latest
+              args: ["server", "start"]
+              containerPort: 8888
+              env:
+                - name: ATUIN_HOST
+                  value: "0.0.0.0"
+                - name: ATUIN_PORT
+                  value: "8888"
+                - name: ATUIN_OPEN_REGISTRATION
+                  value: "true"
+                - name: ATUIN_DB_URI
+                  valueFrom:
+                    secretKeyRef:
+                      name: atuin-secrets
+                      key: ATUIN_DB_URI
+              nodeSelector:
+                syscd.dev/storage: tp1
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: postgresql
+      targetRevision: "16.7.15"
+      helm:
+        valuesObject:
+          auth:
+            database: atuin
+            username: atuin
+            existingSecret: "atuin-secrets"
+            secretKeys:
+              adminPasswordKey: ATUIN_DB_PASSWORD
+              userPasswordKey: ATUIN_DB_PASSWORD
+          primary:
+            nodeSelector:
+              syscd.dev/storage: tp1
+            persistence:
+              enabled: true
+              storageClass: "local-path"
+              size: 1Gi
+            resources:
+              requests:
+                memory: 256Mi
+                cpu: 250m
+              limits:
+                memory: 512Mi
+                cpu: 500m 
