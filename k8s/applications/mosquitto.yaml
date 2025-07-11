@@ -24,7 +24,7 @@ spec:
         - /spec/template/spec/hostUsers
   sources:
     - chart: mosquitto
-      targetRevision: "16.5.3"
+      targetRevision: "17.1.0"
       repoURL: tccr.io/truecharts
       helm:
         valuesObject:
