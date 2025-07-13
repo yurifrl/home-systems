@@ -1,13 +1,13 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: web-ui
+  name: browser-use
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: web-ui
+    namespace: browser-use
   syncPolicy:
     automated:
       prune: true
@@ -21,27 +21,27 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: web-ui
+            - name: browser-use
               service:
-                name: web-ui
-                namespace: web-ui
+                name: browser-use
+                namespace: browser-use
                 port: 7788
-            - name: web-ui-vnc
+            - name: browser-use-vnc
               service:
-                name: web-ui-vnc
-                namespace: web-ui
+                name: browser-use-vnc
+                namespace: browser-use
                 port: 6080
           externalSecrets:
-            - name: web-ui-secrets
+            - name: browser-use-secrets
           services:
-            - name: web-ui
+            - name: browser-use
               port: 7788
-            - name: web-ui-vnc
+            - name: browser-use-vnc
               port: 6080
           deployments:
-            - name: web-ui
+            - name: browser-use
               containers:
-                - name: web-ui
+                - name: browser-use
                   image: ghcr.io/yurifrl/web-ui:main
                   ports:
                     - name: http
@@ -50,7 +50,7 @@ spec:
                       containerPort: 6080
                   envFrom:
                     - secretRef:
-                        name: web-ui-secrets
+                        name: browser-use-secrets
                   env:
                     - name: OLLAMA_ENDPOINT
                       value: http://ollama.ollama.svc.cluster.local:11434
