@@ -17,6 +17,15 @@ spec:
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
+      path: k8s/charts/appdaemon
+      helm:
+        valuesObject:
+          nodeSelector:
+            syscd.dev/storage: tp1
+          persistence:
+            volumeName: appdaemon-tp1-data
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
       path: k8s/charts/support
       helm:
         valuesObject:
@@ -35,12 +44,3 @@ spec:
             - name: appdaemon-secrets
           nodeSelector:
             syscd.dev/storage: tp1
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/appdaemon
-      helm:
-        valuesObject:
-          nodeSelector:
-            syscd.dev/storage: tp1
-          persistence:
-            volumeName: appdaemon-tp1-data

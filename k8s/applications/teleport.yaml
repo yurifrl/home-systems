@@ -15,26 +15,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          persistentVolumeClaims:
-            - name: teleport-tp1-data
-              storage: 10Gi
-              storageClassName: local-path
-              accessModes:
-                - ReadWriteOnce
-              volumeName: teleport-tp1-data
-          externalSecrets:
-            - name: teleport-agent-token
-              namespace: teleport
-
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support-teleport
-
     - chart: teleport-cluster
       repoURL: https://charts.releases.teleport.dev
       targetRevision: "*"
@@ -141,6 +121,25 @@ spec:
               uri: http://influxdb-influxdb2.influxdb.svc.cluster.local:8086
               labels:
                 purpose: monitoring
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          persistentVolumeClaims:
+            - name: teleport-tp1-data
+              storage: 10Gi
+              storageClassName: local-path
+              accessModes:
+                - ReadWriteOnce
+              volumeName: teleport-tp1-data
+          externalSecrets:
+            - name: teleport-agent-token
+              namespace: teleport
+
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support-teleport
 
 # k -n teleport describe teleportusers $USER
 # k -n teleport get pod -l app.kubernetes.io/component=auth

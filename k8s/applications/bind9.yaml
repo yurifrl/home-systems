@@ -20,15 +20,15 @@ spec:
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
+      path: k8s/charts/bind9
+      helm:
+        valuesObject:
+          loadBalancerIP: "192.168.68.200"
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
       path: k8s/charts/support
       helm:
         valuesObject:
           externalSecrets:
             - name: bind9-keys
               decodingStrategy: Auto
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/bind9
-      helm:
-        valuesObject:
-          loadBalancerIP: "192.168.68.200"

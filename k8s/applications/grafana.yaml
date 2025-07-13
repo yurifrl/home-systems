@@ -16,22 +16,6 @@ spec:
       - CreateNamespace=true 
       - ServerSideApply=true
   sources:
-      - path: k8s/charts/support
-        repoURL: https://github.com/yurifrl/home-systems.git
-        targetRevision: HEAD
-        helm:
-          valuesObject:
-            virtualServices:
-              - name: grafana
-                service:
-                  name: grafana-operator-grafana-service
-                  namespace: monitoring
-                  port: 3000
-            externalSecrets:
-              - name: grafana-credentials
-      - path: k8s/charts/support-grafana
-        repoURL: https://github.com/yurifrl/home-systems.git
-        targetRevision: HEAD
       - chart: grafana-operator
         repoURL: registry-1.docker.io/bitnamicharts
         targetRevision: "*"
@@ -119,3 +103,19 @@ spec:
       - repoURL: https://github.com/dotdc/grafana-dashboards-kubernetes
         targetRevision: HEAD
         path: .
+      - path: k8s/charts/support
+        repoURL: https://github.com/yurifrl/home-systems.git
+        targetRevision: HEAD
+        helm:
+          valuesObject:
+            virtualServices:
+              - name: grafana
+                service:
+                  name: grafana-operator-grafana-service
+                  namespace: monitoring
+                  port: 3000
+            externalSecrets:
+              - name: grafana-credentials
+      - path: k8s/charts/support-grafana
+        repoURL: https://github.com/yurifrl/home-systems.git
+        targetRevision: HEAD
