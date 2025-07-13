@@ -50,4 +50,23 @@ spec:
                       containerPort: 6080
                   envFrom:
                     - secretRef:
-                        name: web-ui-secrets 
+                        name: web-ui-secrets
+                  env:
+                    - name: RESOLUTION
+                      value: "1920x1080x24"
+                    - name: RESOLUTION_WIDTH
+                      value: "1920"
+                    - name: RESOLUTION_HEIGHT
+                      value: "1080"
+                    - name: DISPLAY
+                      value: ":99"
+                    - name: VNC_PASSWORD
+                      value: "youvncpassword"
+                    - name: BROWSER_DEBUGGING_PORT
+                      value: "9222"
+                    - name: KEEP_BROWSER_OPEN
+                      value: "true"
+                    - name: USE_OWN_BROWSER
+                      value: "false"
+                    - name: PLAYWRIGHT_BROWSERS_PATH
+                      value: "/ms-browsers" 
