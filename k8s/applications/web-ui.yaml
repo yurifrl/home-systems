@@ -52,6 +52,9 @@ spec:
                     - secretRef:
                         name: web-ui-secrets
                   env:
+                    - name: OLLAMA_ENDPOINT
+                      value: http://ollama.ollama.svc.cluster.local:11434
+                    # VNC Config
                     - name: RESOLUTION
                       value: "1920x1080x24"
                     - name: RESOLUTION_WIDTH
