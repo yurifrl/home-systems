@@ -76,17 +76,7 @@ machine:
     #         - '!10.0.0.3/32'
     #         - fdc7::/16
   # Provides machine specific network configuration options.
-  network:
-    interfaces:
-      - interface: eth0 # Please verify this is the correct network interface name
-        addresses:
-          - 192.168.68.102/24
-        routes:
-          - network: 0.0.0.0/0
-            gateway: 192.168.68.1 # Please verify your gateway address
-    nameservers:
-      - 1.1.1.1 # Please verify your DNS servers
-      - 8.8.8.8
+  network: {}
   # # `interfaces` is used to define the network interface configuration.
   # interfaces:
   #     - interface: enp0s1 # The interface name.

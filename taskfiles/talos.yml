@@ -3,7 +3,7 @@ version: '3'
 tasks:
   dashboard:
     cmds:
-      - talosctl -n 192.168.68.100,192.168.68.114,192.168.68.107,192.168.68.104 dashboard
+      - talosctl -n 192.168.68.100,192.168.68.114,192.168.68.107,192.168.68.115 dashboard
 
   onepassword:
     desc: "Inject 1Password secrets into Talos YAML files"
@@ -12,7 +12,7 @@ tasks:
       - op inject -f -i talos/controlplane-192.168.68.100.yaml -o talos/op/controlplane-192.168.68.100.yaml
       - op inject -f -i talos/nodes/tp4-192.168.68.114.yaml -o talos/op/nodes/tp4-192.168.68.114.yaml
       - op inject -f -i talos/nodes/tp1-192.168.68.107.yaml -o talos/op/nodes/tp1-192.168.68.107.yaml
-      - op inject -f -i talos/nodes/192.168.68.102-vm-pc01.yaml -o talos/op/nodes/192.168.68.102-pc01.yaml
+      - op inject -f -i talos/nodes/vm-pc01.yaml -o talos/op/nodes/vm-pc01.yaml
       - op inject -f -i talos/talosconfig -o talos/op/talosconfig
 
   apply:
@@ -20,7 +20,7 @@ tasks:
       - talosctl -n 192.168.68.100 apply-config -f talos/op/controlplane-192.168.68.100.yaml
       - talosctl -n 192.168.68.114 apply-config -f talos/op/nodes/tp4-192.168.68.114.yaml
       - talosctl -n 192.168.68.107 apply-config -f talos/op/nodes/tp1-192.168.68.107.yaml
-      - talosctl -n 192.168.68.102 apply-config -f talos/op/nodes/192.168.68.102-pc01.yaml
+      - talosctl -n 192.168.68.102 apply-config -f talos/op/nodes/vm-pc01.yaml
 
   apply-controlplane:
     cmds:
