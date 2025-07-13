@@ -42,8 +42,7 @@ spec:
             - name: web-ui
               containers:
                 - name: web-ui
-                  # image: ghcr.io/yurifrl/web-ui:latest
-                  image: ghcr.io/yurifrl/web-ui@sha256:e5c91a8701c8a8745c188e3baf4d52e221a86da1bfa9e705d617e1c89c866e03
+                  image: ghcr.io/yurifrl/web-ui:main
                   ports:
                     - name: http
                       containerPort: 7788
