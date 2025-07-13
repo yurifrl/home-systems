@@ -18,28 +18,6 @@ spec:
       labels:
         istio.io/dataplane-mode: ambient
   sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          services:
-            - name: node-red
-              port: 1880
-              selector:
-                app.kubernetes.io/name: home-assistant
-          virtualServices:
-            - name: code
-              service:
-                name: home-assistant-codeserver
-                namespace: home-assistant
-                port: 12321
-            - name: ha
-              service:
-                name: home-assistant
-                namespace: home-assistant
-                port: 8080
-
     - repoURL: http://pajikos.github.io/home-assistant-helm-chart/
       chart: home-assistant
       targetRevision: "*"
@@ -106,5 +84,26 @@ spec:
               prometheus:
                 namespace: hass
                 requires_auth: false
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          services:
+            - name: node-red
+              port: 1880
+              selector:
+                app.kubernetes.io/name: home-assistant
+          virtualServices:
+            - name: code
+              service:
+                name: home-assistant-codeserver
+                namespace: home-assistant
+                port: 12321
+            - name: ha
+              service:
+                name: home-assistant
+                namespace: home-assistant
+                port: 8080
              
 # Chart: https://github.com/pajikos/home-assistant-helm-chart

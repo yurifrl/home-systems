@@ -17,20 +17,6 @@ spec:
       - ServerSideApply=true
       
   sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: promlens
-              service:
-                name: promlens
-                namespace: promlens
-                port: 8080
-          externalSecrets:
-            - name: promlens-secret
-
     - repoURL: https://charts.christianhuth.de
       chart: promlens
       targetRevision: "1.1.0"
@@ -50,3 +36,16 @@ spec:
             requests:
               cpu: 100m
               memory: 128Mi
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: promlens
+              service:
+                name: promlens
+                namespace: promlens
+                port: 8080
+          externalSecrets:
+            - name: promlens-secret

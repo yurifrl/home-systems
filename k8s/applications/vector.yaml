@@ -15,19 +15,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
-    # Add virtual service configuration
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          virtualServices:
-            - name: vector
-              service:
-                name: vector
-                namespace: vector
-                port: 8686
-
     # Vector Helm chart installation
     - repoURL: https://helm.vector.dev
       chart: vector
@@ -117,6 +104,7 @@ spec:
                       namespace: "${namespace}"
                       pod: "${pod}"
                       container: "${container}"
+                      app: "${kubernetes.pod_labels.app}"
                       
             # Sinks - where to send the processed data
             sinks:
@@ -156,3 +144,15 @@ spec:
                 port: 9598
                 targetPort: 9598
                 protocol: TCP
+    # Add virtual service configuration
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: vector
+              service:
+                name: vector
+                namespace: vector
+                port: 8686

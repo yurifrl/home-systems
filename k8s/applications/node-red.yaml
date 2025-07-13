@@ -16,6 +16,22 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
+    # https://github.com/SchwarzIT/node-red-chart
+    - repoURL: https://schwarzit.github.io/node-red-chart
+      targetRevision: "0.35.0"
+      chart: node-red
+      helm:
+        valuesObject:
+          persistence:
+            enabled: true
+            storageClass: local-path
+            accessMode: ReadWriteOnce
+            size: 10Gi
+            existingClaim: node-red-tp1-data
+            mountPath: "/data"
+
+          nodeSelector:
+            syscd.dev/storage: tp1
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/support
@@ -34,19 +50,3 @@ spec:
               accessModes:
                 - ReadWriteOnce
               volumeName: node-red-tp1-data
-    # https://github.com/SchwarzIT/node-red-chart
-    - repoURL: https://schwarzit.github.io/node-red-chart
-      targetRevision: "0.35.0"
-      chart: node-red
-      helm:
-        valuesObject:
-          persistence:
-            enabled: true
-            storageClass: local-path
-            accessMode: ReadWriteOnce
-            size: 10Gi
-            existingClaim: node-red-tp1-data
-            mountPath: "/data"
-
-          nodeSelector:
-            syscd.dev/storage: tp1
