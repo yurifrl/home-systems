@@ -52,7 +52,7 @@ spec:
                     - secretRef:
                         name: browser-use-secrets
                   env:
-                    - name: OLLAMA_ENDPOINT
+                    - name: OLLAMA_HOST
                       value: http://ollama.ollama.svc.cluster.local:11434
                     # VNC Config
                     - name: RESOLUTION
