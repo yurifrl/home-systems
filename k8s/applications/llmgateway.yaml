@@ -42,7 +42,7 @@ spec:
             - name: llmgateway-secrets
     - repoURL: https://charts.bitnami.com/bitnami
       chart: postgresql
-      targetRevision: 15.2.5
+      targetRevision: 16.7.21
       helm:
         releaseName: pg
         valuesObject:
