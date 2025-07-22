@@ -26,7 +26,7 @@ spec:
           deployments:
             - name: llmgateway
               image:
-                repository: ghcr.io/llmgateway/llm-gateway
+                repository: ghcr.io/theopenco/llmgateway-gateway 
                 tag: latest
               containerPort: 8080
               envFrom:
@@ -40,8 +40,6 @@ spec:
                 port: 8080
           externalSecrets:
             - name: llmgateway-secrets
-          persistentVolumeClaims: []
-          persistentVolumes: []
     - repoURL: https://charts.bitnami.com/bitnami
       chart: postgresql
       targetRevision: 15.2.5
