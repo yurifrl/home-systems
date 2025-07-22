@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: llmgateway
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: llmgateway
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          services:
+            - name: llmgateway
+              port: 8080
+          deployments:
+            - name: llmgateway
+              image:
+                repository: ghcr.io/llmgateway/llm-gateway
+                tag: latest
+              containerPort: 8080
+              env: [] # add your provider keys, e.g. OPENAI_API_KEY, etc.
+          virtualServices:
+            - name: llmgateway
+              service:
+                name: llmgateway
+                namespace: llmgateway
+                port: 8080
+          externalSecrets: []
+          persistentVolumeClaims: []
+          persistentVolumes: [] 
