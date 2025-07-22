@@ -26,7 +26,7 @@ spec:
           deployments:
             - name: llmgateway
               image:
-                repository: docker-registry.docker-registry.svc.cluster.local/llmgateway-unified:5000
+                repository: ghcr.io/theopenco/llmgateway-unified
                 tag: latest
               containerPort: 8080
               envFrom:
