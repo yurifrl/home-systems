@@ -29,13 +29,32 @@ spec:
                 repository: ghcr.io/llmgateway/llm-gateway
                 tag: latest
               containerPort: 8080
-              env: [] # add your provider keys, e.g. OPENAI_API_KEY, etc.
+              envFrom:
+                - secretRef:
+                    name: llmgateway-secrets
           virtualServices:
             - name: llmgateway
               service:
                 name: llmgateway
                 namespace: llmgateway
                 port: 8080
-          externalSecrets: []
+          externalSecrets:
+            - name: llmgateway-secrets
           persistentVolumeClaims: []
-          persistentVolumes: [] 
+          persistentVolumes: []
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: postgresql
+      targetRevision: 15.2.5
+      helm:
+        releaseName: pg
+        valuesObject:
+          primary:
+            service:
+              ports:
+                postgresql: 5432
+          auth:
+            existingSecret: llmgateway-secrets
+            username: llmgateway
+            database: llmgateway
+            secretKeys:
+              userPasswordKey: postgres-password 
