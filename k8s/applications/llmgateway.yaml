@@ -27,7 +27,7 @@ spec:
             - name: llmgateway
               image:
                 repository: ghcr.io/theopenco/llmgateway-gateway 
-                tag: v0.0.0-d720793
+                tag: latest
               containerPort: 8080
               envFrom:
                 - secretRef:
