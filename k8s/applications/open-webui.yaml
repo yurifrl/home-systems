@@ -31,7 +31,7 @@ spec:
     # Main Open WebUI chart
     - repoURL: https://helm.openwebui.com/
       chart: open-webui
-      targetRevision: "6.22.0"
+      targetRevision: "6.29.0"
       helm:
         values: |
           # Disable embedded Ollama as we already have it running
