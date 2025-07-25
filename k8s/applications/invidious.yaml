@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: invidious
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: invidious
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://charts-helm.invidious.io
+      chart: invidious
+      targetRevision: "*"
+      helm:
+        valuesObject:
+          postgresql:
+            primary:
+              persistence:
+                enabled: false
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: invidious
+              service:
+                name: invidious
+                namespace: invidious
+                port: 3000 
