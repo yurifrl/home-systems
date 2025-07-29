@@ -52,7 +52,7 @@ spec:
               memory: 512Mi
     - repoURL: https://helm.influxdata.com/
       chart: telegraf
-      targetRevision: "1.8.59"
+      targetRevision: "1.8.61"
       helm:
         valuesObject:
           config:
