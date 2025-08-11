@@ -50,7 +50,7 @@ spec:
                 port: 8080
     - repoURL: https://charts.bitnami.com/bitnami
       chart: postgresql
-      targetRevision: "16.7.18"
+      targetRevision: "16.7.18" 
       helm:
         valuesObject:
           auth:
