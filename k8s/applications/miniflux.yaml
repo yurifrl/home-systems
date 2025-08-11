@@ -1,0 +1,63 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: miniflux
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: miniflux
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: miniflux
+              decodingStrategy: Auto
+          services:
+            - name: miniflux
+              port: 8080
+          deployments:
+            - name: miniflux
+              image:
+                repository: docker.io/miniflux/miniflux
+                tag: latest
+              containerPort: 8080
+              envFrom:
+                - secretRef:
+                    name: miniflux
+              env:
+                - name: DATABASE_URL
+                  value: "postgres://miniflux:miniflux12345@miniflux-postgresql:5432/miniflux?sslmode=disable"
+                - name: RUN_MIGRATIONS
+                  value: "1"
+                - name: CREATE_ADMIN
+                  value: "1"
+          virtualServices:
+            - name: miniflux
+              service:
+                name: miniflux
+                namespace: miniflux
+                port: 8080
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: postgresql
+      targetRevision: "16.7.18"
+      helm:
+        valuesObject:
+          auth:
+            database: miniflux
+            username: miniflux
+            password: "miniflux12345"
+          primary:
+            persistence:
+              enabled: false
+
