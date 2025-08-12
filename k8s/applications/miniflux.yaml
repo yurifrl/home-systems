@@ -42,6 +42,8 @@ spec:
                   value: "1"
                 - name: CREATE_ADMIN
                   value: "1"
+                - name: BASE_URL
+                  value: "https://miniflux.syscd.tech"
           virtualServices:
             - name: miniflux
               service:
