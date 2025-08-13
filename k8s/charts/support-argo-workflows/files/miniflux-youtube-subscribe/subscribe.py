@@ -2,6 +2,7 @@ import json
 import os
 import sys
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 
 
 MINIFLUX_URL = os.environ.get("MINIFLUX_URL", "https://miniflux.syscd.tech")
@@ -20,8 +21,19 @@ def subscribe_feed(feed_url: str) -> int:
         headers={"Content-Type": "application/json", "X-Auth-Token": MINIFLUX_TOKEN},
         method="POST",
     )
-    with urlopen(req) as resp:
-        return resp.getcode()
+    try:
+        with urlopen(req) as resp:
+            return resp.getcode()
+    except HTTPError as e:
+        try:
+            body = (e.read() or b"").decode("utf-8", "ignore")
+        except Exception:
+            body = ""
+        if e.code in (400, 409) and "already" in body.lower():
+            return 200
+        return e.code
+    except URLError:
+        return 0
 
 
 def main() -> None:
