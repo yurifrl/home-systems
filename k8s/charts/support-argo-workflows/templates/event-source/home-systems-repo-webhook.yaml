@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: home-systems-repo-webhook
+  namespace: {{ .Release.Namespace }}
+spec:
+  service:
+    ports:
+      - port: 12000
+        targetPort: 12000
+  github:
+    repo:
+      repositories:
+        - owner: "yurifrl"
+          repository: "home-systems"
+      events:
+        - push
+      webhook:
+        endpoint: "/webhook"
+        port: "12000"
+        method: POST
+        secret:
+          name: argo-workflows
+          key: GITHUB_WEBHOOK_SECRET
+

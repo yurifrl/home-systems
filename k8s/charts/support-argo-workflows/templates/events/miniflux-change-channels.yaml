@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: {{ .Release.Name }}-miniflux-change-channels
+  namespace: {{ .Release.Namespace }}
+spec:
+  dependencies:
+    - name: push
+      eventSourceName: home-systems-repo-webhook
+      eventName: repo
+      filters:
+        data:
+          - path: body.commits.[*].added
+            type: string
+            contains:
+              - "k8s/charts/support-argo-workflows/files/miniflux-youtube-subscribe/channels.json"
+          - path: body.commits.[*].modified
+            type: string
+            contains:
+              - "k8s/charts/support-argo-workflows/files/miniflux-youtube-subscribe/channels.json"
+  triggers:
+    - template:
+        name: run-miniflux-subscribe
+        argoWorkflow:
+          operation: submit
+          source:
+            resource: |
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: miniflux-sub-
+              spec:
+                workflowTemplateRef:
+                  name: {{ .Release.Name }}-miniflux-youtube-subscribe
+
