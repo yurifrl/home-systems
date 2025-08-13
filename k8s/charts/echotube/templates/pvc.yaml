@@ -10,10 +10,8 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ $.Values.cache.size | default "1Gi" }}
-{{- with $.Values.cache.storageClassName }}
-  storageClassName: {{ . }}
-{{- end }}
+      storage: 1Gi
+  storageClassName: local-path
 {{- if not $enabled }}
 ---
 {{- end }}
