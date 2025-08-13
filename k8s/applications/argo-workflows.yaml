@@ -28,6 +28,7 @@ spec:
             - name: argo-workflows
               decodingStrategy: Auto
             - name: argo-workflows-stock-checker
+            - name: argo-workflows-miniflux
           virtualServices:
             - name: argo-workflows
               service:
