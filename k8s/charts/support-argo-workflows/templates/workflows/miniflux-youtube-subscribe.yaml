@@ -1,0 +1,64 @@
+{{- if .Values.minifluxSubscribe.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-miniflux-channels
+  namespace: {{ .Release.Namespace }}
+data:
+  channels.json: |
+    {{- (.Files.Get "files/miniflux-youtube-subscribe/channels.json") | nindent 4 }}
+  subscribe.py: |
+    {{- (.Files.Get "files/miniflux-youtube-subscribe/subscribe.py") | nindent 4 }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: {{ .Release.Name }}-miniflux-youtube-subscribe
+  namespace: {{ .Release.Namespace }}
+spec:
+  entrypoint: subscribe
+  templates:
+    - name: subscribe
+      container:
+        image: nixery.dev/arm64/shell/python311/uv
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            set -euo pipefail
+            printf '%s' "$CHANNELS_JSON" | python3 /app/subscribe.py | tee /tmp/result.txt
+        env:
+          - name: MINIFLUX_URL
+            value: {{ .Values.minifluxSubscribe.url | default "https://miniflux.syscd.tech" | quote }}
+          - name: MINIFLUX_CATEGORY_ID
+            value: {{ .Values.minifluxSubscribe.categoryId | default 1 | quote }}
+          - name: MINIFLUX_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: argo-workflows-miniflux
+                key: MINIFLUX_TOKEN
+          - name: CHANNELS_JSON
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-miniflux-channels
+                key: channels.json
+        volumeMounts:
+          - name: script
+            mountPath: /app/subscribe.py
+            subPath: subscribe.py
+      volumes:
+        - name: script
+          configMap:
+            name: {{ .Release.Name }}-miniflux-channels
+---
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: {{ .Release.Name }}-miniflux-youtube-subscribe-cron
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: {{ .Values.minifluxSubscribe.schedule | default "0 2 * * *" | quote }}
+  concurrencyPolicy: Replace
+  workflowSpec:
+    workflowTemplateRef:
+      name: {{ .Release.Name }}-miniflux-youtube-subscribe
+{{- end }}
