@@ -7,7 +7,7 @@ metadata:
     helm.sh/hook-weight: "-5"
     helm.sh/hook-delete-policy: hook-succeeded
 data:
-  channels.json: |
-    {{ (.Files.Get "files/channels.json" | default "[]") | nindent 4 }}
-
-
+{{- range $i, $inst := .Values.instances | default (list) }}
+  {{ $inst.name }}.json: |
+{{ ($.Files.Get (printf "files/%s.json" $inst.name) | default "[]") | nindent 4 }}
+{{- end }}

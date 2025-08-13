@@ -19,10 +19,13 @@ spec:
             - |
               set -euo pipefail
               apk add --no-cache jq kubectl
-              ids=$(jq -r '[.[] | (.channel_id // .) | strings] | join(",")' /config/channels.json)
-              kubectl create configmap echotube-channels \
-                --from-literal=ET_CHANNEL_IDS="${ids}" \
-                -o yaml --dry-run=client | kubectl apply -f -
+              for f in /config/*.json; do
+                name=$(basename "$f" .json)
+                ids=$(jq -r '[.[] | (.channel_id // .) | strings] | join(",")' "$f")
+                kubectl create configmap echotube-channels-${name} \
+                  --from-literal=ET_CHANNEL_IDS="${ids}" \
+                  -o yaml --dry-run=client | kubectl apply -f -
+              done
           volumeMounts:
             - name: channels
               mountPath: /config
@@ -30,5 +33,3 @@ spec:
         - name: channels
           configMap:
             name: echotube-channels-input
-
-
