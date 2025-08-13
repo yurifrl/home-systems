@@ -1,18 +1,20 @@
+{{- range $i, $inst := .Values.instances | default (list) }}
+{{- $name := $inst.name }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: echotube
+  name: echotube-{{ $name }}
   labels:
-    app: echotube
+    app: echotube-{{ $name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: echotube
+      app: echotube-{{ $name }}
   template:
     metadata:
       labels:
-        app: echotube
+        app: echotube-{{ $name }}
     spec:
       containers:
         - name: echotube
@@ -22,8 +24,13 @@ spec:
             - name: ET_CHANNEL_IDS
               valueFrom:
                 configMapKeyRef:
-                  name: echotube-channels
+                  name: echotube-channels-{{ $name }}
                   key: ET_CHANNEL_IDS
+            - name: ET_DISCORD_WEBHOOK_URLS
+              valueFrom:
+                secretKeyRef:
+                  name: echotube
+                  key: {{ printf "%s_WEBHOOK" (upper $name) }}
           envFrom:
             - secretRef:
                 name: echotube
@@ -34,3 +41,5 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+---
+{{- end }}
