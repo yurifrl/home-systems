@@ -1,0 +1,18 @@
+{{- range $i, $inst := .Values.instances | default (list) }}
+{{- $name := $inst.name }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: echotube-cache-{{ $name }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $.Values.cache.size | default "1Gi" }}
+{{- with $.Values.cache.storageClassName }}
+  storageClassName: {{ . }}
+{{- end }}
+---
+{{- end }}
+
