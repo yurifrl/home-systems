@@ -57,7 +57,7 @@ metadata:
   name: {{ .Release.Name }}-miniflux-youtube-subscribe-cron
   namespace: {{ .Release.Namespace }}
 spec:
-  schedule: {{ .Values.minifluxSubscribe.schedule | default "0 2 * * *" | quote }}
+  schedule: {{ .Values.minifluxSubscribe.cron.schedule | default "0 2 * * *" | quote }}
   concurrencyPolicy: Replace
   workflowSpec:
     workflowTemplateRef:
