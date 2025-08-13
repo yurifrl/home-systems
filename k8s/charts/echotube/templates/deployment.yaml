@@ -41,5 +41,12 @@ spec:
             limits:
               cpu: 100m
               memory: 128Mi
+          volumeMounts:
+            - name: cache
+              mountPath: /app/cache
+      volumes:
+        - name: cache
+          persistentVolumeClaim:
+            claimName: echotube-cache-{{ $name }}
 ---
 {{- end }}

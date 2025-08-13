@@ -1,3 +1,7 @@
 instances:
   - name: tier1
   - name: tier2
+
+cache:
+  size: 1Gi
+  # storageClassName: ""
