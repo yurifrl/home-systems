@@ -35,6 +35,11 @@ spec:
                 name: argo-workflows-server
                 namespace: argo-workflows
                 port: 2746
+            - name: home-systems-repo-webhook
+              service:
+                name: home-systems-repo-webhook
+                namespace: argo-workflows
+                port: 12000
     - chart: argo-events
       repoURL: https://argoproj.github.io/argo-helm
       targetRevision: "2.4.16"
