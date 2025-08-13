@@ -1,6 +1,6 @@
 stockChecker:
   enabled: true
-  schedule: "0 */4 * * *"
+  schedule: "0 * * * *"
   products:
     - name: "EAH-8"
       url: "https://br.store.ui.com/br/pt/category/all-door-access/products/eah-8"

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: echotube-channels-input
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: hook-succeeded
+data:
+  channels.json: |
+    {{ (.Files.Get "files/channels.json" | default "[]") | nindent 4 }}
+
+

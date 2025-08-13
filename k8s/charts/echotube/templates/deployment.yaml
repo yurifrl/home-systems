@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echotube
+  labels:
+    app: echotube
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: echotube
+  template:
+    metadata:
+      labels:
+        app: echotube
+    spec:
+      containers:
+        - name: echotube
+          image: ghcr.io/richardthornton/echotube:latest
+          imagePullPolicy: Always
+          env:
+            - name: ET_CHANNEL_IDS
+              valueFrom:
+                configMapKeyRef:
+                  name: echotube-channels
+                  key: ET_CHANNEL_IDS
+          envFrom:
+            - secretRef:
+                name: echotube
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
