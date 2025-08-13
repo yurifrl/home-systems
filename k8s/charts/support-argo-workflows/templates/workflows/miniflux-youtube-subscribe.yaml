@@ -50,6 +50,7 @@ spec:
           configMap:
             name: {{ .Release.Name }}-miniflux-channels
 ---
+{{- if .Values.minifluxSubscribe.cron.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: CronWorkflow
 metadata:
@@ -61,4 +62,5 @@ spec:
   workflowSpec:
     workflowTemplateRef:
       name: {{ .Release.Name }}-miniflux-youtube-subscribe
+{{- end }}
 {{- end }}
