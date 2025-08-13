@@ -1,0 +1,64 @@
+{{- if .Values.miniflux.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: {{ .Release.Name }}-miniflux
+  namespace: {{ .Release.Namespace }}
+spec:
+  service:
+    ports:
+      - port: 12000
+        targetPort: 12000
+  github:
+    repo:
+      repositories:
+        - owner: "yurifrl"
+          repository: "home-systems"
+      events:
+        - push
+      webhook:
+        endpoint: "/miniflux/trigger"
+        port: "12000"
+        method: POST
+        secret:
+          name: argo-workflows
+          key: MINIFLUX_TRIGGER_SECRET
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: {{ .Release.Name }}-miniflux-sensor
+  namespace: {{ .Release.Namespace }}
+spec:
+  dependencies:
+    - name: push
+      eventSourceName: {{ .Release.Name }}-miniflux
+      eventName: repo
+      filters:
+        data:
+          - path: body.commits.[*].added
+            type: string
+            contains:
+              - "k8s/charts/support-argo-workflows/files/miniflux-youtube-subscribe/channels.json"
+          - path: body.commits.[*].modified
+            type: string
+            contains:
+              - "k8s/charts/support-argo-workflows/files/miniflux-youtube-subscribe/channels.json"
+  triggers:
+    - template:
+        name: run-miniflux-subscribe
+        argoWorkflow:
+          operation: submit
+          source:
+            resource: |
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: miniflux-sub-
+              spec:
+                workflowTemplateRef:
+                  name: {{ .Release.Name }}-miniflux-youtube-subscribe
+{{- end }}
+
+
