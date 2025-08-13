@@ -1,6 +1,8 @@
 instances:
   - name: tier1
+    enabled: true
   - name: tier2
+    enabled: false
 
 cache:
   size: 1Gi

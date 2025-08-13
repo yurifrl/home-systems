@@ -1,5 +1,6 @@
 {{- range $i, $inst := .Values.instances | default (list) }}
 {{- $name := $inst.name }}
+{{- $enabled := default true $inst.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -12,6 +13,9 @@ spec:
       storage: {{ $.Values.cache.size | default "1Gi" }}
 {{- with $.Values.cache.storageClassName }}
   storageClassName: {{ . }}
+{{- end }}
+{{- if not $enabled }}
+---
 {{- end }}
 ---
 {{- end }}

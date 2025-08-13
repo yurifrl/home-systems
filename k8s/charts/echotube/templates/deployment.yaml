@@ -1,5 +1,6 @@
 {{- range $i, $inst := .Values.instances | default (list) }}
 {{- $name := $inst.name }}
+{{- $enabled := default true $inst.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7,7 +8,7 @@ metadata:
   labels:
     app: echotube-{{ $name }}
 spec:
-  replicas: 1
+  replicas: {{ if $enabled }}1{{ else }}0{{ end }}
   selector:
     matchLabels:
       app: echotube-{{ $name }}
