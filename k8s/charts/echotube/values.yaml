@@ -6,4 +6,3 @@ instances:
 
 cache:
   size: 1Gi
-  # storageClassName: ""
