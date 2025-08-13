@@ -5,3 +5,9 @@ stockChecker:
     - name: "EAH-8"
       url: "https://br.store.ui.com/br/pt/category/all-door-access/products/eah-8"
       outOfStockText: "Esgotado"
+
+minifluxSubscribe:
+  enabled: true
+  schedule: "0 2 * * *"
+  url: https://miniflux.miniflux.svc.cluster.local
+  categoryId: 1
