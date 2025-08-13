@@ -8,7 +8,7 @@ stockChecker:
 
 minifluxSubscribe:
   enabled: true
-  url: https://miniflux.miniflux.svc.cluster.local
+  url: http://miniflux.miniflux.svc.cluster.local
   categoryId: 1
   cron:
     schedule: "0 2 * * *"

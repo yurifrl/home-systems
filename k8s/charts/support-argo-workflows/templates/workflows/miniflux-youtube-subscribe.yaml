@@ -28,9 +28,9 @@ spec:
             printf '%s' "$CHANNELS_JSON" | python3 /app/subscribe.py | tee /tmp/result.txt
         env:
           - name: MINIFLUX_URL
-            value: {{ .Values.minifluxSubscribe.url | default "https://miniflux.syscd.tech" | quote }}
+            value: {{ .Values.minifluxSubscribe.url | quote }}
           - name: MINIFLUX_CATEGORY_ID
-            value: {{ .Values.minifluxSubscribe.categoryId | default 1 | quote }}
+            value: {{ .Values.minifluxSubscribe.categoryId | quote }}
           - name: MINIFLUX_TOKEN
             valueFrom:
               secretKeyRef:
