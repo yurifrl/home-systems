@@ -16,6 +16,7 @@ spec:
       events:
         - push
       webhook:
+        # need to make this work -> https://github.com/yurifrl/home-systems/settings/hooks/563564509?tab=deliveries
         endpoint: "/webhook"
         port: "12000"
         method: POST
