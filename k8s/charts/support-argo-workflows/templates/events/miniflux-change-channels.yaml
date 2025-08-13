@@ -33,3 +33,4 @@ spec:
               spec:
                 workflowTemplateRef:
                   name: {{ .Release.Name }}-miniflux-youtube-subscribe
+{{- end }}
