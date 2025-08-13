@@ -29,7 +29,7 @@ spec:
                 port: 9115
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: prometheus-blackbox-exporter
-      targetRevision: "11.0.0"
+      targetRevision: "11.2.2"
       helm:
         valuesObject:
           extraSecretMounts:
