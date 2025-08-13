@@ -25,7 +25,7 @@ spec:
     # Cloudflare (.live)
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
-      targetRevision: "9.0.2"
+      targetRevision: "9.0.3"
       helm:
         releaseName: cloudflare
         valuesObject:
@@ -45,7 +45,7 @@ spec:
     # Tailscale (.tech), there need to be two because tailscale can't be proxied I the annotation to disable proxie only work on virtualservices
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
-      targetRevision: "9.0.2"
+      targetRevision: "9.0.3"
       helm:
         releaseName: tailscale
         valuesObject:
@@ -65,7 +65,7 @@ spec:
     - repoURL: registry-1.docker.io/bitnamicharts
       chart: external-dns
       # external-dns > 1.16.1 (chart >= 8.8.3) is broken https://github.com/kubernetes-sigs/external-dns/issues/5240
-      targetRevision: "9.0.2" # 1.15.1
+      targetRevision: "9.0.3" # 1.15.1
       helm:
         releaseName: rfc2136
         valuesObject:
