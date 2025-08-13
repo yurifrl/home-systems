@@ -1,3 +1,4 @@
+{{- if .Values.minifluxChangeChannels.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Sensor
 metadata:
@@ -13,11 +14,11 @@ spec:
           - path: body.commits.[*].added
             type: string
             contains:
-              - "k8s/charts/support-argo-workflows/files/miniflux-youtube-subscribe/channels.json"
+              - {{ .Values.minifluxChangeChannels.watchPath | quote }}
           - path: body.commits.[*].modified
             type: string
             contains:
-              - "k8s/charts/support-argo-workflows/files/miniflux-youtube-subscribe/channels.json"
+              - {{ .Values.minifluxChangeChannels.watchPath | quote }}
   triggers:
     - template:
         name: run-miniflux-subscribe
@@ -32,4 +33,3 @@ spec:
               spec:
                 workflowTemplateRef:
                   name: {{ .Release.Name }}-miniflux-youtube-subscribe
-

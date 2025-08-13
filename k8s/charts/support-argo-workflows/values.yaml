@@ -13,3 +13,7 @@ minifluxSubscribe:
   cron:
     schedule: "0 2 * * *"
     enabled: false
+
+minifluxChangeChannels:
+  enabled: true
+  watchPath: k8s/charts/support-argo-workflows/files/miniflux-youtube-subscribe/channels.json
