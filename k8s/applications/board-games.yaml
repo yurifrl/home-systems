@@ -43,7 +43,7 @@ spec:
           deployments:
             - name: board-games
               image:
-                repository: gcr.io/board-games/board-games
+                repository: ghcr.io/yurifrl/board-games
                 tag: latest
               containerPort: 8080
               envFrom:
