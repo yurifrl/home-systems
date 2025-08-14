@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: board-games
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: board-games
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          services:
+            - name: board-games
+              port: 8080
+          deployments:
+            - name: board-games
+              image:
+                repository: gcr.io/board-games/board-games
+                tag: latest
+              containerPort: 8080
+          virtualServices:
+            - name: board-games
+              service:
+                name: board-games
+                namespace: board-games
+                port: 8080
+
