@@ -45,6 +45,8 @@ spec:
                 service: http://istio-gateway.istio-system.svc.cluster.local:80
               - hostname: "yagp.monaddaydream.com"
                 service: http://istio-gateway.istio-system.svc.cluster.local:80
+              - hostname: "bg.monaddaydream.com"
+                service: http://istio-gateway.istio-system.svc.cluster.local:80
           resources:
             limits:
               cpu: 100m
