@@ -11,7 +11,11 @@ pyrra.dev/chart: support
 {{- define "support.hosts" -}}
 {{- $hostPrefix := .hostname | default .name }}
 {{- $domains := .domains | default dict }}
-{{- if .hostnameOverride }}
+{{- if .hosts }}
+{{- range .hosts }}
+- {{ . }}
+{{- end }}
+{{- else if .hostnameOverride }}
 - {{ .hostnameOverride }}
 {{- else }}
 {{- if or (and (not (hasKey $domains "live")) $.Values.global.domains.live) (get $domains "live") }}

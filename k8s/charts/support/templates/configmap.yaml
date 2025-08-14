@@ -7,8 +7,6 @@ metadata:
   name: {{ .name }}
   namespace: {{ $.Release.Namespace }}
 data:
-  {{- range $key, $value := .data }}
-  {{ $key }}: {{ $value | quote }}
-  {{- end }}
+  {{- toYaml .data | nindent 2 }}
 {{- end }}
 {{- end }} 

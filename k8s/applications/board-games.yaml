@@ -23,6 +23,20 @@ spec:
       path: k8s/charts/support
       helm:
         valuesObject:
+          configMaps:
+            - name: board-games-config
+              data:
+                config.yaml: |
+                  port: 8080
+                  log_level: info
+                  github:
+                    owner: yurifrl
+                    repo: Obsidian
+                    path: .data/inventory.yaml
+                    ref: heads/main
+                    interval_seconds: 10
+          externalSecrets:
+            - name: board-games
           services:
             - name: board-games
               port: 8080
@@ -32,8 +46,23 @@ spec:
                 repository: gcr.io/board-games/board-games
                 tag: latest
               containerPort: 8080
+              envFrom:
+                - secretRef:
+                    name: board-games
+              volumes:
+                - name: config
+                  configMap:
+                    name: board-games-config
+              volumeMounts:
+                - name: config
+                  mountPath: /app/config.yaml
+                  subPath: config.yaml
           virtualServices:
             - name: board-games
+              hosts:
+                - bg.monaddaydream.com
+                - bg.syscd.live
+                - bg.syscd.tech
               service:
                 name: board-games
                 namespace: board-games
