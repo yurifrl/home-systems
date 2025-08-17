@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: youtube-to-text
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: youtube-to-text
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          services:
+            - name: youtube-to-text
+              port: 8080
+          deployments:
+            - name: youtube-to-text
+              image:
+                repository: ghcr.io/yurifrl/youtube-to-text
+                tag: latest
+              containerPort: 8080
+          virtualServices:
+            - name: youtube-to-text
+              hosts:
+                - ytt.syscd.live
+                - ytt.syscd.tech
+                - ytt.syscd.dev
+              service:
+                name: youtube-to-text
+                namespace: youtube-to-text
+                port: 8080
