@@ -25,13 +25,13 @@ spec:
         valuesObject:
           services:
             - name: youtube-to-text
-              port: 8080
+              port: 8000
           deployments:
             - name: youtube-to-text
               image:
                 repository: ghcr.io/yurifrl/youtube-to-text
                 tag: latest
-              containerPort: 8080
+              containerPort: 8000
           virtualServices:
             - name: youtube-to-text
               hosts:
@@ -41,4 +41,4 @@ spec:
               service:
                 name: youtube-to-text
                 namespace: youtube-to-text
-                port: 8080
+                port: 8000
