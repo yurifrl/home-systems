@@ -4,21 +4,27 @@ metadata:
   name: applications
   namespace: argocd
 spec:
+  syncPolicy:
+    preserveResourcesOnDeletion: true
   generators:
-  - git:
-      repoURL: https://github.com/yurifrl/home-systems.git
-      revision: HEAD
-      directories:
-      - path: k8s/applications/*
+    - git:
+        repoURL: https://github.com/yurifrl/home-systems.git
+        revision: HEAD
+        files:
+          - path: k8s/applications/*.yaml
   template:
     metadata:
-      name: '{{path.basename}}'
+      name: '{{ path.basename }}'
+      namespace: argocd
     spec:
       project: default
       source:
         repoURL: https://github.com/yurifrl/home-systems.git
         targetRevision: HEAD
-        path: '{{path}}'
+        path: k8s/applications
+        directory:
+          recurse: false
+          include: '{{ path.filename }}'
       destination:
         server: https://kubernetes.default.svc
         namespace: argocd
@@ -26,8 +32,7 @@ spec:
         automated:
           prune: true
           selfHeal: true
-        preserveResourcesOnDeletion: true
         syncOptions:
           - CreateNamespace=true
-          - PruneLast=true
-          - ApplyOutOfSyncOnly=true
+
+
