@@ -14,7 +14,7 @@ global:
   addPrometheusAnnotations: true
 
 controller:
-  replicas: 2
+  replicas: 1
   metrics:
     enabled: true
     serviceMonitor:
@@ -53,7 +53,9 @@ server:
       server.insecure: true
       exec.enabled: true
       server.disable.auth: true
-  
+  autoscaling:
+    enabled: true
+    minReplicas: 1
   extraArgs:
     - --insecure
     - --disable-auth
@@ -75,7 +77,10 @@ server:
       operator: Exists
 
 repoServer:
-  replicas: 2
+  replicas: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 1
   metrics:
     enabled: true
     serviceMonitor:
@@ -86,6 +91,7 @@ repoServer:
       operator: Exists
 
 applicationSet:
+  replicas: 1
   metrics:
     enabled: true
     serviceMonitor:
@@ -112,7 +118,7 @@ configs:
     exec.enabled: true
 
     # -- Timeout to discover if a new manifests version got published to the repository
-    timeout.reconciliation: 18s
+    timeout.reconciliation: 1s
 
     # -- Timeout to refresh application data as well as target manifests cache
     timeout.hard.reconciliation: 0s
