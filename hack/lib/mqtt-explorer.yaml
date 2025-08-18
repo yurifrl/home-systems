@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: mqtt-explorer
   namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   destination:
