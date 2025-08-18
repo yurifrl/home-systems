@@ -9,6 +9,8 @@ kind: Application
 metadata:
   name: zigbee2mqtt
   namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   destination:
