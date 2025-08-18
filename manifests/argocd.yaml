@@ -243,7 +243,7 @@ data:
   server.rbac.log.enforce.enable: "false"
   statusbadge.enabled: "false"
   timeout.hard.reconciliation: 0s
-  timeout.reconciliation: 1s
+  timeout.reconciliation: 10s
   url: https://argocd.example.com
 ---
 # Source: argo-cd/templates/argocd-configs/argocd-cmd-params-cm.yaml
@@ -25785,7 +25785,7 @@ spec:
     metadata:
       annotations:
         checksum/cmd-params: a44037b2d9beea3304b0f7ae4ae13ee4bb705ceaedc7f0ed5587a18a7d09f474
-        checksum/cm: 0e6703032e950361eedc3e066812ace58407f1569a4566d447374f180a445fa5
+        checksum/cm: 5bed5c7f67e7ff7a5e32057a0d91f27d5924774603bdbf7bf504623613b88628
       labels:
         helm.sh/chart: argo-cd-8.1.3
         app.kubernetes.io/name: argocd-repo-server
@@ -26185,7 +26185,7 @@ spec:
     metadata:
       annotations:
         checksum/cmd-params: a44037b2d9beea3304b0f7ae4ae13ee4bb705ceaedc7f0ed5587a18a7d09f474
-        checksum/cm: 0e6703032e950361eedc3e066812ace58407f1569a4566d447374f180a445fa5
+        checksum/cm: 5bed5c7f67e7ff7a5e32057a0d91f27d5924774603bdbf7bf504623613b88628
       labels:
         helm.sh/chart: argo-cd-8.1.3
         app.kubernetes.io/name: argocd-server
@@ -26973,7 +26973,7 @@ spec:
     metadata:
       annotations:
         checksum/cmd-params: a44037b2d9beea3304b0f7ae4ae13ee4bb705ceaedc7f0ed5587a18a7d09f474
-        checksum/cm: 0e6703032e950361eedc3e066812ace58407f1569a4566d447374f180a445fa5
+        checksum/cm: 5bed5c7f67e7ff7a5e32057a0d91f27d5924774603bdbf7bf504623613b88628
       labels:
         helm.sh/chart: argo-cd-8.1.3
         app.kubernetes.io/name: argocd-application-controller
