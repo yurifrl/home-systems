@@ -32,6 +32,11 @@ spec:
                 repository: ghcr.io/yurifrl/youtube-to-text
                 tag: latest
               containerPort: 8000
+              env:
+                - name: DJANGO_ALLOWED_HOSTS
+                  value: "ytt.syscd.live,ytt.syscd.tech,ytt.syscd.dev"
+                - name: DJANGO_CSRF_TRUSTED_ORIGINS
+                  value: "https://ytt.syscd.live,https://ytt.syscd.tech,https://ytt.syscd.dev"
           virtualServices:
             - name: youtube-to-text
               hosts:
