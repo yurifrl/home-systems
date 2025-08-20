@@ -6,6 +6,7 @@ metadata:
 spec:
   syncPolicy:
     preserveResourcesOnDeletion: true
+  goTemplate: true
   generators:
     - git:
         repoURL: https://github.com/yurifrl/home-systems.git
@@ -14,7 +15,7 @@ spec:
           - path: k8s/applications/*.yaml
   template:
     metadata:
-      name: '{{ path.basename }}'
+      name: '{{ trimSuffix ".yaml" .path.filename }}'
       namespace: argocd
     spec:
       project: default
