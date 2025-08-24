@@ -43,6 +43,7 @@ spec:
             repository: codercom/code-server
             tag: "latest"
             pullPolicy: Always
+          existingSecret: code-server
           securityContext:
             enabled: true
             fsGroup: 1000
@@ -50,12 +51,6 @@ spec:
           env:
             - name: NVIDIA_VISIBLE_DEVICES
               value: "all"
-          extraVars:
-            - name: PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: code-server
-                  key: password
           persistence:
             enabled: false
           service:
