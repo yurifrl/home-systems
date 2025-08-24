@@ -44,6 +44,8 @@ spec:
             tag: "latest"
             pullPolicy: Always
           existingSecret: code-server
+          # nodeSelector:
+          #   syscd.dev/gpu: "true"
           securityContext:
             enabled: true
             fsGroup: 1000
@@ -52,7 +54,9 @@ spec:
             - name: NVIDIA_VISIBLE_DEVICES
               value: "all"
           persistence:
-            enabled: false
+            enabled: true
+            size: 10Gi
+            accessMode: ReadWriteOnce
           service:
             type: ClusterIP
             port: 8080
