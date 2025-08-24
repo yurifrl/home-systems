@@ -25,6 +25,8 @@ spec:
       path: k8s/charts/support
       helm:
         valuesObject:
+          externalSecrets:
+            - name: code-server
           virtualServices:
             - name: code-server
               service:
@@ -48,6 +50,12 @@ spec:
           env:
             - name: NVIDIA_VISIBLE_DEVICES
               value: "all"
+          extraVars:
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: code-server
+                  key: password
           persistence:
             enabled: false
           service:
