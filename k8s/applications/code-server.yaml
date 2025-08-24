@@ -41,8 +41,6 @@ spec:
             repository: codercom/code-server
             tag: "latest"
             pullPolicy: Always
-          nodeSelector:
-            syscd.dev/gpu: "true"
           securityContext:
             enabled: true
             fsGroup: 1000
