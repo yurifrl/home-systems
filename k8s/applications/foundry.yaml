@@ -51,6 +51,7 @@ spec:
               containers:
                 - name: foundry
                   image: felddy/foundryvtt:release
+                  imagePullPolicy: Always
                   ports:
                     - name: http
                       containerPort: 30000
