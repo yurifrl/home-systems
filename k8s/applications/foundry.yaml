@@ -38,9 +38,16 @@ spec:
           persistentVolumeClaims:
             - name: foundry-data
               volumeName: foundry-data
+            - name: foundry-talos-vca-xy1-data
+              volumeName: foundry-talos-vca-xy1-data
           persistentVolumes:
             - name: foundry-data
               path: /var/mnt/storage/foundry-data
+            - name: foundry-talos-vca-xy1-data
+              path: /var/mnt/storage/foundry-data
+              nodeLabelKey: kubernetes.io/hostname
+              nodeLabelValues:
+                - talos-vca-xy1
           services:
             - name: foundry
               port: 30000
@@ -48,6 +55,7 @@ spec:
               port: 8080
           statefulSets:
             - name: foundry
+              replicas: 0
               containers:
                 - name: foundry
                   image: felddy/foundryvtt:release
@@ -63,6 +71,11 @@ spec:
                     capabilities:
                       add:
                         - SYS_ADMIN
+                  resources:
+                    limits:
+                      nvidia.com/gpu: 1
+                    requests:
+                      nvidia.com/gpu: 1
                   volumeMounts:
                     - name: foundry-data
                       mountPath: "/data"
@@ -95,7 +108,7 @@ spec:
                           name: foundry-secrets
                           key: gcs-bucket
               nodeSelector:
-                syscd.dev/storage: tp1
+                syscd.dev/gpu: "true"
               volumes:
                 - name: foundry-data
                   persistentVolumeClaim:
@@ -137,4 +150,10 @@ spec:
                   mountPath: /key.json
                   subPath: key.json
                   readOnly: true
-         
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/applications/foundry-migration
+      directory:
+        recurse: false
+        jsonnet: {}
+

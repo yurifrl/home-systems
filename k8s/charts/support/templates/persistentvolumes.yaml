@@ -19,8 +19,12 @@ spec:
     required:
       nodeSelectorTerms:
         - matchExpressions:
-            - key: syscd.dev/storage
+            - key: {{ .nodeLabelKey | default "syscd.dev/storage" }}
               operator: In
               values:
+                {{- if .nodeLabelValues }}
+                {{- toYaml .nodeLabelValues | nindent 16 }}
+                {{- else }}
                 - {{ .nodeName | default "tp1" }}
+                {{- end }}
 {{- end }}
