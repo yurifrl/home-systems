@@ -5,3 +5,5 @@ secrets
 talos/op
 talos/op*
 keys.conf
+hack/foundryvtt-mcp
+hack/foundry
