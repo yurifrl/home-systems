@@ -33,7 +33,7 @@ spec:
     # Main Ollama chart
     - repoURL: https://otwld.github.io/ollama-helm
       chart: ollama
-      targetRevision: "1.26.0"
+      targetRevision: "1.29.0"
       helm:
         values: |
           ollama:
