@@ -5,7 +5,6 @@ kind: PersistentVolume
 metadata:
   name: {{ .name | required "name is required" }}
   namespace: {{ $.Release.Namespace | default .namespace }}
-  finalizers: []
 spec:
   storageClassName: {{ .storageClass | default "local-path" }}
   capacity:
