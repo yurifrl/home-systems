@@ -55,7 +55,7 @@ spec:
               port: 8080
           statefulSets:
             - name: foundry
-              replicas: 0
+              replicas: 1
               containers:
                 - name: foundry
                   image: felddy/foundryvtt:release
@@ -112,7 +112,7 @@ spec:
               volumes:
                 - name: foundry-data
                   persistentVolumeClaim:
-                    claimName: foundry-data
+                    claimName: foundry-talos-vca-xy1-data
                 - name: bucket-data
                   emptyDir: {}
                 - name: gcs-creds
