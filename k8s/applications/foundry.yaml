@@ -104,6 +104,10 @@ spec:
                           key: gcs-bucket
               nodeSelector:
                 syscd.dev/gpu: "true"
+              tolerations:
+                - key: "node.kubernetes.io/disk-pressure"
+                  operator: "Exists"
+                  effect: "NoSchedule"
               volumes:
                 - name: foundry-data
                   persistentVolumeClaim:
