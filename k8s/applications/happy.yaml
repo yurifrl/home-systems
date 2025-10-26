@@ -31,6 +31,20 @@ spec:
           deployments:
             - name: happy
               replicas: 1
+              initContainers:
+                - name: minio-init
+                  image: "minio/mc:latest"
+                  command:
+                    - sh
+                    - -c
+                    - |
+                      until mc alias set local http://localhost:9000 minioadmin minioadmin; do
+                        echo "Waiting for MinIO...";
+                        sleep 2;
+                      done;
+                      mc mb -p local/happy || true;
+                      mc anonymous set download local/happy;
+                      echo "MinIO bucket ready";
               containers:
                 - name: happy-server
                   image: "ghcr.io/yurifrl/dockerfiles/happy-server:latest"
@@ -48,6 +62,20 @@ spec:
                       value: "redis://localhost:6379"
                     - name: PORT
                       value: "3005"
+                    - name: S3_HOST
+                      value: "localhost"
+                    - name: S3_PORT
+                      value: "9000"
+                    - name: S3_USE_SSL
+                      value: "false"
+                    - name: S3_ACCESS_KEY
+                      value: "minioadmin"
+                    - name: S3_SECRET_KEY
+                      value: "minioadmin"
+                    - name: S3_BUCKET
+                      value: "happy"
+                    - name: S3_PUBLIC_URL
+                      value: "http://localhost:9000/happy"
                   envFrom:
                     - secretRef:
                         name: happy-server
@@ -95,6 +123,34 @@ spec:
                     requests:
                       cpu: 100m
                       memory: 128Mi
+                - name: minio
+                  image: "minio/minio:latest"
+                  imagePullPolicy: IfNotPresent
+                  command:
+                    - minio
+                    - server
+                    - /data
+                    - --console-address
+                    - ":9001"
+                  env:
+                    - name: MINIO_ROOT_USER
+                      value: "minioadmin"
+                    - name: MINIO_ROOT_PASSWORD
+                      value: "minioadmin"
+                  ports:
+                    - name: minio
+                      containerPort: 9000
+                      protocol: TCP
+                    - name: console
+                      containerPort: 9001
+                      protocol: TCP
+                  resources:
+                    limits:
+                      cpu: 500m
+                      memory: 512Mi
+                    requests:
+                      cpu: 250m
+                      memory: 256Mi
           virtualServices:
             - name: happy
               service:
