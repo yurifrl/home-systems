@@ -33,7 +33,7 @@ spec:
               replicas: 1
               containers:
                 - name: happy-server
-                  image: "ghcr.io/yurifrl/happy-server:latest"
+                  image: "ghcr.io/yurifrl/dockerfiles/happy-server:latest"
                   imagePullPolicy: Always
                   ports:
                     - name: http
