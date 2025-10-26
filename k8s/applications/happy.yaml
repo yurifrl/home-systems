@@ -54,9 +54,7 @@ spec:
                     - -c
                     - |
                       echo "Waiting for PostgreSQL...";
-                      until echo "SELECT 1" | npx prisma db execute --stdin 2>/dev/null; do
-                        sleep 2;
-                      done;
+                      sleep 10;
                       echo "Running migrations...";
                       npx prisma migrate deploy;
                       echo "Starting server...";
