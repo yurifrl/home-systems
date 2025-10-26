@@ -1,0 +1,103 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: happy
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: happy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: happy-server
+              decodingStrategy: Auto
+          services:
+            - name: happy
+              port: 3005
+          deployments:
+            - name: happy
+              replicas: 1
+              containers:
+                - name: happy-server
+                  image: "ghcr.io/yurifrl/happy-server:latest"
+                  imagePullPolicy: Always
+                  ports:
+                    - name: http
+                      containerPort: 3005
+                      protocol: TCP
+                  env:
+                    - name: NODE_ENV
+                      value: "production"
+                    - name: DATABASE_URL
+                      value: "postgres://happy:happy@localhost:5432/happy?sslmode=disable"
+                    - name: REDIS_URL
+                      value: "redis://localhost:6379"
+                    - name: PORT
+                      value: "3005"
+                  envFrom:
+                    - secretRef:
+                        name: happy-server
+                  resources:
+                    limits:
+                      cpu: 500m
+                      memory: 512Mi
+                    requests:
+                      cpu: 250m
+                      memory: 256Mi
+                - name: postgres
+                  image: "postgres:16-alpine"
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: POSTGRES_DB
+                      value: "happy"
+                    - name: POSTGRES_USER
+                      value: "happy"
+                    - name: POSTGRES_PASSWORD
+                      value: "happy"
+                    - name: PGDATA
+                      value: "/var/lib/postgresql/data/pgdata"
+                  ports:
+                    - name: postgres
+                      containerPort: 5432
+                      protocol: TCP
+                  resources:
+                    limits:
+                      cpu: 500m
+                      memory: 512Mi
+                    requests:
+                      cpu: 250m
+                      memory: 256Mi
+                - name: redis
+                  image: "redis:7-alpine"
+                  imagePullPolicy: IfNotPresent
+                  ports:
+                    - name: redis
+                      containerPort: 6379
+                      protocol: TCP
+                  resources:
+                    limits:
+                      cpu: 250m
+                      memory: 256Mi
+                    requests:
+                      cpu: 100m
+                      memory: 128Mi
+          virtualServices:
+            - name: happy
+              service:
+                name: happy
+                namespace: happy
+                port: 3005
