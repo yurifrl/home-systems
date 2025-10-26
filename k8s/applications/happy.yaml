@@ -81,11 +81,11 @@ spec:
                         name: happy-server
                   resources:
                     limits:
-                      cpu: 500m
-                      memory: 512Mi
+                      cpu: 300m
+                      memory: 384Mi
                     requests:
-                      cpu: 250m
-                      memory: 256Mi
+                      cpu: 100m
+                      memory: 128Mi
                 - name: postgres
                   image: "postgres:16-alpine"
                   imagePullPolicy: IfNotPresent
@@ -104,11 +104,11 @@ spec:
                       protocol: TCP
                   resources:
                     limits:
-                      cpu: 500m
-                      memory: 512Mi
+                      cpu: 300m
+                      memory: 384Mi
                     requests:
-                      cpu: 250m
-                      memory: 256Mi
+                      cpu: 100m
+                      memory: 128Mi
                 - name: redis
                   image: "redis:7-alpine"
                   imagePullPolicy: IfNotPresent
@@ -118,11 +118,11 @@ spec:
                       protocol: TCP
                   resources:
                     limits:
-                      cpu: 250m
-                      memory: 256Mi
-                    requests:
                       cpu: 100m
                       memory: 128Mi
+                    requests:
+                      cpu: 50m
+                      memory: 64Mi
                 - name: minio
                   image: "minio/minio:latest"
                   imagePullPolicy: IfNotPresent
@@ -146,11 +146,11 @@ spec:
                       protocol: TCP
                   resources:
                     limits:
-                      cpu: 500m
-                      memory: 512Mi
-                    requests:
-                      cpu: 250m
+                      cpu: 200m
                       memory: 256Mi
+                    requests:
+                      cpu: 100m
+                      memory: 128Mi
           virtualServices:
             - name: happy
               service:
