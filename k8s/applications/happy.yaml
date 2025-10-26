@@ -49,6 +49,18 @@ spec:
                 - name: happy-server
                   image: "ghcr.io/yurifrl/dockerfiles/happy-server:latest"
                   imagePullPolicy: Always
+                  command:
+                    - sh
+                    - -c
+                    - |
+                      echo "Waiting for PostgreSQL...";
+                      until npx prisma db execute --stdin <<< "SELECT 1" 2>/dev/null; do
+                        sleep 2;
+                      done;
+                      echo "Running migrations...";
+                      npx prisma migrate deploy;
+                      echo "Starting server...";
+                      npm start;
                   ports:
                     - name: http
                       containerPort: 3005
