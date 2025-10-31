@@ -1,71 +1,71 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: ollama
-#   namespace: argocd
-#   finalizers:
-#   - resources-finalizer.argocd.argoproj.io
-# spec:
-#   project: default
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: ollama
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-#     syncOptions:
-#       - CreateNamespace=true
-#   sources:
-#     # Support chart for VirtualService
-#     - repoURL: https://github.com/yurifrl/home-systems.git
-#       targetRevision: HEAD
-#       path: k8s/charts/support
-#       helm:
-#         valuesObject:
-#           virtualServices:
-#             - name: ollama
-#               service:
-#                 name: ollama
-#                 namespace: ollama
-#                 port: 11434
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ollama
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ollama
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    # Support chart for VirtualService
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          virtualServices:
+            - name: ollama
+              service:
+                name: ollama
+                namespace: ollama
+                port: 11434
 
-#     # Main Ollama chart
-#     - repoURL: https://otwld.github.io/ollama-helm
-#       chart: ollama
-#       targetRevision: "1.26.0"
-#       helm:
-#         values: |
-#           ollama:
-#             gpu:
-#               # Enable GPU support
-#               enabled: true
-#               # Use NVIDIA GPU
-#               type: nvidia
-#               # Request 1 GPU
-#               number: 1
+    # Main Ollama chart
+    - repoURL: https://otwld.github.io/ollama-helm
+      chart: ollama
+      targetRevision: "1.26.0"
+      helm:
+        values: |
+          ollama:
+            gpu:
+              # Enable GPU support
+              enabled: true
+              # Use NVIDIA GPU
+              type: nvidia
+              # Request 1 GPU
+              number: 1
             
-#             # Pull these models at startup
-#             models:
-#               pull:
-#                 - llama2
-#                 - mistral
+            # Pull these models at startup
+            models:
+              pull:
+                - llama2
+                - mistral
 
-#           # Configure persistence
-#           persistentVolume:
-#             enabled: false
-#             # size: 30Gi
-#             # # Specify your storage class if needed
-#             # storageClass: "local-path"
+          # Configure persistence
+          persistentVolume:
+            enabled: false
+            # size: 30Gi
+            # # Specify your storage class if needed
+            # storageClass: "local-path"
 
-#           # Resource requests/limits
-#           resources:
-#             requests:
-#               nvidia.com/gpu: 1
-#             limits:
-#               nvidia.com/gpu: 1
+          # Resource requests/limits
+          resources:
+            requests:
+              nvidia.com/gpu: 1
+            limits:
+              nvidia.com/gpu: 1
 
-#           # Service configuration
-#           service:
-#             type: ClusterIP
-#             port: 11434
+          # Service configuration
+          service:
+            type: ClusterIP
+            port: 11434
