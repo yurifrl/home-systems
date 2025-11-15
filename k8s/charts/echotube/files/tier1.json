@@ -88,10 +88,6 @@
         "channel_id": "UCSc16oMxxlcJSb9SXkjwMjA",
     },
     {
-        "channel_name": "Office Hours Live with Tim Heidecker",
-        "channel_id": "UCtS3BcCw-tITPFYSvkbP0Bg"
-    },
-    {
         "channel_name": "STRANGE ÆONS",
         "channel_id": "UCrq3JYirgV-BLluzTF6X_7A"
     },
@@ -134,5 +130,9 @@
     {
         "channel_name": "Not An Engineer",
         "channel_id": "UCXh9mHdcBD-3aGCiECZMP1Q"
+    },
+    {
+        "channel_name": "The McElroy Family",
+        "channel_id": "UC6k_GngLDtxbkUlZOq6_h5g"
     }
 ]
