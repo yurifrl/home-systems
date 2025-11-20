@@ -34,7 +34,7 @@ spec:
     # PostgreSQL deployment
     - repoURL: https://charts.bitnami.com/bitnami
       chart: postgresql
-      targetRevision: "18.1.8" 
+      targetRevision: "18.1.11" 
       helm:
         values: |
           auth:
