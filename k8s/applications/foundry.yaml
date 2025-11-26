@@ -25,14 +25,9 @@ spec:
           virtualServices:
             - name: foundry
               service:
-                name: foundry
+                name: foundry2
                 namespace: foundry
                 port: 30000
-            - name: froudry-gcsproxy
-              service:
-                name: gcsproxy
-                namespace: foundry
-                port: 8080
           externalSecrets:
             - name: foundry-secrets
           persistentVolumeClaims:
@@ -74,34 +69,6 @@ spec:
                   volumeMounts:
                     - name: foundry-data
                       mountPath: "/data"
-                    # - name: bucket-data
-                    #   mountPath: "/data/Data/bucket"
-                    #   mountPropagation: "Bidirectional"
-                # - name: gcsfuse
-                #   image: ghcr.io/yurifrl/dockerfiles/gcsfuse:latest
-                #   command: ["gcsfuse"]
-                #   args: ["--foreground", "--implicit-dirs", "-o", "allow_other", "--uid", "1000", "--gid", "1000", "$(GCS_BUCKET)", "/bucket"]
-                #   securityContext:
-                #     privileged: true
-                #     capabilities:
-                #       add:
-                #         - SYS_ADMIN
-                #   volumeMounts:
-                #     - name: bucket-data
-                #       mountPath: "/bucket"
-                #       mountPropagation: "Bidirectional"
-                #     - name: gcs-creds
-                #       mountPath: "/foundry-sa-key.json"
-                #       subPath: foundry-sa-key.json
-                #       readOnly: true
-                #   env:
-                #     - name: GOOGLE_APPLICATION_CREDENTIALS
-                #       value: /foundry-sa-key.json
-                #     - name: GCS_BUCKET
-                #       valueFrom:
-                #         secretKeyRef:
-                #           name: foundry-secrets
-                #           key: gcs-bucket
               nodeSelector:
                 syscd.dev/gpu: "true"
               tolerations:
@@ -112,40 +79,7 @@ spec:
                 - name: foundry-data
                   persistentVolumeClaim:
                     claimName: foundry-talos-vca-xy1-data
-                # - name: bucket-data
-                #   emptyDir: {}
-                # - name: gcs-creds
-                #   secret:
-                #     secretName: foundry-secrets
-                #     items:
-                #       - key: foundry-sa-key.json
-                #         path: foundry-sa-key.json
                 - name: options-config
                   configMap:
                     name: foundry-options
-          # deployments:
-          #   # http://gcsproxy:8080/legends-of-barovia-founrdyvvt/module.json
-          #   - name: gcsproxy
-          #     image:
-          #       # https://github.com/yurifrl/dockerfiles
-          #       repository: ghcr.io/yurifrl/dockerfiles/gcsproxy
-          #       tag: latest
-          #     containerPort: 8080
-          #     env:
-          #       - name: GCS_BUCKET
-          #         valueFrom:
-          #           secretKeyRef:
-          #             name: foundry-secrets
-          #             key: gcs-bucket
-          #     volumes:
-          #       - name: foundry-sa-key
-          #         secret:
-          #           secretName: foundry-secrets
-          #           items:
-          #             - key: foundry-sa-key.json
-          #               path: key.json
-          #     volumeMounts:
-          #       - name: foundry-sa-key
-          #         mountPath: /key.json
-          #         subPath: key.json
-          #         readOnly: true
+   
