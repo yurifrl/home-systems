@@ -27,7 +27,7 @@ spec:
         - '.spec.template.spec.containers[].env[]?.valueFrom.resourceFieldRef.divisor'
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: "1.26.2"
+    targetRevision: "1.28.2"
     chart: cni
     helm:
       valuesObject:
