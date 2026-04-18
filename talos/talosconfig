@@ -10,3 +10,4 @@ contexts:
         ca: "op://kubernetes/talos/MACHINE_CA_CRT"
         crt: "op://kubernetes/talos/TALOS_CLIENT_CRT"
         key: "op://kubernetes/talos/TALOS_CLIENT_KEY"
+
