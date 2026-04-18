@@ -1,0 +1,9 @@
+version: "3"
+
+tasks:
+  setup:
+    cmds:
+      - op inject -f -i talos/talosconfig -o talos/op/talosconfig
+      - cp talos/op/talosconfig ~/.talos/config
+
+

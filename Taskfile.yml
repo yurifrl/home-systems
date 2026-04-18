@@ -6,3 +6,4 @@ includes:
   # k8s: ./taskfiles/kubernetes.yml
   turing: ./taskfiles/turing.yml
   proxmox: ./taskfiles/proxmox.yml
+  clusterbootstrap: ./taskfiles/clusterbootstrap.yml
