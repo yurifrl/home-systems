@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "proxmox": {
+      "type": "local",
+      "command": [
+        "bunx",
+        "-y",
+        "https://github.com/gilby125/mcp-proxmox.git"
+      ],
+      "enabled": true,
+      "environment": {
+        "PROXMOX_HOST": "{env:PROXMOX_HOST}",
+        "PROXMOX_USER": "{env:PROXMOX_USER}",
+        "PROXMOX_TOKEN_NAME": "{env:PROXMOX_TOKEN_NAME}",
+        "PROXMOX_TOKEN_VALUE": "{env:PROXMOX_TOKEN_VALUE}",
+        "PROXMOX_ALLOW_ELEVATED": "{env:PROXMOX_ALLOW_ELEVATED}"
+      }
+    }
+  }
+}
