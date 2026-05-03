@@ -1,0 +1,183 @@
+# Talos machineconfig TEMPLATE for dell01 (OptiPlex 3080M, amd64)
+# Role: control plane node at 192.168.68.100
+#
+# Rendered via `task pxe:config NODE=dell01`:
+#   - 1Password secret references (op-colon-slash-slash) are injected
+#   - Output lands in pxe/assets/configs/<mac-hex-hyphens>.yaml
+#   - Served over HTTP during PXE boot via talos.config= kernel arg
+#
+# Secrets are reused from the original cluster (stored in 1Password "kubernetes" vault)
+# so workers (tp1/tp4/rpi) can re-join without regenerating configs.
+version: v1alpha1
+debug: false
+persist: true
+
+machine:
+  type: controlplane
+  token: "83hslk.63hudjooz4mhaufv"
+  ca:
+    crt: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJQakNCOGFBREFnRUNBaEFOV0tDckFYUnJxV0lrcDVCTlJhdnNNQVVHQXl0bGNEQVFNUTR3REFZRFZRUUsKRXdWMFlXeHZjekFlRncweU5UQXhNekF4T1RBd016TmFGdzB6TlRBeE1qZ3hPVEF3TXpOYU1CQXhEakFNQmdOVgpCQW9UQlhSaGJHOXpNQ293QlFZREsyVndBeUVBSitXR2tnbStaMG1aaXMzMXFJTHQ4RjIwK2ZXNHhqZksvV3pNCjJteEx5QXVqWVRCZk1BNEdBMVVkRHdFQi93UUVBd0lDaERBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUkKS3dZQkJRVUhBd0l3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFkQmdOVkhRNEVGZ1FVWWFEZVVQTFI5VDZRbmN1YgpwaDZIYkRXKzFya3dCUVlESzJWd0EwRUFVcHJteDVTeVNWc2JDUEFqbkpmMm9mS3hPVHRPWS9UWXArcis2Z1VGCi9ZMytqQ0Y0TEdhVHdHRC93anJLMEVaRlMrMjgxZ0FaTXVkOFc3QktHeW4yREE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="
+    key: "LS0tLS1CRUdJTiBFRDI1NTE5IFBSSVZBVEUgS0VZLS0tLS0KTUM0Q0FRQXdCUVlESzJWd0JDSUVJSW5qYkphQTNFamNMYkgvQXRmZEQ5bFpiS1hIQmpLV292aUdCL0xOQ2ZKVwotLS0tLUVORCBFRDI1NTE5IFBSSVZBVEUgS0VZLS0tLS0K"
+  certSANs:
+    - 192.168.68.100
+  kubelet:
+    image: ghcr.io/siderolabs/kubelet:v1.32.1
+    defaultRuntimeSeccompProfileEnabled: true
+    disableManifestsDirectory: true
+  network:
+    hostname: dell01
+    interfaces:
+      - interface: enp2s0
+        dhcp: false
+        addresses:
+          - 192.168.68.100/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.68.1
+    nameservers:
+      - 192.168.68.1
+      - 8.8.8.8
+  install:
+    disk: /dev/nvme0n1
+    image: factory.talos.dev/metal-installer/4a0d65c669d46663f377e7161e50cfd570c401f26fd9e7bda34a0216b6f1922b:v1.10.3
+    wipe: true
+    extraKernelArgs:
+      - talos.dashboard.disabled=0
+  features:
+    rbac: true
+    stableHostname: true
+    apidCheckExtKeyUsage: true
+    diskQuotaSupport: true
+    kubePrism:
+      enabled: true
+      port: 7445
+    hostDNS:
+      enabled: true
+      forwardKubeDNSToHost: true
+  nodeLabels:
+    node.kubernetes.io/exclude-from-external-load-balancers: ""
+    syscd.dev/storage: dell01
+
+cluster:
+  id: "sMo2fr1PNGcRWVyFRpfYEOj9I_ZkzhQuHIJrNzPt_jU="
+  secret: "oOIk5Lx9jgk6+XDaQmOLUJr74zR1V0MxarGQy17HH0s="
+  controlPlane:
+    endpoint: https://192.168.68.100:6443
+  clusterName: talos-default
+  network:
+    cni:
+      name: flannel
+    dnsDomain: cluster.local
+    podSubnets:
+      - 10.244.0.0/16
+    serviceSubnets:
+      - 10.96.0.0/12
+  token: "yaaaud.b857ac1i2tqsrk7f"
+  secretboxEncryptionSecret: "7/UGwyhiyVn8NWQN8RBxR5vAN4BTQpDJBvLIlOFzXvQ="
+  ca:
+    crt: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJpVENDQVMrZ0F3SUJBZ0lRY3pTcTU3L21FSlM4bkFEOUcxN0dMREFLQmdncWhrak9QUVFEQWpBVk1STXcKRVFZRFZRUUtFd3ByZFdKbGNtNWxkR1Z6TUI0WERUSTFNREV6TURFNU1EQXpNMW9YRFRNMU1ERXlPREU1TURBegpNMW93RlRFVE1CRUdBMVVFQ2hNS2EzVmlaWEp1WlhSbGN6QlpNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VICkEwSUFCSlpQRURtOVFVMWEvWVpKeWNTL0tPZS80a2wybTVXRVpVa2tKM2w4bUtUZVZ3QWlrcnQ2SjJoOENSN0kKSitZdHJJRzVCczAxWTRtUXlTSjZ1L3VxVXdtallUQmZNQTRHQTFVZER3RUIvd1FFQXdJQ2hEQWRCZ05WSFNVRQpGakFVQmdnckJnRUZCUWNEQVFZSUt3WUJCUVVIQXdJd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFCkZnUVVQK25iRE0wT2Z0aEorMlNLTFNGdGF3N2Zrc1V3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUlnWTJOdnFCU20KTmE3cWVVeGJUcjUzU1BhOGpMMEwyY0FoWkR5NXZZMGYzU29DSVFEZmRPOXpCTmFEQTNQTVZRcFNYUWV2M3hMSApqRENOaDJiMWZldFFXSGV0cEE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="
+    key: "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSUhqRGNQaE41MS93T09WNUpzUzdpZVZZWllJMGQ4QXBQcDVNNjhIdzNWdG1vQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFbGs4UU9iMUJUVnI5aGtuSnhMOG81Ny9pU1hhYmxZUmxTU1FuZVh5WXBONVhBQ0tTdTNvbgphSHdKSHNnbjVpMnNnYmtHelRWamlaREpJbnE3KzZwVENRPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="
+  aggregatorCA:
+    crt: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJYekNDQVFXZ0F3SUJBZ0lRQ3lIVjlYQ1k4Vzc1d3JldWRCVWErVEFLQmdncWhrak9QUVFEQWpBQU1CNFgKRFRJMU1ERXpNREU1TURBek0xb1hEVE0xTURFeU9ERTVNREF6TTFvd0FEQlpNQk1HQnlxR1NNNDlBZ0VHQ0NxRwpTTTQ5QXdFSEEwSUFCTkJSZjF6T2hWUlFEclR0VzlJZ3VGU3h0U1RkUlZiTWlFNkRGcG0yRDdhbGRvMjRDakNrCml3WmhIYnYrVmlGNzZJQ0pPTGxwd3VGNnJNTE5ETTZHSmt5allUQmZNQTRHQTFVZER3RUIvd1FFQXdJQ2hEQWQKQmdOVkhTVUVGakFVQmdnckJnRUZCUWNEQVFZSUt3WUJCUVVIQXdJd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZApCZ05WSFE0RUZnUVVuRWxTNVdEMk00VnRXUHpML1BDZ0xxQ3Racmt3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUlnCkNmMmtlcjZIMldFdHVFMnMxR1FqSU1vYUZGMll1bm5aLzlRRHVtMEJ0ejhDSVFEU1h2aTExUUFacTcybHA2LzIKUGEyNzBWWkxKTm01YnZZZ0VRQ0lhYTRlcWc9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="
+    key: "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSU5wNUJOUncxblczLytpc25DRDVoM2w3OFYzZW9DTENxeUsxWm1rd2F2M01vQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFMEZGL1hNNkZWRkFPdE8xYjBpQzRWTEcxSk4xRlZzeUlUb01XbWJZUHRxVjJqYmdLTUtTTApCbUVkdS81V0lYdm9nSWs0dVduQzRYcXN3czBNem9ZbVRBPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="
+  serviceAccount:
+    key: "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSUhqRGNQaE41MS93T09WNUpzUzdpZVZZWllJMGQ4QXBQcDVNNjhIdzNWdG1vQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFbGs4UU9iMUJUVnI5aGtuSnhMOG81Ny9pU1hhYmxZUmxTU1FuZVh5WXBONVhBQ0tTdTNvbgphSHdKSHNnbjVpMnNnYmtHelRWamlaREpJbnE3KzZwVENRPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="
+  apiServer:
+    image: registry.k8s.io/kube-apiserver:v1.32.1
+    certSANs:
+      - 192.168.68.100
+    disablePodSecurityPolicy: true
+    admissionControl:
+      - name: PodSecurity
+        configuration:
+          apiVersion: pod-security.admission.config.k8s.io/v1alpha1
+          kind: PodSecurityConfiguration
+          defaults:
+            enforce: privileged
+            enforce-version: latest
+            audit: privileged
+            audit-version: latest
+            warn: privileged
+            warn-version: latest
+          exemptions:
+            namespaces:
+              - kube-system
+              - metallb-system
+              - istio-system
+            runtimeClasses: []
+            usernames: []
+    auditPolicy:
+      apiVersion: audit.k8s.io/v1
+      kind: Policy
+      rules:
+        - level: Metadata
+  controllerManager:
+    image: registry.k8s.io/kube-controller-manager:v1.32.1
+  proxy:
+    image: registry.k8s.io/kube-proxy:v1.32.1
+  scheduler:
+    image: registry.k8s.io/kube-scheduler:v1.32.1
+  discovery:
+    enabled: true
+    registries:
+      kubernetes:
+        disabled: true
+      service: {}
+  etcd:
+    ca:
+      crt: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJmekNDQVNTZ0F3SUJBZ0lSQU9Ld21mZWJkNHlObFduQTRlUU05SlF3Q2dZSUtvWkl6ajBFQXdJd0R6RU4KTUFzR0ExVUVDaE1FWlhSalpEQWVGdzB5TlRBeE16QXhPVEF3TXpOYUZ3MHpOVEF4TWpneE9UQXdNek5hTUE4eApEVEFMQmdOVkJBb1RCR1YwWTJRd1dUQVRCZ2NxaGtqT1BRSUJCZ2dxaGtqT1BRTUJCd05DQUFUTVEzQW1lMnVOCmEvM2JXbkFwOWwweDNFZWdOY3VBMkFoM2l3amxhS1hYVm5MQzJicDI5R0pNd1E3VzBIeFBkNlh3RWt1OXhDMEoKUEVBMjE0bXRZVXZsbzJFd1h6QU9CZ05WSFE4QkFmOEVCQU1DQW9Rd0hRWURWUjBsQkJZd0ZBWUlLd1lCQlFVSApBd0VHQ0NzR0FRVUZCd01DTUE4R0ExVWRFd0VCL3dRRk1BTUJBZjh3SFFZRFZSME9CQllFRkhxSUY2MkRnbVNiCkd2MDM0UmFJenFzcmxpNzZNQW9HQ0NxR1NNNDlCQU1DQTBrQU1FWUNJUUMrTW9TNFpDSUsvNTRReU1pN01VWGUKTGlIRlhrbXdpRjFPYVdOM0FKbHNvUUloQUxHYTM0SE5LNS84UWRFM2ZZUEVTZUpETjVHVStTNnRoZ2RYcHAyaAo5azczCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K"
+      key: "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSUJrcVNWbjVEaG1vMnA2WXVIdGJQNzR4cHRmYmpFaW5qbmc3czUvalN2VzlvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFekVOd0pudHJqV3Y5MjFwd0tmWmRNZHhIb0RYTGdOZ0lkNHNJNVdpbDExWnl3dG02ZHZSaQpUTUVPMXRCOFQzZWw4QkpMdmNRdENUeEFOdGVKcldGTDVRPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="
+  # Bootstrap manifests only apply on first cluster-init. Kept here so a fresh
+  # cluster comes up with ArgoCD + 1Password Connect wired.
+  extraManifests:
+    - https://raw.githubusercontent.com/yurifrl/home-systems/refs/heads/main/manifests/argocd.yaml
+    - https://raw.githubusercontent.com/yurifrl/home-systems/refs/heads/main/manifests/applications.yaml
+  inlineManifests:
+    - name: namespace-argocd
+      contents: |
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: argocd
+    - name: namespace-external-secrets
+      contents: |
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: external-secrets
+    - name: secret-op-credentials
+      contents: |
+        apiVersion: v1
+        kind: Secret
+        type: Opaque
+        metadata:
+          name: op-credentials
+          namespace: 1password
+        data:
+          1password-credentials.json: "ZXlKMlpYSnphVzl1SWpvaU1pSXNJblpsY21sbWFXVnlJanA3SW5OaGJIUWlPaUpXWDA4MVdVRm1WemxsTWtack9XWjBPRjl0YW1kQklpd2liRzlqWVd4SVlYTm9Jam9pVjFJMmFVWlBNRUZMTWsxaGVsUlZOazlETmsxSmJUWXdZalpsVkROelJqVldhMlkyTUc5ZmJXcENPQ0o5TENKb1pXRnNkR2hXWlhKcFptbGxjaUk2Ym5Wc2JDd2laVzVqUTNKbFpHVnVkR2xoYkhNaU9uc2lhMmxrSWpvaWJHOWpZV3hoZFhSb2RqSnJaWGxyYVdRaUxDSmxibU1pT2lKQk1qVTJSME5OSWl3aVkzUjVJam9pWWpVcmFuZHJLMnB6YjI0aUxDSnBkaUk2SWxCd05XbFdPVE4xTVhveWQzbDFjeTBpTENKa1lYUmhJam9pYVhkWlZGUXhiRTFCUTI5V1dsTjBWV1J2WWtKUWJGbDVZVXRUT0RaV1ltNXhWRUpMTVMwMWFtcDJNRmRGYnpoTWFEZGxiVU5KZEVwUk5ERnhXWEJuWjBGUmEzQnNTa2xvTURNM1lXbHlTRzg1TTJWTlJEaFdSRjlNV0ZKeVdUVTVTblYxVHpnNU4zRnFla3czYTNKUFgyWm1aa293TVRWM2F6WnZaa05yTm10emFYaHZSSFpDZVZoemNpMU5lR0UyZG5OTVZERm1jMEpvTVZWYWMxcElNamh1TlZoblVTMXFiM1F5Um5oNGRXNW1Rek5vVGpBMmNrOXJaM05NTTNaNk1VSjFSWFpTU21OQ2FUTllPRXR0ZVhKR1MxOWFTMjkyUWpSb2FWSlplak5NU0RGV1FUTkRNVFZDU0hocWNVd3RWRzlQZVVsRVRuZFZRbE5qYlhKc1VrZEdURXB1YWpScllUWnJOelJmTlVSZmJUVmxRa0UxVFdOSVYwTmhPSFJRWWtwTVJXbE5VMjlvVGpFNVVqbGpXRTlIV2tGeFRVMTVSM1JPT0VFdFNtc3diVEJWU1UxSFVEaHhjM2RhYlY5c1lWaERjM2R2TVdKT1ZFaHdRM1p5Y25CSFRtOVlhMWhETlhZemRGZDZiSGd0WldVMWR6UlhNV2RRYjBnM1ptZHNhVlJWUW5WQlpWbE1PR28zZVhjelFrdEJOREp5ZVZWblJUQlhZM0Y2YUdOaWRIZG1kVkE1VmxaRGRISjNkbWh6WDFrMVdXdHdTWHBmVFZWcVRGUlRSMWxXTTBoNWNsOUZOR1pxUlVoelJsTjJhbUpHYm05aVpYbDNWV1JMV2tod1QySTJNMFJmT0V0MlptVjJXRTB0VlVONWIzTmhMWE5sZWpFdFlXbDBZV1Z0U1dSRFNISlJNMUJMVFZBd1JrZ3RXRkJxTWpkcFRsWm1ZbW93VlU5cU9VRk5Oalp4YVRsVE9YRm5jMHBpZUVKSWRYWTBhMHhPYUVOSVdIbzVhVzkzY25GSVdHTlJMVEZpTmtSRk0xTnVZamhYTnpGblNXRm9WR3M1TjJKNWJpMURibWxTVG5ndFh6UjJTMjh5Vm14aVRsSk5UamxYWWxVM2NGQnVhRXhNU2tFME5qaFVTSEZhTFhaMlRYWlRiVmhPWWxGNUluMHNJblZ1YVhGMVpVdGxlU0k2ZXlKaGJHY2lPaUpCTWpVMlIwTk5JaXdpYTJsa0lqb2liR3h3ZWpjMmVXRmtOWGx3YW1SMWRXOXlkWEozWjNKcGMzRWlMQ0pySWpvaU5WTnNVazAyWTFadmFVaEVNbE5UTUdVNVkxRnpjWGhEY1dGdVJrcFhaa1ZZVXpOb1FscGhabU5TVFNJc0ltdGxlVjl2Y0hNaU9sc2laVzVqY25sd2RDSXNJbVJsWTNKNWNIUWlYU3dpWlhoMElqcDBjblZsTENKcmRIa2lPaUp2WTNRaWZTd2laR1YyYVdObFZYVnBaQ0k2SW1aMk0zcHFabkIzWlc1eWMybDJiWEZ3ZVRkM2JYUnhhV3hsSW4wPQ=="
+          token: "ZXlKaGJHY2lPaUpGVXpJMU5pSXNJbXRwWkNJNklqZGxORzlvZUd0emIyOTJaMnd5TkhKcmNIWnpjbWhpTm5kaElpd2lkSGx3SWpvaVNsZFVJbjAuZXlJeGNHRnpjM2R2Y21RdVkyOXRMMkYxZFdsa0lqb2lORWxWV2xoT00xQk1Sa05OTjBneVNsUktWMWRVTlV0WlUxRWlMQ0l4Y0dGemMzZHZjbVF1WTI5dEwyWjBjeUk2V3lKMllYVnNkR0ZqWTJWemN5SmRMQ0l4Y0dGemMzZHZjbVF1WTI5dEwzUnZhMlZ1SWpvaVVtbEVTVXhqUmt4M1ZUZHljSGhPZGw4eVIwVXlkVmx1UnpWR1gxTndiWFFpTENJeGNHRnpjM2R2Y21RdVkyOXRMM1owY3lJNlczc2lZU0k2TVRBd09Dd2lkU0k2SW14MWNtUjFlVEoyY3pRMGNXOTJiMlZwWmpac2Ftb3pObWswSW4xZExDSmhkV1FpT2lKamIyMHVNWEJoYzNOM2IzSmtMbU52Ym01bFkzUWlMQ0pwWVhRaU9qRTNOREF5TkRNMU1qQXNJbWx6Y3lJNkltTnZiUzR4Y0dGemMzZHZjbVF1WWpVaUxDSnFkR2tpT2lKdGJqUnFjbTExTW01M2VtaGxaM0pxZG5KeU56TTNObXB4WlNJc0luTjFZaUk2SWxFMFVGcFZVMGRQVlVKQ1NGUkxSRWRRVlV0RE0xTkZOVVJaSW4wLkRwV3FhbmxqQXVZY2JrNG9zSnhoLXg1ZTBxcWNIcTU2Sk9kV3ZBUGE0Z19CWERxcE1PREtRbUJ2NzRkM0MxeFI4YUhILURSYVk1Z0szY0IxR3lnX01B"
+    - name: cluster-secret-store-onepassword
+      contents: |
+        apiVersion: external-secrets.io/v1
+        kind: ClusterSecretStore
+        metadata:
+          name: onepassword
+        spec:
+          provider:
+            onepassword:
+              connectHost: http://onepassword-connect.1password.svc.cluster.local:8080
+              vaults:
+                kubernetes: 1
+              auth:
+                secretRef:
+                  connectTokenSecretRef:
+                    name: op-credentials
+                    key: token
+                    namespace: 1password
+---
+apiVersion: v1alpha1
+kind: ExtensionServiceConfig
+name: tailscale
+environment:
+  - TS_AUTHKEY=tskey-auth-kkMLRmvFs221CNTRL-VurfkVhJhJ1yeUtrK9FNJ1pVmM5gumEHf
+  - TS_ROUTES=10.96.0.0/12,192.168.68.0/24

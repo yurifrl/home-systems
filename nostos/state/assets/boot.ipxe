@@ -1,0 +1,9 @@
+#!ipxe
+# Rendered by nostos. Per-MAC config fetched via ${mac:hexhyp}.
+# ${next-server} resolves at runtime from the DHCP reply, so this script
+# is portable across operator IP changes.
+set cfg_url http://${next-server}:9080/configs/${mac:hexhyp}.yaml
+echo Booting Talos v1.10.3, config at ${cfg_url}
+kernel http://${next-server}:9080/assets/vmlinuz-amd64 talos.platform=metal talos.config=${cfg_url}  slab_nomerge pti=on console=tty0
+initrd http://${next-server}:9080/assets/initramfs-amd64.xz
+boot
