@@ -1,0 +1,57 @@
+version: '3'
+
+# PXE server for installing Talos on bare-metal nodes.
+# Run `task pxe:setup` once, then `task pxe:up` whenever you want to install a node.
+# See pxe/README.md for full workflow.
+
+env:
+  PXE_DIR: '{{.TASKFILE_DIR}}/../pxe'
+
+tasks:
+  setup:
+    desc: "Download Talos assets and build the iPXE chainloader. Run once."
+    cmds:
+      - bash pxe/scripts/1-build-assets.sh
+    dir: '{{.TASKFILE_DIR}}/..'
+
+  config:
+    desc: "Render a node's machineconfig from its template. Usage: task pxe:config NODE=dell01"
+    requires:
+      vars: [NODE]
+    cmds:
+      - bash pxe/scripts/2-render-config.sh {{.NODE}}
+    dir: '{{.TASKFILE_DIR}}/..'
+
+  up:
+    desc: "Start PXE server (HTTP + dnsmasq). Foreground, Ctrl+C to stop."
+    cmds:
+      - bash pxe/scripts/3-serve.sh
+    dir: '{{.TASKFILE_DIR}}/..'
+
+  status:
+    desc: "Show what's running and what assets are prepared."
+    cmds:
+      - |
+        echo "=== Assets ==="
+        ls -lh pxe/assets 2>/dev/null || echo "(none - run task pxe:setup)"
+        echo ""
+        echo "=== Rendered node configs ==="
+        ls -lh pxe/assets/configs 2>/dev/null || echo "(none - run task pxe:config NODE=name)"
+        echo ""
+        echo "=== Running processes ==="
+        pgrep -lf "python3 -m http.server 9080" || echo "HTTP server: not running"
+        pgrep -lf "dnsmasq.*tftp-root" || echo "dnsmasq: not running"
+    dir: '{{.TASKFILE_DIR}}/..'
+
+  down:
+    desc: "Kill background PXE servers (if any leaked from a prior run)."
+    cmds:
+      - pkill -f "python3 -m http.server 9080" || true
+      - sudo pkill -f "dnsmasq.*tftp-root" || true
+      - echo "stopped"
+
+  clean-assets:
+    desc: "Wipe downloaded assets + iPXE build. Next `task pxe:setup` will re-download."
+    cmds:
+      - rm -rf pxe/assets pxe/ipxe-src
+    dir: '{{.TASKFILE_DIR}}/..'
