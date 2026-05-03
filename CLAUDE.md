@@ -223,7 +223,7 @@ kubectl -n istio-system logs -l app=ztunnel -f | grep -E "inbound|outbound"
 
 **Control Plane** (192.168.68.100):
 - Raspberry Pi
-- Config: `talos/controlplane-192.168.68.100.yaml`
+- Config: `talos/rpi-192.168.68.100.yaml`
 - Runs Kubernetes control plane components
 
 **Worker Nodes**:

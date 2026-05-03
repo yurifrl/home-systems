@@ -1,5 +1,8 @@
 version: '3'
 
+env:
+  OP_ACCOUNT: my.1password.com
+
 includes:
   talos: ./taskfiles/talos.yml
   argo: ./taskfiles/argo.yml
@@ -7,3 +10,4 @@ includes:
   turing: ./taskfiles/turing.yml
   proxmox: ./taskfiles/proxmox.yml
   clusterbootstrap: ./taskfiles/clusterbootstrap.yml
+  pxe: ./taskfiles/pxe.yml
