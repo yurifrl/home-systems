@@ -66,26 +66,26 @@ tasks:
   build:
     desc: "Download Talos assets + build iPXE binary"
     cmds:
-      - uv run --project .submodules/nostos nostos --config nostos/config.yaml build
+      - go run ./.submodules/nostos/cmd/nostos --config nostos/config.yaml build
   render:
     desc: "Render machineconfig for a node. Usage: task nostos:render NODE=dell01"
     requires:
       vars: [NODE]
     cmds:
-      - uv run --project .submodules/nostos nostos --config nostos/config.yaml render "{{.NODE}}"
+      - go run ./.submodules/nostos/cmd/nostos --config nostos/config.yaml render "{{.NODE}}"
   up:
     desc: "Start PXE server (foreground, Ctrl+C to stop)"
     cmds:
-      - uv run --project .submodules/nostos nostos --config nostos/config.yaml serve
+      - go run ./.submodules/nostos/cmd/nostos --config nostos/config.yaml serve
   bootstrap:
     desc: "Bootstrap etcd on first controlplane node. Usage: task nostos:bootstrap NODE=dell01"
     requires:
       vars: [NODE]
     cmds:
-      - uv run --project .submodules/nostos nostos --config nostos/config.yaml bootstrap "{{.NODE}}"
+      - go run ./.submodules/nostos/cmd/nostos --config nostos/config.yaml bootstrap "{{.NODE}}"
   status:
     cmds:
-      - uv run --project .submodules/nostos nostos --config nostos/config.yaml status
+      - go run ./.submodules/nostos/cmd/nostos --config nostos/config.yaml status
 ```
 
 The `--config nostos/config.yaml` flag is passed explicitly so the wrapper works regardless of operator's cwd.
@@ -116,7 +116,7 @@ None. Operator chose "delete immediately" for the legacy scripts. There's no par
 
 ## Migration Plan
 
-1. Verify prerequisites: `nostos-v01` shipped, `uv tool install --editable .submodules/nostos` works, Dell controlplane is healthy.
+1. Verify prerequisites: `nostos-v01` shipped, `go run ./.submodules/nostos/cmd/nostos --version` works, Dell controlplane is healthy.
 2. Create `nostos/config.yaml` populated from existing `pxe/nodes.yaml` data.
 3. `git mv talos/templates/dell01.yaml nostos/templates/dell01.yaml`.
 4. Write `taskfiles/nostos.yml`.

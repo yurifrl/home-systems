@@ -1,6 +1,6 @@
 ## 1. Prerequisites
 
-- [ ] 1.1 Verify `nostos-v01` is shipped: `.submodules/nostos/` exists and `uv run --project .submodules/nostos nostos --version` prints `0.1.0`
+- [ ] 1.1 Verify `nostos-v01` is shipped: `.submodules/nostos/` exists and `go run ./.submodules/nostos/cmd/nostos --version` prints `0.1.0`
 - [ ] 1.2 Verify Dell controlplane is healthy: `kubectl get nodes` shows `dell01` `Ready`
 - [ ] 1.3 Take a reference inventory: `kubectl get nodes,pods -A > /tmp/pre-adopt.txt` (for post-change diff)
 
@@ -13,7 +13,7 @@
 
 ## 3. Wire the Taskfile wrappers
 
-- [ ] 3.1 Create `taskfiles/nostos.yml` with `build`, `render`, `up`, `down`, `status`, `bootstrap`, `wipe`, `config:refresh` tasks (each calling `uv run --project .submodules/nostos nostos --config nostos/config.yaml <subcommand>`)
+- [ ] 3.1 Create `taskfiles/nostos.yml` with `build`, `render`, `up`, `down`, `status`, `bootstrap`, `wipe`, `config:refresh` tasks (each calling `go run ./.submodules/nostos/cmd/nostos --config nostos/config.yaml <subcommand>`)
 - [ ] 3.2 Add `includes: nostos: ./taskfiles/nostos.yml` to root `Taskfile.yml`
 - [ ] 3.3 Smoke test: `task nostos:status` executes without Python import or config-parse errors
 

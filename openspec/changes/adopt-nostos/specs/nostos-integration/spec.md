@@ -12,18 +12,18 @@ The home-systems repo SHALL store all nostos-consumer data under `nostos/` at th
 - **THEN** `git status` does not list `nostos/state/` contents as untracked changes
 
 ### Requirement: Tool vendored under .submodules
-The home-systems repo SHALL vendor the nostos tool at `.submodules/nostos/` and invoke it via `uv run --project .submodules/nostos nostos`.
+The home-systems repo SHALL vendor the nostos tool at `.submodules/nostos/` and invoke it via `go run ./.submodules/nostos/cmd/nostos`.
 
 #### Scenario: Tool invocation path
 - **WHEN** any nostos command is run through the Taskfile wrappers
-- **THEN** the underlying invocation is `uv run --project .submodules/nostos nostos --config nostos/config.yaml <subcommand>`
+- **THEN** the underlying invocation is `go run ./.submodules/nostos/cmd/nostos --config nostos/config.yaml <subcommand>`
 
 ### Requirement: Taskfile wrappers for nostos commands
 The home-systems repo SHALL expose Taskfile wrappers named `task nostos:<cmd>` for the core operator commands (`build`, `render`, `up`, `bootstrap`, `status`), each passing `--config nostos/config.yaml`.
 
 #### Scenario: Task wrapper invokes nostos
 - **WHEN** `task nostos:up` is run from the repo root
-- **THEN** it executes `uv run --project .submodules/nostos nostos --config nostos/config.yaml serve`
+- **THEN** it executes `go run ./.submodules/nostos/cmd/nostos --config nostos/config.yaml serve`
 
 #### Scenario: Wrappers pass NODE variable
 - **WHEN** `task nostos:render NODE=dell01` is run

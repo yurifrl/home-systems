@@ -12,7 +12,7 @@
 - **BREAKING** Delete `pxe/` directory entirely (scripts, README, schematic, nodes.yaml).
 - **BREAKING** Delete `taskfiles/pxe.yml` and all `task pxe:*` commands.
 - **BREAKING** Remove pxe-related entries from `taskfiles/talos.yml` (`op:inject` now scoped to talos nodes only; `apply:dell01` removed).
-- Add `taskfiles/nostos.yml` with thin wrappers: `task nostos:build`, `task nostos:render`, `task nostos:up`, `task nostos:bootstrap`, `task nostos:status`. Each wrapper shells out to `uv run --project .submodules/nostos nostos <cmd> --config nostos/config.yaml`.
+- Add `taskfiles/nostos.yml` with thin wrappers: `task nostos:build`, `task nostos:render`, `task nostos:up`, `task nostos:bootstrap`, `task nostos:status`. Each wrapper shells out to `go run ./.submodules/nostos/cmd/nostos <cmd> --config nostos/config.yaml`.
 - Update `.gitignore`: add `nostos/state/`, remove `pxe/assets/` and `pxe/ipxe-src/` entries.
 - Update `CLAUDE.md` with new provisioning-workflow guidance (replaces stale RPi-era references).
 
