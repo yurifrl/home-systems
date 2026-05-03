@@ -111,7 +111,7 @@ None of this is wrong. It all works. But every single step is <span class="bad">
 <!-- ============================================================ -->
 <h2>What nostos is</h2>
 
-<p>A single Python CLI (and a small web UI) that owns the entire bare-metal onboarding loop:</p>
+<p>A single Go CLI (with a Charm-powered TUI) that owns the entire bare-metal onboarding loop:</p>
 
 <pre><code><span class="kw">nostos node add</span> dell01                 <span class="cmt"># interactive: MAC, IP, role, disk</span>
 <span class="kw">nostos build</span>                          <span class="cmt"># download Talos + build iPXE, once</span>
@@ -151,7 +151,7 @@ taskfiles/
   <div class="card">
     <h4 class="good">After</h4>
 <pre><code>.submodules/nostos/         <span class="cmt"># the tool (installable, git submodule later)</span>
-  pyproject.toml
+  go.mod
   src/nostos/               <span class="cmt"># cli, pxe, registry, secrets, cluster, web</span>
 
 nostos/                     <span class="cmt"># your home lab's data</span>
@@ -323,7 +323,7 @@ Every Talos home-labber hits the same eight walls. The Talos docs are excellent 
 </p>
 
 <p>
-Small surface area (Python, uv, single binary via <code>uv run --script</code>). Easy to read. Easy to fork. MIT. Ships with the <em>real</em> troubleshooting for <em>real</em> failure modes: Deco DHCP races, <code>${next-server}</code> vs <code>${filename}</code>, persisted STATE partition, expired admin certs. The things that actually eat weekends.
+Small surface area (Go, Cobra + Charm, single command via <code>go run</code>). Easy to read. Easy to fork. MIT. Ships with the <em>real</em> troubleshooting for <em>real</em> failure modes: Deco DHCP races, <code>${next-server}</code> vs <code>${filename}</code>, persisted STATE partition, expired admin certs, <code>/assets/</code> serve-root, wipe-flag cleanup. The things that actually eat weekends.
 </p>
 
 <!-- ============================================================ -->
@@ -341,7 +341,7 @@ Small surface area (Python, uv, single binary via <code>uv run --script</code>).
 <h2>Open questions</h2>
 
 <ul>
-  <li>Single-file <code>uv run --script</code> vs. proper package layout? Probably script at first (ship-ability), package once web UI lands.</li>
+  <li>Always <code>go run</code> vs. compiled binary distribution? v0.1 is <code>go run</code>-only (simple, works from fresh clone). Binary release at v0.2 once feature set is stable.</li>
   <li>Ship a pre-built iPXE for common arches, or always build locally via Docker? Shipping avoids the Docker dep for 95% of users.</li>
   <li>Support <code>metal</code> + <code>nocloud</code> only, or also <code>aws</code>/<code>azure</code>? Start metal-only. Scope creep kills.</li>
   <li>Web UI mutates state (restart, wipe)? Or read-only? Lean read-only + "copy this command" buttons. Safer, less code.</li>

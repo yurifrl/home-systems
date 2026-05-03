@@ -1,0 +1,12 @@
+bin/
+dist/
+
+# editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# test artifacts
+coverage.out
+*.test
