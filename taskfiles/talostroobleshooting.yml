@@ -9,7 +9,7 @@ tasks:
     desc: "Inject 1Password secrets into Talos YAML files"
     cmds:
       - mkdir -p talos/op/nodes
-      - op inject -f -i talos/controlplane-192.168.68.100.yaml -o talos/op/controlplane-192.168.68.100.yaml
+      - op inject -f -i talos/rpi-192.168.68.100.yaml -o talos/op/rpi-192.168.68.100.yaml
       - op inject -f -i talos/nodes/tp4-192.168.68.114.yaml -o talos/op/nodes/tp4-192.168.68.114.yaml
       - op inject -f -i talos/nodes/tp1-192.168.68.107.yaml -o talos/op/nodes/tp1-192.168.68.107.yaml
       - op inject -f -i talos/nodes/vm-pc01.yaml -o talos/op/nodes/vm-pc01.yaml
@@ -17,14 +17,14 @@ tasks:
 
   apply:
     cmds:
-      - talosctl -n 192.168.68.100 apply-config -f talos/op/controlplane-192.168.68.100.yaml
+      - talosctl -n 192.168.68.100 apply-config -f talos/op/rpi-192.168.68.100.yaml
       - talosctl -n 192.168.68.114 apply-config -f talos/op/nodes/tp4-192.168.68.114.yaml
       - talosctl -n 192.168.68.107 apply-config -f talos/op/nodes/tp1-192.168.68.107.yaml
       - talosctl -n 192.168.68.102 apply-config -f talos/op/nodes/vm-pc01.yaml
 
   apply-controlplane:
     cmds:
-      - talosctl -n 192.168.68.100 apply-config -f talos/op/controlplane-192.168.68.100.yaml
+      - talosctl -n 192.168.68.100 apply-config -f talos/op/rpi-192.168.68.100.yaml
 
   upgrade-1.10.3-tailscale:
     desc: "Upgrades all nodes to1.10.3 with tailscale"
