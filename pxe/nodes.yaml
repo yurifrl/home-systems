@@ -1,0 +1,18 @@
+# Talos Linux version to install
+talos_version: v1.10.3
+
+# Default Image Factory schematic (amd64, tailscale)
+# Get schematic ID via:
+#   curl -X POST --data-binary @pxe/schematic-amd64.yaml https://factory.talos.dev/schematics
+schematic_amd64: 4a0d65c669d46663f377e7161e50cfd570c401f26fd9e7bda34a0216b6f1922b
+
+# Nodes registered for PXE boot (MAC address → desired IP + hostname)
+# dnsmasq will hand out these static IPs only to these MACs.
+# Everything else on the LAN is ignored.
+nodes:
+  dell01:
+    mac: "d0:94:66:d9:eb:a5"
+    ip: 192.168.68.100
+    role: controlplane
+    arch: amd64
+    install_disk: /dev/nvme0n1
