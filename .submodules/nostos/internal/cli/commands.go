@@ -40,6 +40,7 @@ func newBuildCmd() *cobra.Command {
 func newPxeCmd() *cobra.Command {
 	var iface string
 	var port int
+	var fullDHCP bool
 	cmd := &cobra.Command{
 		Use:     "pxe",
 		Aliases: []string{"serve"},
@@ -49,13 +50,16 @@ func newPxeCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			_ = cfg // reserved for future wipe-aware serve
+			_ = cfg
 			srv := pxe.NewServer(p)
 			if iface != "" {
 				srv.Interface = iface
 			}
 			if port > 0 {
 				srv.HTTPPort = port
+			}
+			if fullDHCP {
+				srv.ProxyMode = false
 			}
 			ni, err := srv.Preflight()
 			if err != nil {
@@ -66,16 +70,21 @@ func newPxeCmd() *cobra.Command {
 			if err := srv.Start(ctx, ni); err != nil {
 				return err
 			}
+			mode := "proxy"
+			if !srv.ProxyMode {
+				mode = "full-dhcp"
+			}
 			fmt.Fprintf(cmd.OutOrStdout(),
-				"%s nostos pxe on %s (%s), :%d. Ctrl+C to stop.\n",
+				"%s nostos pxe on %s (%s), :%d, mode=%s. Ctrl+C to stop.\n",
 				lipgloss.NewStyle().Bold(true).Render("→"),
-				ni.Interface, ni.IP, srv.HTTPPort,
+				ni.Interface, ni.IP, srv.HTTPPort, mode,
 			)
 			return srv.Wait(ctx)
 		}),
 	}
 	cmd.Flags().StringVar(&iface, "iface", "", "network interface (auto-detect if empty)")
 	cmd.Flags().IntVar(&port, "port", pxe.DefaultHTTPPort, "HTTP port")
+	cmd.Flags().BoolVar(&fullDHCP, "full-dhcp", false, "act as full DHCP server instead of PXE proxy (use when no other DHCP on LAN)")
 	return cmd
 }
 

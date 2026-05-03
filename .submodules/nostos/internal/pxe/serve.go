@@ -42,6 +42,7 @@ type Server struct {
 	DHCPRangeEnd    string
 	TFTPRoot        string
 	Interface       string // override auto-detect
+	ProxyMode       bool   // coexist with consumer's existing DHCP (recommended)
 
 	httpSrv       *http.Server
 	dnsmasqProc   *exec.Cmd
@@ -58,6 +59,7 @@ func NewServer(p paths.Paths) *Server {
 		DHCPRangeStart: DefaultDHCPRangeStart,
 		DHCPRangeEnd:   DefaultDHCPRangeEnd,
 		TFTPRoot:       DefaultTFTPStaging,
+		ProxyMode:      true, // coexist with consumer's DHCP by default
 	}
 }
 
@@ -83,7 +85,11 @@ func (s *Server) Preflight() (NetworkInfo, error) {
 		return NetworkInfo{}, errors.New("dnsmasq not found; install: brew install dnsmasq")
 	}
 	if s.Interface != "" {
-		return NetworkInfo{Interface: s.Interface, IP: "unknown"}, nil
+		ip, err := ipForInterface(s.Interface)
+		if err != nil {
+			return NetworkInfo{}, fmt.Errorf("interface %s: %w", s.Interface, err)
+		}
+		return NetworkInfo{Interface: s.Interface, IP: ip}, nil
 	}
 	return detectNetwork()
 }
@@ -118,10 +124,17 @@ func (s *Server) KillStaleHTTP() {
 	time.Sleep(500 * time.Millisecond)
 }
 
+// KillStaleDnsmasq asks sudo to kill any leftover nostos-managed dnsmasq.
+func (s *Server) KillStaleDnsmasq() {
+	_ = exec.Command("sudo", "-n", "pkill", "-f", "dnsmasq.*tftp-root="+s.TFTPRoot).Run()
+	time.Sleep(500 * time.Millisecond)
+}
+
 // Start launches HTTP + dnsmasq. Returns on ctx cancel or dnsmasq exit.
 // Progress events are surfaced via HTTPRequests().
 func (s *Server) Start(ctx context.Context, net NetworkInfo) error {
 	s.KillStaleHTTP()
+	s.KillStaleDnsmasq()
 	if err := s.StageTFTP(); err != nil {
 		return fmt.Errorf("stage TFTP: %w", err)
 	}
@@ -210,15 +223,22 @@ func (s *Server) startDnsmasq(ni NetworkInfo) error {
 			bin = path
 		}
 	}
+
+	var dhcpRangeArg string
+	if s.ProxyMode {
+		// Proxy mode: we answer only the PXE/bootfile part. Deco (or whatever
+		// existing DHCP server exists on the LAN) keeps giving out IPs.
+		dhcpRangeArg = "--dhcp-range=" + s.Gateway + ",proxy"
+	} else {
+		dhcpRangeArg = fmt.Sprintf("--dhcp-range=%s,%s,255.255.255.0,5m", s.DHCPRangeStart, s.DHCPRangeEnd)
+	}
+
 	args := []string{
 		bin,
 		"--no-daemon",
 		"--port=0",
 		"--interface=" + ni.Interface,
-		fmt.Sprintf("--dhcp-range=%s,%s,255.255.255.0,5m", s.DHCPRangeStart, s.DHCPRangeEnd),
-		"--dhcp-option=3," + s.Gateway,
-		"--dhcp-option=6," + s.Gateway,
-		"--dhcp-authoritative",
+		dhcpRangeArg,
 		"--dhcp-match=set:pxe,60,PXEClient",
 		"--dhcp-ignore=tag:!pxe",
 		"--enable-tftp",
@@ -226,9 +246,20 @@ func (s *Server) startDnsmasq(ni NetworkInfo) error {
 		"--dhcp-userclass=set:ipxe,iPXE",
 		fmt.Sprintf("--dhcp-boot=tag:!ipxe,ipxe.efi,,%s", ni.IP),
 		fmt.Sprintf("--dhcp-boot=tag:ipxe,http://%s:%d/assets/boot.ipxe", ni.IP, s.HTTPPort),
+		"--pxe-prompt=nostos boot,1", // force PXE clients to pick our bootfile immediately
 		"--log-queries",
 		"--log-dhcp",
 	}
+
+	if !s.ProxyMode {
+		// Full-DHCP mode: we need to provide gateway/router info too.
+		args = append(args,
+			"--dhcp-option=3,"+s.Gateway,
+			"--dhcp-option=6,"+s.Gateway,
+			"--dhcp-authoritative",
+		)
+	}
+
 	cmd := exec.Command("sudo", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -262,6 +293,26 @@ func loggingMiddleware(next http.Handler, s *Server) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// ipForInterface looks up the first IPv4 192.168.68.x address of an interface.
+func ipForInterface(name string) (string, error) {
+	iface, err := net.InterfaceByName(name)
+	if err != nil {
+		return "", err
+	}
+	addrs, err := iface.Addrs()
+	if err != nil {
+		return "", err
+	}
+	for _, a := range addrs {
+		if ipn, ok := a.(*net.IPNet); ok {
+			if ip4 := ipn.IP.To4(); ip4 != nil && strings.HasPrefix(ip4.String(), "192.168.68.") {
+				return ip4.String(), nil
+			}
+		}
+	}
+	return "", fmt.Errorf("no 192.168.68.x IPv4 address on %s", name)
 }
 
 // detectNetwork finds an ethernet interface with a 192.168.68.x IPv4 address.
