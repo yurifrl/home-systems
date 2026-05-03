@@ -1,67 +1,90 @@
 ## ADDED Requirements
 
-### Requirement: Bootstrap a fresh cluster
-The system SHALL provide `nostos bootstrap <node>` that invokes `talosctl bootstrap` against the named controlplane node, waits for etcd to become healthy, and reports success or timeout.
+### Requirement: Bootstrap etcd on a fresh controlplane
+The system SHALL provide `nostos bootstrap <node>` that invokes `talosctl bootstrap` against the named controlplane node, polls until etcd becomes Running/OK, and reports success or timeout.
 
 #### Scenario: Happy path bootstrap
-- **WHEN** `nostos bootstrap dell01` is run against a node whose apid is up and config is applied
-- **THEN** `talosctl bootstrap` is invoked, the command waits up to the configured timeout (default 5 min) for etcd `Running+OK`, and exits zero on success
+- **WHEN** `nostos bootstrap dell01` runs against a node with apid up and our config applied
+- **THEN** `talosctl bootstrap` is invoked, the command polls every ~3s up to the configured timeout (default 5 min), and exits zero when etcd is Running/OK
 
 #### Scenario: Bootstrap on non-controlplane rejected
-- **WHEN** `nostos bootstrap tp1` is run and `tp1`'s role in `config.yaml` is `worker`
-- **THEN** the command exits non-zero before contacting the node with a message explaining bootstrap targets controlplane nodes only
+- **WHEN** `nostos bootstrap tp1` runs and tp1's role is `worker`
+- **THEN** the command exits non-zero before contacting the node
 
-#### Scenario: Already-bootstrapped is safe
-- **WHEN** `nostos bootstrap dell01` is run against a node whose etcd is already healthy
-- **THEN** the command exits zero with a message noting the cluster is already bootstrapped (idempotent)
+#### Scenario: Already-bootstrapped is idempotent
+- **WHEN** `nostos bootstrap dell01` runs against a node with etcd already healthy
+- **THEN** the command exits zero noting the cluster is already bootstrapped
 
-### Requirement: Fetch kubeconfig post-bootstrap
-The system SHALL fetch the cluster's kubeconfig via `talosctl kubeconfig` and write it to `state/kubeconfig` after successful bootstrap or on demand.
+### Requirement: Fetch kubeconfig on demand
+The system SHALL provide `nostos kubeconfig [<node>]` that fetches the cluster kubeconfig via `talosctl kubeconfig` and writes it to `state/kubeconfig`. Default controlplane target is the first node with role=controlplane in config.yaml.
 
-#### Scenario: Kubeconfig fetched after bootstrap
-- **WHEN** `nostos bootstrap dell01` completes successfully
-- **THEN** `state/kubeconfig` exists and contains the cluster endpoint
+#### Scenario: Explicit node
+- **WHEN** `nostos kubeconfig dell01` runs against a bootstrapped cluster
+- **THEN** `state/kubeconfig` is populated (or refreshed if it exists) with the current cluster endpoint and working credentials
 
-#### Scenario: Explicit kubeconfig refresh
-- **WHEN** `nostos kubeconfig` is run against a bootstrapped cluster
-- **THEN** `state/kubeconfig` is refreshed from the apiserver
+#### Scenario: Auto-select controlplane
+- **WHEN** `nostos kubeconfig` (no argument) runs
+- **THEN** nostos uses the first `controlplane` node in `config.yaml`
 
-### Requirement: Regenerate admin client certificate
-The system SHALL provide `nostos config refresh` that generates a new Talos admin client certificate signed by the existing cluster CA, writing a fresh `state/talosconfig` without requiring an existing unexpired admin cert.
+### Requirement: Regenerate admin client certificate natively
+The system SHALL provide `nostos config refresh` that generates a new Talos admin client certificate **using Go's `crypto/ed25519` + `crypto/x509` stdlib, without shelling out to `talosctl gen`**. The resulting cert SHALL be signed by the existing cluster CA and include the Talos custom extension for the `os:admin` role.
 
 #### Scenario: Refresh with expired existing cert
-- **WHEN** `nostos config refresh` is run and the existing `state/talosconfig` contains an expired client cert
-- **THEN** a new keypair + CSR is generated, signed by the CA read from the rendered machineconfig (or secrets backend), and written to `state/talosconfig` — the subsequent `nostos status` call succeeds
+- **WHEN** `nostos config refresh` runs and the existing `state/talosconfig` has an expired client cert
+- **THEN** a new Ed25519 keypair is generated, a CSR is signed by the CA extracted from the rendered machineconfig, and `state/talosconfig` is overwritten with the new cert
 
 #### Scenario: Configurable validity
-- **WHEN** `nostos config refresh --hours 8760` is run
-- **THEN** the resulting admin cert has `notAfter` approximately one year from now (default is 876000 hours ≈ 100 years)
+- **WHEN** `nostos config refresh --hours 8760` runs
+- **THEN** the resulting cert has `notAfter` approximately one year from now (default is 876000 hours ≈ 100 years)
 
-#### Scenario: Admin cert is per-device
-- **WHEN** `nostos config refresh` is run on two different machines using the same consumer repo
-- **THEN** each machine's `state/talosconfig` contains a different admin keypair, both signed by the same CA, both working against the cluster
+#### Scenario: Role extension bytes match talosctl's output
+- **WHEN** `nostos config refresh` produces a cert AND a reference cert is generated by `talosctl gen crt --roles os:admin`
+- **THEN** the Talos custom extension bytes (OID 1.3.6.1.4.1.58107.1.1) are byte-identical between the two certs
+
+#### Scenario: Admin cert accepted by running cluster
+- **WHEN** `nostos config refresh` completes and `talosctl --talosconfig state/talosconfig version --nodes <controlplane>` runs
+- **THEN** the command succeeds, proving the cert is accepted by the cluster apiserver
 
 ### Requirement: Report per-node status
-The system SHALL provide `nostos status` that displays for each configured node: reachability (ping), Talos apid port 50000 state, running Talos version, kubelet health, and any stuck services.
+The system SHALL provide `nostos status` that displays for each configured node: reachability (ping), apid TCP:50000 state, running Talos version, and any stuck services.
 
 #### Scenario: Status against healthy cluster
-- **WHEN** `nostos status` is run against a running cluster
-- **THEN** each node's row shows `ping: ok`, `apid: up`, `version: v1.10.3`, `kubelet: healthy`, and no stuck services
+- **WHEN** `nostos status` runs against a running cluster
+- **THEN** each node's row shows `ping: up`, `apid: up`, and the detected Talos version
 
-#### Scenario: Status against unreachable worker
-- **WHEN** `nostos status` is run and one worker has apid down (like the bricked tp1/tp4 from this session)
-- **THEN** that node's row shows `apid: refused` and a hint recommending reinstall via PXE
+#### Scenario: Status against unreachable node
+- **WHEN** `nostos status` runs and a node has apid refused
+- **THEN** that node's row shows `apid: refused` with a hint recommending reinstall via PXE
 
-### Requirement: One-shot wipe flag
-The system SHALL provide `nostos wipe <node>` that marks a node for a single `talos.experimental.wipe=system` boot, coordinating with the PXE serve layer to include the flag once and remove it after the node successfully reinstalls.
+### Requirement: One-shot wipe queue
+The system SHALL provide `nostos wipe <node>` that marks a node's MAC in `state/pending-wipes.json`. The queue SHALL be consumed by the serve layer per the pxe-provisioning spec.
 
-#### Scenario: Wipe flag added and consumed exactly once
-- **WHEN** `nostos wipe dell01` marks dell01 and the node PXE-boots once
-- **THEN** the served `boot.ipxe` for dell01 contains `talos.experimental.wipe=system` on exactly that one boot; after the node completes install and comes back Ready, subsequent PXE boots for dell01 do not include the flag unless `nostos wipe dell01` is run again
+#### Scenario: Wipe queued
+- **WHEN** `nostos wipe dell01` runs
+- **THEN** `state/pending-wipes.json` contains the MAC of dell01
+
+#### Scenario: Wipe survives process restart
+- **WHEN** a wipe is queued, nostos exits, and `nostos serve` starts later
+- **THEN** the queued wipe is still honored (persisted on disk, not in memory)
+
+### Requirement: End-to-end install orchestration
+The system SHALL provide `nostos up <node>` that drives the full flow: queue wipe, build assets (if stale), render machineconfig, start PXE serve, watch logs for the node's progress, wait for the node to come back at its static IP, wait for apid, bootstrap etcd if controlplane, fetch kubeconfig. Progress SHALL be surfaced via Event values consumed by the TUI.
+
+#### Scenario: Full install succeeds
+- **WHEN** `nostos up dell01` runs end-to-end against a powered-off Dell
+- **THEN** the operator powers the Dell on, and `nostos up` reports in order: boot.ipxe fetched, kernel download, initramfs download, config fetched, node up at static IP, apid up, etcd bootstrapped, Ready
+
+#### Scenario: Install times out with clear error
+- **WHEN** `nostos up dell01` runs and the node never PXE-boots within the configured timeout
+- **THEN** the command exits non-zero with a message explaining the node did not fetch its config, suggesting BIOS boot-order check
+
+#### Scenario: Install cleans up on interrupt
+- **WHEN** `nostos up dell01` is interrupted with Ctrl+C
+- **THEN** the PXE subprocesses are terminated cleanly AND the wipe flag is restored to its pre-up state (not left queued)
 
 ### Requirement: Graceful fallback when talosctl is absent
-The system SHALL detect `talosctl` availability and fail with a clear message if it isn't installed; `nostos` SHALL NOT attempt to reimplement `talosctl` functionality.
+The system SHALL detect `talosctl` availability and fail with a clear message if it isn't installed. `nostos` SHALL NOT attempt to reimplement `talosctl bootstrap` or equivalent subcommands.
 
 #### Scenario: Missing talosctl errors cleanly
-- **WHEN** any cluster-control command is run and `talosctl` is not on PATH
-- **THEN** the command exits non-zero with a message explaining that `talosctl` is required and how to install it
+- **WHEN** any cluster-control command runs and `talosctl` is not on PATH
+- **THEN** the command exits non-zero with a message explaining talosctl is required and how to install it
