@@ -1,0 +1,18 @@
+cluster:
+  name: talos-default
+  endpoint: https://192.168.68.100:6443
+  talos_version: v1.10.3
+  schematic_id: 4a0d65c669d46663f377e7161e50cfd570c401f26fd9e7bda34a0216b6f1922b
+secrets:
+  backend: onepassword
+  onepassword:
+    account: my.1password.com
+    vault: kubernetes
+nodes:
+  dell01:
+    mac: "d0:94:66:d9:eb:a5"
+    ip: 192.168.68.100
+    role: controlplane
+    arch: amd64
+    install_disk: /dev/nvme0n1
+    template: dell01.yaml

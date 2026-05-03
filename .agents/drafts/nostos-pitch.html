@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>forge — bare-metal Talos, without the rituals</title>
+<title>nostos — bring your bare metal home to the cluster</title>
 <style>
   :root {
     --bg: #0b0d10;
@@ -81,8 +81,9 @@
 <div class="wrap">
 
 <div class="kicker">A pitch — draft</div>
-<h1>forge <span class="muted">/ bare-metal Talos, without the rituals</span></h1>
+<h1>nostos <span class="muted">/ bring your bare metal home to the cluster</span></h1>
 <p class="tagline">One CLI. Plug in a machine. Get a cluster. Keep your sanity.</p>
+<p class="dim" style="font-size:14px;margin-top:-8px">νόστος · Homer's word for homecoming. The Odyssey is one long nostos. So is every bare-metal install.</p>
 
 <!-- ============================================================ -->
 <h2>The story so far</h2>
@@ -105,19 +106,19 @@ Getting a Talos node onto your home lab takes, today, <em>eight hours of a very 
 None of this is wrong. It all works. But every single step is <span class="bad">undocumented tribal knowledge</span>. Re-running in six months means re-reading a 900-line conversation log.
 </p>
 
-<p><strong>forge</strong> is the tool I wish existed when I started.</p>
+<p><strong>nostos</strong> is the tool I wish existed when I started.</p>
 
 <!-- ============================================================ -->
-<h2>What forge is</h2>
+<h2>What nostos is</h2>
 
 <p>A single Python CLI (and a small web UI) that owns the entire bare-metal onboarding loop:</p>
 
-<pre><code><span class="kw">forge node add</span> dell01                 <span class="cmt"># interactive: MAC, IP, role, disk</span>
-<span class="kw">forge build</span>                          <span class="cmt"># download Talos + build iPXE, once</span>
-<span class="kw">forge render</span> dell01                   <span class="cmt"># op-inject secrets → per-MAC config</span>
-<span class="kw">forge serve</span>                          <span class="cmt"># start PXE (dnsmasq + HTTP)</span>
+<pre><code><span class="kw">nostos node add</span> dell01                 <span class="cmt"># interactive: MAC, IP, role, disk</span>
+<span class="kw">nostos build</span>                          <span class="cmt"># download Talos + build iPXE, once</span>
+<span class="kw">nostos render</span> dell01                   <span class="cmt"># op-inject secrets → per-MAC config</span>
+<span class="kw">nostos serve</span>                          <span class="cmt"># start PXE (dnsmasq + HTTP)</span>
 <span class="cmt"># → power on the Dell, walk away</span>
-<span class="kw">forge bootstrap</span> dell01               <span class="cmt"># talosctl bootstrap + wait for Ready</span></code></pre>
+<span class="kw">nostos bootstrap</span> dell01               <span class="cmt"># talosctl bootstrap + wait for Ready</span></code></pre>
 
 <p>Five commands. That's the happy path.</p>
 
@@ -149,19 +150,24 @@ taskfiles/
   </div>
   <div class="card">
     <h4 class="good">After</h4>
-<pre><code>forge.yaml                  <span class="cmt"># cluster + node registry</span>
-templates/
-  dell01.yaml               <span class="cmt"># op:// refs, committed</span>
-  tp1.yaml
-.forge/                     <span class="cmt"># all state, gitignored</span>
-  assets/                   <span class="cmt"># kernel, initramfs, ipxe.efi</span>
-  configs/                  <span class="cmt"># rendered, secret-bearing</span>
-  talosconfig               <span class="cmt"># 100-yr admin cert</span>
-  cache/
-  logs/
-forge                       <span class="cmt"># the CLI, that's it</span></code></pre>
+<pre><code>.submodules/nostos/         <span class="cmt"># the tool (installable, git submodule later)</span>
+  pyproject.toml
+  src/nostos/               <span class="cmt"># cli, pxe, registry, secrets, cluster, web</span>
+
+nostos/                     <span class="cmt"># your home lab's data</span>
+  config.yaml               <span class="cmt"># cluster + node registry</span>
+  templates/
+    dell01.yaml             <span class="cmt"># op:// refs, committed</span>
+    tp1.yaml
+  state/                    <span class="cmt"># gitignored cache</span>
+    assets/                 <span class="cmt"># kernel, initramfs, ipxe.efi</span>
+    configs/                <span class="cmt"># rendered, secret-bearing</span>
+    talosconfig             <span class="cmt"># 100-yr admin cert</span>
+    logs/
+
+Taskfile.yml                <span class="cmt"># thin: task nostos:up → nostos serve</span></code></pre>
     <p class="dim" style="margin-top:12px;font-size:13px">
-      One config file. One state dir. One binary. Taskfiles collapse to <em>thin wrappers</em> if you keep them at all.
+      Tool in <code>.submodules/</code>, your data in <code>nostos/</code>, cache wipeable. Taskfile wrappers preserved if you like them.
     </p>
   </div>
 </div>
@@ -170,25 +176,25 @@ forge                       <span class="cmt"># the CLI, that's it</span></code>
 <h2>Architecture</h2>
 
 <pre><code>                        ┌──────────────────────┐
-                        │   <span class="kw">templates/*.yaml</span>   │  source of truth (committed)
+                        │  <span class="kw">nostos/templates/*.yaml</span> │  source of truth (committed)
                         └──────────┬───────────┘
                                    │
-                                   │ op inject (pluggable: op, sops, env, file)
+                                   │ resolve via secrets-backend (op/sops/env/file)
                                    ▼
                         ┌──────────────────────┐
-                        │  <span class="kw">.forge/configs/</span>     │  per-MAC rendered (gitignored)
+                        │ <span class="kw">nostos/state/configs/</span> │  per-MAC rendered (gitignored)
                         └──────────┬───────────┘
                                    │
  ┌──────────┐   DHCP/TFTP   ┌──────┴───────┐   HTTP    ┌─────────────┐
- │  dnsmasq │◀─────────────▶│  forge serve │◀─────────▶│ Talos node  │
+ │  dnsmasq │◀─────────────▶│ nostos serve │◀─────────▶│ Talos node  │
  │  (sudo)  │               │  (python)    │           │ (PXE boot)  │
  └──────────┘               └──────┬───────┘           └─────────────┘
                                    │
                                    │ talosctl API (v1alpha1)
                                    ▼
                         ┌──────────────────────┐
-                        │  forge bootstrap /    │  post-install
-                        │  wait / status        │
+                        │ nostos bootstrap /   │  post-install
+                        │ status / config refresh  │
                         └──────────────────────┘</code></pre>
 
 <p>Three layers:</p>
@@ -205,62 +211,62 @@ forge                       <span class="cmt"># the CLI, that's it</span></code>
 <table class="table">
   <tr><th>Command</th><th>What it does</th><th>Replaces</th></tr>
   <tr>
-    <td><code>forge init</code></td>
-    <td>Scaffold <code>forge.yaml</code>, <code>templates/</code>, <code>.forge/</code>, <code>.gitignore</code></td>
+    <td><code>nostos init</code></td>
+    <td>Scaffold <code>nostos/config.yaml</code>, <code>templates/</code>, <code>nostos/state/</code>, <code>.gitignore</code></td>
     <td class="dim">manual setup</td>
   </tr>
   <tr>
-    <td><code>forge node add &lt;name&gt;</code></td>
-    <td>Interactive wizard: MAC, IP, role, disk, template. Writes <code>forge.yaml</code> + template stub.</td>
+    <td><code>nostos node add &lt;name&gt;</code></td>
+    <td>Interactive wizard: MAC, IP, role, disk, template. Writes <code>nostos/config.yaml</code> + template stub.</td>
     <td class="dim">hand-edit <code>pxe/nodes.yaml</code></td>
   </tr>
   <tr>
-    <td><code>forge node list</code></td>
+    <td><code>nostos node list</code></td>
     <td>Table of nodes with live reachability, Talos version, role, Ready status</td>
     <td class="dim">(didn't exist)</td>
   </tr>
   <tr>
-    <td><code>forge build</code></td>
+    <td><code>nostos build</code></td>
     <td>Download Talos kernel/initramfs from factory.talos.dev; build iPXE snponly.efi with retry-loop embed</td>
     <td><code>task pxe:setup</code></td>
   </tr>
   <tr>
-    <td><code>forge render &lt;node&gt;</code></td>
+    <td><code>nostos render &lt;node&gt;</code></td>
     <td>Resolve secrets (op, sops, env, file), render per-MAC config, <code>talosctl validate</code></td>
     <td><code>task pxe:config</code></td>
   </tr>
   <tr>
-    <td><code>forge serve</code></td>
+    <td><code>nostos serve</code></td>
     <td>Start HTTP + dnsmasq in foreground; clear stale state; live log with request filter</td>
     <td><code>task pxe:up</code></td>
   </tr>
   <tr>
-    <td><code>forge install &lt;node&gt;</code></td>
+    <td><code>nostos install &lt;node&gt;</code></td>
     <td>Print exact boot sequence for that node: BIOS keys, PXE flow, expected outcome</td>
     <td class="dim">tribal knowledge</td>
   </tr>
   <tr>
-    <td><code>forge wipe &lt;node&gt;</code></td>
+    <td><code>nostos wipe &lt;node&gt;</code></td>
     <td>One-shot PXE boot with <code>wipe=system</code>; auto-removes flag after install completes</td>
     <td class="dim">manual edit + hope</td>
   </tr>
   <tr>
-    <td><code>forge bootstrap &lt;node&gt;</code></td>
+    <td><code>nostos bootstrap &lt;node&gt;</code></td>
     <td><code>talosctl bootstrap</code>; wait for etcd + apiserver; fetch kubeconfig</td>
     <td>manual</td>
   </tr>
   <tr>
-    <td><code>forge config refresh</code></td>
+    <td><code>nostos config refresh</code></td>
     <td>Re-generate admin cert against the CA (handles the "cert expired" trap)</td>
     <td class="dim">/tmp/talos-ca dance</td>
   </tr>
   <tr>
-    <td><code>forge status</code></td>
+    <td><code>nostos status</code></td>
     <td>Cluster health + per-node STAGE / READY / version / ext-services</td>
     <td><code>talosctl dashboard</code> × N</td>
   </tr>
   <tr>
-    <td><code>forge web</code></td>
+    <td><code>nostos web</code></td>
     <td>Start localhost UI on :8080</td>
     <td class="dim">—</td>
   </tr>
@@ -269,10 +275,10 @@ forge                       <span class="cmt"># the CLI, that's it</span></code>
 <!-- ============================================================ -->
 <h2>The web UI</h2>
 
-<p>Optional. Single-page, localhost-only, served by <code>forge web</code>. For the "I don't remember the CLI flags" moments and for guests/housemates who want to see cluster state without a terminal.</p>
+<p>Optional. Single-page, localhost-only, served by <code>nostos web</code>. For the "I don't remember the CLI flags" moments and for guests/housemates who want to see cluster state without a terminal.</p>
 
 <div class="mock">
-  <div class="bar">forge · cluster <span style="float:right">v0.1.0</span></div>
+  <div class="bar">nostos · cluster <span style="float:right">v0.1.0</span></div>
   <div class="row"><span class="name"><span class="pill on">ready</span> &nbsp; dell01 <span class="dim">controlplane · v1.10.3</span></span><span class="meta">192.168.68.100 &nbsp; 12x800 / 7.5GiB</span></div>
   <div class="row"><span class="name"><span class="pill" style="color:var(--bad);border-color:#6b2a2a">down</span> &nbsp; tp1 <span class="dim">worker · needs reinstall</span></span><span class="meta">192.168.68.107</span></div>
   <div class="row"><span class="name"><span class="pill" style="color:var(--bad);border-color:#6b2a2a">down</span> &nbsp; tp4 <span class="dim">worker · needs reinstall</span></span><span class="meta">192.168.68.114</span></div>
@@ -287,7 +293,7 @@ forge                       <span class="cmt"># the CLI, that's it</span></code>
 
 <p>The <code>op://kubernetes/talos/TS_AUTHKEY</code> pattern is good. Keep it. But treat it as one backend behind a common interface:</p>
 
-<pre><code><span class="cmt"># forge.yaml</span>
+<pre><code><span class="cmt"># nostos/config.yaml</span>
 <span class="kw">secrets</span>:
   <span class="kw">backend</span>: onepassword        <span class="cmt"># onepassword | sops | env | file</span>
   <span class="kw">onepassword</span>:
@@ -303,10 +309,10 @@ A future move to <code>sops</code> (encrypted-in-repo) or shared team <code>vaul
 <h2>What this is not</h2>
 
 <ul>
-  <li><strong>Not Sidero Omni.</strong> Omni is the Talos vendor's hosted SaaS. forge is local-only, offline-capable, 0 RPS of phone-home.</li>
-  <li><strong>Not Matchbox / Tinkerbell / MaaS.</strong> Those are production datacenter provisioners. forge is <em>one person, one laptop, one weekend</em>.</li>
-  <li><strong>Not a Kubernetes bootstrapper.</strong> Talos already does that. forge just gets Talos onto metal.</li>
-  <li><strong>Not opinionated about your network.</strong> If your router runs DHCP, forge's dnsmasq co-exists via vendor-class filtering (we already do this).</li>
+  <li><strong>Not Sidero Omni.</strong> Omni is the Talos vendor's hosted SaaS. nostos is local-only, offline-capable, 0 RPS of phone-home.</li>
+  <li><strong>Not Matchbox / Tinkerbell / MaaS.</strong> Those are production datacenter provisioners. nostos is <em>one person, one laptop, one weekend</em>.</li>
+  <li><strong>Not a Kubernetes bootstrapper.</strong> Talos already does that. nostos just gets Talos onto metal.</li>
+  <li><strong>Not opinionated about your network.</strong> If your router runs DHCP, nostos's dnsmasq co-exists via vendor-class filtering (we already do this).</li>
 </ul>
 
 <!-- ============================================================ -->
@@ -324,10 +330,10 @@ Small surface area (Python, uv, single binary via <code>uv run --script</code>).
 <h2>Migration plan (for this repo)</h2>
 
 <ol>
-  <li><strong>v0.1:</strong> port <code>pxe/scripts/*.sh</code> verbatim into <code>forge</code> subcommands. No feature changes. Prove parity.</li>
-  <li><strong>v0.2:</strong> add <code>forge config refresh</code> (the <code>/tmp/talos-ca</code> dance), <code>forge bootstrap</code>, <code>forge status</code>. Delete <code>taskfiles/pxe.yml</code>.</li>
-  <li><strong>v0.3:</strong> <code>forge node add</code> wizard; <code>forge.yaml</code> becomes source of truth; <code>pxe/nodes.yaml</code> retired.</li>
-  <li><strong>v0.4:</strong> <code>forge web</code>. Delete <code>taskfiles/talostroobleshooting.yml</code>.</li>
+  <li><strong>v0.1:</strong> port <code>pxe/scripts/*.sh</code> verbatim into <code>nostos</code> subcommands. No feature changes. Prove parity.</li>
+  <li><strong>v0.2:</strong> add <code>nostos config refresh</code> (the <code>/tmp/talos-ca</code> dance), <code>nostos bootstrap</code>, <code>nostos status</code>. Delete <code>taskfiles/pxe.yml</code>.</li>
+  <li><strong>v0.3:</strong> <code>nostos node add</code> wizard; <code>nostos/config.yaml</code> becomes source of truth; <code>pxe/nodes.yaml</code> retired.</li>
+  <li><strong>v0.4:</strong> <code>nostos web</code>. Delete <code>taskfiles/talostroobleshooting.yml</code>.</li>
   <li><strong>v1.0:</strong> extract from this repo to its own. Publish on PyPI / brew. Write a proper README with a GIF of a node going from "just unboxed" to "Ready" in one command.</li>
 </ol>
 
@@ -342,8 +348,8 @@ Small surface area (Python, uv, single binary via <code>uv run --script</code>).
 </ul>
 
 <p class="foot">
-draft · forge-pitch · v0.0.1<br>
-next step: pick a name (forge / talforge / bedrock / hearth), scaffold <code>v0.1</code>, ship parity with current scripts.
+draft · nostos-pitch · v0.0.2<br>
+next step: apply the <code>nostos-v01</code> openspec change, scaffold <code>.submodules/nostos/</code>, ship parity with the legacy scripts, then extract to its own repo at v0.2.
 </p>
 
 </div>

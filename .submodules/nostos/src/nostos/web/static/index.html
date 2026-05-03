@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>nostos</title>
+<style>
+  :root { --bg:#0b0d10; --panel:#14181d; --border:#232a32; --fg:#e6edf3; --dim:#8b949e; --good:#7ce38b; --bad:#ff7b72; --warn:#f78166; --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font: 15px/1.5 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+  header { padding: 24px; border-bottom: 1px solid var(--border); display:flex; align-items:baseline; gap:16px; }
+  h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:-0.01em; }
+  .tagline { color: var(--dim); font-size: 13px; }
+  main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+  table { width:100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  th { color: var(--dim); font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; }
+  .pill { display:inline-block; padding: 2px 10px; border-radius: 999px; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; border: 1px solid var(--border); background: #1c2128; color: var(--dim); }
+  .pill.up { color: var(--good); border-color: #2a6b3a; }
+  .pill.down, .pill.refused { color: var(--bad); border-color: #6b2a2a; }
+  button { background: #1c2128; color: var(--fg); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font: inherit; cursor: pointer; font-size: 12px; }
+  button:hover:not(:disabled) { background: #232a32; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.danger { color: var(--bad); border-color: #6b2a2a; }
+  .mono { font-family: var(--mono); color: var(--dim); font-size: 13px; }
+  .toolbar { display:flex; gap: 8px; margin: 16px 0; }
+  .status { color: var(--dim); font-size: 12px; margin-top: 12px; }
+  .readonly { color: var(--warn); }
+  dialog { background: var(--panel); color: var(--fg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; max-width: 440px; }
+  dialog::backdrop { background: rgba(0,0,0,0.7); }
+  dialog h3 { margin: 0 0 12px; }
+  dialog p { color: var(--dim); }
+  dialog input { width: 100%; padding: 8px; background: #1c2128; color: var(--fg); border: 1px solid var(--border); border-radius: 4px; font-family: var(--mono); }
+  dialog .actions { display:flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>nostos</h1>
+  <div class="tagline">bring your bare metal home to the cluster</div>
+  <div style="flex:1"></div>
+  <div class="mono" id="cluster-meta">loading…</div>
+</header>
+
+<main>
+  <div class="toolbar">
+    <button onclick="refresh()">Refresh</button>
+    <span class="status" id="last-refreshed"></span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th><th>IP</th><th>Role</th><th>Ping</th><th>apid</th><th>Version</th><th></th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <p class="status" id="readonly-notice"></p>
+</main>
+
+<dialog id="confirm">
+  <h3 id="confirm-title"></h3>
+  <p id="confirm-body"></p>
+  <input id="confirm-input" autocomplete="off" placeholder="type node name to confirm"/>
+  <div class="actions">
+    <button onclick="closeDialog()">Cancel</button>
+    <button class="danger" onclick="doConfirmed()">Confirm</button>
+  </div>
+</dialog>
+
+<script>
+let pending = null;
+
+async function refresh() {
+  const [cluster, nodes] = await Promise.all([
+    fetch('/api/cluster').then(r => r.json()),
+    fetch('/api/nodes').then(r => r.json()),
+  ]);
+  document.getElementById('cluster-meta').textContent =
+    `${cluster.name} · ${cluster.talos_version}`;
+  document.getElementById('readonly-notice').innerHTML =
+    cluster.read_only ? '<span class="readonly">read-only mode — mutations disabled</span>' : '';
+  const rows = document.getElementById('rows');
+  rows.innerHTML = nodes.map(n => `
+    <tr>
+      <td><strong>${n.name}</strong></td>
+      <td class="mono">${n.ip}</td>
+      <td>${n.role}</td>
+      <td><span class="pill ${n.ping}">${n.ping}</span></td>
+      <td><span class="pill ${n.apid}">${n.apid}</span></td>
+      <td class="mono">${n.version || '—'}</td>
+      <td>
+        <button onclick="openConfirm('wipe','${n.name}')" ${cluster.read_only?'disabled':''}>Wipe</button>
+        ${n.role === 'controlplane' ? `
+          <button onclick="openConfirm('bootstrap','${n.name}')" ${cluster.read_only?'disabled':''}>Bootstrap</button>
+          <button onclick="openConfirm('refresh','${n.name}')" ${cluster.read_only?'disabled':''}>Refresh cert</button>
+        ` : ''}
+        <button onclick="copyCheatsheet('${n.name}')">Copy install steps</button>
+      </td>
+    </tr>
+  `).join('');
+  document.getElementById('last-refreshed').textContent = `refreshed ${new Date().toLocaleTimeString()}`;
+}
+
+function openConfirm(action, name) {
+  pending = { action, name };
+  document.getElementById('confirm-title').textContent = `${action} ${name}`;
+  document.getElementById('confirm-body').textContent =
+    `Type the node name to confirm this ${action}.`;
+  document.getElementById('confirm-input').value = '';
+  document.getElementById('confirm').showModal();
+}
+
+function closeDialog() { document.getElementById('confirm').close(); pending = null; }
+
+async function doConfirmed() {
+  if (!pending) return;
+  const confirmation = document.getElementById('confirm-input').value;
+  if (confirmation !== pending.name) {
+    alert('confirmation must equal the node name');
+    return;
+  }
+  const { action, name } = pending;
+  closeDialog();
+  const resp = await fetch(`/api/nodes/${name}/${action}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ confirmation }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json();
+    alert(`Error: ${err.detail || resp.statusText}`);
+  }
+  refresh();
+}
+
+async function copyCheatsheet(name) {
+  const n = await fetch(`/api/nodes/${name}`).then(r => r.json());
+  const text = `nostos install for ${name}\n` +
+    `  MAC:  ${n.mac}\n  IP:   ${n.ip}\n  Disk: ${n.install_disk}\n` +
+    `  Arch: ${n.arch}\n  Role: ${n.role}\n\n` +
+    `1. Power on. Tap F12 for boot menu.\n` +
+    `2. Select "UEFI: Onboard NIC IPv4".\n` +
+    `3. Watch nostos serve for GET /configs/${n.mac.replaceAll(':','-')}.yaml\n` +
+    `4. After install reboot, BIOS order should be HDD/NVMe first.\n`;
+  await navigator.clipboard.writeText(text);
+  alert('Copied install cheat-sheet to clipboard.');
+}
+
+refresh();
+setInterval(refresh, 10000);
+</script>
+</body>
+</html>
