@@ -4,10 +4,10 @@ env:
   OP_ACCOUNT: my.1password.com
 
 includes:
+  nostos: ./taskfiles/nostos.yml
   talos: ./taskfiles/talos.yml
   argo: ./taskfiles/argo.yml
   # k8s: ./taskfiles/kubernetes.yml
   turing: ./taskfiles/turing.yml
   proxmox: ./taskfiles/proxmox.yml
   clusterbootstrap: ./taskfiles/clusterbootstrap.yml
-  pxe: ./taskfiles/pxe.yml

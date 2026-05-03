@@ -7,3 +7,6 @@ talos/op*
 keys.conf
 hack/foundryvtt-mcp
 hack/foundry
+
+# nostos cache — regenerable from config.yaml + templates/ + 1Password
+nostos/state/

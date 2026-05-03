@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is a home lab infrastructure repository managing a Kubernetes cluster running on Talos Linux with bare metal nodes (Raspberry Pi, Turing Pi, and x86 machines). The infrastructure uses GitOps principles with ArgoCD for application deployment, Istio service mesh in ambient mode, and various home automation services.
+This is a home lab infrastructure repository managing a Kubernetes cluster running on Talos Linux with bare metal nodes (Dell OptiPlex, Turing Pi, and x86 machines). The infrastructure uses GitOps principles with ArgoCD for application deployment, Istio service mesh in ambient mode, and various home automation services.
 
 ## Architecture
 
 ### Infrastructure Layers
 
 1. **Talos Linux**: Bare metal Kubernetes OS running on:
-   - Control plane: Raspberry Pi (192.168.68.100)
+   - Control plane: Dell OptiPlex 3080M (192.168.68.100, formerly RPi — decommissioned 2026-05)
    - Workers: Turing Pi RK1 nodes (192.168.68.107, 192.168.68.114)
    - GPU worker: x86 PC (192.168.68.104) with NVIDIA GPU support
 
@@ -221,18 +221,32 @@ kubectl -n istio-system logs -l app=ztunnel -f | grep -E "inbound|outbound"
 
 ## Node-Specific Details
 
-**Control Plane** (192.168.68.100):
-- Raspberry Pi
-- Config: `talos/rpi-192.168.68.100.yaml`
-- Runs Kubernetes control plane components
+**Control Plane — dell01** (192.168.68.100):
+- Dell OptiPlex 3080M, amd64, NVMe
+- Managed by **`nostos`** (see `nostos/README.md` + `.submodules/nostos/README.md`)
+- Templated from `nostos/templates/dell01.yaml`; rendered machineconfig lives in `nostos/state/configs/` (gitignored)
+- Replaced the original Raspberry Pi controlplane via `task nostos:install NODE=dell01`
 
 **Worker Nodes**:
 - tp1 (192.168.68.107): Turing Pi RK1, ARM64
 - tp4 (192.168.68.114): Turing Pi RK1, ARM64
 - pc01 (192.168.68.104): x86 with NVIDIA GPU
-- Configs: `talos/nodes/*.yaml`
+- Configs: `talos/nodes/*.yaml` (operated via `task talos:*`)
 
 Talos factory images include platform-specific extensions (NVIDIA drivers, QEMU guest agent, Tailscale).
+
+## Provisioning a new bare-metal node
+
+Use `nostos` (`.submodules/nostos/`):
+
+```bash
+task nostos:node:add NAME=<name>   # interactive wizard (MAC, IP, role, disk, template)
+task nostos:build                  # once per schematic/version change
+task nostos:install NODE=<name>    # end-to-end: wipe → pxe serve → bootstrap
+task nostos:status                 # verify Ready
+```
+
+See `nostos/README.md` for the full data-dir layout and `.submodules/nostos/README.md` for the complete CLI reference.
 
 ## Documentation
 

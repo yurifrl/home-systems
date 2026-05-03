@@ -1,0 +1,88 @@
+version: '3'
+
+# Thin wrappers around `go run ./.submodules/nostos/cmd/nostos`.
+#
+# The Go tool runs always via `go run` in v0.1 — no install step, no binary.
+# These tasks preserve the `task <ns>:<cmd>` muscle memory while keeping the
+# underlying invocation trivial.
+
+vars:
+  NOSTOS: 'go run ./.submodules/nostos/cmd/nostos --config nostos/config.yaml'
+
+tasks:
+  build:
+    desc: "Download Talos assets + build iPXE binary"
+    cmds:
+      - '{{.NOSTOS}} build'
+
+  render:
+    desc: "Render a per-MAC machineconfig. Usage: task nostos:render NODE=dell01"
+    requires:
+      vars: [NODE]
+    cmds:
+      - '{{.NOSTOS}} render {{.NODE}}'
+
+  up:
+    desc: "Start PXE server (HTTP + dnsmasq). Requires sudo."
+    cmds:
+      - '{{.NOSTOS}} pxe --iface {{.IFACE | default "en5"}}'
+
+  install:
+    desc: "End-to-end install: wipe + serve + wait + bootstrap. Usage: task nostos:install NODE=dell01"
+    requires:
+      vars: [NODE]
+    cmds:
+      - '{{.NOSTOS}} up {{.NODE}}'
+
+  status:
+    desc: "Per-node reachability + Talos version"
+    cmds:
+      - '{{.NOSTOS}} status'
+
+  bootstrap:
+    desc: "Bootstrap etcd on first controlplane. Usage: task nostos:bootstrap NODE=dell01"
+    requires:
+      vars: [NODE]
+    cmds:
+      - '{{.NOSTOS}} bootstrap {{.NODE}}'
+
+  wipe:
+    desc: "Queue a one-shot wipe for NODE on next PXE boot. Usage: task nostos:wipe NODE=dell01"
+    requires:
+      vars: [NODE]
+    cmds:
+      - '{{.NOSTOS}} wipe {{.NODE}}'
+
+  kubeconfig:
+    desc: "Refresh state/kubeconfig from the controlplane"
+    cmds:
+      - '{{.NOSTOS}} kubeconfig'
+
+  node:add:
+    desc: "Interactively add a new node"
+    requires:
+      vars: [NAME]
+    cmds:
+      - '{{.NOSTOS}} node add {{.NAME}}'
+
+  node:list:
+    desc: "List registered nodes"
+    cmds:
+      - '{{.NOSTOS}} node list'
+
+  node:remove:
+    desc: "Remove a node from config.yaml"
+    requires:
+      vars: [NAME]
+    cmds:
+      - '{{.NOSTOS}} node remove {{.NAME}} --yes'
+
+  config:refresh:
+    desc: "Regenerate admin talosconfig cert against the existing CA"
+    cmds:
+      - '{{.NOSTOS}} config refresh'
+
+  nuke:
+    desc: "Delete nostos/state/ entirely (safe; regenerable)"
+    cmds:
+      - '{{.NOSTOS}} nuke --yes'
