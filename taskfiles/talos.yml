@@ -1,14 +1,17 @@
 version: '3'
 
+# Direct talosctl operations against the non-nostos-managed nodes (tp1, tp4,
+# vm-pc01). dell01 is managed by `task nostos:*` now; see ../nostos/README.md.
+
 tasks:
   dashboard:
+    desc: "Open talosctl dashboard against every node in the cluster"
     cmds:
-      - talosctl -n 192.168.68.100,192.168.68.114,192.168.68.107,192.168.68.115,192.168.68.200 dashboard
+      - talosctl -n 192.168.68.100,192.168.68.114,192.168.68.107,192.168.68.115 dashboard
   op:inject:
-    desc: "Inject 1Password secrets into Talos YAML files"
+    desc: "Inject 1Password secrets into workers' Talos YAML files"
     cmds:
       - mkdir -p talos/op/nodes
-      - op inject -f -i talos/nodes/dell01-192.168.68.100.yaml -o talos/op/nodes/dell01-192.168.68.100.yaml
       - op inject -f -i talos/nodes/tp4-192.168.68.114.yaml -o talos/op/nodes/tp4-192.168.68.114.yaml
       - op inject -f -i talos/nodes/tp1-192.168.68.107.yaml -o talos/op/nodes/tp1-192.168.68.107.yaml
       - op inject -f -i talos/nodes/vm-pc01.yaml -o talos/op/nodes/vm-pc01.yaml
@@ -19,15 +22,11 @@ tasks:
     cmds:
       - op inject -f -i talos/kubeconfig > ~/.talos/kubeconfig
   apply:
+    desc: "apply-config to all workers (dell01 is nostos-managed; use `task nostos:install NODE=dell01`)"
     cmds:
-      - talosctl -n 192.168.68.100 apply-config -f talos/op/nodes/dell01-192.168.68.100.yaml
       - talosctl -n 192.168.68.114 apply-config -f talos/op/nodes/tp4-192.168.68.114.yaml
       - talosctl -n 192.168.68.107 apply-config -f talos/op/nodes/tp1-192.168.68.107.yaml
       - talosctl -n 192.168.68.102 apply-config -f talos/op/nodes/vm-pc01.yaml
-  apply:dell01:
-    desc: "Apply config to Dell control plane. First boot: Dell comes up via PXE at DHCP .200 (maintenance mode), apply reconfigs it to static .100."
-    cmds:
-      - talosctl -n 192.168.68.200 apply-config --insecure -f talos/op/nodes/dell01-192.168.68.100.yaml
   pc01-install:
     dir: /tmp/images
     cmds:
