@@ -1,0 +1,183 @@
+# Talos machineconfig TEMPLATE for dell01 (OptiPlex 3080M, amd64)
+# Role: control plane node at 192.168.68.100
+#
+# Rendered via `task pxe:config NODE=dell01`:
+#   - 1Password secret references (op-colon-slash-slash) are injected
+#   - Output lands in pxe/assets/configs/<mac-hex-hyphens>.yaml
+#   - Served over HTTP during PXE boot via talos.config= kernel arg
+#
+# Secrets are reused from the original cluster (stored in 1Password "kubernetes" vault)
+# so workers (tp1/tp4/rpi) can re-join without regenerating configs.
+version: v1alpha1
+debug: false
+persist: true
+
+machine:
+  type: controlplane
+  token: "op://kubernetes/talos/MACHINE_TOKEN"
+  ca:
+    crt: "op://kubernetes/talos/MACHINE_CA_CRT"
+    key: "op://kubernetes/talos/MACHINE_CA_KEY"
+  certSANs:
+    - 192.168.68.100
+  kubelet:
+    image: ghcr.io/siderolabs/kubelet:v1.32.1
+    defaultRuntimeSeccompProfileEnabled: true
+    disableManifestsDirectory: true
+  network:
+    hostname: dell01
+    interfaces:
+      - interface: enp2s0
+        dhcp: false
+        addresses:
+          - 192.168.68.100/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.68.1
+    nameservers:
+      - 192.168.68.1
+      - 8.8.8.8
+  install:
+    disk: /dev/nvme0n1
+    image: factory.talos.dev/metal-installer/4a0d65c669d46663f377e7161e50cfd570c401f26fd9e7bda34a0216b6f1922b:v1.10.3
+    wipe: true
+    extraKernelArgs:
+      - talos.dashboard.disabled=0
+  features:
+    rbac: true
+    stableHostname: true
+    apidCheckExtKeyUsage: true
+    diskQuotaSupport: true
+    kubePrism:
+      enabled: true
+      port: 7445
+    hostDNS:
+      enabled: true
+      forwardKubeDNSToHost: true
+  nodeLabels:
+    node.kubernetes.io/exclude-from-external-load-balancers: ""
+    syscd.dev/storage: dell01
+
+cluster:
+  id: "op://kubernetes/talos/CLUSTER_ID"
+  secret: "op://kubernetes/talos/CLUSTER_SECRET"
+  controlPlane:
+    endpoint: https://192.168.68.100:6443
+  clusterName: talos-default
+  network:
+    cni:
+      name: flannel
+    dnsDomain: cluster.local
+    podSubnets:
+      - 10.244.0.0/16
+    serviceSubnets:
+      - 10.96.0.0/12
+  token: "op://kubernetes/talos/CLUSTER_TOKEN"
+  secretboxEncryptionSecret: "op://kubernetes/talos/CLUSTER_SECRETBOXENCRYPTIONSECRET"
+  ca:
+    crt: "op://kubernetes/talos/CLUSTER_CA_CRT"
+    key: "op://kubernetes/talos/CLUSTER_CA_KEY"
+  aggregatorCA:
+    crt: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_CRT"
+    key: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_KEY"
+  serviceAccount:
+    key: "op://kubernetes/talos/CLUSTER_SERVICEACCOUNT_KEY"
+  apiServer:
+    image: registry.k8s.io/kube-apiserver:v1.32.1
+    certSANs:
+      - 192.168.68.100
+    disablePodSecurityPolicy: true
+    admissionControl:
+      - name: PodSecurity
+        configuration:
+          apiVersion: pod-security.admission.config.k8s.io/v1alpha1
+          kind: PodSecurityConfiguration
+          defaults:
+            enforce: privileged
+            enforce-version: latest
+            audit: privileged
+            audit-version: latest
+            warn: privileged
+            warn-version: latest
+          exemptions:
+            namespaces:
+              - kube-system
+              - metallb-system
+              - istio-system
+            runtimeClasses: []
+            usernames: []
+    auditPolicy:
+      apiVersion: audit.k8s.io/v1
+      kind: Policy
+      rules:
+        - level: Metadata
+  controllerManager:
+    image: registry.k8s.io/kube-controller-manager:v1.32.1
+  proxy:
+    image: registry.k8s.io/kube-proxy:v1.32.1
+  scheduler:
+    image: registry.k8s.io/kube-scheduler:v1.32.1
+  discovery:
+    enabled: true
+    registries:
+      kubernetes:
+        disabled: true
+      service: {}
+  etcd:
+    ca:
+      crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
+      key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
+  # Bootstrap manifests only apply on first cluster-init. Kept here so a fresh
+  # cluster comes up with ArgoCD + 1Password Connect wired.
+  extraManifests:
+    - https://raw.githubusercontent.com/yurifrl/home-systems/refs/heads/main/manifests/argocd.yaml
+    - https://raw.githubusercontent.com/yurifrl/home-systems/refs/heads/main/manifests/applications.yaml
+  inlineManifests:
+    - name: namespace-argocd
+      contents: |
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: argocd
+    - name: namespace-external-secrets
+      contents: |
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: external-secrets
+    - name: secret-op-credentials
+      contents: |
+        apiVersion: v1
+        kind: Secret
+        type: Opaque
+        metadata:
+          name: op-credentials
+          namespace: 1password
+        data:
+          1password-credentials.json: "op://kubernetes/op-credentials/OP_CREDENTIALS_JSON"
+          token: "op://kubernetes/op-credentials/OP_CONNECT_TOKEN"
+    - name: cluster-secret-store-onepassword
+      contents: |
+        apiVersion: external-secrets.io/v1
+        kind: ClusterSecretStore
+        metadata:
+          name: onepassword
+        spec:
+          provider:
+            onepassword:
+              connectHost: http://onepassword-connect.1password.svc.cluster.local:8080
+              vaults:
+                kubernetes: 1
+              auth:
+                secretRef:
+                  connectTokenSecretRef:
+                    name: op-credentials
+                    key: token
+                    namespace: 1password
+---
+apiVersion: v1alpha1
+kind: ExtensionServiceConfig
+name: tailscale
+environment:
+  - TS_AUTHKEY=op://kubernetes/talos/TS_AUTHKEY
+  - TS_ROUTES=10.96.0.0/12,192.168.68.0/24
