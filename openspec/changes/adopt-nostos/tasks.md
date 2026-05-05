@@ -54,6 +54,6 @@
 
 ## 9. Commit
 
-- [ ] 9.1 Review `git status`; confirm expected changes only (nostos/ added, pxe/ deleted, taskfiles updated, CLAUDE.md updated, .gitignore updated, talos/templates/dell01.yaml moved)
-- [ ] 9.2 Commit in logical batches: (a) add nostos/ + .submodules/nostos/, (b) add Taskfile wrappers, (c) delete pxe/ + prune talos.yml, (d) update CLAUDE.md
-- [ ] 9.3 Final smoke: from a fresh shell, `task nostos:status` works end-to-end
+- [x] 9.1 Review `git status`; confirm expected changes only (nostos/ added, pxe/ deleted, taskfiles updated, CLAUDE.md updated, .gitignore updated, talos/templates/dell01.yaml moved)
+- [x] 9.2 Commit in logical batches: (a) add nostos/ + .submodules/nostos/, (b) add Taskfile wrappers, (c) delete pxe/ + prune talos.yml, (d) update CLAUDE.md
+- [x] 9.3 Final smoke: from a fresh shell, `task nostos:status` works end-to-end
