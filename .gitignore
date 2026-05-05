@@ -1,3 +1,4 @@
+*.xz
 secrets.*
 secrets
 .DS_Store

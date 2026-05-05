@@ -1,0 +1,53 @@
+{
+  "mcpServers": {
+    "bubbles_docs": {
+      "args": [
+        "mcp-remote",
+        "https://gitmcp.io/charmbracelet/bubbles"
+      ],
+      "command": "npx"
+    },
+    "bubbletea_docs": {
+      "args": [
+        "mcp-remote",
+        "https://gitmcp.io/charmbracelet/bubbletea"
+      ],
+      "command": "npx"
+    },
+    "cobra_docs": {
+      "args": [
+        "mcp-remote",
+        "https://gitmcp.io/spf13/cobra"
+      ],
+      "command": "npx"
+    },
+    "git": {
+      "args": [
+        "mcp-server-git"
+      ],
+      "command": "uvx",
+      "type": "stdio"
+    },
+    "huh_docs": {
+      "args": [
+        "mcp-remote",
+        "https://gitmcp.io/charmbracelet/huh"
+      ],
+      "command": "npx"
+    },
+    "lipgloss_docs": {
+      "args": [
+        "mcp-remote",
+        "https://gitmcp.io/charmbracelet/lipgloss"
+      ],
+      "command": "npx"
+    },
+    "viper_docs": {
+      "args": [
+        "mcp-remote",
+        "https://gitmcp.io/spf13/viper"
+      ],
+      "command": "npx"
+    }
+  }
+}
