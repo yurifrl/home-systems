@@ -1,0 +1,8 @@
+nostos/state/
+.submodules/
+.worktrees/
+.git/
+.agents/tmp/
+.swift-cache/
+.opencode/
+graphify-out/
