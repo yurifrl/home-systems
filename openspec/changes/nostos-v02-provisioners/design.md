@@ -2,55 +2,90 @@
 
 nostos v0.1 (openspec/changes/nostos-v01/) shipped a single-method install
 flow: PXE-boot a Dell OptiPlex from UEFI, render a per-MAC machineconfig,
-serve over HTTP+dnsmasq, watch for the config fetch, wait for apid, bootstrap
-etcd. End-to-end install lives in
-.submodules/nostos/internal/cluster/orchestrate.go::Install (lines 67-235);
-that function references pxe.BuildAll, pxe.RenderBootIpxe, pxe.NewServer
-and the HTTP request tap directly. PXE is the only supported install path.
+serve over HTTP+dnsmasq, watch for the config fetch in the iPXE chain
+(in-band delivery), wait for apid, bootstrap etcd. End-to-end install lives
+in `.submodules/nostos/internal/cluster/orchestrate.go::Install` (lines
+67-235). PXE is the only supported install path.
 
-The lab has four other nodes that do not PXE:
-
-- tp1, tp4 - Turing Pi RK1 ARM modules. Todays flow lives in
-  taskfiles/turing.yml (flash, download, install-talos): download
-  metal-arm64.raw.xz from factory.talos.dev, tpi flash -i ... -n <slot>,
-  tpi power on -n <slot>, then talosctl apply-config -i. None of this is
-  in nostos.
-- vm-pc01 - Proxmox VM. taskfiles/talos.yml::apply does
-  talosctl apply-config -f against an already-running VM with a
-  pre-installed Talos disk image. VM lifecycle (create, attach ISO, boot) is
-  manual.
-- pc01 - x86 with NVIDIA GPU. taskfiles/talos.yml::pc01-install flashes
-  a USB stick by dd to /dev/disk5 and then talosctl apply-config -i.
-
-nostos/config.yaml only contains dell01 (lines 11-17); the workers are
-not declared there because the v0.1 schema has no concept of a non-PXE node.
-This is the gap v0.2 closes.
+The lab has tp1 / tp4 (Turing Pi RK1, arm64) sitting unjoined, plus
+vm-pc01 (Proxmox VM) and pc01 (x86 + NVIDIA) on manual Taskfile flows.
+v0.2 closes the **tp1/tp4 gap only**. vm-pc01 and pc01 wait for v0.3
+providers.
 
 ## Goals / Non-Goals
 
 **Goals (v0.2):**
-- Define a single Provisioner interface that all install methods satisfy.
-- Refactor internal/cluster/orchestrate.go::Install to be provisioner-agnostic.
-- Ship the tpi provider end-to-end so `task nostos:install NODE=tp1` replaces
-  the entire taskfiles/turing.yml flow.
-- Preserve dell01s behavior bit-for-bit by promoting v0.1s PXE code into a
-  pxe provider.
-- Lay groundwork (interface shape, run-log JSONL, BMC contention key) for
-  v0.3 providers without implementing them.
+- Single `Provisioner` interface with pinned hook contracts.
+- `internal/cluster/orchestrate.go::Install` is provisioner-agnostic.
+- `tpi` provider end-to-end so `task nostos:install NODE=tp1` replaces
+  `taskfiles/turing.yml`.
+- dell01's behavior preserved bit-for-bit by promoting v0.1 PXE code into
+  a `pxe` provider whose `Apply` is a no-op (config is delivered in-band
+  via the iPXE chain).
+- Three test seams (`Commander`, `Secrets`, `Clock`) and a provider
+  compliance suite, so ~90% of spec scenarios are unit-testable.
 
-**Non-Goals (v0.2 - deferred):**
-- redfish, proxmox, usb, rpi-imager providers.
-- inventory.db, drift detection, nostos diff.
-- cluster upgrade, secrets rotate, comprehensive doctor.
-- --parallel actually running parallel; the contention key ships, the flag
-  defaults to off.
-- Vendored iPXE / Homebrew / Talos system extension - v1.0 work.
+**Non-Goals (v0.2 — deferred with reason in proposal.md):**
+- `redfish`, `proxmox`, `usb`, `rpi-imager` providers and enum entries.
+- JSONL run log, `inventory.db`, drift detection, `nostos diff`.
+- `nostos doctor` (catalog or stub).
+- `--parallel` flag (locks ship internally; flag does not).
+- `--resume` and any persistent run history.
+- Tailscale authkey auto-rotation.
+- Vendored iPXE / Homebrew / Talos system extension.
+
+## Definitions (glossary)
+
+These terms are load-bearing and pinned here; specs cite this section.
+
+- **RK1**: Turing Pi RK1 compute module (Rockchip RK3588, arm64). The
+  `tpi` provider is not RK1-specific — it works for any module hosted on
+  a Turing Pi 2 board — but the v0.2 hardware targets are RK1.
+- **Maintenance mode**: Talos boot state where apid is exposed on TCP
+  50000 without TLS client-cert authentication, prior to first
+  machineconfig apply. Observable via `talosctl --insecure -n <ip>
+  version` returning a parseable response. TCP-listening alone does
+  NOT imply maintenance-mode-ready.
+- **Ready**: For a worker, apid responds to `talosctl version` over the
+  secured listener after Apply (i.e. `WaitApid` succeeds). For a
+  controlplane, additionally etcd is healthy and `talos/kubeconfig` has
+  been fetched. The orchestrator emits `Kind=ready` only when this
+  condition holds.
+- **Boot method**: the value of `Node.Boot.Method` in `nostos/config.yaml`.
+  v0.2 enum is `{pxe, tpi}`.
+- **Provisioner**: Go interface in `internal/provisioner/`. One method
+  per boot method; one implementation per provider package.
+- **Idempotent (per hook)**:
+  - `Preflight`: no observable side effect; safe to re-run.
+  - `Prepare`: converges to the same on-disk state across re-runs (cache
+    hits short-circuit work).
+  - `Boot`: NOT idempotent in the general case (a `tpi flash` is
+    destructive every run; PXE Boot starts a server). Re-entry guarded
+    by the orchestrator's per-node flock and the live-node reinstall
+    guard.
+  - `WaitMaintenance`: pure poll; safe to re-run.
+  - `Apply`: each provider documents whether re-running is safe. PXE's
+    no-op is trivially safe. tpi's `talosctl apply-config -i` succeeds
+    once per maintenance-mode window; second call returns a typed
+    error from talosctl which the provider must surface.
+  - `Cleanup`: idempotent; safe to call twice.
+- **ContentionKey**: string returned by a Provisioner for a given node
+  identifying a shared scarce resource. Two installs with the same
+  non-empty key serialize at the Apply boundary. Replaces v0.2-draft
+  `BMCKey`; same shape, more honest name (PXE server contention is also
+  modeled this way).
+- **Boundary "in-band" vs "out-of-band" config delivery**: in-band =
+  rendered config is fetched by the firmware/bootloader during the boot
+  chain (PXE: `talos.config=http://...` in iPXE script). Out-of-band =
+  delivered via `talosctl apply-config -i` after the node reaches
+  maintenance mode (tpi). Each provider declares which by what it does
+  in `Apply`.
 
 ## Decisions
 
 ### D1. Provisioner interface
 
-Defined in internal/provisioner/provisioner.go:
+Defined in `internal/provisioner/provisioner.go`:
 
     package provisioner
 
@@ -59,69 +94,74 @@ Defined in internal/provisioner/provisioner.go:
         "time"
     )
 
-    // NodeView is the immutable subset of a Node a provisioner needs.
-    // Decouples providers from internal/config to keep the package importable
-    // from tests without dragging in yaml + validator.
-    type NodeView struct {
-        Name        string
-        MAC         string
-        IP          string
-        Role        string // "controlplane" | "worker"
-        Arch        string // "amd64" | "arm64"
-        InstallDisk string // /dev/...
-        Template    string // path under templates/
-        Boot        BootConfig
+    // Phase is one of these constants; orchestrator emits the phase
+    // marker on transition.
+    type Phase string
+    const (
+        PhasePreflight Phase = "preflight"
+        PhasePrepare   Phase = "prepare"
+        PhaseBoot      Phase = "boot"
+        PhaseWait      Phase = "wait"
+        PhaseApply     Phase = "apply"
+        PhaseBootstrap Phase = "bootstrap"
+        PhaseReady     Phase = "ready"
+        PhaseError     Phase = "error"
+        PhaseCleanup   Phase = "cleanup"
+    )
+
+    type Event struct {
+        Phase   Phase
+        Kind    string  // "info" | "progress" | "download" | "apid-up" | ...
+        Message string
+        At      time.Time
     }
 
-    type BootConfig struct {
-        Method string // pxe | tpi | redfish | proxmox | usb | rpi-imager
-        TPI      *TPIBoot
-        Redfish  *RedfishBoot
-        Proxmox  *ProxmoxBoot
-        USB      *USBBoot
-        RPi      *RPiBoot
-        // PXE has no extra fields - cluster-wide settings live in cfg.Cluster.
-    }
+    // EventEmitter is wrapped by the orchestrator with a Scrubber sink
+    // before being passed to providers. Providers MUST NOT construct
+    // their own emitters; they receive one.
+    type EventEmitter func(Event)
 
-    // Provisioner is one boot method.
     type Provisioner interface {
-        // Method returns the boot.method string this provider handles.
         Method() string
 
-        // BMCKey returns a string identifying the shared BMC for contention
-        // purposes. Two installs with the same BMCKey are serialized.
-        // Empty string means "no shared BMC" (PXE; USB; rpi-imager).
-        BMCKey(NodeView) string
+        // ContentionKey returns "" if no shared resource, else a stable
+        // string. Two installs with the same non-empty key serialize
+        // at the Apply boundary (acquired before Boot, released after
+        // Apply or in Cleanup, whichever runs last).
+        ContentionKey(node *config.Node) string
 
-        // Preflight runs cheap checks: BMC reachable, image cached,
-        // creds resolvable. Called before any side effects.
-        Preflight(ctx context.Context, n NodeView) error
+        // Preflight: cheap checks. No side effects. ctx is the run ctx.
+        Preflight(ctx context.Context, node *config.Node, emit EventEmitter) error
 
-        // Prepare does idempotent prep work: download/build images, render
-        // boot artifacts, queue any one-shot wipe flags. Safe to re-run.
-        Prepare(ctx context.Context, n NodeView, emit EventEmitter) error
+        // Prepare: idempotent prep (image fetch, decompress, render
+        // boot artifacts, queue wipe). Side effects allowed; safe to
+        // re-run. ctx is the run ctx.
+        Prepare(ctx context.Context, node *config.Node, emit EventEmitter) error
 
-        // Boot kicks the node toward Talos maintenance mode (tpi flash +
-        // power-on; redfish virtual-media + reboot; pxe.Server.Start; etc).
-        // Returns when the boot signal has been sent, NOT when the node is
-        // up. Long-running boot servers (PXE) are kept alive via a context
-        // owned by the orchestrator and torn down by Cleanup.
-        Boot(ctx context.Context, n NodeView, emit EventEmitter) error
+        // Boot: kick the node toward maintenance mode (tpi flash + power
+        // on; pxe.Server.Start). Returns when the boot signal has been
+        // sent, NOT when the node is up. Long-running servers (PXE) keep
+        // running; their goroutines are owned by the provider and joined
+        // in Cleanup. ctx is the run ctx.
+        Boot(ctx context.Context, node *config.Node, emit EventEmitter) error
 
-        // WaitMaintenance blocks until the node is reachable in maintenance
-        // mode (apid up at NodeView.IP, no machineconfig applied yet) or
-        // the deadline expires.
-        WaitMaintenance(ctx context.Context, n NodeView, emit EventEmitter) error
+        // WaitMaintenance: blocks until the node is reachable in
+        // maintenance mode (talosctl --insecure version parses) or ctx
+        // deadline expires. ctx carries the deadline.
+        WaitMaintenance(ctx context.Context, node *config.Node, emit EventEmitter) error
 
-        // Cleanup tears down provider resources (PXE server stop; restore
-        // boot.ipxe; clear pending wipe entry; close BMC sessions).
-        // Always called, even on error in earlier phases.
-        Cleanup(ctx context.Context, n NodeView, emit EventEmitter) error
+        // Apply: deliver the rendered machineconfig. PXE: no-op (config
+        // already delivered in iPXE chain). tpi/redfish/proxmox/usb:
+        // talosctl apply-config -i. configPath is a 0600 temp file owned
+        // by the orchestrator and unlinked after Apply returns.
+        Apply(ctx context.Context, node *config.Node, configPath string, emit EventEmitter) error
+
+        // Cleanup: ALWAYS called. Receives a fresh ctx derived from
+        // context.Background with a 60s deadline. May re-acquire
+        // ContentionKey if non-empty to issue destructive teardown.
+        // Idempotent.
+        Cleanup(ctx context.Context, node *config.Node, emit EventEmitter) error
     }
-
-    // EventEmitter is the same channel used by the orchestrator today.
-    // Aliased here so providers do not import internal/cluster.
-    type EventEmitter func(kind, message string)
 
 A registry maps method strings to constructors:
 
@@ -130,402 +170,313 @@ A registry maps method strings to constructors:
         Cfg     *config.Config
         Paths   paths.Paths
         Secrets secrets.Resolver
-        Cmd     execx.Commander // mockable subprocess interface
+        Cmd     execx.Commander // mockable subprocess seam
+        Clock   clockx.Clock    // mockable time seam
     }
     var registry = map[string]Factory{}
-    func Register(method string, f Factory) { registry[method] = f }
+    func Register(method string, f Factory) { ... } // panics on dup
     func New(method string, deps Deps) (Provisioner, error) { ... }
 
-Each provider package (provisioner/pxe, provisioner/tpi) calls Register in
-its init(). cmd/nostos/main.go blank-imports the providers it wants to ship
-in this build, mirroring how database/sql drivers register.
+Method enum (validator-enforced): `{pxe, tpi}`. Providers register in
+`init()`. `cmd/nostos/main.go` blank-imports the providers it ships;
+unimplemented methods are not in the enum and fail validation closed.
+
+**No `NodeView` value type.** Providers import `internal/config`
+read-only and accept `*config.Node`. Decoupling-via-extra-type was a
+duplication anti-pattern; the interface signatures themselves are the
+seam.
 
 ### D2. Orchestrator reshape
 
-internal/cluster/orchestrate.go::Install today is ~170 lines of linear PXE
-plumbing (orchestrate.go:67-235). The reshaped function becomes:
+`internal/cluster/orchestrate.go::Install` becomes:
 
     func Install(ctx, cfg, p, node, name, opts, events) error {
-        emit := makeEmitter(events)
-        nv := provisioner.ViewFrom(cfg, node, name)
+        // Wrap the raw event channel with a Scrubber seeded with the
+        // resolved-secret table for THIS run. Providers cannot leak
+        // secrets via emit() even if they try.
+        scrub := redact.NewScrubber()
+        emit := redact.WrapEmitter(events, scrub)
 
-        prov, err := provisioner.New(nv.Boot.Method, deps)
+        prov, err := provisioner.New(node.Boot.Method, deps)
         if err != nil { return err }
 
-        runID := runlog.NewID()
-        rlog, _ := runlog.Open(runID)
-        defer rlog.Close()
-        // Tee every emit into the JSONL run log.
-        emit = runlog.Tee(emit, rlog)
+        // Per-node flock for cross-process safety. Held Render -> Apply.
+        unlock, err := flock.AcquireNode(name)
+        if err != nil { return ErrLocked }
+        defer unlock()
 
-        // Always render machineconfig - every provisioner needs it
-        // because maintenance-mode handoff is `talosctl apply-config -i`.
-        if _, err := registry.Render(cfg, p, name, true); err != nil { ... }
+        // Phase: preflight (BEFORE any disk/secret side effect).
+        if err := prov.Preflight(ctx, node, emit); err != nil { return err }
 
-        if err := prov.Preflight(ctx, nv); err != nil { return err }
+        // Resolve secrets ONCE; feed Scrubber.
+        resolved, err := secrets.ResolveAll(ctx, node)
+        if err != nil { return err }
+        scrub.AddAll(resolved.Values())
+        defer resolved.Zero()
 
-        // Cleanup runs no matter what. Defer order: cleanup last (LIFO).
-        defer prov.Cleanup(context.Background(), nv, emit)
+        // Optional: live-node reinstall guard.
+        if !opts.Reinstall {
+            if alive, _ := cluster.ProbeReady(ctx, node.IP); alive {
+                return ErrNodeAlreadyReady // require --reinstall
+            }
+        }
 
-        if err := prov.Prepare(ctx, nv, emit); err != nil { return err }
-        if err := prov.Boot(ctx, nv, emit); err != nil { return err }
-        if err := prov.WaitMaintenance(ctx, nv, opts.bootDeadline(), emit); err != nil { return err }
+        // Render machineconfig to a 0600 temp file under
+        // ~/.cache/nostos/secrets/<run-id>/. Unlinked at end.
+        configPath, err := registry.RenderTo(cfg, p, name, secretsTempDir)
+        if err != nil { return err }
+        defer os.Remove(configPath)
 
-        // Maintenance-mode handoff: identical for every provider.
-        if err := ApplyConfigInsecure(ctx, cfg, p, nv); err != nil { return err }
+        // Cleanup runs no matter what (LIFO defer).
+        defer func() {
+            cctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+            defer cancel()
+            _ = prov.Cleanup(cctx, node, emit)
+        }()
 
-        // Wait for apid on the static IP after reboot into installed mode.
-        if err := WaitApid(ctx, nv, opts.apidDeadline()); err != nil { return err }
+        // ContentionKey acquisition spans Boot..Apply.
+        if key := prov.ContentionKey(node); key != "" {
+            release := contention.Acquire(key)
+            defer release()
+        }
 
-        if nv.Role == "controlplane" {
+        if err := prov.Prepare(ctx, node, emit); err != nil { return err }
+        if err := prov.Boot(ctx, node, emit); err != nil { return err }
+
+        waitCtx, cancel := context.WithDeadline(ctx, opts.WaitMaintenanceDeadline())
+        defer cancel()
+        if err := prov.WaitMaintenance(waitCtx, node, emit); err != nil { return err }
+
+        if err := prov.Apply(ctx, node, configPath, emit); err != nil { return err }
+        if err := WaitApid(ctx, node, opts.ApidDeadline()); err != nil { return err }
+
+        if node.Role == "controlplane" {
             if err := Bootstrap(ctx, cfg, p, node, opts.BootstrapTimeout); err != nil { return err }
             _ = FetchKubeconfig(ctx, p, node)
         }
-        emit("ready", "...")
+        emit(Event{Phase: PhaseReady, Kind: "ready", Message: "...", At: time.Now()})
         return nil
     }
 
-The PXE-specific blocks at orchestrate.go:103-112 (BuildAll), 114-119 (wipe
-re-render), 122-135 (server start + Preflight + HTTPRequests tap), 137-160
-(GET /configs/<mac>.yaml watch), 195-205 (consume wipe + restore boot.ipxe)
-all migrate to provisioner/pxe/*.go. The wipe queue itself
-(internal/cluster/wipe.go) stays put because v0.3 may want it for redfish
-too.
+Key contracts:
 
-A new function `cluster.ApplyConfigInsecure` formalizes the existing
-`talosctl apply-config -i` step that the workers do today via
-taskfiles/talos.yml::apply. v0.1 PXE happened to include the config inline
-in iPXE boot, so this step was implicit; in v0.2 every provider funnels
-through it for symmetry.
+- **No double-apply.** PXE's `Apply` is a no-op; tpi's `Apply` runs
+  `talosctl apply-config -i`. The orchestrator does not call
+  `apply-config -i` itself — that decision lives in the provider.
+- **Render after Preflight, after secret resolution, before Prepare.**
+  No resolved secrets touch disk before cheap checks pass.
+- **Cleanup gets a fresh context** so it survives Ctrl-C of the run
+  context. May re-acquire its `ContentionKey` to issue destructive
+  teardown.
+- **Scrubber is seeded once per run** with all resolved-secret values.
+  Every provider emit and every captured child stdout/stderr passes
+  through `scrub.Scrub(string)` before reaching events. Provider
+  discretion is not part of the redaction story.
 
 ### D3. Per-method designs
 
-#### pxe (v0.2 - refactor only)
+#### pxe (refactor only)
 
-Implementation: provisioner/pxe/pxe.go. Wraps the existing internal/pxe code
-1:1.
+Implementation: `internal/provisioner/pxe/pxe.go`. Wraps existing
+`internal/pxe/` 1:1.
 
-- Method: "pxe"
-- BMCKey: "" (no BMC; PXE boot is initiated by the node, not by nostos)
-- Preflight: pxe.NewServer().Preflight() (current orchestrate.go:124-129);
-  detects ethernet interface, port 9080 free, dnsmasq binary present.
-- Prepare: pxe.BuildAll (download kernel/initramfs, build iPXE), then
-  registry.Render is called by the orchestrator. If the node has a wipe
-  queued, re-render boot.ipxe with talos.experimental.wipe=system.
-- Boot: srv.Start(serveCtx, ni). The HTTP-request tap (srv.HTTPRequests())
-  becomes a goroutine inside the provider that emits download events.
-- WaitMaintenance: poll registry.Probe for apid up at nv.IP.
-- Cleanup: srv.Stop, ConsumeWipe on success, restore clean boot.ipxe.
+- `Method() = "pxe"`
+- `ContentionKey() = "pxe:server"` (only one PXE server can bind
+  dnsmasq + port 9080 at a time).
+- `Preflight`: detect ethernet interface, port 9080 free, dnsmasq
+  binary present.
+- `Prepare`: `pxe.BuildAll`. Wipe re-render lives here (read pending
+  wipes, re-render boot.ipxe with `talos.experimental.wipe=system`).
+- `Boot`: `srv.Start(serveCtx, ni)`. The HTTP-request tap goroutine is
+  owned by the provider; tied to a context that is cancelled in
+  `Cleanup`. `Boot` returns when the server is listening.
+- `WaitMaintenance`: poll `talosctl --insecure -n nv.IP version` until
+  it parses or ctx deadline.
+- `Apply`: **no-op** (config delivered in-band via iPXE chain). Returns
+  nil immediately.
+- `Cleanup`: `srv.Stop`, cancel HTTP tap goroutine and wait, ConsumeWipe
+  on success, restore clean boot.ipxe.
 
-#### tpi (v0.2 - new provider, key deliverable)
+#### tpi (new — key v0.2 deliverable)
 
-Implementation: provisioner/tpi/tpi.go. Replaces taskfiles/turing.yml.
+Implementation: `internal/provisioner/tpi/tpi.go`. Replaces
+`taskfiles/turing.yml`.
 
 Config block on Node:
 
     boot:
       method: tpi
       tpi:
-        host: "192.168.68.10"        # Turing Pi BMC LAN IP
-        slot: 1                       # 1..4
-        # Authentication source. Either:
+        host: "192.168.68.10"
+        slot: 1                        # 1..4
         username_ref: "op://kubernetes/turingpi/username"
         password_ref: "op://kubernetes/turingpi/password"
-        # ...or a key file:
-        identity_file_ref: "op://kubernetes/turingpi/ssh_key"
+        # OR identity_file_ref alone:
+        # identity_file_ref: "op://kubernetes/turingpi/ssh_key"
 
-- Method: "tpi"
-- BMCKey: tpi.Host (every slot on the same board shares one BMC; serialize).
-- Preflight:
-  - tpi --version succeeds (binary present on operator laptop).
-  - TCP connect to tpi.Host:443 within 2s.
-  - Secrets backend resolves credential refs (no value logged).
-  - Image cache directory has > 4 GiB free.
-- Prepare:
-  - Compute image URL from cfg.Cluster.SchematicID + TalosVersion + arch:
-    https://factory.talos.dev/image/<schematic>/<version>/metal-arm64.raw.xz
-  - Download to ~/.cache/nostos/images/<schematic>/<version>/metal-arm64.raw.xz
-    (idempotent: skip if size + sha match).
-  - xz -d to a sibling .raw file (sparse-aware).
-  - Render machineconfig is done by the orchestrator already.
-- Boot:
-  - Set TPI_USERNAME / TPI_PASSWORD env (or --user/--password flags) from the
-    resolved secrets, never inline in argv.
-  - tpi --host <h> power off -n <slot>
-  - tpi --host <h> flash -i <local.raw> -n <slot>     (this can take 5+ min)
-  - tpi --host <h> power on -n <slot>
-  - Stream tpi stdout; emit progress events.
-- WaitMaintenance:
-  - Poll TCP nv.IP:50000 (apid maintenance-mode listener) every 5s up to
-    opts.bootDeadline (default 10 min).
-- Cleanup:
-  - On error: tpi power off -n <slot> (operator can retry).
-  - Always: redact creds from emitted events; close any tpi log file handles.
+`_ref` fields are `Ref` typed strings (custom YAML unmarshaller). Allowed
+URI prefixes: `op://`, `sops://`, `file://`. `env://` is **prohibited**
+for BMC creds (process-environment exposure). Anything else fails to
+unmarshal with a typed error. No "credential-shaped value" heuristics.
 
-#### redfish (v0.3 - sketch)
+- `Method() = "tpi"`
+- `ContentionKey(node) = "tpi:" + node.Boot.TPI.Host` (every slot on a
+  board shares one BMC).
+- `Preflight`:
+  - `tpi --version` succeeds AND parses to >= minimum (TBD;
+    placeholder until we benchmark current operator binary).
+  - TCP-connect to `host:443` within 2s.
+  - All `_ref` fields resolve via `secrets.Resolver` (values consumed,
+    never logged, fed to Scrubber).
+  - Cache root has `>= max(image_size_compressed * 3, 8 GiB)` free
+    (compressed + decompressed + headroom). Replaces fixed 4 GiB.
+  - `(host, slot)` is unique across all `tpi`-method nodes in
+    `cfg.Nodes` (validator runs at config load; Preflight re-checks
+    defensively).
+- `Prepare`:
+  - Compute image URL from `cfg.Cluster.SchematicID` + `cfg.Cluster.TalosVersion`
+    + `node.Arch`:
+    `https://factory.talos.dev/image/<schematic>/<version>/metal-<arch>.raw.xz`
+  - Look up expected sha256 in `cfg.Cluster.ImageDigests[<schematic>/<version>/<arch>]`.
+    If not pinned, fail with a typed error pointing the operator to add
+    the digest. **No TOFU on first download.**
+  - Download to
+    `~/.cache/nostos/images/<schematic>/<version>/metal-<arch>.raw.xz`
+    via temp-file + atomic rename. Verify sha256 matches the pinned
+    digest; on mismatch, delete and fail.
+  - Decompress to sibling `.raw` using `github.com/ulikunitz/xz`
+    (Go-native; no shell out).
+  - Idempotent: if cached file exists and sha256 matches, skip download.
+- `Boot`:
+  - Materialize `identity_file_ref` (if set) to
+    `~/.cache/nostos/secrets/<run-id>/tpi-key` with `O_CREAT|O_EXCL`
+    mode 0600 inside a 0700 dir. `lstat` to refuse symlinks. Path is
+    in argv; key bytes are not.
+  - Set `TPI_USERNAME` / `TPI_PASSWORD` on the `Cmd.Env` (never argv).
+  - `tpi --host <h> power off -n <slot>` — exit code != 0 is non-fatal
+    if stderr indicates "already off" (provider documents the matched
+    pattern).
+  - `tpi --host <h> flash -i <local.raw> -n <slot>` — destructive.
+  - `tpi --host <h> power on -n <slot>`.
+  - Stream `tpi` stdout into emit() through Scrubber, with a 200ms
+    coalescing window (assert ≤ 151 emits over a 30s synthetic stream).
+- `WaitMaintenance`: poll `talosctl --insecure -n nv.IP version` every
+  5s; success = parseable response. Default deadline 20 min (RK1 cold
+  boots are slow). Override via `--wait-deadline`.
+- `Apply`: `talosctl apply-config -i -n <ip> --file <configPath>`. The
+  rendered config file is a 0600 temp owned by the orchestrator;
+  provider does not move or copy it.
+- `Cleanup`: on prior error, `tpi power off -n <slot>` (best-effort,
+  60s deadline). Always: unlink any materialized key file in
+  `~/.cache/nostos/secrets/<run-id>/`; remove that dir.
 
-Use github.com/stmcginnis/gofish. Mount rendered machineconfig via virtual
-media (Talos supports config injection through metadata server; for redfish
-flow, ship a small one-shot ISO with the machineconfig embedded, attached as
-virtual CD). Power-cycle. Wait for apid on static IP.
+### D4. Concurrency and contention
 
-QUESTION: do we ship our own ISO builder or rely on talos-image factory? See
-Open Questions Q1.
+- Single `contention.Map[string]*sync.Mutex` keyed by
+  `Provisioner.ContentionKey(node)`. Held from before `Boot` to after
+  `Apply` (or to Cleanup, whichever exits last). Empty key bypasses.
+- `tpi` returns `"tpi:<host>"` → slots on one board serialize, distinct
+  boards parallelize.
+- `pxe` returns `"pxe:server"` → multiple PXE installs serialize on the
+  single dnsmasq+9080 binding. v0.3 may add multiplexing.
+- `--parallel` is **not** wired in v0.2. The locks ship; the flag does
+  not. v0.2 is effectively serial.
+- **Cross-process safety:** per-node flock at
+  `nostos/state/configs/<name>.lock` (created 0600). Held across Render
+  → Apply. A second `nostos node install <name>` from another laptop
+  or shell on the same workstation fails fast with a typed
+  `ErrLocked`. Cross-host concurrent operators are out of scope; spec
+  scenario records the expected symptom.
 
-#### proxmox (v0.3 - sketch)
-
-API client: github.com/luthermonson/go-proxmox. Provisioner manages the
-full VM lifecycle for boot.method=proxmox: create or reuse VM, attach Talos
-ISO from PVE storage, set cloud-init or smbios with the machineconfig
-metadata URL, start VM. Wait for apid.
-
-#### usb (v0.3 - sketch)
-
-Operator-driven. nostos generates the right metal-<arch>.raw.xz, decompresses,
-then prompts the operator (huh form) to insert a USB stick, picks the
-device with diskutil/lsblk, runs dd with progress, and waits for the
-operator to physically boot the target machine. WaitMaintenance is the same
-TCP poll. No BMC.
-
-#### rpi-imager (v0.4 - sketch)
-
-For Raspberry Pi nodes: write the Talos ARM image plus boot config via the
-rpi-imager headless API. Mostly a special-case of usb with Pi-specific
-boot-firmware setup.
-
-### D4. Concurrency and BMC contention
-
-`nostos node install --parallel <n1> <n2> <n3>` runs in v0.3+. The shape that
-ships in v0.2:
-
-- The orchestrator owns a `BMCSemaphore` map keyed by Provisioner.BMCKey(nv).
-  Two installs whose providers return the same non-empty key block on a
-  shared sync.Mutex (or weighted semaphore of size 1). Empty keys mean no
-  contention.
-- For tpi specifically: a single Turing Pi board (one BMC) serializes its
-  four slots. Two boards in the same lab parallelize freely.
-- For pxe: BMCKey returns "" so multiple PXE installs could in principle
-  run in parallel, BUT only one PXE server can bind dnsmasq + port 9080 +
-  the tftp dir at a time. We model this as a separate keyed lock
-  ("pxe:server"), held by the pxe providers Boot phase. So in v0.2 PXE
-  installs are effectively serial; v0.3 may add a multiplexing PXE server.
-- --parallel ships disabled in v0.2 (default 1). The locks ship; the user-
-  facing flag does not. This avoids shipping untested concurrency on real
-  hardware.
-
-### D5. Resumability via JSONL run logs
-
-internal/runlog/runlog.go writes one event per line to
-~/.local/state/nostos/runs/<run-id>.jsonl. Format:
-
-    {"run_id":"...","ts":"2026-05-23T08:14:01Z","node":"tp1","kind":"info","message":"queued ..."}
-    {"run_id":"...","ts":"2026-05-23T08:14:02Z","node":"tp1","kind":"progress","phase":"prepare","message":"..."}
-
-- Phase tag (preflight|prepare|boot|wait|apply|bootstrap|ready|error) is
-  emitted at the start of each orchestrator phase so resume logic in v0.3
-  can know where the previous run died.
-- Secrets are NEVER written to the log. Provider implementations call
-  emit() with already-redacted strings; the runlog package does no extra
-  redaction (defence-in-depth via static lint test, see Testing Strategy).
-- Logs are kept; rotation policy (delete > 30 days, > 100 runs) lands in
-  v0.4 as part of a `nostos run gc` subcommand.
-- v0.2 deliverable: write the log and tail it for `nostos run logs <id>`.
-- v0.3 deliverable: `nostos node install --resume <run-id>` reads the log,
-  determines the last completed phase, and re-enters the lifecycle from
-  there. Provisioner methods are already idempotent so this requires no
-  new interface surface.
-
-### D6. Inventory schema (v0.3 deliverable, reserved here)
-
-SQLite at ~/.local/state/nostos/inventory.db. modernc.org/sqlite (pure-Go,
-no cgo) keeps `go run` cold-start fast.
-
-Tables (DDL is illustrative; final shape lives in the v0.3 change):
-
-    CREATE TABLE nodes (
-      name        TEXT PRIMARY KEY,
-      mac         TEXT NOT NULL,
-      ip          TEXT NOT NULL,
-      role        TEXT NOT NULL,
-      arch        TEXT NOT NULL,
-      boot_method TEXT NOT NULL,
-      first_seen  TIMESTAMP,
-      last_seen   TIMESTAMP,
-      last_run_id TEXT
-    );
-
-    CREATE TABLE installs (
-      run_id     TEXT PRIMARY KEY,
-      node       TEXT REFERENCES nodes(name),
-      started_at TIMESTAMP,
-      ended_at   TIMESTAMP,
-      result     TEXT, -- "ok" | "error" | "interrupted"
-      message    TEXT
-    );
-
-    CREATE TABLE drift_snapshots (
-      id          INTEGER PRIMARY KEY,
-      node        TEXT REFERENCES nodes(name),
-      taken_at    TIMESTAMP,
-      rendered_sha256 TEXT,
-      live_sha256     TEXT,
-      diff_text   TEXT  -- empty when no drift
-    );
-
-Drift snapshot algorithm (v0.3): render machineconfig in-memory, fetch live
-machineconfig via talosctl get mc -o yaml, normalize (sort keys, strip
-volatile fields like timestamps), sha256 each, capture diff if differs.
-Surfaced via `nostos diff <node>` and `nostos doctor`.
-
-### D7. Security model
+### D5. Security model
 
 Trust boundaries:
 
-- Operator laptop is trusted (already runs `op signin`).
-- BMC LAN is **semi-trusted** at best. Turing Pi BMC ships with a default
-  password; iLO/iDRAC are HTTPS-only but often with self-signed certs.
-- Maintenance-mode Talos (apid pre-config) is **insecure** by design - this
-  is the existing "first-boot insecure window" v0.1 already accepts. v0.2
-  does not narrow it.
+- Operator laptop: trusted (already runs `op signin`).
+- BMC LAN: semi-trusted. Turing Pi BMCs ship with default passwords.
+- Maintenance-mode Talos (apid pre-config): insecure window — same as
+  v0.1. v0.2 narrows it by:
+  - Probing with authenticated `talosctl --insecure version` (not raw
+    TCP) so we verify "this is actually Talos in maintenance mode."
+  - Holding the per-node flock so two concurrent local invocations
+    cannot race the apply-config.
+- factory.talos.dev: external trust dependency. Mitigated by
+  operator-pinned `cluster.image_digests`.
+- `op` CLI: trusted as v0.1 already trusted it. `OP_SESSION_*` is
+  stripped from child env before exec'ing `tpi`/`talosctl`.
 
-Rules:
+Rules pinned in spec:
 
-- BMC creds are always resolved through `internal/secrets`, never read from
-  config.yaml inline. Validation rejects any `boot.tpi.password:` literal.
-- `_ref` suffix on every credential field is a static rule; the validator
-  ensures the value matches the URI regex (op:// | sops:// | env:// | file://).
-- Subprocess argv is constructed without secrets where the tool supports
-  env vars (tpi accepts TPI_USERNAME / TPI_PASSWORD env). Where argv is
-  unavoidable (e.g. some redfish CLI flows), we use stdin.
-- Run logs and Event emissions go through redact.Strings() which scrubs any
-  substring matching the resolved-secret values for the current run.
-- machineconfig contents (which already contain decrypted secrets after
-  rendering) live in nostos/state/configs/ at 0600 - same rule v0.1
-  enforces. v0.2 ships a startup check that asserts perms on render and
-  refuses to start serve if anything is world-readable.
+- BMC creds resolved through `internal/secrets`; inline values fail
+  YAML unmarshal (typed `Ref`).
+- `env://` scheme prohibited for BMC creds.
+- Subprocess: never invoke a shell. `Cmd.Env` for secrets;
+  `Cmd.Stdin` where the tool accepts it; argv only for non-secret
+  paths and flags.
+- Resolved-secret values never reach emitted events: orchestrator
+  wraps the EventEmitter with a Scrubber seeded once per run with all
+  resolved values. Captured child stdout/stderr passes through the
+  same Scrubber before emit.
+- Rendered machineconfig lives at 0600 in a 0700 per-run secrets
+  directory, unlinked after Apply.
+- Tailscale authkey: spec requires single-use, TTL ≤ 1h, rotated per
+  install run. Operator rotates the `op://` ref before invocation.
+  Auto-rotation lands in v0.4 alongside `secrets rotate`.
+- Live-node reinstall guard: orchestrator probes `talosctl version`
+  on `node.IP`; if Ready, refuses unless `--reinstall` is passed.
+- `(host, slot)` uniqueness validation across all `tpi`-method nodes.
+- `nostos/state/configs/` must be in `.gitignore`; nostos refuses to
+  start an install if any rendered file is git-tracked.
 
-### D8. Doctor checks catalog (v0.4 deliverable, sketched)
+### D-Open. Open questions
 
-`nostos doctor` runs all of:
+- **Q1.** Concrete minimum `tpi` version. Placeholder in spec; pin
+  during implementation.
+- **Q2.** Cleanup retry policy on flaky BMCs. v0.2 = single try, 60s
+  timeout. Revisit if real flashes show >60s power-off latency.
+- **Q3.** Reinstall live-node detection: prefer `talosctl version`
+  over ARP/ICMP since it confirms "Talos at this IP" not just
+  "host alive." Confirm during implementation.
+- **Q4.** `nostos up` alias removal: pinned to v0.3 release; if v0.3
+  slips past 90 days, alias stays.
 
-- BMC reachability for every node with boot.method in {tpi, redfish, proxmox}.
-- Secret URI validity: every ref in config + templates resolves without value
-  leakage.
-- Disk size: install_disk exists on the node (talosctl get disks) and is at
-  least 32 GiB.
-- MAC collision: already in v0.1 config validation; doctor re-runs at
-  cluster scope and checks against the live ARP table on the operators LAN.
-- Version match: every node reports the cluster.talos_version.
-- Time skew: < 60s drift on every node.
+### D-Tests. Testing strategy (summary)
 
-`--json` output is consumed by `nostos cluster status`.
+Three seams land in PR #1 before any provider migration:
 
-### D9. Backwards-compat and migration
+- `execx.Commander` (mockable subprocess).
+- `secrets.Resolver` (already exists; widen with FakeSecrets fixture).
+- `clockx.Clock` (FakeClock; no wall-clock dependence in tests).
 
-- Node gets an optional Boot block. Absent means method: pxe. dell01 existing
-  entry (nostos/config.yaml:11-17) parses unchanged.
-- nostos up <node> keeps working for one release as an alias for
-  nostos node install <node>. After v0.3 we drop the alias and surface a
-  one-line deprecation when invoked.
-- taskfiles/turing.yml::flash, download, install-talos are rewritten as a
-  single task nostos:install NODE=<name> wrapper. The old keys remain as
-  deprecation aliases for one minor release; their cmds invoke the new task
-  and print deprecated; use task nostos:install NODE=...
-- taskfiles/talos.yml::apply (the workers row) follows the same pattern.
-- taskfiles/talos.yml::pc01-install is NOT auto-migrated in v0.2 - pc01
-  needs the usb provider which lands in v0.3. The task stays manual with a
-  TODO referencing the v0.3 spec.
-- v0.1 state directory layout is unchanged. Provisioner artifacts (image
-  cache for tpi) live under ~/.cache/nostos/, not under the consumers
-  state/, because they are not config-derived.
-- v0.1 secrets backend interface is unchanged. New _ref fields plug in
-  without backend changes.
+Plus a `internal/provisioner/provisionertest/` compliance suite that
+both `pxe` and `tpi` pass with no skips (table-driven invariants:
+Method stable, Preflight idempotent, Boot ctx-cancellation, Cleanup
+fresh-ctx + idempotent, ContentionKey purity, no resolved secret in
+emits).
 
-Migration steps for the operator:
+Tier 1 (every PR, ubuntu-latest, < 3 min): unit, race, vet, lint.
+Tier 2 (nightly, self-hosted with KVM): QEMU PXE end-to-end against a
+SHA-pinned Talos amd64 image. Skipped with reason if `kvm-ok` fails;
+never silent pass.
+Tier 3 (manual, `run-hardware-tests` PR label): real Turing Pi flash;
+real dell01 reinstall. Evidence captured via
+`.github/PULL_REQUEST_TEMPLATE/hardware.md` (hardware, slot, image
+sha, run-id, log attachment).
 
-1. Update .submodules/nostos/ (this change adds files; no existing files
-   change schema).
-2. Edit nostos/config.yaml to add the workers under nodes: with a boot:
-   block each. Reference template additions in tasks.md sec 2.
-3. Run task nostos:install NODE=tp1. Operator confirms the destructive flash
-   via interactive prompt (or --yes for scripted use).
-4. Repeat for tp4 and (when v0.3 ships proxmox) vm-pc01.
+dell01 regression check is a **topological subsequence** assertion on
+the event-Kind stream (PXE boot-time download events appear before
+`apid-up`, `ready` is last, no `KindError`), not a literal-list
+golden — same evidence without brittle ordering.
 
-### D10. Testing strategy
+### D-Roadmap
 
-- Unit:
-  - internal/provisioner/registry_test.go - Register/New/duplicate detection.
-  - internal/provisioner/pxe/pxe_test.go - lifecycle calls thin wrappers
-    around existing pxe code; mostly compile-time guarantees + a single
-    integration-shaped test gated on Docker.
-  - internal/provisioner/tpi/tpi_test.go - subprocess interface mocked via
-    execx.Commander (already in v0.1 design D9). Cases:
-      - happy flash + power-on emits expected event sequence
-      - tpi flash failure surfaces error and triggers Cleanup power-off
-      - secrets are not present in argv (assert via captured argv)
-      - image already cached - skip download
-  - internal/runlog/runlog_test.go - JSONL append + tail; redaction lint
-    test that fails the build if any secret-shaped string lands in a log.
-- Orchestrator:
-  - internal/cluster/orchestrate_test.go (new) uses a fake Provisioner that
-    records every method called. Asserts:
-      - Cleanup runs on every error path (including ctx cancel)
-      - Render happens before Boot
-      - ApplyConfigInsecure runs once per install
-      - On controlplane role, Bootstrap runs after WaitMaintenance returns
-- Regression:
-  - dell01 install path: a golden test running the orchestrator with the
-    pxe provider against fake commands must produce the same Event sequence
-    (same Kinds in same order) as the v0.1 implementation. Pin via
-    testdata/golden/dell01-install.events.json.
-- Integration:
-  - //go:build integration && tpi: real tpi CLI against a lab Turing Pi.
-    Manual evidence; not in CI.
+v0.3 (next change): redfish + proxmox + usb providers (each its own
+openspec change). JSONL run log + `--resume`. `inventory.db`. Drift
+detection + `nostos diff`. `--parallel` real implementation. `nostos up`
+alias removed.
 
-### D11. Roadmap
+v0.4: `cluster upgrade --to <ver>`. `secrets rotate` (covers Tailscale
+authkey). Comprehensive `nostos doctor`. `rpi-imager` provider.
 
-- v0.2 (this change): Provisioner interface + registry. pxe provider
-  (refactor). tpi provider (new). Orchestrator reshape. Run-log JSONL. BMC
-  contention key. nostos node install command. Backwards-compat alias for
-  nostos up. Workers added to nostos/config.yaml.
-- v0.3: redfish + proxmox providers. inventory.db (SQLite). Drift detection
-  + nostos diff. --parallel real implementation. usb provider for pc01.
-  nostos node install --resume.
-- v0.4: cluster upgrade --to <ver> (controlled rolling reboot via
-  provisioner Boot calls). secrets rotate. Comprehensive doctor. nostos-pxe
-  and nostos-bmc daemon split.
-- v1.0: Stable CLI surface, man pages, Homebrew tap, container image,
-  vendored iPXE binaries (kill Docker requirement), optional Talos system
-  extension, hardware test matrix (RK1, RPi4/5, Dell, Proxmox, generic
-  Redfish).
-
-### D12. Open Questions
-
-- QUESTION Q1. Redfish path for delivering machineconfig in maintenance
-  mode: do we (a) build a one-shot ISO embedding the config and attach via
-  virtual media, (b) rely on Talos metadata-server URL and host the
-  rendered config at HTTP from nostos, or (c) post-boot via
-  talosctl apply-config -i? Option (c) matches every other provider but
-  requires the firmware to PXE-or-disk boot a generic Talos image first.
-  Decide in v0.3.
-- QUESTION Q2. Is BMCKey enough to model contention, or do we need a
-  finer-grained resource concept? E.g. a Proxmox host with 12 VMs is
-  effectively unlimited for VM-create but capped at the storage backend
-  IO. Lean toward BMCKey is enough for v0.3; revisit if a real bottleneck
-  surfaces.
-- QUESTION Q3. Should the run-log JSONL be append-only across runs in one
-  file (nostos.jsonl) or one file per run-id? Plan: one file per run-id
-  for easy nostos run logs <id> and trivial cleanup. Confirm.
-- QUESTION Q4. TPI image cache path: ~/.cache/nostos/images/ vs. consumer
-  state/assets/. Lean cache (operator-wide), but if the operator manages
-  multiple clusters with different schematics, cache key must include
-  schematic_id. Confirmed in tasks.md sec 3.
-- QUESTION Q5. Do we want a provisioner.Capabilities() method now (so the
-  orchestrator can ask: does this provider support resume? does it require
-  config render? does it leave artifacts in state/?) or wait until v0.3
-  forces it? Lean: defer; YAGNI.
-- QUESTION Q6. First-boot insecure window: tpi flash + reboot lands the
-  node in maintenance mode with apid listening on every interface. Should
-  we recommend a temporary firewall rule on the operator laptop side, or
-  accept this is the same window v0.1 already has? Lean: same as v0.1,
-  document in security spec.
+v1.0: Stable CLI, vendored iPXE binaries, Homebrew tap, container image,
+hardware test matrix.
