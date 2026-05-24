@@ -5,13 +5,18 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os/exec"
-	"strings"
+	"os"
+	"path/filepath"
 	"time"
 
+	"github.com/yurifrl/nostos/internal/clockx"
 	"github.com/yurifrl/nostos/internal/config"
+	"github.com/yurifrl/nostos/internal/execx"
 	"github.com/yurifrl/nostos/internal/paths"
-	"github.com/yurifrl/nostos/internal/pxe"
+	"github.com/yurifrl/nostos/internal/provisioner"
+	"github.com/yurifrl/nostos/internal/provisioner/contention"
+	"github.com/yurifrl/nostos/internal/provisioner/flock"
+	"github.com/yurifrl/nostos/internal/provisioner/redact"
 	"github.com/yurifrl/nostos/internal/registry"
 )
 
@@ -44,10 +49,12 @@ func newEvent(kind EventKind, msg, node string) Event {
 
 // InstallOpts tunes timeouts + feature flags.
 type InstallOpts struct {
-	ServeTimeout     time.Duration
-	BootTimeout      time.Duration
-	BootstrapTimeout time.Duration
-	SkipWipe         bool
+	ServeTimeout            time.Duration
+	BootTimeout             time.Duration
+	BootstrapTimeout        time.Duration
+	WaitMaintenanceDeadline time.Duration
+	SkipWipe                bool
+	Reinstall               bool
 }
 
 func (o *InstallOpts) withDefaults() {
@@ -60,10 +67,13 @@ func (o *InstallOpts) withDefaults() {
 	if o.BootstrapTimeout == 0 {
 		o.BootstrapTimeout = 5 * time.Minute
 	}
+	if o.WaitMaintenanceDeadline == 0 {
+		o.WaitMaintenanceDeadline = 20 * time.Minute
+	}
 }
 
-// Install drives node from power-on through Ready. Emits Events on `events`.
-// Returns after emitting a terminal Event (Ready or Error) or ctx cancellation.
+// Install drives node from power-on through Ready. The flow is method
+// agnostic; per-method work lives in registered Provisioners.
 func Install(
 	ctx context.Context,
 	cfg *config.Config,
@@ -75,104 +85,125 @@ func Install(
 ) error {
 	opts.withDefaults()
 
-	emit := func(e Event) {
+	clusterEmit := func(e Event) {
 		select {
 		case events <- e:
 		case <-ctx.Done():
 		}
 	}
+	clusterEmit(newEvent(KindInfo, "starting install of "+nodeName, nodeName))
 
-	emit(newEvent(KindInfo, fmt.Sprintf("starting install of %s", nodeName), nodeName))
-
-	// 1. Queue wipe unless skipped.
-	if !opts.SkipWipe {
-		if err := QueueWipe(p.PendingWipes(), node.MAC); err != nil {
-			emit(newEvent(KindError, fmt.Sprintf("queue wipe: %v", err), nodeName))
-			return err
-		}
-		emit(newEvent(KindInfo, fmt.Sprintf("queued one-shot wipe for %s", node.MAC), nodeName))
+	// Bridge from provisioner.Event into cluster.Event for the channel.
+	bridge := func(ev provisioner.Event) {
+		clusterEmit(Event{Kind: EventKind(ev.Kind), Message: ev.Message, Node: nodeName, At: ev.At})
 	}
+	scrub := redact.NewScrubber()
+	emit := redact.WrapEmitter(bridge, scrub)
 
-	// 2. Ensure assets + render config.
-	emit(newEvent(KindProgress, "ensuring PXE assets are built", nodeName))
-	if err := pxe.BuildAll(ctx, cfg, p, node.Arch); err != nil {
-		emit(newEvent(KindError, fmt.Sprintf("build: %v", err), nodeName))
-		return err
-	}
-
-	emit(newEvent(KindProgress, fmt.Sprintf("rendering machineconfig for %s", nodeName), nodeName))
-	if _, err := registry.Render(cfg, p, nodeName, true); err != nil {
-		emit(newEvent(KindError, fmt.Sprintf("render: %v", err), nodeName))
-		return err
-	}
-
-	// 3. If wipe active, re-render boot.ipxe with wipe=system.
-	wipeActive := !opts.SkipWipe
-	if wipeActive {
-		if _, err := pxe.RenderBootIpxe(cfg, p, node.Arch, "talos.experimental.wipe=system"); err != nil {
-			emit(newEvent(KindError, fmt.Sprintf("render boot.ipxe with wipe: %v", err), nodeName))
-			return err
-		}
-		emit(newEvent(KindInfo, "boot.ipxe rendered with wipe=system (one-shot)", nodeName))
-	}
-
-	// 4. Start serve.
-	emit(newEvent(KindProgress, "starting PXE server (sudo for dnsmasq)", nodeName))
-	srv := pxe.NewServer(p)
-	ni, err := srv.Preflight()
+	// Per-node flock: cross-process safety. Held for the duration.
+	unlock, err := flock.AcquireNodeAt(p.Configs(), nodeName)
 	if err != nil {
-		emit(newEvent(KindError, err.Error(), nodeName))
+		clusterEmit(newEvent(KindError, err.Error(), nodeName))
+		return err
+	}
+	defer unlock()
+
+	method := node.Boot.Method
+	if method == "" {
+		method = "pxe"
+	}
+
+	deps := provisioner.Deps{
+		Cfg:   cfg,
+		Paths: p,
+		Cmd:   execx.OSCommander{},
+		Clock: clockx.Real{},
+	}
+	prov, err := provisioner.New(method, deps)
+	if err != nil {
+		clusterEmit(newEvent(KindError, err.Error(), nodeName))
 		return err
 	}
 
-	serveCtx, serveCancel := context.WithCancel(ctx)
-	defer serveCancel()
+	// PXE-specific knob plumb-through. Optional setters are best-effort.
+	if s, ok := prov.(interface{ SetSkipWipe(bool) }); ok {
+		s.SetSkipWipe(opts.SkipWipe)
+	}
+	if s, ok := prov.(interface{ SetServeTimeout(time.Duration) }); ok {
+		s.SetServeTimeout(opts.ServeTimeout)
+	}
 
-	// Tap HTTP request channel BEFORE Start so we don't miss early GETs.
-	reqCh := srv.HTTPRequests()
-	if err := srv.Start(serveCtx, ni); err != nil {
-		emit(newEvent(KindError, err.Error(), nodeName))
+	// Phase: preflight.
+	if err := prov.Preflight(ctx, &node, emit); err != nil {
+		clusterEmit(newEvent(KindError, err.Error(), nodeName))
+		_ = runCleanup(prov, &node, emit)
 		return err
 	}
-	emit(newEvent(KindInfo, fmt.Sprintf("PXE server on %s (%s); power on %s", ni.Interface, ni.IP, nodeName), nodeName))
 
-	// 5. Wait for GET /configs/<mac>.yaml.
-	expectedCfg := fmt.Sprintf("/configs/%s.yaml", node.MACHyphen())
-	sawConfig := false
-	serveDeadline := time.After(opts.ServeTimeout)
-waitLoop:
-	for !sawConfig {
-		select {
-		case path, ok := <-reqCh:
-			if !ok {
-				break waitLoop
-			}
-			switch {
-			case strings.HasSuffix(path, "/boot.ipxe"):
-				emit(newEvent(KindDownload, "iPXE chainloaded boot.ipxe", nodeName))
-			case strings.Contains(path, "vmlinuz"):
-				emit(newEvent(KindDownload, "downloading kernel", nodeName))
-			case strings.Contains(path, "initramfs"):
-				emit(newEvent(KindDownload, "downloading initramfs", nodeName))
-			case path == expectedCfg:
-				emit(newEvent(KindConfigFetched, "Talos fetched its config — installing", nodeName))
-				sawConfig = true
-			}
-		case <-serveDeadline:
-			emit(newEvent(KindError, fmt.Sprintf("no config fetch in %s; check BIOS boot order", opts.ServeTimeout), nodeName))
-			return errors.New("serve timeout before config fetched")
-		case <-ctx.Done():
-			return ctx.Err()
+	// Live-node reinstall guard.
+	if !opts.Reinstall {
+		if alive := probeReady(node); alive {
+			err := provisioner.ErrNodeAlreadyReady
+			clusterEmit(newEvent(KindError, fmt.Sprintf("%v: %s already healthy; pass --reinstall to force", err, nodeName), nodeName))
+			_ = runCleanup(prov, &node, emit)
+			return err
 		}
 	}
 
-	// 6. Wait for node to come back at its static IP.
-	emit(newEvent(KindProgress, fmt.Sprintf("waiting for %s to come up at %s", nodeName, node.IP), nodeName))
-	bootDeadline := time.Now().Add(opts.BootTimeout)
-	for time.Now().Before(bootDeadline) {
-		s := registry.Probe(node, 2*time.Second)
-		if s.Ping == registry.Up {
-			emit(newEvent(KindNodeUp, fmt.Sprintf("%s is responding at %s", nodeName, node.IP), nodeName))
+	// Render machineconfig to a 0600 temp file under a 0700 per-run dir.
+	configPath, cleanupTmp, err := renderToTemp(cfg, p, nodeName)
+	if err != nil {
+		clusterEmit(newEvent(KindError, err.Error(), nodeName))
+		_ = runCleanup(prov, &node, emit)
+		return err
+	}
+	defer cleanupTmp()
+
+	// Cleanup (always).
+	defer func() {
+		_ = runCleanup(prov, &node, emit)
+	}()
+
+	// ContentionKey acquire spans Boot..Apply.
+	releaseKey := contention.Acquire(prov.ContentionKey(&node))
+	keyReleased := false
+	releaseKeyOnce := func() {
+		if !keyReleased {
+			keyReleased = true
+			releaseKey()
+		}
+	}
+	defer releaseKeyOnce()
+
+	if err := prov.Prepare(ctx, &node, emit); err != nil {
+		clusterEmit(newEvent(KindError, err.Error(), nodeName))
+		return err
+	}
+	if err := prov.Boot(ctx, &node, emit); err != nil {
+		clusterEmit(newEvent(KindError, err.Error(), nodeName))
+		return err
+	}
+
+	waitCtx, cancel := context.WithTimeout(ctx, opts.WaitMaintenanceDeadline)
+	werr := prov.WaitMaintenance(waitCtx, &node, emit)
+	cancel()
+	if werr != nil {
+		clusterEmit(newEvent(KindError, werr.Error(), nodeName))
+		return werr
+	}
+
+	if err := prov.Apply(ctx, &node, configPath, emit); err != nil {
+		clusterEmit(newEvent(KindError, err.Error(), nodeName))
+		return err
+	}
+	releaseKeyOnce()
+
+	// Wait for apid using the existing probe.
+	clusterEmit(newEvent(KindProgress, "waiting for apid", nodeName))
+	apidDeadline := time.Now().Add(3 * time.Minute)
+	for time.Now().Before(apidDeadline) {
+		if probeApid(node) {
+			clusterEmit(newEvent(KindApidUp, "apid up on "+nodeName, nodeName))
 			break
 		}
 		select {
@@ -182,48 +213,74 @@ waitLoop:
 		}
 	}
 
-	// 7. Wait for apid.
-	emit(newEvent(KindProgress, "waiting for apid", nodeName))
-	apidDeadline := time.Now().Add(3 * time.Minute)
-	for time.Now().Before(apidDeadline) {
-		s := registry.Probe(node, 2*time.Second)
-		if s.Apid == registry.Up {
-			emit(newEvent(KindApidUp, fmt.Sprintf("apid up on %s", nodeName), nodeName))
-			break
-		}
-		time.Sleep(3 * time.Second)
-	}
-
-	// 8. Stop serve.
-	srv.Stop()
-	emit(newEvent(KindInfo, "stopped PXE server", nodeName))
-
-	// 9. Consume wipe + restore boot.ipxe.
-	if wipeActive {
-		if _, err := ConsumeWipe(p.PendingWipes(), node.MAC); err != nil {
-			slog.Warn("could not consume wipe flag", "err", err)
-		}
-		if _, err := pxe.RenderBootIpxe(cfg, p, node.Arch, ""); err != nil {
-			slog.Warn("could not restore clean boot.ipxe", "err", err)
-		} else {
-			emit(newEvent(KindInfo, "cleared wipe flag; boot.ipxe back to normal", nodeName))
-		}
-	}
-
-	// 10. Bootstrap if controlplane.
 	if node.Role == "controlplane" {
-		if _, err := exec.LookPath("talosctl"); err == nil {
-			emit(newEvent(KindBootstrapping, fmt.Sprintf("running talosctl bootstrap on %s", nodeName), nodeName))
-			if err := Bootstrap(ctx, cfg, p, node, opts.BootstrapTimeout); err != nil {
-				emit(newEvent(KindError, err.Error(), nodeName))
-				return err
-			}
-			if err := FetchKubeconfig(ctx, p, node); err != nil {
-				slog.Warn("kubeconfig fetch failed", "err", err)
-			}
+		clusterEmit(newEvent(KindBootstrapping, "running talosctl bootstrap on "+nodeName, nodeName))
+		if err := Bootstrap(ctx, cfg, p, node, opts.BootstrapTimeout); err != nil {
+			clusterEmit(newEvent(KindError, err.Error(), nodeName))
+			return err
+		}
+		if err := FetchKubeconfig(ctx, p, node); err != nil {
+			slog.Warn("kubeconfig fetch failed", "err", err)
 		}
 	}
 
-	emit(newEvent(KindReady, fmt.Sprintf("%s is Ready. kubeconfig: %s", nodeName, p.Kubeconfig()), nodeName))
+	clusterEmit(newEvent(KindReady, fmt.Sprintf("%s is Ready. kubeconfig: %s", nodeName, p.Kubeconfig()), nodeName))
 	return nil
 }
+
+// runCleanup invokes prov.Cleanup with a fresh 60s context derived from
+// context.Background so it survives ctx cancel.
+func runCleanup(prov provisioner.Provisioner, node *config.Node, emit provisioner.EventEmitter) error {
+	cctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	return prov.Cleanup(cctx, node, emit)
+}
+
+// renderToTemp renders the machineconfig into a 0600 file inside a 0700
+// per-run secrets directory and returns its path plus a cleanup func.
+func renderToTemp(cfg *config.Config, p paths.Paths, nodeName string) (string, func(), error) {
+	// First render into the canonical configs/ location (existing behavior).
+	canonical, err := registry.Render(cfg, p, nodeName, true)
+	if err != nil {
+		return "", func() {}, err
+	}
+	body, err := os.ReadFile(canonical)
+	if err != nil {
+		return "", func() {}, err
+	}
+
+	dir, err := os.MkdirTemp("", "nostos-secrets-")
+	if err != nil {
+		return "", func() {}, err
+	}
+	if err := os.Chmod(dir, 0o700); err != nil {
+		_ = os.RemoveAll(dir)
+		return "", func() {}, err
+	}
+	tmp := filepath.Join(dir, "machineconfig.yaml")
+	if err := os.WriteFile(tmp, body, 0o600); err != nil {
+		_ = os.RemoveAll(dir)
+		return "", func() {}, err
+	}
+	cleanup := func() {
+		_ = os.Remove(tmp)
+		_ = os.RemoveAll(dir)
+	}
+	return tmp, cleanup, nil
+}
+
+// probeReady reports whether the node is currently healthy at its IP.
+// Uses the existing Probe (talosctl version short).
+func probeReady(node config.Node) bool {
+	s := registry.Probe(node, 1500*time.Millisecond)
+	return s.Apid == registry.Up && s.Version != ""
+}
+
+// probeApid is a cheap reachability check for apid.
+func probeApid(node config.Node) bool {
+	s := registry.Probe(node, 2*time.Second)
+	return s.Apid == registry.Up
+}
+
+// errLockTimeout is unused but reserved for future refinements.
+var _ = errors.New

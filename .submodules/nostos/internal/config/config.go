@@ -19,6 +19,9 @@ type Cluster struct {
 	Endpoint     string `yaml:"endpoint"      validate:"required,startswith=https://"`
 	TalosVersion string `yaml:"talos_version" validate:"required"`
 	SchematicID  string `yaml:"schematic_id"  validate:"required,len=64"`
+	// ImageDigests pins sha256 of factory.talos.dev image artifacts.
+	// Key format: "<schematic>/<version>/<arch>". Value: "sha256:<hex>".
+	ImageDigests map[string]string `yaml:"image_digests,omitempty"`
 }
 
 // OnepasswordConfig is populated when secrets.backend == "onepassword".
@@ -32,21 +35,96 @@ type SopsConfig struct {
 	AgeKeyFile string `yaml:"age_key_file,omitempty"`
 }
 
+// TailscaleConfig is populated when the operator wants the `tailscale://`
+// URI scheme registered. Optional: when absent, templates that reference
+// tailscale:// fail loud at render time.
+type TailscaleConfig struct {
+	OAuthClientIDRef     Ref      `yaml:"oauth_client_id_ref"     validate:"required"`
+	OAuthClientSecretRef Ref      `yaml:"oauth_client_secret_ref" validate:"required"`
+	Tags                 []string `yaml:"tags,omitempty"`
+	ExpirySeconds        int      `yaml:"expiry,omitempty"`
+	Reusable             bool     `yaml:"reusable,omitempty"`
+	Ephemeral            bool     `yaml:"ephemeral,omitempty"`
+	Preauthorized        bool     `yaml:"preauthorized,omitempty"`
+	Description          string   `yaml:"description,omitempty"`
+	Tailnet              string   `yaml:"tailnet,omitempty"`
+}
+
 // Secrets selects the active backend for URI resolution.
 type Secrets struct {
 	Backend     string             `yaml:"backend" validate:"required,oneof=onepassword sops env file"`
 	Onepassword *OnepasswordConfig `yaml:"onepassword,omitempty"`
 	Sops        *SopsConfig        `yaml:"sops,omitempty"`
+	Tailscale   *TailscaleConfig   `yaml:"tailscale,omitempty"`
+}
+
+// Ref is a typed-string for secret references. Allowed schemes are
+// op://, sops://, file://. env:// is rejected for credential refs.
+type Ref string
+
+// UnmarshalYAML enforces the ref scheme allowlist.
+func (r *Ref) UnmarshalYAML(node *yaml.Node) error {
+	var s string
+	if err := node.Decode(&s); err != nil {
+		return err
+	}
+	if s == "" {
+		*r = ""
+		return nil
+	}
+	switch {
+	case strings.HasPrefix(s, "op://"),
+		strings.HasPrefix(s, "sops://"),
+		strings.HasPrefix(s, "file://"):
+		*r = Ref(s)
+		return nil
+	case strings.HasPrefix(s, "env://"):
+		return fmt.Errorf("env:// scheme not allowed for credential refs (got %q)", s)
+	default:
+		return fmt.Errorf("ref %q: must start with op://, sops://, or file://", s)
+	}
+}
+
+// String returns the raw URI.
+func (r Ref) String() string { return string(r) }
+
+// TPIBoot describes Turing-Pi BMC settings for a node.
+type TPIBoot struct {
+	Host            string `yaml:"host"             validate:"required"`
+	Slot            int    `yaml:"slot"             validate:"required,min=1,max=4"`
+	UsernameRef     Ref    `yaml:"username_ref,omitempty"`
+	PasswordRef     Ref    `yaml:"password_ref,omitempty"`
+	IdentityFileRef Ref    `yaml:"identity_file_ref,omitempty"`
+}
+
+// Boot selects the install method for a node. Default Method is "pxe".
+type Boot struct {
+	Method string   `yaml:"method,omitempty" validate:"omitempty,oneof=pxe tpi"`
+	TPI    *TPIBoot `yaml:"tpi,omitempty"`
 }
 
 // Node is one declared bare-metal or VM node.
 type Node struct {
-	MAC         string `yaml:"mac"          validate:"required,mac"`
+	MAC         string `yaml:"mac,omitempty" validate:"omitempty,mac"`
 	IP          string `yaml:"ip"           validate:"required,ip4_addr"`
 	Role        string `yaml:"role"         validate:"required,oneof=controlplane worker"`
 	Arch        string `yaml:"arch"         validate:"required,oneof=amd64 arm64"`
 	InstallDisk string `yaml:"install_disk" validate:"required,startswith=/dev/"`
 	Template    string `yaml:"template"     validate:"required"`
+	Boot        Boot   `yaml:"boot,omitempty"`
+	// SchematicID overrides Cluster.SchematicID for this node when set.
+	// Required for SBCs that need a different overlay than the cluster default
+	// (e.g. Turing RK1 needs siderolabs/sbc-rockchip overlay; x86 nodes don't).
+	SchematicID string `yaml:"schematic_id,omitempty" validate:"omitempty,len=64"`
+}
+
+// EffectiveSchematic returns the node's SchematicID when set, otherwise the
+// cluster default. Centralizes the override rule so callers don't pick wrong.
+func (n Node) EffectiveSchematic(cluster Cluster) string {
+	if n.SchematicID != "" {
+		return n.SchematicID
+	}
+	return cluster.SchematicID
 }
 
 // MACHyphen returns the MAC in iPXE ${mac:hexhyp} form: d0-94-66-d9-eb-a5.
@@ -79,9 +157,13 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
 
-	// Normalize before validation: lowercase MAC and strip surrounding whitespace.
+	// Normalize before validation: lowercase MAC, strip surrounding whitespace,
+	// default Boot.Method to "pxe" when omitted.
 	for name, node := range cfg.Nodes {
 		node.MAC = strings.ToLower(strings.TrimSpace(node.MAC))
+		if node.Boot.Method == "" {
+			node.Boot.Method = "pxe"
+		}
 		cfg.Nodes[name] = node
 	}
 
@@ -114,9 +196,12 @@ func (c *Config) Validate() error {
 		}
 	}
 
-	// No duplicate MACs across nodes.
+	// No duplicate MACs across nodes (empty MACs ignored).
 	macToNames := map[string][]string{}
 	for name, node := range c.Nodes {
+		if node.MAC == "" {
+			continue
+		}
 		macToNames[node.MAC] = append(macToNames[node.MAC], name)
 	}
 	var dupes []string
@@ -136,6 +221,50 @@ func (c *Config) Validate() error {
 		if net.ParseIP(node.IP) == nil {
 			return fmt.Errorf("node %s has invalid IP %q", name, node.IP)
 		}
+	}
+
+	// Boot-method-specific validation.
+	type hostSlot struct {
+		host string
+		slot int
+	}
+	hostSlotToNames := map[hostSlot][]string{}
+	for name, node := range c.Nodes {
+		switch node.Boot.Method {
+		case "", "pxe":
+			// no extra validation
+		case "tpi":
+			if node.Boot.TPI == nil {
+				return fmt.Errorf("node %s: boot.method=tpi requires boot.tpi block", name)
+			}
+			tpi := node.Boot.TPI
+			// Credential refs are all optional; when absent the tpi provider
+			// falls back to the tpi CLI's cached token / interactive prompt.
+			key := hostSlot{tpi.Host, tpi.Slot}
+			hostSlotToNames[key] = append(hostSlotToNames[key], name)
+		}
+	}
+
+	// PXE method requires MAC (for iPXE matching). tpi method does not.
+	for name, node := range c.Nodes {
+		method := node.Boot.Method
+		if method == "" {
+			method = "pxe"
+		}
+		if method == "pxe" && node.MAC == "" {
+			return fmt.Errorf("node %s: boot.method=pxe requires mac", name)
+		}
+	}
+	var collisions []string
+	for key, names := range hostSlotToNames {
+		if len(names) > 1 {
+			sort.Strings(names)
+			collisions = append(collisions, fmt.Sprintf("  %s slot %d: %s", key.host, key.slot, strings.Join(names, ", ")))
+		}
+	}
+	if len(collisions) > 0 {
+		sort.Strings(collisions)
+		return fmt.Errorf("duplicate (host, slot) across tpi-method nodes:\n%s", strings.Join(collisions, "\n"))
 	}
 
 	return nil

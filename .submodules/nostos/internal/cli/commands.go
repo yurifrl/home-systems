@@ -218,9 +218,10 @@ func newUpCmd() *cobra.Command {
 	)
 	cmd := &cobra.Command{
 		Use:   "up NODE",
-		Short: "End-to-end install: wipe → build → render → serve → bootstrap → Ready",
+		Short: "[deprecated] alias for `nostos node install` — end-to-end install",
 		Args:  cobra.ExactArgs(1),
 		RunE: runEFuncSimple(func(cmd *cobra.Command, args []string) error {
+			fmt.Fprintln(cmd.ErrOrStderr(), "deprecated: nostos up; use 'nostos node install <name>'")
 			cfg, p, err := loadConfig()
 			if err != nil {
 				return err

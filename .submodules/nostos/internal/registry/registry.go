@@ -103,7 +103,14 @@ func Render(cfg *config.Config, p paths.Paths, name string, runValidate bool) (s
 	if err := os.MkdirAll(p.Configs(), 0o755); err != nil {
 		return "", err
 	}
-	out := p.Configs() + "/" + node.MACHyphen() + ".yaml"
+	// Filename: <mac-hyphen>.yaml for PXE nodes (matches /configs/<mac>.yaml URL
+	// the iPXE chainload requests). For tpi/non-PXE nodes (no MAC), use the node
+	// name to avoid collisions on the empty-MAC -> ".yaml" path.
+	fname := node.MACHyphen()
+	if fname == "" {
+		fname = name
+	}
+	out := p.Configs() + "/" + fname + ".yaml"
 	if err := os.WriteFile(out, []byte(rendered), 0o600); err != nil {
 		return "", err
 	}
@@ -223,7 +230,7 @@ func pingProbe(ip string, timeout time.Duration) Reachability {
 }
 
 func tcpProbe(ip string, port int, timeout time.Duration) Reachability {
-	addr := fmt.Sprintf("%s:%d", ip, port)
+	addr := net.JoinHostPort(ip, fmt.Sprintf("%d", port))
 	conn, err := net.DialTimeout("tcp", addr, timeout)
 	if err == nil {
 		_ = conn.Close()

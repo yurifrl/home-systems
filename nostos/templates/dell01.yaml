@@ -179,5 +179,5 @@ apiVersion: v1alpha1
 kind: ExtensionServiceConfig
 name: tailscale
 environment:
-  - TS_AUTHKEY=op://kubernetes/talos/TS_AUTHKEY
+  - TS_AUTHKEY=tailscale://authkey?description=dell01
   - TS_ROUTES=10.96.0.0/12,192.168.68.0/24

@@ -8,6 +8,15 @@ secrets:
   onepassword:
     account: my.1password.com
     vault: kubernetes
+  tailscale:
+    oauth_client_id_ref:     op://kubernetes/talos/tailscale-oauth-client-id
+    oauth_client_secret_ref: op://kubernetes/talos/tailscale-oauth-client-secret
+    tags:        [tag:k8s]
+    expiry:      7776000
+    reusable:    false
+    ephemeral:   false
+    preauthorized: true
+    description: nostos
 nodes:
   dell01:
     mac: "d0:94:66:d9:eb:a5"
@@ -16,3 +25,31 @@ nodes:
     arch: amd64
     install_disk: /dev/nvme0n1
     template: dell01.yaml
+  tp1:
+    ip: 192.168.68.107
+    role: worker
+    arch: arm64
+    install_disk: /dev/mmcblk0
+    template: tp1.yaml
+    schematic_id: 3616c4c824f2540c0a14da0cc8e6fc46143f2ca0cc75c9c6376a66e562894950
+    boot:
+      method: tpi
+      tpi:
+        host: turingpi.local
+        slot: 1
+        username_ref: op://kubernetes/home-systems/TURING_BMC_USERNAME
+        password_ref: op://kubernetes/home-systems/TURING_BMC_PASSWORD
+  tp4:
+    ip: 192.168.68.114
+    role: worker
+    arch: arm64
+    install_disk: /dev/mmcblk0
+    template: tp4.yaml
+    schematic_id: 3616c4c824f2540c0a14da0cc8e6fc46143f2ca0cc75c9c6376a66e562894950
+    boot:
+      method: tpi
+      tpi:
+        host: turingpi.local
+        slot: 4
+        username_ref: op://kubernetes/home-systems/TURING_BMC_USERNAME
+        password_ref: op://kubernetes/home-systems/TURING_BMC_PASSWORD

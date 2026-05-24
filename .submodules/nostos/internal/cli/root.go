@@ -45,6 +45,7 @@ func NewRoot(version string) *cobra.Command {
 		newKubeconfigCmd(),
 		newNukeCmd(),
 		newConfigCmd(),
+		newSecretsCmd(),
 	)
 
 	return root

@@ -1,2 +1,6 @@
+[tools]
+go = "latest"
+
 [env]
 KUBECONFIG = "~/.talos/config"
+_.path = [".bin"]

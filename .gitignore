@@ -11,3 +11,6 @@ hack/foundry
 
 # nostos cache — regenerable from config.yaml + templates/ + 1Password
 nostos/state/
+
+# Locally built binaries (e.g. nostos)
+.bin/

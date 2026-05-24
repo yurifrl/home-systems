@@ -16,7 +16,7 @@ func newNodeCmd() *cobra.Command {
 		Use:   "node",
 		Short: "Manage node registrations",
 	}
-	cmd.AddCommand(newNodeListCmd(), newNodeRemoveCmd())
+	cmd.AddCommand(newNodeListCmd(), newNodeRemoveCmd(), newNodeInstallCmd())
 	return cmd
 }
 
