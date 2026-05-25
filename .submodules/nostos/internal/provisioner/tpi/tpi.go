@@ -64,6 +64,10 @@ func (p *Provisioner) ContentionKey(node *config.Node) string {
 	return "tpi:" + node.Boot.TPI.Host
 }
 
+// MaxWaitMaintenance is intentionally generous: an RK1 cold boot can
+// take ~5 min flash + ~30s boot, plus margin for slow eMMC.
+func (p *Provisioner) MaxWaitMaintenance() time.Duration { return 30 * time.Minute }
+
 // dialer seam (var so tests can substitute).
 var dialTimeout = func(network, addr string, d time.Duration) (net.Conn, error) {
 	return net.DialTimeout(network, addr, d)
@@ -77,6 +81,14 @@ func (p *Provisioner) Preflight(ctx context.Context, node *config.Node, emit pro
 	}
 	tpi := node.Boot.TPI
 
+	// BMC pre-flight (A3): translate kernel-level red herrings into typed,
+	// human-readable errors before the tpi binary swallows them.
+	probeCtx, probeCancel := context.WithTimeout(ctx, 6*time.Second)
+	defer probeCancel()
+	if _, err := ProbeBMC(probeCtx, tpi.Host, tpi.Host, 5*time.Second); err != nil {
+		return fmt.Errorf("%w: %v", provisioner.ErrPreflight, err)
+	}
+
 	// tpi --version
 	var stdout bytes.Buffer
 	if err := p.run(ctx, "tpi", []string{"--version"}, nil, nil, &stdout, io.Discard); err != nil {
@@ -86,12 +98,11 @@ func (p *Provisioner) Preflight(ctx context.Context, node *config.Node, emit pro
 		return fmt.Errorf("%w: tpi version %q < required %s", provisioner.ErrPreflight, v, MinVersion)
 	}
 
-	// TCP probe host:443
-	conn, err := dialTimeout("tcp", net.JoinHostPort(tpi.Host, "443"), 2*time.Second)
-	if err != nil {
-		return fmt.Errorf("%w: tpi BMC %s:443: %v", provisioner.ErrPreflight, tpi.Host, err)
+	// TCP probe host:443 (kept as a secondary signal — many BMC web UIs
+	// also expose 443; failure here is non-fatal and only logged.)
+	if conn, derr := dialTimeout("tcp", net.JoinHostPort(tpi.Host, "443"), 2*time.Second); derr == nil {
+		_ = conn.Close()
 	}
-	_ = conn.Close()
 
 	// Resolve refs (read-only here; values cached on Boot).
 	if err := p.resolveRefs(node); err != nil {

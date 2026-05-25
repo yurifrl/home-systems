@@ -184,7 +184,7 @@ func Install(
 		return err
 	}
 
-	waitCtx, cancel := context.WithTimeout(ctx, opts.WaitMaintenanceDeadline)
+	waitCtx, cancel := context.WithTimeout(ctx, chooseWaitTimeout(opts, prov))
 	werr := prov.WaitMaintenance(waitCtx, &node, emit)
 	cancel()
 	if werr != nil {
@@ -284,3 +284,17 @@ func probeApid(node config.Node) bool {
 
 // errLockTimeout is unused but reserved for future refinements.
 var _ = errors.New
+
+// chooseWaitTimeout picks the WaitMaintenance ctx deadline. A non-zero
+// provisioner-supplied bound wins; otherwise we honor opts.WaitMaintenanceDeadline
+// (already defaulted in withDefaults) and fall back to opts.BootTimeout when both
+// are zero.
+func chooseWaitTimeout(opts InstallOpts, prov provisioner.Provisioner) time.Duration {
+	if provMax := prov.MaxWaitMaintenance(); provMax > 0 {
+		return provMax
+	}
+	if opts.WaitMaintenanceDeadline > 0 {
+		return opts.WaitMaintenanceDeadline
+	}
+	return opts.BootTimeout
+}

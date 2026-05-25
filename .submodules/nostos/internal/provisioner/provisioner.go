@@ -63,6 +63,11 @@ type Provisioner interface {
 	Method() string
 	ContentionKey(node *config.Node) string
 
+	// MaxWaitMaintenance returns the upper-bound the orchestrator should
+	// allow for the WaitMaintenance phase. Returning 0 lets the
+	// orchestrator fall back to its configured default.
+	MaxWaitMaintenance() time.Duration
+
 	Preflight(ctx context.Context, node *config.Node, emit EventEmitter) error
 	Prepare(ctx context.Context, node *config.Node, emit EventEmitter) error
 	Boot(ctx context.Context, node *config.Node, emit EventEmitter) error

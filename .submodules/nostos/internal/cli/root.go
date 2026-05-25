@@ -46,6 +46,7 @@ func NewRoot(version string) *cobra.Command {
 		newNukeCmd(),
 		newConfigCmd(),
 		newSecretsCmd(),
+		newClusterCmd(),
 	)
 
 	return root

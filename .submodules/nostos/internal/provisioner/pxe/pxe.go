@@ -51,6 +51,11 @@ func (p *Provisioner) Method() string { return Method }
 // ContentionKey returns the single PXE-server key.
 func (p *Provisioner) ContentionKey(_ *config.Node) string { return "pxe:server" }
 
+// MaxWaitMaintenance is the maximum time we permit a node to spend in
+// maintenance mode after PXE boot. PXE flows are fast; 10 minutes is
+// generous.
+func (p *Provisioner) MaxWaitMaintenance() time.Duration { return 10 * time.Minute }
+
 // Preflight checks server-side prerequisites (assets present, dnsmasq, iface).
 func (p *Provisioner) Preflight(ctx context.Context, node *config.Node, emit provisioner.EventEmitter) error {
 	emitInfo(emit, "pxe preflight: checking assets and interface")
