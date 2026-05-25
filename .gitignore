@@ -1,6 +1,7 @@
 *.xz
-secrets.*
-secrets
+# Talos PXE secrets dir at repo root (legacy). Don't ignore Go source dirs named 'secrets' inside .submodules/.
+/secrets.*
+/secrets
 .DS_Store
 *.env
 talos/op
