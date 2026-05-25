@@ -7,7 +7,12 @@ import (
 
 func TestListIncludesShipped(t *testing.T) {
 	got := List()
-	want := map[string]bool{"dell-optiplex-3080m": true, "turing-rk1": true}
+	want := map[string]bool{
+		"dell-optiplex-3080m": true,
+		"turing-rk1":          true,
+		"generic-amd64":       true,
+		"raspberry-pi-5":      true,
+	}
 	for _, id := range got {
 		delete(want, id)
 	}
@@ -30,6 +35,23 @@ func TestRenderStability(t *testing.T) {
 	}
 	if !strings.Contains(a, "OptiPlex") {
 		t.Fatalf("rendered output missing title content: %q", a)
+	}
+}
+
+func TestRenderAllNoPanic(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("playbook render panicked: %v", r)
+		}
+	}()
+	for _, id := range List() {
+		out, err := Render(id, 80)
+		if err != nil {
+			t.Fatalf("render %s: %v", id, err)
+		}
+		if strings.TrimSpace(out) == "" {
+			t.Fatalf("empty render for %s", id)
+		}
 	}
 }
 
