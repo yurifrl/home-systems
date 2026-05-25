@@ -88,7 +88,21 @@ func Run(ctx context.Context, cfg *config.Config) Result {
 		}
 	}()
 
+	// mDNS multicast probe — best effort; merged into Devices via IP key.
+	var mdnsHits []Device
+	if hasIPv4Multicast() {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			defer func() { recover() }()
+			mdnsHits = mdnsScan(ctx)
+		}()
+	}
+
 	wg.Wait()
+	if len(mdnsHits) > 0 {
+		r.Devices = mergeMDNS(r.Devices, mdnsHits)
+	}
 	r.FinishedAt = time.Now()
 	return r
 }
