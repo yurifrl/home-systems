@@ -1,17 +1,23 @@
 // Package tui implements the Bubble Tea v2 dashboard model.
 //
-// Per the spec, v0.3 is a read-only status board. Mutating action handlers
-// (i, r, d, capital G) ship in v0.4.
+// v0.3 ships read-only by default but mutating action handlers (i, r, d,
+// capital G) are wired through the actions.Dispatcher seam. The Real-cluster
+// path requires a two-keystroke confirm: a sentinel keypress (e.g. `i`) puts
+// the model into a 3-second armed window during which `y` confirms; any other
+// key cancels.
 package tui
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	lipgloss "charm.land/lipgloss/v2"
 
+	"github.com/yurifrl/nostos/internal/dashboard/actions"
 	"github.com/yurifrl/nostos/internal/dashboard/playbooks"
 	"github.com/yurifrl/nostos/internal/dashboard/snapshot"
 )
@@ -19,7 +25,7 @@ import (
 // Model is the TUI state.
 type Model struct {
 	Snap        snapshot.Snapshot
-	Cursor      int    // selected row in the inventory
+	Cursor      int  // selected row in the inventory
 	ShowHelp    bool
 	ShowHidden  bool
 	ShowDocs    bool
@@ -28,7 +34,47 @@ type Model struct {
 	Width       int
 	Height      int
 	asciiOnly   bool
+
+	// Cached indicates the current Snap was loaded from on-disk cache and
+	// hasn't been refreshed yet. The TUI prefixes such row labels with `~`.
+	Cached bool
+
+	// Dispatcher backs i/r/d/G. When nil, those keys no-op (with a stderr line).
+	Dispatcher actions.Dispatcher
+
+	// pending is the armed two-keystroke action; expires PendingExpiry.
+	pending       actions.Kind
+	pendingArgv   []string
+	pendingTarget actions.Target
+	pendingErr    error
+	PendingExpiry time.Time
+
+	// StatusPane is the last action result (rendered under inventory).
+	StatusPane string
+
+	// ConfirmTimeout is the chord window. Defaults to 3 * time.Second.
+	ConfirmTimeout time.Duration
+
+	// Now lets tests inject a clock.
+	Now func() time.Time
 }
+
+func (m Model) now() time.Time {
+	if m.Now != nil {
+		return m.Now()
+	}
+	return time.Now()
+}
+
+func (m Model) confirmTimeout() time.Duration {
+	if m.ConfirmTimeout > 0 {
+		return m.ConfirmTimeout
+	}
+	return 3 * time.Second
+}
+
+// Pending returns the currently armed action kind ("" when not armed).
+func (m Model) Pending() actions.Kind { return m.pending }
 
 // Init satisfies tea.Model.
 func (m Model) Init() tea.Cmd { return nil }
@@ -59,6 +105,23 @@ func (m Model) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.ShowDocs = false
 		return m, nil
 	}
+
+	// Two-keystroke confirm path: if armed, `y` (within timeout) commits;
+	// any other key cancels.
+	if m.pending != "" {
+		if m.now().After(m.PendingExpiry) {
+			m.pending = ""
+			m.StatusPane = "action timed out—press the action key again"
+			return m, nil
+		}
+		if msg.String() == "y" || msg.String() == "Y" {
+			return m.commitPending()
+		}
+		m.pending = ""
+		m.StatusPane = "cancelled"
+		return m, nil
+	}
+
 	switch msg.String() {
 	case "q", "ctrl+c":
 		return m, tea.Quit
@@ -90,11 +153,174 @@ func (m Model) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		// preview-only: no shell-out from the TUI layer in v0.3
 		m.ShowDocs = true
 		m.DocsBody = "# upgrade preview\n\nrun `nostos cluster upgrade --dry-run` from your shell.\n"
+	case "i":
+		return m.armIdentify()
+	case "r":
+		return m.armReinstall()
+	case "d":
+		return m.armDelete()
 	case "G":
-		m.ShowDocs = true
-		m.DocsBody = "# guide\n\nopen `docs/nostos-guide.md` in your editor.\n"
+		return m.armGoFix()
 	}
 	return m, nil
+}
+
+// --- two-keystroke arming -----------------------------------------------------
+
+func (m Model) armIdentify() (tea.Model, tea.Cmd) {
+	row := m.cursorRow()
+	if row == nil {
+		m.StatusPane = "no row selected"
+		return m, nil
+	}
+	t := m.targetFor(row)
+	// Pre-flight: synthesize argv via the same dispatcher logic so the prompt
+	// shows what would actually run.
+	dry := &actions.ExecDispatcher{DryRun: true}
+	res, err := dry.Identify(context.Background(), t)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "identify: %v\n", err)
+		m.StatusPane = fmt.Sprintf("identify: %v", err)
+		return m, nil
+	}
+	m.pending = actions.KindIdentify
+	m.pendingArgv = res.Argv
+	m.pendingTarget = t
+	m.PendingExpiry = m.now().Add(m.confirmTimeout())
+	m.StatusPane = fmt.Sprintf("about to: %s — press y to confirm (3s)", strings.Join(res.Argv, " "))
+	return m, nil
+}
+
+func (m Model) armReinstall() (tea.Model, tea.Cmd) {
+	row := m.cursorRow()
+	if row == nil {
+		m.StatusPane = "no row selected"
+		return m, nil
+	}
+	t := m.targetFor(row)
+	if t.Bucket == "unknown" || t.Bucket == "" || t.Name == "" {
+		m.StatusPane = "reinstall only works on known nodes (press n to name first)"
+		return m, nil
+	}
+	dry := &actions.ExecDispatcher{DryRun: true}
+	res, err := dry.Reinstall(context.Background(), t)
+	if err != nil {
+		m.StatusPane = fmt.Sprintf("reinstall: %v", err)
+		return m, nil
+	}
+	m.pending = actions.KindReinstall
+	m.pendingArgv = res.Argv
+	m.pendingTarget = t
+	m.PendingExpiry = m.now().Add(m.confirmTimeout())
+	m.StatusPane = fmt.Sprintf("about to: %s — press y to confirm (3s)", strings.Join(res.Argv, " "))
+	return m, nil
+}
+
+func (m Model) armDelete() (tea.Model, tea.Cmd) {
+	row := m.cursorRow()
+	if row == nil {
+		m.StatusPane = "no row selected"
+		return m, nil
+	}
+	t := m.targetFor(row)
+	if !t.IsOrphan && t.Bucket != "orphan" {
+		m.StatusPane = "delete only allowed on orphan rows"
+		return m, nil
+	}
+	dry := &actions.ExecDispatcher{DryRun: true}
+	res, err := dry.Delete(context.Background(), t)
+	if err != nil {
+		m.StatusPane = fmt.Sprintf("delete: %v", err)
+		return m, nil
+	}
+	m.pending = actions.KindDelete
+	m.pendingArgv = res.Argv
+	m.pendingTarget = t
+	m.PendingExpiry = m.now().Add(m.confirmTimeout())
+	m.StatusPane = fmt.Sprintf("about to: %s — press y to confirm (3s)", strings.Join(res.Argv, " "))
+	return m, nil
+}
+
+func (m Model) armGoFix() (tea.Model, tea.Cmd) {
+	dry := &actions.ExecDispatcher{DryRun: true}
+	res, err := dry.GoFix(context.Background(), m.Snap)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		m.StatusPane = err.Error()
+		return m, nil
+	}
+	m.pending = actions.KindGoFix
+	m.pendingArgv = res.Argv
+	m.PendingExpiry = m.now().Add(m.confirmTimeout())
+	m.StatusPane = fmt.Sprintf("about to: %s — press y to confirm (3s)", strings.Join(res.Argv, " "))
+	return m, nil
+}
+
+func (m Model) commitPending() (tea.Model, tea.Cmd) {
+	k := m.pending
+	m.pending = ""
+	if m.Dispatcher == nil {
+		m.StatusPane = fmt.Sprintf("%s: no dispatcher bound (would run: %s)", k, strings.Join(m.pendingArgv, " "))
+		return m, nil
+	}
+	ctx := context.Background()
+	var (
+		res actions.Result
+		err error
+	)
+	switch k {
+	case actions.KindIdentify:
+		res, err = m.Dispatcher.Identify(ctx, m.pendingTarget)
+	case actions.KindReinstall:
+		res, err = m.Dispatcher.Reinstall(ctx, m.pendingTarget)
+	case actions.KindDelete:
+		res, err = m.Dispatcher.Delete(ctx, m.pendingTarget)
+	case actions.KindGoFix:
+		res, err = m.Dispatcher.GoFix(ctx, m.Snap)
+	}
+	if err != nil {
+		m.StatusPane = fmt.Sprintf("%s failed: %v", k, err)
+		return m, nil
+	}
+	tag := "dispatched"
+	if res.DryRun {
+		tag = "would run"
+	}
+	m.StatusPane = fmt.Sprintf("%s [%s]: %s", tag, k, strings.Join(res.Argv, " "))
+	return m, nil
+}
+
+// targetFor maps a row to an actions.Target. Boot method + tpi slot are looked
+// up from the snapshot's Nodes (which carry the resolved config view).
+func (m Model) targetFor(row *rowSpec) actions.Target {
+	t := actions.Target{Name: row.label, Bucket: row.bucket, Severity: row.sev}
+	for _, n := range m.Snap.Nodes {
+		if n.Name == row.label || "~"+n.Name == row.label {
+			t.IP = n.IP
+			t.BootMethod = bootHint(n)
+			break
+		}
+	}
+	for _, d := range m.Snap.Discoveries {
+		if d.IP == row.label || d.Hostname == row.label {
+			t.IP = d.IP
+			if d.Bucket == "orphan" {
+				t.IsOrphan = true
+				t.Bucket = "orphan"
+			}
+			break
+		}
+	}
+	return t
+}
+
+// bootHint guesses the boot method from a snapshot.Node row. The TUI doesn't
+// carry the full config; it falls back to "pxe" for non-RK1 hosts.
+func bootHint(n snapshot.Node) string {
+	if strings.HasPrefix(strings.ToLower(n.Name), "tp") {
+		return "tpi"
+	}
+	return "pxe"
 }
 
 // View renders the dashboard.
@@ -247,14 +473,18 @@ func (m Model) checksPanel() string {
 
 func (m Model) footer() string {
 	row := m.cursorRow()
-	keys := []string{"[?]help", "[H]hidden", "[u]upgrade", "[s]docs", "[/]search", "[q]quit"}
+	keys := []string{"[i]dentify", "[r]einstall", "[d]elete", "[G]o-fix", "[?]help", "[H]hidden", "[u]upgrade", "[s]docs", "[/]search", "[q]quit"}
 	if row != nil {
 		switch row.bucket {
 		case "unknown":
 			keys = append([]string{"[n]ame"}, keys...)
 		}
 	}
-	return strings.Join(keys, "  ")
+	line := strings.Join(keys, "  ")
+	if m.StatusPane != "" {
+		line = m.StatusPane + "\n" + line
+	}
+	return line
 }
 
 func (m Model) helpPanel() string {
@@ -268,10 +498,11 @@ func (m Model) helpPanel() string {
 		"  /       filter (toggle, full edit deferred)",
 		"  s       open vendor playbook for selected row",
 		"  u       preview `nostos cluster upgrade --dry-run`",
-		"  G       open `docs/nostos-guide.md` (v0.3 read-only)",
+		"  i       identify selected node (chord: i then y)",
+		"  r       reinstall selected node (chord: r then y)",
+		"  d       delete orphan/stale row (chord: d then y)",
+		"  G       go-fix worst remediable check (chord: G then y)",
 		"  n       on an unknown row, emit config patch to stderr",
-		"",
-		"  (i, r, d action handlers ship in v0.4)",
 	}, "\n")
 }
 
@@ -344,15 +575,19 @@ func (m Model) renderPlaybookForCursor() string {
 	return out
 }
 
-// guessPlaybookID maps a row label to an embedded playbook id. v0.3 uses a
-// crude prefix match; richer mapping ships in v0.4.
+// guessPlaybookID maps a row label to an embedded playbook id. Crude prefix
+// match — richer mapping (config-aware) ships later.
 func guessPlaybookID(name string) string {
-	low := strings.ToLower(name)
-	if strings.HasPrefix(low, "dell") {
+	low := strings.TrimPrefix(strings.ToLower(name), "~")
+	switch {
+	case strings.HasPrefix(low, "dell"):
 		return "dell-optiplex-3080m"
-	}
-	if strings.HasPrefix(low, "tp") {
+	case strings.HasPrefix(low, "tp"), strings.HasPrefix(low, "rk1"):
 		return "turing-rk1"
+	case strings.HasPrefix(low, "pi"), strings.HasPrefix(low, "rpi"), strings.Contains(low, "raspberry"):
+		return "raspberry-pi-5"
+	case strings.HasPrefix(low, "pc"), strings.HasPrefix(low, "nuc"), strings.HasPrefix(low, "amd"):
+		return "generic-amd64"
 	}
-	return "dell-optiplex-3080m"
+	return "generic-amd64"
 }

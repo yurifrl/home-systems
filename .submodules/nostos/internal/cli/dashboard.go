@@ -14,8 +14,11 @@ import (
 
 	"github.com/yurifrl/nostos/internal/cli/jsonio"
 	"github.com/yurifrl/nostos/internal/dashboard"
+	"github.com/yurifrl/nostos/internal/dashboard/actions"
+	"github.com/yurifrl/nostos/internal/dashboard/cache"
 	"github.com/yurifrl/nostos/internal/dashboard/snapshot"
 	"github.com/yurifrl/nostos/internal/dashboard/tui"
+	"github.com/yurifrl/nostos/internal/execx"
 )
 
 // newDashboardCmd wires `nostos dashboard`.
@@ -23,6 +26,7 @@ func newDashboardCmd() *cobra.Command {
 	var once bool
 	var fields string
 	var noUpstream bool
+	var dispatchMode string
 
 	cmd := &cobra.Command{
 		Use:   "dashboard",
@@ -61,16 +65,34 @@ func newDashboardCmd() *cobra.Command {
 			}
 
 			// Interactive TUI path.
-			model := tui.Model{}
-			snap := dashboard.BuildSnapshot(ctx, cfg, dashboard.Options{
-				HiddenMACs:    loadHiddenDevices(),
-				FetchUpstream: !noUpstream,
-			})
-			model.Snap = snap
+			model := tui.Model{Dispatcher: pickDispatcher(dispatchMode)}
+
+			// Cold-start cache: render the cached snapshot first if any, then
+			// kick off a live refresh in the background.
+			if st, ok := cache.Load(); ok {
+				cached := st.Snap
+				cache.MarkCached(&cached)
+				model.Snap = cached
+				model.Cached = true
+			} else {
+				model.Snap = dashboard.BuildSnapshot(ctx, cfg, dashboard.Options{
+					HiddenMACs:    loadHiddenDevices(),
+					FetchUpstream: !noUpstream,
+				})
+				_ = cache.Save(model.Snap)
+			}
 
 			p := tea.NewProgram(model, tea.WithContext(ctx))
 			// Background refresh tick.
 			go func() {
+				// Always do an immediate refresh to clear any cache prefix.
+				fresh := dashboard.BuildSnapshot(ctx, cfg, dashboard.Options{
+					HiddenMACs:    loadHiddenDevices(),
+					FetchUpstream: !noUpstream,
+				})
+				_ = cache.Save(fresh)
+				p.Send(tui.SnapshotMsg(fresh))
+
 				t := time.NewTicker(5 * time.Second)
 				defer t.Stop()
 				for {
@@ -81,6 +103,7 @@ func newDashboardCmd() *cobra.Command {
 						s := dashboard.BuildSnapshot(ctx, cfg, dashboard.Options{
 							HiddenMACs: loadHiddenDevices(),
 						})
+						_ = cache.Save(s)
 						p.Send(tui.SnapshotMsg(s))
 					}
 				}
@@ -93,7 +116,17 @@ func newDashboardCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&once, "once", false, "run all checks once, emit a snapshot, exit")
 	cmd.Flags().BoolVar(&noUpstream, "no-upstream", false, "skip the HTTP upstream-version probe")
 	cmd.Flags().StringVar(&fields, "fields", "", "comma-separated subset of "+joinFields(snapshotFields))
+	cmd.Flags().StringVar(&dispatchMode, "dispatch", "", "action dispatcher: '' (real, default), 'mock' (no-op, for smoke tests)")
 	return cmd
+}
+
+// pickDispatcher selects the action dispatcher implementation. Honors the
+// NOSTOS_DASHBOARD_DISPATCH_DRY_RUN env var as a forced override.
+func pickDispatcher(mode string) actions.Dispatcher {
+	if mode == "mock" || os.Getenv("NOSTOS_DASHBOARD_DISPATCH_DRY_RUN") == "1" {
+		return actions.NoopDispatcher{}
+	}
+	return actions.New(execx.OSCommander{})
 }
 
 // loadHiddenDevices reads ${XDG_CONFIG_HOME:-~/.config}/nostos/dashboard.toml
