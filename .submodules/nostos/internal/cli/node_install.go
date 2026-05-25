@@ -7,10 +7,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/yurifrl/nostos/internal/cli/dryrun"
+	"github.com/yurifrl/nostos/internal/cli/errs"
+	"github.com/yurifrl/nostos/internal/cli/inputx"
 	"github.com/yurifrl/nostos/internal/cluster"
 	"github.com/yurifrl/nostos/internal/registry"
 
@@ -23,22 +25,52 @@ func newNodeInstallCmd() *cobra.Command {
 	var (
 		reinstall bool
 		yes       bool
+		dryRun    bool
 	)
 	cmd := &cobra.Command{
 		Use:   "install NAME",
 		Short: "End-to-end install for NAME (method-dispatched: pxe|tpi)",
 		Args:  cobra.ExactArgs(1),
-		RunE: runEFuncSimple(func(cmd *cobra.Command, args []string) error {
+		RunE: runEFunc(func(cmd *cobra.Command, args []string) error {
+			if err := inputx.ValidateNodeName(args[0]); err != nil {
+				return err
+			}
 			cfg, p, err := loadConfig()
 			if err != nil {
 				return err
 			}
 			n, err := registry.Get(cfg, args[0])
 			if err != nil {
-				return err
+				return errs.NotFound("E_NODE_NOT_FOUND", err.Error()).
+					WithDetails(map[string]any{"name": args[0]}).
+					WithHint("nostos node list")
 			}
+
+			if dryRun {
+				method := boot(n.Boot.Method)
+				plan := dryrun.New("node.install").
+					Add("preflight", fmt.Sprintf("validate config + reachability for %s", args[0])).
+					Add("provisioner.preflight", fmt.Sprintf("prov=%s, host=%s", method, n.IP))
+				if !reinstall {
+					plan.Add("guard.reinstall", "would short-circuit if node is already Ready (pass --reinstall to bypass)")
+				}
+				if method == "pxe" {
+					plan.AddArgv("pxe.serve", "serve iPXE chain + assets to "+n.MAC,
+						[]string{"nostos", "pxe"}, []string{"PATH"})
+					plan.Add("pxe.boot", "wait for node to fetch machineconfig.yaml")
+				} else {
+					plan.AddArgv("tpi.flash", "flash node "+args[0],
+						[]string{"tpi", "flash", "-i", "<image>", "-n", "<slot>"},
+						[]string{"TPI_USERNAME", "TPI_PASSWORD"})
+				}
+				plan.Add("apid.wait", "wait for talos apid to come up at "+n.IP)
+				plan.Add("bootstrap", "talosctl bootstrap (controlplane only)")
+				plan.Add("kubeconfig", "fetch kubeconfig to "+p.Kubeconfig())
+				return emitDryRun(plan)
+			}
+
 			if !yes {
-				fmt.Fprintf(cmd.OutOrStdout(), "About to install %s (method=%s). Pass --yes to skip prompt.\n", args[0], boot(n.Boot.Method))
+				fmt.Fprintf(cmd.ErrOrStderr(), "About to install %s (method=%s). Pass --yes to skip prompt.\n", args[0], boot(n.Boot.Method))
 			}
 
 			ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
@@ -48,20 +80,32 @@ func newNodeInstallCmd() *cobra.Command {
 			done := make(chan error, 1)
 			go func() {
 				done <- cluster.Install(ctx, cfg, p, n, args[0],
-					cluster.InstallOpts{
-						Reinstall: reinstall,
-					}, events)
+					cluster.InstallOpts{Reinstall: reinstall}, events)
 				close(events)
 			}()
+			collected := []cluster.Event{}
 			for ev := range events {
-				printEvent(cmd, ev)
+				collected = append(collected, ev)
+				if outputMode != "json" {
+					printEvent(cmd, ev)
+				}
 			}
-			return <-done
+			if err := <-done; err != nil {
+				return errs.FromGo(err)
+			}
+			if outputMode == "json" {
+				return outputJSON(map[string]any{
+					"status": "installed",
+					"name":   args[0],
+					"events": collected,
+				})
+			}
+			return nil
 		}),
 	}
 	cmd.Flags().BoolVar(&reinstall, "reinstall", false, "force reinstall even if node is currently Ready")
 	cmd.Flags().BoolVar(&yes, "yes", false, "skip confirmation")
-	_ = time.Second
+	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "preview planned actions as JSON; no subprocesses are spawned")
 	return cmd
 }
 

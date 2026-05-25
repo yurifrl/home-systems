@@ -13,6 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/yurifrl/nostos/internal/cli/dryrun"
 	"github.com/yurifrl/nostos/internal/config"
 	"github.com/yurifrl/nostos/internal/secrets"
 )
@@ -141,10 +142,27 @@ func newClusterCleanupCmd() *cobra.Command {
 				})
 			}
 
-			// dry-run preview path.
+			// dry-run preview path. Emits the canonical dryrun.Plan shape
+			// (status=preview, would_execute=[...]) plus the legacy CleanupPlan
+			// detail in `details`.
 			if dryRun || (!yes && !reallyYes) {
 				if outputMode == "json" || dryRun {
-					return outputJSON(plan)
+					p := dryrun.New("cluster.cleanup")
+					for _, n := range plan.K8sNodes {
+						p.AddArgv("kubectl.delete-node", n.Reason,
+							[]string{"kubectl", "delete", "node", n.Name}, []string{"KUBECONFIG"})
+					}
+					for _, d := range plan.Tailscale {
+						p.AddArgv("tailscale.delete-device", d.Reason,
+							[]string{"DELETE", "/api/v2/device/" + d.DeviceID}, []string{"TS_API_KEY"})
+					}
+					envelope := map[string]any{
+						"status":        p.Status,
+						"method":        p.Method,
+						"would_execute": p.WouldExecute,
+						"details":       plan,
+					}
+					return outputJSON(envelope)
 				}
 				printCleanupText(cmd, plan)
 				return nil

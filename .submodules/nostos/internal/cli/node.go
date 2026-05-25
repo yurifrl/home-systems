@@ -8,57 +8,102 @@ import (
 
 	"charm.land/lipgloss/v2"
 
+	"github.com/yurifrl/nostos/internal/cli/errs"
+	"github.com/yurifrl/nostos/internal/cli/inputx"
+	"github.com/yurifrl/nostos/internal/cli/jsonio"
 	"github.com/yurifrl/nostos/internal/registry"
 )
+
+// nodeStatusFields is the schema used by --fields validation for node list/show/status.
+var nodeStatusFields = []string{"name", "ip", "role", "ping", "apid", "version"}
 
 func newNodeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "node",
 		Short: "Manage node registrations",
 	}
-	cmd.AddCommand(newNodeListCmd(), newNodeRemoveCmd(), newNodeInstallCmd())
+	cmd.AddCommand(newNodeListCmd(), newNodeShowCmd(), newNodeRemoveCmd(), newNodeInstallCmd())
 	return cmd
 }
 
 func newNodeListCmd() *cobra.Command {
-	return &cobra.Command{
+	var fieldsRaw string
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List registered nodes with live reachability",
-		RunE: runEFuncSimple(func(cmd *cobra.Command, args []string) error {
+		RunE: runEFunc(func(cmd *cobra.Command, args []string) error {
+			fields, err := parseFields(fieldsRaw, nodeStatusFields)
+			if err != nil {
+				return err
+			}
 			cfg, _, err := loadConfig()
 			if err != nil {
 				return err
 			}
 			entries := registry.List(cfg)
-
-			if outputMode == "json" {
-				rows := make([]registry.NodeStatus, 0, len(entries))
-				for _, e := range entries {
-					s := registry.Probe(e.Node, 1500*time.Millisecond)
-					s.Name = e.Name
-					rows = append(rows, s)
-				}
-				return outputJSON(rows)
-			}
-
-			header := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("13"))
-			dim := lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-
-			fmt.Fprintf(cmd.OutOrStdout(), "%s\n", header.Render(fmt.Sprintf("Nodes in %s", cfg.Cluster.Name)))
-			fmt.Fprintf(cmd.OutOrStdout(), "%-10s  %-16s  %-12s  %-8s  %-8s  %s\n",
-				"NAME", "IP", "ROLE", "PING", "APID", "VERSION")
+			rows := make([]registry.NodeStatus, 0, len(entries))
 			for _, e := range entries {
 				s := registry.Probe(e.Node, 1500*time.Millisecond)
-				ver := s.Version
-				if ver == "" {
-					ver = dim.Render("—")
-				}
-				fmt.Fprintf(cmd.OutOrStdout(), "%-10s  %-16s  %-12s  %s  %s  %s\n",
-					e.Name, e.Node.IP, e.Node.Role, pill(s.Ping), pill(s.Apid), ver)
+				s.Name = e.Name
+				rows = append(rows, s)
 			}
-			return nil
+			return emitListOutput(rows, nodeStatusFields, fields, func() {
+				header := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("13"))
+				fmt.Fprintf(cmd.OutOrStdout(), "%s\n", header.Render(fmt.Sprintf("Nodes in %s", cfg.Cluster.Name)))
+				fmt.Fprintf(cmd.OutOrStdout(), "%-10s  %-16s  %-12s  %-8s  %-8s  %s\n",
+					"NAME", "IP", "ROLE", "PING", "APID", "VERSION")
+				for _, s := range rows {
+					ver := s.Version
+					if ver == "" {
+						ver = "—"
+					}
+					fmt.Fprintf(cmd.OutOrStdout(), "%-10s  %-16s  %-12s  %s  %s  %s\n",
+						s.Name, s.IP, s.Role, pill(s.Ping), pill(s.Apid), ver)
+				}
+			})
 		}),
 	}
+	cmd.Flags().StringVar(&fieldsRaw, "fields", "", "comma-separated subset of "+joinFields(nodeStatusFields))
+	cmd.Flags().Bool("dry-run", false, "no-op for read-only command (warns on stderr)")
+	return cmd
+}
+
+func newNodeShowCmd() *cobra.Command {
+	var fieldsRaw string
+	cmd := &cobra.Command{
+		Use:   "show NAME",
+		Short: "Show one node's reachability and config",
+		Args:  cobra.ExactArgs(1),
+		RunE: runEFunc(func(cmd *cobra.Command, args []string) error {
+			if err := inputx.ValidateNodeName(args[0]); err != nil {
+				return err
+			}
+			fields, err := parseFields(fieldsRaw, nodeStatusFields)
+			if err != nil {
+				return err
+			}
+			cfg, _, err := loadConfig()
+			if err != nil {
+				return err
+			}
+			n, err := registry.Get(cfg, args[0])
+			if err != nil {
+				return errs.NotFound("E_NODE_NOT_FOUND", err.Error()).
+					WithDetails(map[string]any{"name": args[0]}).
+					WithHint("nostos node list")
+			}
+			s := registry.Probe(n, 1500*time.Millisecond)
+			s.Name = args[0]
+			return emitObjectOutput(s, fields, func() {
+				m, _ := jsonio.ToMap(s)
+				for _, k := range nodeStatusFields {
+					fmt.Fprintf(cmd.OutOrStdout(), "%-10s %v\n", k+":", m[k])
+				}
+			})
+		}),
+	}
+	cmd.Flags().StringVar(&fieldsRaw, "fields", "", "comma-separated subset of "+joinFields(nodeStatusFields))
+	return cmd
 }
 
 func newNodeRemoveCmd() *cobra.Command {
@@ -67,16 +112,20 @@ func newNodeRemoveCmd() *cobra.Command {
 		Use:   "remove NAME",
 		Short: "Remove a node from config.yaml",
 		Args:  cobra.ExactArgs(1),
-		RunE: runEFuncSimple(func(cmd *cobra.Command, args []string) error {
+		RunE: runEFunc(func(cmd *cobra.Command, args []string) error {
+			if err := inputx.ValidateNodeName(args[0]); err != nil {
+				return err
+			}
 			_, p, err := loadConfig()
 			if err != nil {
 				return err
 			}
 			if !yes {
-				return fmt.Errorf("refusing to remove without --yes confirmation")
+				return errs.Conflict("E_CONFIRM_REQUIRED", "refusing to remove without --yes").
+					WithHint("re-run with --yes")
 			}
 			if err := registry.Remove(p.Config, args[0]); err != nil {
-				return err
+				return errs.FromGo(err)
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "Removed %s\n", args[0])
 			return nil
@@ -106,4 +155,15 @@ func padRight(s string, n int) string {
 		return s
 	}
 	return s + "        "[:n-len(s)]
+}
+
+func joinFields(fs []string) string {
+	out := ""
+	for i, f := range fs {
+		if i > 0 {
+			out += ","
+		}
+		out += f
+	}
+	return out
 }

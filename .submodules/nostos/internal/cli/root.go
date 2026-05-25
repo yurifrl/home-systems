@@ -23,6 +23,10 @@ func NewRoot(version string) *cobra.Command {
 			"Invocation: go run ./.submodules/nostos/cmd/nostos <subcommand>.",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			outWriter = cmd.OutOrStdout()
+			return nil
+		},
 	}
 
 	root.PersistentFlags().StringVar(&configPath, "config", "",
@@ -47,6 +51,8 @@ func NewRoot(version string) *cobra.Command {
 		newConfigCmd(),
 		newSecretsCmd(),
 		newClusterCmd(),
+		newSchemaCmd(),
+		newMCPCmd(),
 	)
 
 	return root

@@ -75,6 +75,9 @@ func newInitCmd() *cobra.Command {
 				return err
 			}
 
+			if outputMode == "json" {
+				return outputJSON(map[string]string{"status": "initialized", "path": abs})
+			}
 			fmt.Fprintf(cmd.OutOrStdout(), "Initialized nostos project at %s\n", abs)
 			return nil
 		}),

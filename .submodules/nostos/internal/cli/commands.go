@@ -29,6 +29,9 @@ func newBuildCmd() *cobra.Command {
 			if err := pxe.BuildAll(cmd.Context(), cfg, p, arch); err != nil {
 				return err
 			}
+			if outputMode == "json" {
+				return outputJSON(map[string]string{"status": "built", "assets": p.Assets(), "arch": arch})
+			}
 			fmt.Fprintf(cmd.OutOrStdout(), "Assets ready in %s\n", p.Assets())
 			return nil
 		}),
@@ -174,6 +177,9 @@ func newKubeconfigCmd() *cobra.Command {
 			}
 			if err := cluster.FetchKubeconfig(cmd.Context(), p, n); err != nil {
 				return err
+			}
+			if outputMode == "json" {
+				return outputJSON(map[string]string{"status": "fetched", "path": p.Kubeconfig(), "node": name})
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "kubeconfig written to %s\n", p.Kubeconfig())
 			return nil

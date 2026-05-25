@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/yurifrl/nostos/internal/cli/dryrun"
 	"github.com/yurifrl/nostos/internal/secrets"
 )
 
@@ -234,11 +235,18 @@ func newSecretsKeysListCmd() *cobra.Command {
 }
 
 func newSecretsKeysRevokeCmd() *cobra.Command {
-	return &cobra.Command{
+	var dryRun bool
+	cmd := &cobra.Command{
 		Use:   "revoke KEY_ID",
 		Short: "Delete a Tailscale auth key by id",
 		Args:  cobra.ExactArgs(1),
-		RunE: runEFuncSimple(func(cmd *cobra.Command, args []string) error {
+		RunE: runEFunc(func(cmd *cobra.Command, args []string) error {
+			if dryRun {
+				plan := dryrun.New("secrets.keys.revoke").
+					Add("load", "load tailscale backend").
+					Add("revoke", "DELETE /api/v2/key/"+args[0])
+				return emitDryRun(plan)
+			}
 			ts, err := loadTailscaleBackend()
 			if err != nil {
 				return err
@@ -249,12 +257,14 @@ func newSecretsKeysRevokeCmd() *cobra.Command {
 				return err
 			}
 			if outputMode == "json" {
-				return outputJSON(map[string]string{"revoked": args[0]})
+				return outputJSON(map[string]string{"status": "revoked", "key_id": args[0]})
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "Revoked %s\n", args[0])
 			return nil
 		}),
 	}
+	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "preview planned actions as JSON; no API calls")
+	return cmd
 }
 
 func truncate(s string, n int) string {

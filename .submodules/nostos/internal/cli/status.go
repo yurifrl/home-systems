@@ -6,14 +6,21 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/yurifrl/nostos/internal/cli/inputx"
+	"github.com/yurifrl/nostos/internal/cli/jsonio"
 	"github.com/yurifrl/nostos/internal/registry"
 )
 
 func newStatusCmd() *cobra.Command {
-	return &cobra.Command{
+	var fieldsRaw string
+	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Show per-node reachability + Talos version",
-		RunE: runEFuncSimple(func(cmd *cobra.Command, args []string) error {
+		RunE: runEFunc(func(cmd *cobra.Command, args []string) error {
+			fields, err := parseFields(fieldsRaw, nodeStatusFields)
+			if err != nil {
+				return err
+			}
 			cfg, _, err := loadConfig()
 			if err != nil {
 				return err
@@ -26,7 +33,20 @@ func newStatusCmd() *cobra.Command {
 				rows = append(rows, s)
 			}
 			if outputMode == "json" {
-				return outputJSON(rows)
+				if len(fields) > 0 {
+					projected, err := jsonio.ProjectSlice(rows, fields)
+					if err != nil {
+						return err
+					}
+					return jsonio.EncodePretty(cmd.OutOrStdout(), map[string]any{
+						"cluster": map[string]any{"name": cfg.Cluster.Name, "healthy": isHealthy(rows)},
+						"nodes":   projected,
+					})
+				}
+				return jsonio.EncodePretty(cmd.OutOrStdout(), map[string]any{
+					"cluster": map[string]any{"name": cfg.Cluster.Name, "healthy": isHealthy(rows)},
+					"nodes":   rows,
+				})
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "Cluster %s\n", cfg.Cluster.Name)
 			fmt.Fprintf(cmd.OutOrStdout(), "%-10s  %-16s  %-12s  %-8s  %-8s  %s\n",
@@ -42,4 +62,19 @@ func newStatusCmd() *cobra.Command {
 			return nil
 		}),
 	}
+	cmd.Flags().StringVar(&fieldsRaw, "fields", "", "comma-separated subset of "+joinFields(nodeStatusFields))
+	_ = inputx.SanitizeForJSON
+	return cmd
+}
+
+func isHealthy(rows []registry.NodeStatus) bool {
+	if len(rows) == 0 {
+		return false
+	}
+	for _, s := range rows {
+		if s.Ping != registry.Up {
+			return false
+		}
+	}
+	return true
 }
