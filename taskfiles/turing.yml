@@ -1,26 +1,30 @@
 version: '3'
 
-# TODO
+# Retired in nostos v0.3 (Stream B1). Every recipe here bypassed the
+# secrets pipeline and would silently misconfigure a Turing-Pi node.
+# All flows are now owned by `task nostos:install NODE=<name>`.
+
 tasks:
   flash:
-    desc: "flash"
+    desc: "[deprecated] use 'task nostos:install NODE=tp1'"
     cmds:
-      - tpi flash -i /tmp/images/rockship-1.9.4-tailscale.raw -n 1
-      - tpi power on -n 1
-      
+      - 'echo "deprecated: use ''task nostos:install NODE=<name>''" >&2'
+      - exit 1
+
   download:
-    desc: "Download the rockship-1.9.4-tailscale.raw image"
-    dir: /tmp/images
+    desc: "[deprecated] image download is owned by nostos image cache"
     cmds:
-      - curl https://factory.talos.dev/image/3616c4c824f2540c0a14da0cc8e6fc46143f2ca0cc75c9c6376a66e562894950/v1.9.4/metal-arm64.raw.xz > rockship-1.9.4-tailscale.raw.xz 
-      - xz -d rockship-1.9.4-tailscale.raw.xz
+      - 'echo "deprecated: use ''task nostos:install NODE=<name>''" >&2'
+      - exit 1
 
   get:
-    desc: "Get the image"
+    desc: "[deprecated] use 'tpi uart get -n <slot>' directly"
     cmds:
-      - tpi uart get -n 1
+      - 'echo "deprecated: use ''task nostos:install NODE=<name>''" >&2'
+      - exit 1
 
   install-talos:
+    desc: "[deprecated] use 'task nostos:install NODE=tp1'"
     cmds:
-      - talosctl -n 192.168.68.107 apply-config -f -i talos/op/nodes/tp1.yaml
-      
+      - 'echo "deprecated: use ''task nostos:install NODE=<name>''" >&2'
+      - exit 1

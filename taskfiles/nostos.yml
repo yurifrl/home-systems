@@ -28,11 +28,11 @@ tasks:
       - '{{.NOSTOS}} pxe --iface {{.IFACE | default "en5"}}'
 
   install:
-    desc: "End-to-end install: wipe + serve + wait + bootstrap. Usage: task nostos:install NODE=dell01"
+    desc: "End-to-end install via nostos. Usage: task nostos:install NODE=dell01 -- --reinstall --yes"
     requires:
       vars: [NODE]
     cmds:
-      - '{{.NOSTOS}} up {{.NODE}}'
+      - ./.bin/nostos --config nostos/config.yaml node install {{.NODE}} {{.CLI_ARGS}}
 
   status:
     desc: "Per-node reachability + Talos version"

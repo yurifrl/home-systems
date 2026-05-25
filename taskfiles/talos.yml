@@ -22,11 +22,10 @@ tasks:
     cmds:
       - op inject -f -i talos/kubeconfig > ~/.talos/kubeconfig
   apply:
-    desc: "apply-config to all workers (dell01 is nostos-managed; use `task nostos:install NODE=dell01`)"
+    desc: "[deprecated] workers go through nostos now — use 'task nostos:install NODE=<name>'"
     cmds:
-      - talosctl -n 192.168.68.114 apply-config -f talos/op/nodes/tp4-192.168.68.114.yaml
-      - talosctl -n 192.168.68.107 apply-config -f talos/op/nodes/tp1-192.168.68.107.yaml
-      - talosctl -n 192.168.68.102 apply-config -f talos/op/nodes/vm-pc01.yaml
+      - 'echo "deprecated: use ''task nostos:install NODE=<name>''" >&2'
+      - exit 1
   pc01-install:
     dir: /tmp/images
     cmds:
