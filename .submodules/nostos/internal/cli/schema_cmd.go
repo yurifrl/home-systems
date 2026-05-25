@@ -9,6 +9,7 @@ import (
 	"github.com/yurifrl/nostos/internal/cli/inputx"
 	"github.com/yurifrl/nostos/internal/cli/jsonio"
 	"github.com/yurifrl/nostos/internal/cli/schema"
+	"github.com/yurifrl/nostos/internal/dashboard/snapshot"
 )
 
 func newSchemaCmd() *cobra.Command {
@@ -49,6 +50,9 @@ func newSchemaCmd() *cobra.Command {
 				return nil
 			}
 			method := args[0]
+			if method == "dashboard.snapshot" {
+				return jsonio.EncodePretty(w, snapshot.JSONSchema())
+			}
 			all := schema.All(root)
 			m, ok := all[method]
 			if !ok {

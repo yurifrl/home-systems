@@ -173,6 +173,11 @@ var Registry = map[string]Meta{
 	"mcp": {
 		Description: "Run JSON-RPC MCP server over stdio (one tool per cobra command).",
 	},
+	"dashboard": {
+		Description:  "Live single-pane TUI for cluster + nodes + ArgoCD apps.",
+		Idempotent:   true,
+		StdoutSchema: map[string]any{"$ref": "dashboard.snapshot"},
+	},
 }
 
 func nodeStatusSchema() map[string]any {
