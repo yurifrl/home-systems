@@ -15,9 +15,9 @@ spec:
     server: https://kubernetes.default.svc
     namespace: external-dns
   syncPolicy:
-    # automated:
-    #   prune: true
-    #   selfHeal: true
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
     managedNamespaceMetadata:
@@ -32,6 +32,10 @@ spec:
         releaseName: cloudflare
         valuesObject:
           crd.create: false
+          image:
+            registry: registry.k8s.io
+            repository: external-dns/external-dns
+            tag: v0.18.0
           txtOwnerId: syscd-cloudflare
           policy: sync
           interval: 1m
@@ -51,6 +55,10 @@ spec:
       helm:
         releaseName: tailscale
         valuesObject:
+          image:
+            registry: registry.k8s.io
+            repository: external-dns/external-dns
+            tag: v0.18.0
           txtOwnerId: syscd-tailscale
           policy: sync
           interval: 1m
@@ -72,6 +80,10 @@ spec:
         releaseName: rfc2136
         valuesObject:
           crd.create: false
+          image:
+            registry: registry.k8s.io
+            repository: external-dns/external-dns
+            tag: v0.18.0
           logLevel: trace
           registry: txt
           txtOwnerId: syscd-rfc2136
