@@ -45,42 +45,49 @@ spec:
         database:
           internal:
             username: postgres
-            password: changeme
+            pass**************[REDACTED:Generic Password Field]
+          # Force AMD64 - Harbor images don't support ARM
+          nodeSelector:
+            kubernetes.io/arch: amd64
 
         # Redis - use internal
         redis:
           internal:
-            password: changeme
+            pass**************[REDACTED:Generic Password Field]
+          nodeSelector:
+            kubernetes.io/arch: amd64
 
-        # Disable unused components to save resources
+        # Disable unused components
         notary:
           enabled: false
         chartmuseum:
           enabled: false
 
-        # Trivy scanner - minimal config
+        # Trivy scanner
         trivy:
           enabled: true
+          nodeSelector:
+            kubernetes.io/arch: amd64
 
-        # Proxy cache - disabled
+        # Proxy cache
         proxy:
           enabled: false
 
-        # Internal TLS disabled (handled by ingress)
+        # Internal TLS
         internalTLS:
           enabled: false
 
-        # Metrics disabled
+        # Metrics
         metrics:
           enabled: false
 
-        # Force AMD64 (Harbor images don't support ARM)
-        nodeSelector:
-          kubernetes.io/arch: amd64
+        # Logging
         logLevel: warn
 
-        # Resource limits for homelab
+        # NGINX
         nginx:
+          nodeSelector:
+            kubernetes.io/arch: amd64
           resources:
             requests:
               cpu: 50m
@@ -89,7 +96,10 @@ spec:
               cpu: 200m
               memory: 256Mi
 
+        # Portal
         portal:
+          nodeSelector:
+            kubernetes.io/arch: amd64
           resources:
             requests:
               cpu: 50m
@@ -98,7 +108,10 @@ spec:
               cpu: 200m
               memory: 256Mi
 
+        # Core
         core:
+          nodeSelector:
+            kubernetes.io/arch: amd64
           resources:
             requests:
               cpu: 100m
@@ -107,7 +120,10 @@ spec:
               cpu: 500m
               memory: 512Mi
 
+        # Jobservice
         jobservice:
+          nodeSelector:
+            kubernetes.io/arch: amd64
           resources:
             requests:
               cpu: 50m
@@ -116,8 +132,11 @@ spec:
               cpu: 200m
               memory: 256Mi
 
+        # Registry
         registry:
           controller:
+            nodeSelector:
+              kubernetes.io/arch: amd64
             resources:
               requests:
                 cpu: 50m
@@ -126,6 +145,8 @@ spec:
                 cpu: 100m
                 memory: 128Mi
           registry:
+            nodeSelector:
+              kubernetes.io/arch: amd64
             resources:
               requests:
                 cpu: 50m
