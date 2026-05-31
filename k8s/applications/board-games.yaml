@@ -42,7 +42,7 @@ spec:
           deployments:
             - name: board-games
               image:
-                repository: harbor-core.harbor.svc.cluster.local/board-games/bg
+                repository: harbor-core.harbor.svc.cluster.local/bg
                 tag: latest
               containerPort: 8080
               env:
