@@ -32,8 +32,8 @@ spec:
                 tag: latest
           persistence:
             enabled: true
-            storageClass: longhorn-ha
-            size: 5Gi
+            # Data migrated from the old local-path volume into this Longhorn PVC
+            existingClaim: ha-migrate-lh
           initContainers:
             - name: init-hacs
               image: bash
