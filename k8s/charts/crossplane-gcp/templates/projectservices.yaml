@@ -1,0 +1,21 @@
+{{- $pc := .Values.providerConfig.name }}
+{{- $dp := .Values.deletionPolicy }}
+{{- range .Values.projectServices }}
+---
+apiVersion: cloudplatform.gcp.upbound.io/v1beta1
+kind: ProjectService
+metadata:
+  name: {{ .name }}
+  annotations:
+    crossplane.io/external-name: {{ required "projectService.service required" .service | quote }}
+spec:
+  deletionPolicy: {{ .deletionPolicy | default $dp }}
+  providerConfigRef:
+    name: {{ $pc }}
+  forProvider:
+    service: {{ .service | quote }}
+    disableDependentServices: {{ .disableDependentServices | default false }}
+    {{- if hasKey . "disableOnDestroy" }}
+    disableOnDestroy: {{ .disableOnDestroy }}
+    {{- end }}
+{{- end }}

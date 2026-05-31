@@ -1,0 +1,24 @@
+# Crossplane provider packages to install.
+# Pinned to the Upbound official GCP provider family.
+# NOTE: Crossplane 1.20.0 (the v1.x bridge release) installs these v2.x
+# packages for CLUSTER-SCOPED managed resources. Namespace-scoped MRs would
+# require Crossplane v2.
+providers:
+  - name: provider-gcp-storage
+    package: xpkg.upbound.io/upbound/provider-gcp-storage:v2.5.4
+  - name: provider-gcp-cloudplatform
+    package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v2.5.4
+  - name: provider-gcp-iam
+    package: xpkg.upbound.io/upbound/provider-gcp-iam:v2.5.4
+
+# ExternalSecret that materialises the GCP service-account key JSON used by the
+# ProviderConfig. The 1Password item must expose a field whose value is the raw
+# SA key JSON, surfaced under the secret key `creds`.
+gcpCredentials:
+  enabled: true
+  # k8s Secret name consumed by the ProviderConfig credentials.secretRef.
+  secretName: gcp-creds
+  # 1Password item key (ClusterSecretStore "onepassword").
+  onepasswordKey: crossplane-gcp
+  # Key inside the synced Secret holding the SA key JSON.
+  credentialsKey: creds

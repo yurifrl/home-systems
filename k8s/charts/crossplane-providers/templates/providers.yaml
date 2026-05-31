@@ -1,0 +1,33 @@
+{{- range .Values.providers }}
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: {{ .name }}
+spec:
+  package: {{ .package }}
+{{- end }}
+{{- if .Values.gcpCredentials.enabled }}
+---
+# GCP service-account key JSON, synced from 1Password via External Secrets.
+# The ProviderConfig (in the crossplane-gcp chart) references this Secret.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: {{ .Values.gcpCredentials.secretName }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: onepassword
+    kind: ClusterSecretStore
+  target:
+    name: {{ .Values.gcpCredentials.secretName }}
+  data:
+    - secretKey: {{ .Values.gcpCredentials.credentialsKey }}
+      remoteRef:
+        key: {{ .Values.gcpCredentials.onepasswordKey }}
+        property: {{ .Values.gcpCredentials.credentialsKey }}
+{{- end }}

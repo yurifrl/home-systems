@@ -1,0 +1,49 @@
+{{- if .Values.workloadIdentity.enabled }}
+{{- $pc := .Values.providerConfig.name }}
+{{- $dp := .Values.deletionPolicy }}
+{{- $wi := .Values.workloadIdentity }}
+apiVersion: iam.gcp.upbound.io/v1beta1
+kind: WorkloadIdentityPool
+metadata:
+  name: {{ $wi.poolId }}
+  annotations:
+    crossplane.io/external-name: {{ required "workloadIdentity.poolId required" $wi.poolId | quote }}
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef:
+    name: {{ $pc }}
+  forProvider:
+    {{- with $wi.poolDisplayName }}
+    displayName: {{ . | quote }}
+    {{- end }}
+    {{- with $wi.poolDescription }}
+    description: {{ . | quote }}
+    {{- end }}
+{{- if $wi.providerId }}
+---
+apiVersion: iam.gcp.upbound.io/v1beta2
+kind: WorkloadIdentityPoolProvider
+metadata:
+  name: {{ $wi.providerId }}
+  annotations:
+    crossplane.io/external-name: {{ $wi.providerId | quote }}
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef:
+    name: {{ $pc }}
+  forProvider:
+    workloadIdentityPoolIdRef:
+      name: {{ $wi.poolId }}
+    {{- with $wi.attributeMapping }}
+    attributeMapping:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $wi.attributeCondition }}
+    attributeCondition: {{ . | quote }}
+    {{- end }}
+    {{- with $wi.oidc }}
+    oidc:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+{{- end }}
+{{- end }}

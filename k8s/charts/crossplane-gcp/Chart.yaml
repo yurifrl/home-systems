@@ -1,0 +1,6 @@
+apiVersion: v2
+name: crossplane-gcp
+description: GCP infrastructure as Crossplane managed resources (native), values-driven
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

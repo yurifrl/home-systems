@@ -1,0 +1,12 @@
+apiVersion: gcp.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: {{ .Values.providerConfig.name }}
+spec:
+  projectID: {{ .Values.providerConfig.projectID | quote }}
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: {{ .Values.providerConfig.credentials.secretNamespace }}
+      name: {{ .Values.providerConfig.credentials.secretName }}
+      key: {{ .Values.providerConfig.credentials.key }}

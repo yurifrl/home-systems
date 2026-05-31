@@ -1,0 +1,38 @@
+{{- $pc := .Values.providerConfig.name }}
+{{- $dp := .Values.deletionPolicy }}
+{{- range .Values.buckets }}
+---
+apiVersion: storage.gcp.upbound.io/v1beta2
+kind: Bucket
+metadata:
+  name: {{ .name }}
+  annotations:
+    # Import the EXISTING bucket instead of creating a new one.
+    crossplane.io/external-name: {{ required "bucket.externalName required" .externalName | quote }}
+spec:
+  deletionPolicy: {{ .deletionPolicy | default $dp }}
+  providerConfigRef:
+    name: {{ $pc }}
+  forProvider:
+    location: {{ .location | quote }}
+    {{- with .storageClass }}
+    storageClass: {{ . | quote }}
+    {{- end }}
+    {{- if hasKey . "forceDestroy" }}
+    forceDestroy: {{ .forceDestroy }}
+    {{- end }}
+    {{- if hasKey . "uniformBucketLevelAccess" }}
+    uniformBucketLevelAccess: {{ .uniformBucketLevelAccess }}
+    {{- end }}
+    {{- with .publicAccessPrevention }}
+    publicAccessPrevention: {{ . | quote }}
+    {{- end }}
+    {{- with .cors }}
+    cors:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .retentionPolicy }}
+    retentionPolicy:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+{{- end }}

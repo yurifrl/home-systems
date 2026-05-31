@@ -1,0 +1,49 @@
+# ============================================================================
+# PUBLIC placeholder values. These are intentionally fake.
+# REAL values (bucket names/UUIDs, projectID, SA emails, WIF principals) live
+# in the PRIVATE values repo and are merged at sync time via ArgoCD's
+# multi-source $values mechanism. Never put real names here.
+# ============================================================================
+
+# GCP project + provider credentials wiring.
+providerConfig:
+  name: default
+  # projectID is sensitive -> overridden from the private values repo.
+  projectID: REPLACE_IN_PRIVATE_VALUES
+  credentials:
+    secretName: gcp-creds
+    secretNamespace: crossplane-system
+    key: creds
+
+# Common deletion policy for imported resources. Use "Orphan" while importing
+# existing infra so a mistake never deletes a live GCS bucket; flip to "Delete"
+# once you trust reconciliation.
+deletionPolicy: Orphan
+
+# --- GCS buckets -----------------------------------------------------------
+# externalName MUST equal the existing bucket name to IMPORT (not recreate) it.
+buckets: []
+#  - name: nixos-images            # k8s MR name (safe, non-secret)
+#    externalName: REAL_BUCKET     # actual GCS bucket name (secret) -> private
+#    location: us-east1
+#    storageClass: ARCHIVE
+#    forceDestroy: true
+#    uniformBucketLevelAccess: false
+#    publicAccessPrevention: inherited
+
+# --- Service accounts ------------------------------------------------------
+serviceAccounts: []
+#  - name: foundry-sa
+#    accountId: foundry-gcs-access-sa
+#    displayName: Foundry GCS Access Service Account
+
+# --- Project services (API enablement) -------------------------------------
+projectServices: []
+#  - name: iam
+#    service: iam.googleapis.com
+
+# --- Workload Identity (GitHub OIDC) ---------------------------------------
+workloadIdentity:
+  enabled: false
+  poolId: ""            # e.g. github-pool   (secret -> private)
+  providerId: ""        # e.g. github-provider
