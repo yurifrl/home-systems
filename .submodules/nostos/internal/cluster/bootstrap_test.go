@@ -13,6 +13,10 @@ import (
 
 func TestFetchKubeconfigImportsTalosconfigFromProjectSource(t *testing.T) {
 	tmp := t.TempDir()
+	// Redirect HOME so paths.TalosDir() (~/.talos via os.UserHomeDir) resolves
+	// under the sandbox. Without this the test clobbers the operator's real
+	// ~/.talos/config + kubeconfig (XDG_DATA_HOME does NOT cover TalosDir).
+	t.Setenv("HOME", tmp)
 	configDir := filepath.Join(tmp, "nostos")
 	if err := os.MkdirAll(configDir, 0o755); err != nil {
 		t.Fatal(err)
