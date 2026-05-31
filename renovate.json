@@ -9,6 +9,8 @@
     ]
   },
   "enabledManagers": ["argocd", "github-actions", "helm-values", "custom.regex"],
+  "prConcurrentLimit": 0,
+  "prHourlyLimit": 0,
   "packageRules": [
     {
       "description": "Auto-merge Hermes image base (python) and app (hermes-agent) bumps",
