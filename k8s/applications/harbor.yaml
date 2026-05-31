@@ -25,66 +25,59 @@ spec:
         # Harbor basic configuration
         externalURL: https://registry.syscd.live
 
-        # Use Longhorn for persistence
+        # Use Longhorn for persistence - minimal sizes for homelab
         persistence:
           enabled: true
           resourcePolicy: keep
           persistentVolumeClaim:
             registry:
-              storageClass: longhorn-single
-              size: 20Gi
-            chartmuseum:
-              storageClass: longhorn-single
               size: 5Gi
             jobservice:
-              storageClass: longhorn-single
-              size: 1Gi
+              size: 500Mi
             database:
-              storageClass: longhorn-single
-              size: 5Gi
+              size: 2Gi
             redis:
-              storageClass: longhorn-single
-              size: 1Gi
+              size: 500Mi
             trivy:
-              storageClass: longhorn-single
-              size: 5Gi
+              size: 2Gi
 
         # Database - use internal PostgreSQL
         database:
           internal:
             username: postgres
             password: changeme
-            # Using internal DB - no external dependencies
 
         # Redis - use internal
         redis:
           internal:
             password: changeme
 
-        # Disable components you don't need
+        # Disable unused components to save resources
         notary:
           enabled: false
+        chartmuseum:
+          enabled: false
 
-        # Trivy scanner - lightweight vulnerability scanning
+        # Trivy scanner - minimal config
         trivy:
           enabled: true
 
-        # Proxy cache - disabled for now
+        # Proxy cache - disabled
         proxy:
           enabled: false
 
-        # Internal TLS disabled (handled by Istio/ingress)
+        # Internal TLS disabled (handled by ingress)
         internalTLS:
           enabled: false
 
-        # Metrics and tracing disabled
+        # Metrics disabled
         metrics:
           enabled: false
 
         # Logging level
-        logLevel: info
+        logLevel: warn
 
-        # Minimal resource allocation for homelab
+        # Resource limits for homelab
         nginx:
           resources:
             requests:
@@ -139,7 +132,6 @@ spec:
                 cpu: 200m
                 memory: 256Mi
 ---
-# VirtualService for Harbor registry (via support chart)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
