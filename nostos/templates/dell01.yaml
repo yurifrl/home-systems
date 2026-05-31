@@ -24,6 +24,14 @@ machine:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
+    extraMounts:
+      - destination: /var/mnt/storage
+        type: bind
+        source: /var/mnt/storage
+        options:
+          - bind
+          - rshared
+          - rw
   network:
     hostname: dell01
     interfaces:
@@ -54,6 +62,13 @@ machine:
     hostDNS:
       enabled: true
       forwardKubeDNSToHost: true
+  # /dev/sda is a 256GB SATA SSD (wiped of its old Windows install) used as
+  # Longhorn storage, mounted at /var/mnt/storage like the tp* workers.
+  disks:
+    - device: /dev/sda
+      partitions:
+        - mountpoint: /var/mnt/storage
+          size: 0
   nodeLabels:
     node.kubernetes.io/exclude-from-external-load-balancers: ""
     syscd.dev/storage: dell01
