@@ -25,7 +25,7 @@ spec:
         # Harbor basic configuration
         externalURL: https://registry.syscd.live
 
-        # Use Longhorn for persistence - minimal sizes for homelab
+        # Use Longhorn for persistence
         persistence:
           enabled: true
           resourcePolicy: keep
@@ -41,19 +41,18 @@ spec:
             trivy:
               size: 2Gi
 
-        # Database - use internal PostgreSQL
+        # Database with nodeSelector
         database:
           internal:
             username: postgres
-            pass**************[REDACTED:Generic Password Field]
-          # Force AMD64 - Harbor images don't support ARM
+            password: harborpassword123
           nodeSelector:
             kubernetes.io/arch: amd64
 
-        # Redis - use internal
+        # Redis with nodeSelector
         redis:
           internal:
-            pass**************[REDACTED:Generic Password Field]
+            password: harborpassword123
           nodeSelector:
             kubernetes.io/arch: amd64
 
@@ -63,7 +62,7 @@ spec:
         chartmuseum:
           enabled: false
 
-        # Trivy scanner
+        # Trivy with nodeSelector
         trivy:
           enabled: true
           nodeSelector:
@@ -84,7 +83,7 @@ spec:
         # Logging
         logLevel: warn
 
-        # NGINX
+        # NGINX with nodeSelector
         nginx:
           nodeSelector:
             kubernetes.io/arch: amd64
@@ -96,7 +95,7 @@ spec:
               cpu: 200m
               memory: 256Mi
 
-        # Portal
+        # Portal with nodeSelector
         portal:
           nodeSelector:
             kubernetes.io/arch: amd64
@@ -108,7 +107,7 @@ spec:
               cpu: 200m
               memory: 256Mi
 
-        # Core
+        # Core with nodeSelector
         core:
           nodeSelector:
             kubernetes.io/arch: amd64
@@ -120,7 +119,7 @@ spec:
               cpu: 500m
               memory: 512Mi
 
-        # Jobservice
+        # Jobservice with nodeSelector
         jobservice:
           nodeSelector:
             kubernetes.io/arch: amd64
@@ -132,18 +131,8 @@ spec:
               cpu: 200m
               memory: 256Mi
 
-        # Registry
+        # Registry with nodeSelector
         registry:
-          controller:
-            nodeSelector:
-              kubernetes.io/arch: amd64
-            resources:
-              requests:
-                cpu: 50m
-                memory: 64Mi
-              limits:
-                cpu: 100m
-                memory: 128Mi
           registry:
             nodeSelector:
               kubernetes.io/arch: amd64
