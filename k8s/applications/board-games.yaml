@@ -49,7 +49,11 @@ spec:
               env:
                 - { name: PORT, value: "8080" }
                 - { name: BASE_URL, value: "https://bg.syscd.live" }
-                - { name: WHATSAPP_NUMBER, value: "5511999998888" }
+                - name: WHATSAPP_NUMBER
+                  valueFrom:
+                    secretKeyRef:
+                      name: bg-config
+                      key: WHATSAPP_NUMBER
                 - name: AUTH_SECRET
                   valueFrom:
                     secretKeyRef:
