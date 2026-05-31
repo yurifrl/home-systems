@@ -141,6 +141,11 @@ func newBootstrapCmd() *cobra.Command {
 			if err := cluster.FetchKubeconfig(ctx, cfg, p, n); err != nil {
 				fmt.Fprintf(cmd.ErrOrStderr(), "warn: kubeconfig fetch: %v\n", err)
 			}
+			if tsCtx, err := cluster.ConfigureTailscaleContext(ctx, cfg, p); err != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "warn: tailscale context: %v\n", err)
+			} else if tsCtx != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "tailscale context added: %s\n", tsCtx)
+			}
 			fmt.Fprintf(cmd.OutOrStdout(), "Bootstrapped %s. kubeconfig: %s\n", args[0], p.Kubeconfig())
 			return nil
 		}),
@@ -180,10 +185,23 @@ func newKubeconfigCmd() *cobra.Command {
 			if err := cluster.FetchKubeconfig(cmd.Context(), cfg, p, n); err != nil {
 				return err
 			}
+			tsCtx, tsErr := cluster.ConfigureTailscaleContext(cmd.Context(), cfg, p)
 			if outputMode == "json" {
-				return outputJSON(map[string]string{"status": "fetched", "path": p.Kubeconfig(), "node": name})
+				res := map[string]string{"status": "fetched", "path": p.Kubeconfig(), "node": name}
+				if tsCtx != "" {
+					res["tailscale_context"] = tsCtx
+				}
+				if tsErr != nil {
+					res["tailscale_warning"] = tsErr.Error()
+				}
+				return outputJSON(res)
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "kubeconfig written to %s\n", p.Kubeconfig())
+			if tsErr != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "warn: tailscale context: %v\n", tsErr)
+			} else if tsCtx != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "tailscale context added: %s\n", tsCtx)
+			}
 			return nil
 		}),
 	}

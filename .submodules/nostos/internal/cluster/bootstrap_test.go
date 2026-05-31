@@ -86,3 +86,64 @@ printf 'kubeconfig\n' > "$out"
 		t.Fatalf("kubeconfig not written: %v", err)
 	}
 }
+
+func TestConfigureTailscaleContextDisabled(t *testing.T) {
+	p := paths.New(filepath.Join(t.TempDir(), "nostos", "config.yaml"))
+	cfg := &config.Config{} // Cluster.TailscaleOperator == ""
+	got, err := ConfigureTailscaleContext(context.Background(), cfg, p)
+	if err != nil {
+		t.Fatalf("unexpected error when disabled: %v", err)
+	}
+	if got != "" {
+		t.Fatalf("expected no context when disabled, got %q", got)
+	}
+}
+
+func TestConfigureTailscaleContextAddsContextAndRestoresLAN(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("HOME", tmp)
+	p := paths.New(filepath.Join(tmp, "nostos", "config.yaml"))
+	if err := os.MkdirAll(filepath.Dir(p.Kubeconfig()), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	// Seed a kubeconfig as talosctl would leave it: LAN context is current.
+	seed := "apiVersion: v1\nkind: Config\ncurrent-context: admin@talos-default\ncontexts:\n- name: admin@talos-default\n"
+	if err := os.WriteFile(p.Kubeconfig(), []byte(seed), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Fake `tailscale configure kubeconfig <host>`: add a remote context and
+	// switch current-context to it, mirroring the real CLI behavior.
+	binDir := filepath.Join(tmp, "bin")
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	script := "#!/bin/sh\n" +
+		"if [ \"$1\" != \"configure\" ] || [ \"$2\" != \"kubeconfig\" ]; then\n" +
+		"  echo \"unexpected args: $*\" >&2\n  exit 1\nfi\n" +
+		"host=\"$3\"\n" +
+		"printf 'apiVersion: v1\\nkind: Config\\ncurrent-context: %s.example.ts.net\\ncontexts:\\n- name: admin@talos-default\\n- name: %s.example.ts.net\\n' \"$host\" \"$host\" > \"$KUBECONFIG\"\n"
+	if err := os.WriteFile(filepath.Join(binDir, "tailscale"), []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	cfg := &config.Config{Cluster: config.Cluster{TailscaleOperator: "tailscale-operator"}}
+	got, err := ConfigureTailscaleContext(context.Background(), cfg, p)
+	if err != nil {
+		t.Fatalf("ConfigureTailscaleContext: %v", err)
+	}
+	if got != "tailscale-operator.example.ts.net" {
+		t.Fatalf("returned context = %q, want tailscale-operator.example.ts.net", got)
+	}
+	body, err := os.ReadFile(p.Kubeconfig())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cur := kubeconfigCurrentContext(p.Kubeconfig()); cur != "admin@talos-default" {
+		t.Fatalf("current-context = %q, want admin@talos-default (LAN restored)\n%s", cur, body)
+	}
+	if !strings.Contains(string(body), "tailscale-operator.example.ts.net") {
+		t.Fatalf("remote context not present in kubeconfig:\n%s", body)
+	}
+}

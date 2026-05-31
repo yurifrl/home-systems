@@ -22,6 +22,11 @@ type Cluster struct {
 	// ImageDigests pins sha256 of factory.talos.dev image artifacts.
 	// Key format: "<schematic>/<version>/<arch>". Value: "sha256:<hex>".
 	ImageDigests map[string]string `yaml:"image_digests,omitempty"`
+	// TailscaleOperator is the Tailscale hostname of the in-cluster operator
+	// running the API server proxy. When set, `nostos kubeconfig` (and
+	// `bootstrap`) also add a remote context pointing at the proxy over the
+	// tailnet, alongside the LAN context. Empty disables this entirely.
+	TailscaleOperator string `yaml:"tailscale_operator,omitempty"`
 }
 
 // OnepasswordConfig is populated when secrets.backend == "onepassword".
