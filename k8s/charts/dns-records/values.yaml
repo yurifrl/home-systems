@@ -1,3 +1,9 @@
+# external-dns ServiceAccounts that use the crd source without crd.create and
+# therefore need DNSEndpoint read RBAC granted here (the cloudflare instance
+# has crd.create=true and is covered by the bitnami chart already).
+dnsEndpointReaders:
+  - tailscale-external-dns
+
 # Static Cloudflare DNS records, managed by external-dns via DNSEndpoint CRs.
 # Migrated from terraform/cloudflare/dns.tf. Not secret -- public on purpose.
 #
