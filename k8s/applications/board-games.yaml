@@ -35,7 +35,8 @@ spec:
                     buyer:  { canSeePrices: true, canBid: true }
                     viewer: { canSeePrices: false, canBid: false }
           externalSecrets:
-            - name: bg-config
+            - name: bg-whitelist     # 1Password "bg-whitelist" -> field: users (the role:id=pw blob)
+            - name: bg-config        # 1Password "bg-config"    -> field: AUTH_SECRET
           services:
             - name: board-games
               port: 8080
@@ -60,7 +61,7 @@ spec:
                     name: bg-whitelist-config
                 - name: users
                   secret:
-                    secretName: bg-config
+                    secretName: bg-whitelist
                     items:
                       - { key: users, path: users }
                 - name: data
