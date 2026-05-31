@@ -74,7 +74,9 @@ spec:
         metrics:
           enabled: false
 
-        # Logging level
+        # Force AMD64 (Harbor images don't support ARM)
+        nodeSelector:
+          kubernetes.io/arch: amd64
         logLevel: warn
 
         # Resource limits for homelab
