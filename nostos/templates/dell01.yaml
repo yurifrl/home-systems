@@ -39,7 +39,7 @@ machine:
       - 8.8.8.8
   install:
     disk: /dev/nvme0n1
-    image: factory.talos.dev/metal-installer/4a0d65c669d46663f377e7161e50cfd570c401f26fd9e7bda34a0216b6f1922b:v1.10.3
+    image: {{ .InstallImage }}
     wipe: true
     extraKernelArgs:
       - talos.dashboard.disabled=0

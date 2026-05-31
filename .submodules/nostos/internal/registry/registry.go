@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	texttemplate "text/template"
 	"time"
 
 	"github.com/yurifrl/nostos/internal/config"
@@ -91,11 +92,19 @@ func Render(cfg *config.Config, p paths.Paths, name string, runValidate bool) (s
 		return "", fmt.Errorf("template %s not found for node %q: %w", tmplPath, name, err)
 	}
 
+	// Go text/template pass: render values sourced from config (e.g. the Talos
+	// install image) so they live in ONE place. Runs BEFORE secret URI
+	// resolution. missingkey=error makes unknown vars fail loud.
+	templated, err := renderTemplateBody(string(body), cfg, node)
+	if err != nil {
+		return "", fmt.Errorf("render template %s for node %q: %w", tmplPath, name, err)
+	}
+
 	backends, err := secrets.BuildBackends(cfg)
 	if err != nil {
 		return "", err
 	}
-	rendered, err := secrets.ResolveTemplate(string(body), backends)
+	rendered, err := secrets.ResolveTemplate(templated, backends)
 	if err != nil {
 		return "", err
 	}
@@ -121,6 +130,35 @@ func Render(cfg *config.Config, p paths.Paths, name string, runValidate bool) (s
 		}
 	}
 	return out, nil
+}
+
+// templateData is the value passed to the Go text/template render pass. It
+// exposes config-derived values so templates don't duplicate them.
+type templateData struct {
+	// InstallImage is the Talos factory install image for this node:
+	// factory.talos.dev/metal-installer/<schematic>:<version>.
+	InstallImage string
+}
+
+// renderTemplateBody executes the template body as a Go text/template with
+// config-derived values. missingkey=error fails loud on unknown vars.
+func renderTemplateBody(body string, cfg *config.Config, node config.Node) (string, error) {
+	data := templateData{
+		InstallImage: fmt.Sprintf(
+			"factory.talos.dev/metal-installer/%s:%s",
+			node.EffectiveSchematic(cfg.Cluster),
+			cfg.Cluster.TalosVersion,
+		),
+	}
+	tmpl, err := texttemplate.New("template").Option("missingkey=error").Parse(body)
+	if err != nil {
+		return "", err
+	}
+	var buf strings.Builder
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
 // ApplyModes is the set of talosctl apply-config --mode values nostos accepts.
