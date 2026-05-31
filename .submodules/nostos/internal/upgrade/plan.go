@@ -109,6 +109,78 @@ type NodeRef struct {
 	Role string
 }
 
+// Step is one adjacent-minor sweep: a target Version and the ordered set of
+// nodes that the sweep touches (only nodes currently below Version).
+type Step struct {
+	Version string    `json:"version"`
+	Nodes   []NodeRef `json:"nodes"`
+}
+
+// Plan is the computed rolling-upgrade plan shared by the `nostos upgrade`
+// command and the interactive TUI. It carries everything the UI needs to
+// render the screen without re-running the planner.
+type Plan struct {
+	Cluster    string `json:"cluster,omitempty"`
+	Target     string `json:"target"`
+	MinCurrent string `json:"min_current,omitempty"`
+	// Nodes is the full node set, workers-first / controlplane-last.
+	Nodes []NodeRef `json:"-"`
+	// Current maps node name -> detected running version string.
+	Current map[string]string `json:"-"`
+	// Steps is the ordered per-minor sweep sequence.
+	Steps []Step `json:"steps"`
+	// Schematics optionally maps node name -> resolved factory schematic ID.
+	// Populated by callers that have config in hand; the TUI hides these
+	// behind a detail toggle and renders nothing when empty.
+	Schematics map[string]string `json:"schematics,omitempty"`
+}
+
+// BuildPlan is the pure planner shared by the command and the TUI. Given the
+// ordered nodes, each node's detected current Version, the target, and the
+// release catalog, it computes the per-minor sweep steps (only nodes below a
+// step's version are included) and returns a fully-populated Plan.
+//
+// It performs no network or exec — callers gather `current` via DetectVersion
+// and `catalog` via FetchCatalog and hand the results in.
+func BuildPlan(cluster string, ordered []NodeRef, current map[string]Version, target Version, catalog []Version) (Plan, error) {
+	plan := Plan{
+		Cluster: cluster,
+		Target:  target.String(),
+		Current: make(map[string]string, len(current)),
+	}
+	plan.Nodes = append(plan.Nodes, ordered...)
+
+	var minCur Version
+	haveMin := false
+	for _, ref := range ordered {
+		v := current[ref.Name]
+		plan.Current[ref.Name] = v.String()
+		if !haveMin || v.Less(minCur) {
+			minCur, haveMin = v, true
+		}
+	}
+	if haveMin {
+		plan.MinCurrent = minCur.String()
+	}
+
+	steps, err := ComputePath(minCur, target, catalog)
+	if err != nil {
+		return Plan{}, err
+	}
+	for _, sv := range steps {
+		var sn []NodeRef
+		for _, ref := range ordered {
+			if current[ref.Name].Less(sv) {
+				sn = append(sn, ref)
+			}
+		}
+		if len(sn) > 0 {
+			plan.Steps = append(plan.Steps, Step{Version: sv.String(), Nodes: sn})
+		}
+	}
+	return plan, nil
+}
+
 // OrderNodes returns nodes ordered workers-first, controlplane-last, with a
 // stable secondary sort by name. The input slice is not mutated.
 func OrderNodes(nodes []NodeRef) []NodeRef {

@@ -2,9 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"time"
 
+	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 
 	"github.com/yurifrl/nostos/internal/cli/errs"
@@ -12,6 +14,7 @@ import (
 	"github.com/yurifrl/nostos/internal/config"
 	"github.com/yurifrl/nostos/internal/registry"
 	"github.com/yurifrl/nostos/internal/upgrade"
+	upgradetui "github.com/yurifrl/nostos/internal/upgrade/tui"
 )
 
 func newUpgradeCmd() *cobra.Command {
@@ -95,8 +98,6 @@ func newUpgradeCmd() *cobra.Command {
 
 			// Detect each node's running version (network/exec).
 			current := map[string]upgrade.Version{}
-			var minCur upgrade.Version
-			haveMin := false
 			for _, ref := range ordered {
 				v, err := upgrade.DetectVersion(p.Talosconfig(), ref.IP)
 				if err != nil {
@@ -105,42 +106,52 @@ func newUpgradeCmd() *cobra.Command {
 						WithHint("ensure the node is reachable and talosconfig is valid")
 				}
 				current[ref.Name] = v
-				if !haveMin || v.Less(minCur) {
-					minCur, haveMin = v, true
-				}
 			}
 
-			// Compute the per-minor step path from the lowest current version.
-			steps, err := upgrade.ComputePath(minCur, target, catalog)
+			// Compute the per-minor step path from the lowest current version,
+			// and build the per-step node lists (shared planner — see
+			// upgrade.BuildPlan, reused by the interactive TUI).
+			plan, err := upgrade.BuildPlan(cfg.Cluster.Name, ordered, current, target, catalog)
 			if err != nil {
 				return errs.Validation("E_PATH", err.Error()).
 					WithHint("the release catalog is missing a required intermediate minor")
 			}
-
-			// Build the per-step node lists (only nodes below the step version).
-			type stepPlan struct {
-				Version string            `json:"version"`
-				Nodes   []upgrade.NodeRef `json:"nodes"`
-			}
-			plan := make([]stepPlan, 0, len(steps))
-			for _, sv := range steps {
-				var sn []upgrade.NodeRef
-				for _, ref := range ordered {
-					if current[ref.Name].Less(sv) {
-						sn = append(sn, ref)
-					}
-				}
-				if len(sn) > 0 {
-					plan = append(plan, stepPlan{Version: sv.String(), Nodes: sn})
-				}
+			// Annotate each node with its resolved factory schematic so the TUI
+			// detail toggle can reveal it (hidden by default).
+			plan.Schematics = map[string]string{}
+			for i, name := range names {
+				plan.Schematics[name] = nodes[i].EffectiveSchematic(cfg.Cluster)
 			}
 
-			if len(plan) == 0 {
+			if len(plan.Steps) == 0 {
 				if outputMode == "json" {
 					return outputJSON(map[string]any{"status": "up-to-date", "target": target.String()})
 				}
 				fmt.Fprintf(cmd.OutOrStdout(), "All nodes already at or above %s; nothing to do.\n", target)
 				return nil
+			}
+
+			// Interactive plan screen: when stdout is a TTY and the operator
+			// hasn't pre-committed via --dry-run/--yes (and isn't asking for
+			// JSON), present the plan and let them choose. Dry-run prints the
+			// plan; Proceed (after an explicit in-TUI confirm) takes the same
+			// health-gated path --yes uses; Quit aborts.
+			if !dryRun && !yes && outputMode != "json" && term.IsTerminal(os.Stdout.Fd()) {
+				res, err := upgradetui.Run(cmd.Context(), plan)
+				if err != nil {
+					return errs.FromGo(err)
+				}
+				switch res.Action {
+				case upgradetui.ActionDryRun:
+					dryRun = true
+				case upgradetui.ActionProceed:
+					if !res.Confirmed {
+						return nil
+					}
+					yes = true
+				default: // ActionQuit / ActionNone
+					return nil
+				}
 			}
 
 			if dryRun {
@@ -149,11 +160,11 @@ func newUpgradeCmd() *cobra.Command {
 						"status": "preview",
 						"method": "upgrade",
 						"target": target.String(),
-						"steps":  plan,
+						"steps":  plan.Steps,
 					})
 				}
 				fmt.Fprintf(cmd.OutOrStdout(), "Upgrade plan (target %s):\n", target)
-				for _, s := range plan {
+				for _, s := range plan.Steps {
 					var nn []string
 					for _, n := range s.Nodes {
 						nn = append(nn, n.Name)
@@ -167,7 +178,7 @@ func newUpgradeCmd() *cobra.Command {
 			if !yes {
 				return errs.Conflict("E_CONFIRM_REQUIRED",
 					"upgrade reboots nodes; refusing without --yes").
-					WithDetails(map[string]any{"target": target.String(), "steps": plan}).
+					WithDetails(map[string]any{"target": target.String(), "steps": plan.Steps}).
 					WithHint("review with --dry-run, then re-run with --yes")
 			}
 
@@ -177,7 +188,7 @@ func newUpgradeCmd() *cobra.Command {
 			for i, name := range names {
 				byName[name] = nodes[i]
 			}
-			for _, s := range plan {
+			for _, s := range plan.Steps {
 				sv, _ := upgrade.ParseVersion(s.Version)
 				for _, ref := range s.Nodes {
 					node := byName[ref.Name]
@@ -199,7 +210,7 @@ func newUpgradeCmd() *cobra.Command {
 			}
 
 			if outputMode == "json" {
-				return outputJSON(map[string]any{"status": "upgraded", "target": target.String(), "steps": plan})
+				return outputJSON(map[string]any{"status": "upgraded", "target": target.String(), "steps": plan.Steps})
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "✓ cluster upgraded to %s\n", target)
 			return nil
