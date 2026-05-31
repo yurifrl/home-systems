@@ -1,5 +1,5 @@
 // Package flock provides a per-node cross-process exclusive lock backed
-// by flock(2) (LOCK_EX|LOCK_NB) on a file under nostos/state/configs/.
+// by flock(2) (LOCK_EX|LOCK_NB) on a file under the nostos configs cache.
 package flock
 
 import (
@@ -15,7 +15,17 @@ import (
 
 // DefaultDir is used when AcquireNode is called without an override.
 // Production callers SHOULD use AcquireNodeAt to supply paths.Configs().
-var DefaultDir = "nostos/state/configs"
+var DefaultDir = filepath.Join(defaultStateDir(), "configs")
+
+func defaultStateDir() string {
+	if xdg := os.Getenv("XDG_DATA_HOME"); xdg != "" {
+		return filepath.Join(xdg, "nostos")
+	}
+	if home, err := os.UserHomeDir(); err == nil && home != "" {
+		return filepath.Join(home, ".local", "share", "nostos")
+	}
+	return filepath.Join("nostos", "state")
+}
 
 // AcquireNode takes an exclusive non-blocking flock on
 // <DefaultDir>/<name>.lock (mode 0600). On contention it returns an

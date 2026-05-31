@@ -58,7 +58,7 @@ Repo:      github.com/yurifrl/home-systems  (path: nostos/, .submodules/nostos/)
 A working **Talos Linux** cluster with N nodes (one controlplane minimum,
 0…N workers) where every node's kubelet reports **Ready**, every node is
 joined to your **Tailscale** tailnet with the right tag, the kubeconfig
-context lives in `nostos/state/kubeconfig`, and the cluster is in shape
+context lives in `~/.talos/kubeconfig`, and the cluster is in shape
 for **ArgoCD** to take over. nostos owns bare-metal-to-cluster only:
 once `nostos status` shows everything green, the cluster is a normal
 Talos cluster and you should drive it with `kubectl` / `argocd` / Helm
@@ -185,7 +185,7 @@ The result:
 .
 ├── config.yaml         ← edit this
 ├── templates/          ← per-node Talos machineconfig templates
-└── state/              ← cache; gitignored; rebuildable
+└── ~/.local/share/nostos/              ← cache; gitignored; rebuildable
     ├── assets/         ← Talos kernel/initramfs/iPXE
     ├── cache/          ← image cache + digest TOFU records
     ├── configs/        ← rendered, secret-bearing per-MAC machineconfigs
@@ -344,9 +344,9 @@ Sample output:
 
 ```
 → resolving schematic 4a0d65c6... v1.10.3 amd64
-✓ kernel:   nostos/state/assets/v1.10.3/amd64/vmlinuz       (cached)
-✓ initrd:   nostos/state/assets/v1.10.3/amd64/initramfs.xz  (cached)
-✓ ipxe:     nostos/state/assets/v1.10.3/amd64/ipxe.efi      (built)
+✓ kernel:   ~/.local/share/nostos/assets/v1.10.3/amd64/vmlinuz       (cached)
+✓ initrd:   ~/.local/share/nostos/assets/v1.10.3/amd64/initramfs.xz  (cached)
+✓ ipxe:     ~/.local/share/nostos/assets/v1.10.3/amd64/ipxe.efi      (built)
 ```
 
 ### 3.3 Render the per-node config
@@ -360,14 +360,14 @@ Dry-run emits a Plan envelope:
 
 ```json
 {"status":"preview","method":"render","would_execute":[
-  {"phase":"resolve-secrets","detail":"op://kubernetes/talos/cluster-ca → state/cache/secrets/cluster-ca"},
+  {"phase":"resolve-secrets","detail":"op://kubernetes/talos/cluster-ca → ~/.local/share/nostos/cache/secrets/cluster-ca"},
   {"phase":"mint-tailscale","detail":"oauth → tag:k8s, expiry=7776000"},
-  {"phase":"write-config","detail":"state/configs/d0:94:66:d9:eb:a5.yaml"}
+  {"phase":"write-config","detail":"~/.local/share/nostos/configs/d0:94:66:d9:eb:a5.yaml"}
 ]}
 ```
 
 The real run resolves all `op://` refs, mints a fresh Tailscale auth
-key, and writes `nostos/state/configs/<mac>.yaml`. The file is
+key, and writes `~/.local/share/nostos/configs/<mac>.yaml`. The file is
 gitignored — it contains the cluster CA private key, the etcd
 encryption secret, the Tailscale authkey, and any other secret
 referenced from the template. **Don't commit it. Don't email it.**
@@ -385,8 +385,8 @@ Sample log:
 
 ```
 → pxe: serving on 192.168.68.50  (iface en0)
-→ http: state/assets/v1.10.3/amd64/ → :8080
-→ http: state/configs/             → :8080/configs/
+→ http: ~/.local/share/nostos/assets/v1.10.3/amd64/ → :8080
+→ http: ~/.local/share/nostos/configs/             → :8080/configs/
 → dnsmasq: proxy-dhcp on 192.168.68.0/24
    next-server: 192.168.68.50
    filename:    ipxe.efi
@@ -414,14 +414,14 @@ What this does (also visible as
    maintenance mode (TCP 50000 listening, no apid yet), nostos
    reports `up`. PXE deadline default: 20 minutes.
 4. **Apply machineconfig** — `talosctl apply-config --insecure -f
-   state/configs/<mac>.yaml`. Talos installs the OS to
+   ~/.local/share/nostos/configs/<mac>.yaml`. Talos installs the OS to
    `install_disk`, reboots, and joins kubelet.
 5. **Bootstrap** (controlplane only) — once apid responds, `nostos
    bootstrap dell01` runs `talosctl bootstrap` against the node and
    waits for etcd quorum.
 6. **Fetch kubeconfig** — `talosctl kubeconfig` writes
-   `nostos/state/kubeconfig`.
-7. **Verify Ready** — `kubectl --kubeconfig nostos/state/kubeconfig
+   `~/.talos/kubeconfig`.
+7. **Verify Ready** — `kubectl --kubeconfig ~/.talos/kubeconfig
    get nodes` in a poll loop until `Ready`.
 
 Sample session output (lifted from a real `dell01` install):
@@ -442,7 +442,7 @@ About to install dell01 (method=pxe). Pass --yes to skip prompt.
 → apid: up at 192.168.68.100:50000              (4m02s)
 → bootstrap etcd
 ✓ etcd: 1/1 healthy
-→ fetch kubeconfig → nostos/state/kubeconfig
+→ fetch kubeconfig → ~/.talos/kubeconfig
 → kubelet Ready: dell01                          (5m18s)
 DONE. dell01 is Ready.
 ```
@@ -459,7 +459,7 @@ Total wall-clock: 5–7 min on Dell, 12–18 min on RK1.
 | `error[auth_error/E_BMC_AUTH]` | BMC creds wrong. Re-pull from 1Password; verify `op read op://kubernetes/home-systems/TURING_BMC_PASSWORD`. |
 | `error[timeout/E_WAIT_MAINTENANCE]` | Talos didn't reach maintenance within the deadline. Check the node UART / iDRAC console. RK1: see [§7.5](#75-half-flashed-rk1). |
 | `error[conflict/E_NODE_READY]: dell01 is already Ready; pass --reinstall` | The orchestrator short-circuited because the kubelet is already Ready. Pass `--reinstall --yes`. |
-| `error[validation_failed/E_TLS_FACTORY_DIGEST]` | First-run TOFU recorded a different digest than what factory.talos.dev now serves. Either bump `talos_version` deliberately, or delete `nostos/state/cache/digests.json` and let TOFU re-record. |
+| `error[validation_failed/E_TLS_FACTORY_DIGEST]` | First-run TOFU recorded a different digest than what factory.talos.dev now serves. Either bump `talos_version` deliberately, or delete `~/.local/share/nostos/cache/digests.json` and let TOFU re-record. |
 
 ---
 
@@ -515,7 +515,7 @@ first-boot default; rotate before you start.
 ### 4.3 Image cache TOFU
 
 The `tpi` provider downloads the Talos arm64 raw image once into
-`nostos/state/cache/<schematic_id>/<version>/<arch>/metal.raw.xz`
+`~/.local/share/nostos/cache/<schematic_id>/<version>/<arch>/metal.raw.xz`
 and records its SHA-256 in `digests.json`. Subsequent installs
 verify the recorded digest before flashing. The cache is shared
 across nodes that use the same schematic+version+arch (so tp1 and
@@ -540,7 +540,7 @@ Internally:
 ```
 → preflight: tcp turingpi.local:443 ok
 → preflight: GET / (auth) ok, BMC firmware 2.x.x
-→ image cache: state/cache/3616c4c.../v1.10.3/arm64/metal.raw.xz
+→ image cache: ~/.local/share/nostos/cache/3616c4c.../v1.10.3/arm64/metal.raw.xz
    sha256:e3b0c44... (verified)
 → tpi power off --node 1
 → tpi flash --image .../metal.raw.xz --node 1
@@ -562,18 +562,18 @@ the 30 min deadline) but you can confirm via `talosctl version
 finish the install by hand:
 
 ```bash
-talosctl --talosconfig nostos/state/talosconfig \
+talosctl --talosconfig ~/.talos/config \
   apply-config --insecure \
   -n 192.168.68.107 \
-  --file nostos/state/configs/<mac>.yaml
+  --file ~/.local/share/nostos/configs/<mac>.yaml
 ```
 
-Substitute the actual MAC (find it via `ls nostos/state/configs/`).
+Substitute the actual MAC (find it via `ls ~/.local/share/nostos/configs/`).
 After `apply-config` lands, run:
 
 ```bash
 ./.bin/nostos bootstrap tp1   # only for the FIRST controlplane
-./.bin/nostos kubeconfig tp1  # any node — refreshes state/kubeconfig
+./.bin/nostos kubeconfig tp1  # any node — refreshes ~/.talos/kubeconfig
 ./.bin/nostos status
 ```
 
@@ -850,7 +850,12 @@ secrets:
     description: nostos
 ```
 
-### 6.4 Validate
+### 6.4 Per-render Tailscale auth keys
+
+`tailscale://authkey` is documented separately in
+[`tailscale-authkey-refresh.md`](./tailscale-authkey-refresh.md).
+
+### 6.5 Validate
 
 ```bash
 ./.bin/nostos secrets test tailscale --output json
@@ -860,6 +865,8 @@ PASS means: nostos exchanged the OAuth client for an access token,
 minted a real auth-key with tag `tag:k8s`, then revoked it. If you
 see `403 forbidden`, it almost always means `tag:k8s` is missing
 from `tagOwners` (see [§6.1](#61-acl--tagowners-for-tagk8s)).
+
+### 6.6 List and revoke keys
 
 You can list and revoke individual auth keys:
 
@@ -889,7 +896,7 @@ Checks:
 
 1. **Schematic mismatch.** `nostos.yaml` says `arch: arm64` but the
    schematic is the amd64 default. Look in
-   `nostos/state/assets/<version>/<arch>/` — the directory must
+   `~/.local/share/nostos/assets/<version>/<arch>/` — the directory must
    match the node's arch. Fix: set the per-node `schematic_id` per
    [§4.1](#41-per-node-schematic_id) and re-run `nostos build`.
 2. **eMMC vs SPI boot order (RK1).** RK1 honors NVMe first if a
@@ -933,15 +940,15 @@ Checks:
 Single-controlplane recovery (the home-lab norm):
 
 ```bash
-talosctl --talosconfig nostos/state/talosconfig \
+talosctl --talosconfig ~/.talos/config \
   -n 192.168.68.100 service etcd stop
 
-talosctl --talosconfig nostos/state/talosconfig \
+talosctl --talosconfig ~/.talos/config \
   -n 192.168.68.100 etcd snapshot \
   --from-node 192.168.68.100 \
   /tmp/etcd.snap
 
-talosctl --talosconfig nostos/state/talosconfig \
+talosctl --talosconfig ~/.talos/config \
   -n 192.168.68.100 bootstrap --recover-from /tmp/etcd.snap
 ```
 
@@ -953,7 +960,7 @@ survives because Talos doesn't touch them.
 For three-controlplane clusters, lose-one-recover:
 
 ```bash
-talosctl --talosconfig nostos/state/talosconfig \
+talosctl --talosconfig ~/.talos/config \
   -n 192.168.68.100 etcd remove-member \
   --node-id <broken-node-id>
 ./.bin/nostos node install <broken> --reinstall --yes
@@ -1123,15 +1130,15 @@ Re-generate any time with:
 - `config` — Config subcommands.
 - `config.refresh` — Regenerate admin client certificate.
 - `dashboard` — Live single-pane TUI for cluster + nodes + ArgoCD apps.
-- `init` — Scaffold a new nostos project (config.yaml, templates/, state/).
-- `kubeconfig` — Refresh state/kubeconfig from a running controlplane.
+- `init` — Scaffold a new nostos project (config.yaml, templates/, ~/.local/share/nostos/).
+- `kubeconfig` — Refresh ~/.talos/kubeconfig from a running controlplane.
 - `mcp` — Run JSON-RPC MCP server over stdio (one tool per cobra command).
 - `node` — Manage node registrations.
 - `node.install` — End-to-end install for NAME (method-dispatched: pxe|tpi).
 - `node.list` — List registered nodes with live reachability.
 - `node.remove` — Remove a node from config.yaml.
 - `node.show` — Show one node's reachability and config
-- `nuke` — Remove state/ entirely (regenerable from config.yaml).
+- `nuke` — Remove ~/.local/share/nostos/ entirely (regenerable from config.yaml).
 - `pxe` — Start PXE server (HTTP + dnsmasq) until Ctrl+C.
 - `render` — Render NODE's machineconfig with secrets injected.
 - `schema` — Print machine-readable schema descriptors for nostos commands.
@@ -1361,13 +1368,13 @@ MCP server in the client's config:
 
 ```
 home-systems/
-├── nostos/                          ← OPERATOR DATA (committed except state/)
+├── nostos/                          ← OPERATOR DATA (committed except ~/.local/share/nostos/)
 │   ├── config.yaml                  ← cluster + node registry
 │   ├── templates/                   ← per-node Talos machineconfig templates
 │   │   ├── dell01.yaml
 │   │   ├── tp1.yaml
 │   │   └── tp4.yaml
-│   └── state/                       ← cache; gitignored; rebuildable
+│   └── ~/.local/share/nostos/                       ← cache; gitignored; rebuildable
 │       ├── assets/                  ← Talos kernel/initramfs/iPXE per version+arch
 │       ├── cache/                   ← image cache + digests.json (TOFU)
 │       ├── configs/                 ← rendered <mac>.yaml files (SECRETS!)
@@ -1469,16 +1476,16 @@ Refresh kubeconfig (e.g. cert expired):
 
 The following must NEVER be committed to git:
 
-- Anything under `nostos/state/configs/` (rendered machineconfigs
+- Anything under `~/.local/share/nostos/configs/` (rendered machineconfigs
   with embedded secrets).
-- `nostos/state/talosconfig`, `nostos/state/kubeconfig` (client
+- `~/.talos/config`, `~/.talos/kubeconfig` (client
   certs).
 - 1Password OAuth client IDs and secrets, Tailscale auth-keys, BMC
   passwords (paste into 1Password, reference via `op://`).
 - Home-network IPs, MAC addresses, DHCP lease tables (low risk but
   policy here).
 
-The `.gitignore` at the repo root covers `nostos/state/`. If you
+The `.gitignore` at the repo root covers `~/.local/share/nostos/`. If you
 add a new template under `templates/`, **never paste a literal
 secret** — use `op://` refs and let `nostos render` resolve them
-into `state/configs/` (gitignored).
+into `~/.local/share/nostos/configs/` (gitignored).

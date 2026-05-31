@@ -10,7 +10,6 @@ nostos/
 ├── config.yaml        ← cluster + node registry + secrets backend (committed)
 ├── templates/         ← per-node Talos machineconfig templates with op:// refs
 │   └── dell01.yaml
-└── state/             ← everything else: downloaded kernel/initramfs, built iPXE,
                         rendered secret-bearing configs, talosconfig, logs.
                         Gitignored; rebuildable from config.yaml + templates + 1Password.
 ```
@@ -41,11 +40,10 @@ go run ./.submodules/nostos/cmd/nostos --config nostos/config.yaml <cmd>
 
 ## Recovery
 
-`nostos/state/` is a cache. Any of the following is safe:
+`~/.local/share/nostos/` is a cache. Any of the following is safe:
 
 ```bash
-task nostos:nuke --yes              # wipe state/ entirely
-rm -rf nostos/state/                # same thing, more direct
+nostos nuke --yes                   # wipe runtime cache entirely
 ```
 
 Rebuild via:
@@ -57,7 +55,7 @@ task nostos:render NODE=dell01
 
 1Password is the only source of primary state (CA, cluster tokens,
 Tailscale authkey). As long as the `kubernetes` vault is intact, everything
-under `nostos/state/` can be recreated.
+under `~/.local/share/nostos/` can be recreated.
 
 ## See also
 

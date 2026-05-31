@@ -65,7 +65,7 @@ type Meta struct {
 // Method IDs MUST match the dot-path computed by methodID().
 var Registry = map[string]Meta{
 	"init": {
-		Description:  "Scaffold a new nostos project (config.yaml, templates/, state/).",
+		Description:  "Scaffold a new nostos project (config.yaml and templates/).",
 		Idempotent:   true,
 		StdoutSchema: map[string]any{"type": "object", "properties": map[string]any{"path": map[string]any{"type": "string"}}},
 		Args:         []Arg{{Name: "dir", Type: "string", Required: false, Description: "target directory (default: cwd)"}},
@@ -123,12 +123,12 @@ var Registry = map[string]Meta{
 		Args:        []Arg{{Name: "node", Type: "string", Required: true}},
 	},
 	"kubeconfig": {
-		Description: "Refresh state/kubeconfig from a running controlplane.",
+		Description: "Refresh kubeconfig from a running controlplane.",
 		Idempotent:  true,
 		Args:        []Arg{{Name: "node", Type: "string", Required: false}},
 	},
 	"nuke": {
-		Description:     "Remove state/ entirely (regenerable from config.yaml).",
+		Description:     "Remove nostos runtime cache entirely (regenerable from config.yaml).",
 		Destructive:     true,
 		RequiresConfirm: true,
 	},
@@ -158,7 +158,7 @@ var Registry = map[string]Meta{
 		RequiresConfirm: false,
 		Args:            []Arg{{Name: "key_id", Type: "string", Required: true}},
 	},
-	"cluster":         {Description: "Cluster-level operations."},
+	"cluster": {Description: "Cluster-level operations."},
 	"cluster.cleanup": {
 		Description:     "Reconcile k8s + Tailscale state with nostos config.",
 		Destructive:     true,

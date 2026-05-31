@@ -32,16 +32,11 @@ nodes: {}
   #   template: dell01.yaml
 `
 
-const stateGitignore = `# everything in here is a cache
-*
-!.gitignore
-`
-
 func newInitCmd() *cobra.Command {
 	var force bool
 	cmd := &cobra.Command{
 		Use:   "init [DIR]",
-		Short: "Scaffold config.yaml, templates/, state/ in DIR (default: .)",
+		Short: "Scaffold config.yaml and templates/ in DIR (default: .)",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: runEFuncSimple(func(cmd *cobra.Command, args []string) error {
 			dir := "."
@@ -65,13 +60,6 @@ func newInitCmd() *cobra.Command {
 			}
 
 			if err := os.MkdirAll(filepath.Join(abs, "templates"), 0o755); err != nil {
-				return err
-			}
-			state := filepath.Join(abs, "state")
-			if err := os.MkdirAll(state, 0o755); err != nil {
-				return err
-			}
-			if err := os.WriteFile(filepath.Join(state, ".gitignore"), []byte(stateGitignore), 0o644); err != nil {
 				return err
 			}
 

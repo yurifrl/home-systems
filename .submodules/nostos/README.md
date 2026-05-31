@@ -43,6 +43,15 @@ go run ./.submodules/nostos/cmd/nostos up dell01     # end-to-end install
 - Docker (first `build` only; v0.2 will ship pre-built iPXE binaries)
 - One of: [1Password CLI `op`](https://developer.1password.com/docs/cli/), sops, env vars, plain files
 
+## Tailscale auth keys
+
+`tailscale://authkey` is a dynamic secret reference. Every
+`nostos render <node>` mints a fresh Tailscale auth key and writes the real
+`tskey-auth-...` value only into the rendered machineconfig.
+
+See [`docs/tailscale-authkey-refresh.md`](../../docs/tailscale-authkey-refresh.md)
+for the focused behavior doc.
+
 ## Stack
 
 - Go 1.22+

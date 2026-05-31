@@ -4,12 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/yurifrl/nostos/internal/config"
 	"github.com/yurifrl/nostos/internal/paths"
+	"github.com/yurifrl/nostos/internal/secrets"
+	"gopkg.in/yaml.v3"
 )
 
 // Bootstrap runs `talosctl bootstrap` against node. Idempotent on already-bootstrapped.
@@ -65,9 +69,12 @@ func waitForEtcd(ctx context.Context, p paths.Paths, node config.Node, timeout t
 	return fmt.Errorf("etcd did not become healthy on %s within %s", node.IP, timeout)
 }
 
-// FetchKubeconfig writes cluster kubeconfig to state/kubeconfig.
-func FetchKubeconfig(ctx context.Context, p paths.Paths, node config.Node) error {
+// FetchKubeconfig writes cluster kubeconfig to the nostos state directory.
+func FetchKubeconfig(ctx context.Context, cfg *config.Config, p paths.Paths, node config.Node) error {
 	if err := requireTalosctl(); err != nil {
+		return err
+	}
+	if err := ensureTalosconfig(cfg, p); err != nil {
 		return err
 	}
 	c, cancel := context.WithTimeout(ctx, 15*time.Second)
@@ -82,6 +89,66 @@ func FetchKubeconfig(ctx context.Context, p paths.Paths, node config.Node) error
 		return fmt.Errorf("kubeconfig fetch: %s", strings.TrimSpace(string(out)))
 	}
 	return nil
+}
+
+func ensureTalosconfig(cfg *config.Config, p paths.Paths) error {
+	if validTalosconfig(p.Talosconfig()) {
+		return nil
+	}
+	for _, candidate := range talosconfigCandidates(p) {
+		if !validTalosconfig(candidate) {
+			continue
+		}
+		body, err := os.ReadFile(candidate)
+		if err != nil {
+			return fmt.Errorf("read talosconfig %s: %w", candidate, err)
+		}
+		backends, err := secrets.BuildBackends(cfg)
+		if err != nil {
+			return err
+		}
+		rendered, err := secrets.ResolveTemplate(string(body), backends)
+		if err != nil {
+			return fmt.Errorf("resolve talosconfig %s: %w", candidate, err)
+		}
+		if err := os.MkdirAll(filepath.Dir(p.Talosconfig()), 0o755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(p.Talosconfig(), []byte(rendered), 0o600); err != nil {
+			return err
+		}
+		return nil
+	}
+	return fmt.Errorf("no valid talosconfig found (checked %s)", strings.Join(talosconfigCandidates(p), ", "))
+}
+
+func talosconfigCandidates(p paths.Paths) []string {
+	candidates := []string{
+		filepath.Join(filepath.Dir(p.Root()), "talos", "talosconfig"),
+		filepath.Join(p.Root(), "state", "talosconfig"),
+	}
+	if home, err := os.UserHomeDir(); err == nil && home != "" {
+		candidates = append(candidates,
+			filepath.Join(home, ".talos", "config"),
+			filepath.Join(home, ".talos", "talosconfig"),
+		)
+	}
+	return candidates
+}
+
+func validTalosconfig(path string) bool {
+	body, err := os.ReadFile(path)
+	if err != nil || len(strings.TrimSpace(string(body))) == 0 {
+		return false
+	}
+	var tc struct {
+		Context  string         `yaml:"context"`
+		Contexts map[string]any `yaml:"contexts"`
+	}
+	if err := yaml.Unmarshal(body, &tc); err != nil {
+		return false
+	}
+	return strings.TrimSpace(tc.Context) != "" && len(tc.Contexts) > 0
 }
 
 func requireTalosctl() error {

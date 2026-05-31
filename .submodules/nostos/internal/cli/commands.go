@@ -136,7 +136,7 @@ func newBootstrapCmd() *cobra.Command {
 			if err := cluster.Bootstrap(ctx, cfg, p, n, time.Duration(timeoutMin)*time.Minute); err != nil {
 				return err
 			}
-			if err := cluster.FetchKubeconfig(ctx, p, n); err != nil {
+			if err := cluster.FetchKubeconfig(ctx, cfg, p, n); err != nil {
 				fmt.Fprintf(cmd.ErrOrStderr(), "warn: kubeconfig fetch: %v\n", err)
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "Bootstrapped %s. kubeconfig: %s\n", args[0], p.Kubeconfig())
@@ -150,7 +150,7 @@ func newBootstrapCmd() *cobra.Command {
 func newKubeconfigCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "kubeconfig [NODE]",
-		Short: "Refresh state/kubeconfig from a running controlplane",
+		Short: "Refresh kubeconfig from a running controlplane",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: runEFuncSimple(func(cmd *cobra.Command, args []string) error {
 			cfg, p, err := loadConfig()
@@ -175,7 +175,7 @@ func newKubeconfigCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := cluster.FetchKubeconfig(cmd.Context(), p, n); err != nil {
+			if err := cluster.FetchKubeconfig(cmd.Context(), cfg, p, n); err != nil {
 				return err
 			}
 			if outputMode == "json" {
@@ -191,7 +191,7 @@ func newNukeCmd() *cobra.Command {
 	var yes bool
 	cmd := &cobra.Command{
 		Use:   "nuke",
-		Short: "Remove state/ entirely (safe: regenerable from config.yaml + secrets)",
+		Short: "Remove nostos runtime state entirely (safe: regenerable from config.yaml + secrets)",
 		RunE: runEFuncSimple(func(cmd *cobra.Command, args []string) error {
 			_, p, err := loadConfig()
 			if err != nil {
@@ -217,10 +217,10 @@ func newNukeCmd() *cobra.Command {
 
 func newUpCmd() *cobra.Command {
 	var (
-		skipWipe       bool
-		serveTimeout   time.Duration
-		bootTimeout    time.Duration
-		bootstrapTO    time.Duration
+		skipWipe     bool
+		serveTimeout time.Duration
+		bootTimeout  time.Duration
+		bootstrapTO  time.Duration
 	)
 	cmd := &cobra.Command{
 		Use:   "up NODE",

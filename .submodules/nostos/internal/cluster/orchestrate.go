@@ -219,7 +219,7 @@ func Install(
 			clusterEmit(newEvent(KindError, err.Error(), nodeName))
 			return err
 		}
-		if err := FetchKubeconfig(ctx, p, node); err != nil {
+		if err := FetchKubeconfig(ctx, cfg, p, node); err != nil {
 			slog.Warn("kubeconfig fetch failed", "err", err)
 		}
 	}
