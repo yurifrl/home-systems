@@ -1,8 +1,9 @@
 cluster:
   name: talos-default
   endpoint: https://192.168.68.100:6443
-  talos_version: v1.10.3
-  schematic_id: 4a0d65c669d46663f377e7161e50cfd570c401f26fd9e7bda34a0216b6f1922b
+  talos_version: v1.13.3
+  # amd64 (dell01): tailscale + iscsi-tools + util-linux-tools (Longhorn needs iscsiadm)
+  schematic_id: 8f04ea6b6016f12a593fa8a87441270075c648cb75482c2d9d3db8cecda47da1
 secrets:
   backend: onepassword
   onepassword:
@@ -31,7 +32,8 @@ nodes:
     arch: arm64
     install_disk: /dev/mmcblk0
     template: tp1.yaml
-    schematic_id: 3616c4c824f2540c0a14da0cc8e6fc46143f2ca0cc75c9c6376a66e562894950
+    # arm64 (+turingrk1 overlay): tailscale + iscsi-tools + util-linux-tools
+    schematic_id: 6f9371bccd9df78d8c26521528700b463f25bce1cad97691722a4189719e6aa9
     boot:
       method: tpi
       tpi:
@@ -45,7 +47,8 @@ nodes:
     arch: arm64
     install_disk: /dev/mmcblk0
     template: tp4.yaml
-    schematic_id: 3616c4c824f2540c0a14da0cc8e6fc46143f2ca0cc75c9c6376a66e562894950
+    # arm64 (+turingrk1 overlay): tailscale + iscsi-tools + util-linux-tools
+    schematic_id: 6f9371bccd9df78d8c26521528700b463f25bce1cad97691722a4189719e6aa9
     boot:
       method: tpi
       tpi:
