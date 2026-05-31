@@ -44,7 +44,7 @@ spec:
           # Repo-scoped runners. NOTE: yurifrl is a personal GitHub user, not an
           # org, so org/account-level runners are impossible (/orgs/yurifrl
           # returns 404). Must target a specific repo.
-          githubConfigUrl: https://github.com/yurifrl/yagp
+          githubConfigUrl: https://github.com/yurifrl/obsidian
           githubConfigSecret: gha-runner-github-secret
           controllerServiceAccount:
             namespace: gha-runner
