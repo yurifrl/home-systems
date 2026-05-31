@@ -30,6 +30,10 @@ spec:
       targetRevision: "1.26.2"
       chart: gateway
       helm:
+        # istio gateway chart 1.26.2 ships a values.schema.json that newer Helm
+        # rejects (even defaults fail: '_internal_defaults_do_not_set'). Skip
+        # schema validation so the chart renders and syncs.
+        skipSchemaValidation: true
         valuesObject:
           # Pin to dell01: it is the only node on the 192.168.68.0/24 LAN, so
           # with externalTrafficPolicy: Local + MetalLB L2 the .201 VIP can only
