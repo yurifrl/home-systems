@@ -82,11 +82,6 @@ spec:
           # backupTarget: s3://bucket@region/
           # backupTargetCredentialSecret: longhorn-backup-credentials
 
-        # Notifier settings (optional - reduces noise in small clusters)
-        defaultSettings:
-          # Only create default disk if node has label
-          createDefaultDiskLabeledNodes: true
-
         # Persistence for Longhorn itself
         persistence:
           defaultClass: true
