@@ -44,6 +44,10 @@ spec:
                   imagePullPolicy: Always
                   # /init (s6-overlay) is the image ENTRYPOINT; these are the args.
                   args: ["gateway", "run"]
+                  ports:
+                    - name: http
+                      containerPort: 8642
+                      protocol: TCP
                   env:
                     # HERMES_HOME defaults to /opt/data in the image; set
                     # explicitly for clarity. State persists on the Longhorn PVC.
@@ -52,6 +56,12 @@ spec:
                     # All inference flows through LiteLLM so the budget cap applies.
                     - name: OPENAI_BASE_URL
                       value: http://litellm.litellm.svc.cluster.local:4000/v1
+                    # OpenAI-compatible API server (like Ollama). API_SERVER_KEY
+                    # is injected from the "hermes" secret via envFrom.
+                    - name: API_SERVER_HOST
+                      value: "0.0.0.0"
+                    - name: API_SERVER_PORT
+                      value: "8642"
                   envFrom:
                     - secretRef:
                         name: hermes
@@ -65,3 +75,18 @@ spec:
                     limits:
                       cpu: "2"
                       memory: 2Gi
+          services:
+            - name: hermes
+              port: 8642
+          virtualServices:
+            # hermes.syscd.tech only (private VPN via tailscale gateway)
+            - name: hermes
+              domains:
+                live: false
+                tech: true
+                xyz: false
+                dev: false
+              service:
+                name: hermes
+                namespace: hermes
+                port: 8642
