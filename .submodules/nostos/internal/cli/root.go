@@ -41,6 +41,7 @@ func NewRoot(version string) *cobra.Command {
 		newNodeCmd(),
 		newRenderCmd(),
 		newApplyCmd(),
+		newUpgradeCmd(),
 		newBuildCmd(),
 		newPxeCmd(),
 		newStatusCmd(),
