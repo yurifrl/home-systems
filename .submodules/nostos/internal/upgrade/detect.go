@@ -8,12 +8,26 @@ import (
 	"time"
 )
 
-// DetectVersion shells out to `talosctl version` against nodeIP and returns the
-// running SERVER Talos version. It wraps exec like registry.Apply: it looks up
-// talosctl on PATH and bounds the call with a context timeout.
-func DetectVersion(talosconfigPath, nodeIP string) (Version, error) {
+// resolveTalosctl returns talosctlBin when non-empty, otherwise falls back to
+// "talosctl" on PATH. It errors only when the fallback is not found.
+func resolveTalosctl(talosctlBin string) (string, error) {
+	if talosctlBin != "" {
+		return talosctlBin, nil
+	}
 	if _, err := exec.LookPath("talosctl"); err != nil {
-		return Version{}, fmt.Errorf("talosctl not found on PATH")
+		return "", fmt.Errorf("talosctl not found on PATH")
+	}
+	return "talosctl", nil
+}
+
+// DetectVersion shells out to `talosctl version` against nodeIP and returns the
+// running SERVER Talos version. talosctlBin selects the binary to exec; when
+// empty it falls back to "talosctl" on PATH. It bounds the call with a context
+// timeout.
+func DetectVersion(talosctlBin, talosconfigPath, nodeIP string) (Version, error) {
+	bin, err := resolveTalosctl(talosctlBin)
+	if err != nil {
+		return Version{}, err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -24,7 +38,7 @@ func DetectVersion(talosconfigPath, nodeIP string) (Version, error) {
 		"--talosconfig", talosconfigPath,
 		"--short",
 	}
-	out, err := exec.CommandContext(ctx, "talosctl", args...).CombinedOutput()
+	out, err := exec.CommandContext(ctx, bin, args...).CombinedOutput()
 	if err != nil {
 		return Version{}, fmt.Errorf("talosctl version (%s): %s", nodeIP, strings.TrimSpace(string(out)))
 	}
@@ -62,9 +76,10 @@ func parseServerVersion(out string) (Version, error) {
 // Upgrade runs `talosctl upgrade` against a running node, pulling the given
 // installer image. The image path uses /installer/ (running-node upgrades),
 // distinct from the /metal-installer/ path used at first install time.
-func Upgrade(ctx context.Context, talosconfigPath, nodeIP, image string) error {
-	if _, err := exec.LookPath("talosctl"); err != nil {
-		return fmt.Errorf("talosctl not found on PATH")
+func Upgrade(ctx context.Context, talosctlBin, talosconfigPath, nodeIP, image string) error {
+	bin, err := resolveTalosctl(talosctlBin)
+	if err != nil {
+		return err
 	}
 	args := []string{
 		"upgrade",
@@ -73,7 +88,7 @@ func Upgrade(ctx context.Context, talosconfigPath, nodeIP, image string) error {
 		"--talosconfig", talosconfigPath,
 		"--image", image,
 	}
-	out, err := exec.CommandContext(ctx, "talosctl", args...).CombinedOutput()
+	out, err := exec.CommandContext(ctx, bin, args...).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("talosctl upgrade (%s): %s", nodeIP, strings.TrimSpace(string(out)))
 	}
@@ -88,10 +103,10 @@ func InstallerImage(schematic string, v Version) string {
 // WaitHealthy polls DetectVersion until the node reports want (and is
 // reachable), or the timeout elapses. progress is called with friendly status
 // lines; it may be nil.
-func WaitHealthy(talosconfigPath, nodeIP string, want Version, timeout, interval time.Duration, progress func(string)) error {
+func WaitHealthy(talosctlBin, talosconfigPath, nodeIP string, want Version, timeout, interval time.Duration, progress func(string)) error {
 	deadline := time.Now().Add(timeout)
 	for {
-		got, err := DetectVersion(talosconfigPath, nodeIP)
+		got, err := DetectVersion(talosctlBin, talosconfigPath, nodeIP)
 		if err == nil && got == want {
 			if progress != nil {
 				progress(fmt.Sprintf("✓ %s is healthy at %s", nodeIP, want))

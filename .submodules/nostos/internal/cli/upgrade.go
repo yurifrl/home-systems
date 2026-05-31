@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"time"
 
@@ -99,7 +100,7 @@ func newUpgradeCmd() *cobra.Command {
 			// Detect each node's running version (network/exec).
 			current := map[string]upgrade.Version{}
 			for _, ref := range ordered {
-				v, err := upgrade.DetectVersion(p.Talosconfig(), ref.IP)
+				v, err := upgrade.DetectVersion("", p.Talosconfig(), ref.IP)
 				if err != nil {
 					return errs.Network("E_DETECT",
 						fmt.Sprintf("detect version for %s (%s): %v", ref.Name, ref.IP, err)).
@@ -183,18 +184,43 @@ func newUpgradeCmd() *cobra.Command {
 			}
 
 			// Execute: for each step, upgrade each ordered node, health-gating
-			// before moving to the next node.
+			// before moving to the next node. Each one-minor hop is driven by a
+			// talosctl client matching the node's CURRENT (pre-hop) version, so
+			// an older server never sees a much-newer client (which trips its
+			// gRPC keepalive flood protection). We cache talosctl binaries under
+			// p.Cache()/bin and track each node's current version as it climbs.
 			byName := map[string]config.Node{}
 			for i, name := range names {
 				byName[name] = nodes[i]
+			}
+			binCache := filepath.Join(p.Cache(), "bin")
+			if err := os.MkdirAll(binCache, 0o755); err != nil {
+				return errs.FromGo(err)
+			}
+			nodeCurrent := map[string]upgrade.Version{}
+			for name, v := range current {
+				nodeCurrent[name] = v
 			}
 			for _, s := range plan.Steps {
 				sv, _ := upgrade.ParseVersion(s.Version)
 				for _, ref := range s.Nodes {
 					node := byName[ref.Name]
+					cur := nodeCurrent[ref.Name]
+					// Select a talosctl client matching the node's current
+					// (pre-hop) version to keep the client at most one minor
+					// behind the post-reboot server.
+					talosctlBin, err := upgrade.EnsureTalosctl(cmd.Context(), cur, binCache, nil)
+					if err != nil {
+						return errs.Network("E_TALOSCTL",
+							fmt.Sprintf("ensure talosctl %s for %s: %v", cur, ref.Name, err)).
+							WithHint("check network access to github.com/siderolabs/talos releases")
+					}
 					image := upgrade.InstallerImage(node.EffectiveSchematic(cfg.Cluster), sv)
+					if outputMode != "json" {
+						fmt.Fprintf(cmd.OutOrStdout(), "using talosctl %s to upgrade %s %s -> %s\n", cur, ref.Name, cur, sv)
+					}
 					fmt.Fprintf(cmd.OutOrStdout(), "→ upgrading %s (%s) to %s\n", ref.Name, ref.IP, sv)
-					if err := upgrade.Upgrade(cmd.Context(), p.Talosconfig(), ref.IP, image); err != nil {
+					if err := upgrade.Upgrade(cmd.Context(), talosctlBin, p.Talosconfig(), ref.IP, image); err != nil {
 						return errs.FromGo(err)
 					}
 					progress := func(line string) {
@@ -202,10 +228,13 @@ func newUpgradeCmd() *cobra.Command {
 							fmt.Fprintln(cmd.OutOrStdout(), line)
 						}
 					}
-					if err := upgrade.WaitHealthy(p.Talosconfig(), ref.IP, sv, 15*time.Minute, 15*time.Second, progress); err != nil {
+					if err := upgrade.WaitHealthy(talosctlBin, p.Talosconfig(), ref.IP, sv, 15*time.Minute, 15*time.Second, progress); err != nil {
 						return errs.Timeout("E_HEALTH", err.Error()).
 							WithHint("node did not return healthy at the step version in time")
 					}
+					// Node now runs the step version; subsequent hops use a
+					// client matching this new current version.
+					nodeCurrent[ref.Name] = sv
 				}
 			}
 
