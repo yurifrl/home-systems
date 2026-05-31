@@ -5,15 +5,23 @@
 # Nous Research publishes NO official container image, but they DO publish an
 # official wheel per release (hermes-agent on PyPI). We install that pinned
 # wheel rather than reproducing their complex multi-stage s6-overlay Dockerfile,
-# which would drift from upstream. Bump HERMES_VERSION to upgrade.
+# which would drift from upstream.
+#
+# Both versions below are auto-bumped by Renovate (see renovate.json custom
+# manager) and are the single source of truth for the image tag, which CI
+# derives as "<hermes-version>-py<python-version>".
 #
 # Runs as root (no USER switch) on purpose: the upstream image runs s6 as PID 1
 # (root) and chowns the data volume itself. We keep root so the Longhorn PVC
 # mounted at /opt/data is writable without needing a pod-level fsGroup (the
 # shared `support` chart does not expose securityContext).
-FROM python:3.13-slim-trixie
 
-ARG HERMES_VERSION=0.15.2
+# renovate: datasource=docker depName=python versioning=docker
+ARG PYTHON_VERSION=3.13-slim-trixie
+FROM python:${PYTHON_VERSION}
+
+# renovate: datasource=pypi depName=hermes-agent versioning=pep440
+ARG HERMES_VERSION=0.15.0
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \

@@ -8,5 +8,26 @@
       "/k8s/applications/.+\\.yaml$/"
     ]
   },
-  "enabledManagers": ["argocd", "github-actions", "helm-values"]
+  "enabledManagers": ["argocd", "github-actions", "helm-values", "custom.regex"],
+  "packageRules": [
+    {
+      "description": "Auto-merge Hermes image base (python) and app (hermes-agent) bumps",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": ["k8s/images/hermes/Dockerfile"],
+      "automerge": true,
+      "automergeType": "pr"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/k8s/images/.+/Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) versioning=(?<versioning>\\S+)\\s+ARG \\w+_VERSION=(?<currentValue>\\S+)"
+      ],
+      "datasourceTemplate": "{{{datasource}}}",
+      "depNameTemplate": "{{{depName}}}",
+      "versioningTemplate": "{{{versioning}}}"
+    }
+  ]
 }

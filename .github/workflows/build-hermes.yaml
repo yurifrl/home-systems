@@ -8,35 +8,42 @@ on:
       - 'k8s/images/hermes/**'
       - '.github/workflows/build-hermes.yaml'
   workflow_dispatch:
-    inputs:
-      hermes_version:
-        description: 'Hermes Agent version (PyPI) to build'
-        required: false
-        default: '0.15.2'
 
 env:
-  # In-cluster Docker registry (plain HTTP, no auth, internal only).
-  REGISTRY: registry.registry.svc.cluster.local:5000
-  IMAGE_NAME: hermes-agent
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/hermes-agent
 
 jobs:
   build:
     runs-on: syscd-runner
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Read versions from Dockerfile
+        id: vers
+        run: |
+          DF=k8s/images/hermes/Dockerfile
+          # Python tag prefix only (e.g. 3.14 from 3.14-slim-trixie)
+          PY=$(grep -oP '^ARG PYTHON_VERSION=\K[0-9]+\.[0-9]+' "$DF")
+          HV=$(grep -oP '^ARG HERMES_VERSION=\K[0-9.]+' "$DF")
+          echo "py=$PY" >> "$GITHUB_OUTPUT"
+          echo "hv=$HV" >> "$GITHUB_OUTPUT"
+          echo "Building hermes $HV on python $PY"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
-          # network=host lets buildkit reach the in-cluster registry Service;
-          # the inline config marks it as insecure/HTTP so push works without TLS.
-          driver-opts: network=host
-          buildkitd-config-inline: |
-            [registry."registry.registry.svc.cluster.local:5000"]
-              http = true
-              insecure = true
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker metadata
         id: meta
@@ -45,7 +52,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ github.event.inputs.hermes_version || '0.15.2' }}
+            type=raw,value=${{ steps.vers.outputs.hv }}-py${{ steps.vers.outputs.py }}
             type=sha
 
       - name: Build and push
@@ -55,5 +62,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            HERMES_VERSION=${{ github.event.inputs.hermes_version || '0.15.2' }}

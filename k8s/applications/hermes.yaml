@@ -30,8 +30,8 @@ spec:
           statefulSets:
             - name: hermes
               serviceName: hermes
-              # Built by .github/workflows/build-hermes.yaml and pushed to the
-              # in-cluster registry. Nodes must allow insecure pulls from it.
+              # Built by .github/workflows/build-hermes.yaml and pushed to GHCR.
+              # The GHCR package must be public, or add an imagePullSecret.
               volumeClaimTemplates:
                 - name: state
                   accessModes:
@@ -40,7 +40,7 @@ spec:
                   storageClassName: longhorn-ha
               containers:
                 - name: hermes
-                  image: registry.registry.svc.cluster.local:5000/hermes-agent:latest
+                  image: ghcr.io/yurifrl/hermes-agent:latest
                   imagePullPolicy: Always
                   # /init (s6-overlay) is the image ENTRYPOINT; these are the args.
                   args: ["gateway", "run"]
