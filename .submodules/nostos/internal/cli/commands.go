@@ -11,7 +11,9 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/spf13/cobra"
 
+	"github.com/yurifrl/nostos/internal/cli/errs"
 	"github.com/yurifrl/nostos/internal/cluster"
+	"github.com/yurifrl/nostos/internal/config"
 	"github.com/yurifrl/nostos/internal/pxe"
 	"github.com/yurifrl/nostos/internal/registry"
 )
@@ -301,28 +303,27 @@ func newConfigRefreshCmd() *cobra.Command {
 	var hours int
 	cmd := &cobra.Command{
 		Use:   "refresh",
-		Short: "Regenerate admin client certificate (v0.1: not yet implemented in Go)",
-		RunE: runEFuncSimple(func(cmd *cobra.Command, args []string) error {
+		Short: "Mint a fresh admin talosconfig from the cluster CA (offline; no cluster mutation)",
+		Long: "Regenerate ~/.talos/config with a fresh os:admin client certificate.\n" +
+			"Resolves the Talos OS CA from the secrets backend by rendering a\n" +
+			"controlplane machineconfig, then mints a new client cert via talosctl.\n" +
+			"Use when the admin cert has expired. Does NOT touch the cluster.",
+		RunE: runEFunc(func(cmd *cobra.Command, args []string) error {
 			cfg, p, err := loadConfig()
 			if err != nil {
 				return err
 			}
-			// pick first controlplane
-			var name string
-			for n, node := range cfg.Nodes {
-				if node.Role == "controlplane" {
-					name = n
-					break
-				}
+			if err := cluster.RefreshAdminCert(cfg, p, config.Node{}, hours); err != nil {
+				return errs.FromGo(err)
 			}
-			if name == "" {
-				return fmt.Errorf("no controlplane node in config")
+			if outputMode == "json" {
+				return outputJSON(map[string]string{"status": "refreshed", "talosconfig": p.Talosconfig()})
 			}
-			n := cfg.Nodes[name]
-			return cluster.RefreshAdminCert(cfg, p, n, hours)
+			fmt.Fprintf(cmd.OutOrStdout(), "Fresh admin talosconfig written to %s\n", p.Talosconfig())
+			return nil
 		}),
 	}
-	cmd.Flags().IntVar(&hours, "hours", 876_000, "admin cert validity (hours)")
+	cmd.Flags().IntVar(&hours, "hours", 876_000, "requested admin cert validity (hours; talosctl controls actual lifetime)")
 	return cmd
 }
 

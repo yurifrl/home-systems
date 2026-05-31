@@ -1,0 +1,77 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: litellm
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: litellm
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          # Pulls 1Password item "litellm" (Kubernetes vault) into Secret "litellm":
+          #   OPENAI_API_KEY      -> real OpenAI key (LiteLLM -> OpenAI hop)
+          #   LITELLM_MASTER_KEY  -> proxy auth key (clients -> LiteLLM hop)
+          externalSecrets:
+            - name: litellm
+          configMaps:
+            - name: litellm-config
+              data:
+                config.yaml: |
+                  model_list:
+                    - model_name: gpt
+                      litellm_params:
+                        model: openai/gpt-4o
+                        api_key: os.environ/OPENAI_API_KEY
+                  litellm_settings:
+                    # Hard spend cap. NOTE: without a DATABASE_URL the spend
+                    # counter is in-memory and resets when the pod restarts.
+                    # Add Postgres + DATABASE_URL for a persistent budget.
+                    max_budget: 25
+                    budget_duration: 30d
+          deployments:
+            - name: litellm
+              volumes:
+                - name: config
+                  configMap:
+                    name: litellm-config
+              containers:
+                - name: litellm
+                  image: ghcr.io/berriai/litellm:main-latest
+                  imagePullPolicy: Always
+                  args: ["--config", "/app/config/config.yaml", "--port", "4000"]
+                  ports:
+                    - name: http
+                      containerPort: 4000
+                      protocol: TCP
+                  # LITELLM_MASTER_KEY is auto-read from env; OPENAI_API_KEY
+                  # is referenced by config.yaml via os.environ/...
+                  envFrom:
+                    - secretRef:
+                        name: litellm
+                  volumeMounts:
+                    - name: config
+                      mountPath: /app/config
+                  resources:
+                    requests:
+                      cpu: 50m
+                      memory: 256Mi
+                    limits:
+                      cpu: 500m
+                      memory: 512Mi
+          services:
+            - name: litellm
+              port: 4000

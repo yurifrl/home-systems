@@ -1,0 +1,67 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hermes
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: hermes
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          # Pulls 1Password item "hermes" (Kubernetes vault) into Secret "hermes":
+          #   OPENAI_API_KEY -> the LiteLLM master key value (Hermes auths to
+          #                     the LiteLLM proxy, NOT directly to OpenAI).
+          externalSecrets:
+            - name: hermes
+          statefulSets:
+            - name: hermes
+              serviceName: hermes
+              # Built by .github/workflows/build-hermes.yaml and pushed to the
+              # in-cluster registry. Nodes must allow insecure pulls from it.
+              volumeClaimTemplates:
+                - name: state
+                  accessModes:
+                    - ReadWriteOnce
+                  storage: 5Gi
+                  storageClassName: longhorn-ha
+              containers:
+                - name: hermes
+                  image: registry.registry.svc.cluster.local:5000/hermes-agent:latest
+                  imagePullPolicy: Always
+                  # /init (s6-overlay) is the image ENTRYPOINT; these are the args.
+                  args: ["gateway", "run"]
+                  env:
+                    # HERMES_HOME defaults to /opt/data in the image; set
+                    # explicitly for clarity. State persists on the Longhorn PVC.
+                    - name: HERMES_HOME
+                      value: /opt/data
+                    # All inference flows through LiteLLM so the budget cap applies.
+                    - name: OPENAI_BASE_URL
+                      value: http://litellm.litellm.svc.cluster.local:4000/v1
+                  envFrom:
+                    - secretRef:
+                        name: hermes
+                  volumeMounts:
+                    - name: state
+                      mountPath: /opt/data
+                  resources:
+                    requests:
+                      cpu: 100m
+                      memory: 512Mi
+                    limits:
+                      cpu: "2"
+                      memory: 2Gi

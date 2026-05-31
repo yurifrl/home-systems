@@ -412,8 +412,9 @@ machine:
 
   # # node labels example.
   nodeLabels:
-      # exampleLabel: exampleLabelValue
-      syscd.dev/storage: tp4
+    # exampleLabel: exampleLabelValue
+    syscd.dev/storage: tp4
+    node.longhorn.io/create-default-disk: "true"
 
   # # Configures the node annotations for the machine.
 

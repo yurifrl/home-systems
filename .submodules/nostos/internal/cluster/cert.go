@@ -1,26 +1,102 @@
 package cluster
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
+	"os/exec"
+	"sort"
+	"strings"
+	"time"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/yurifrl/nostos/internal/config"
 	"github.com/yurifrl/nostos/internal/paths"
+	"github.com/yurifrl/nostos/internal/registry"
 )
 
-// TODO: native admin cert regeneration (crypto/ed25519 + crypto/x509 with
-// Talos custom extension OID 1.3.6.1.4.1.58107.1.1 for os:admin role).
-// This is a substantial piece; v0.1 ships with a placeholder that reads an
-// existing valid talosconfig from elsewhere or returns a clear error.
-
-// RefreshAdminCert is not yet wired. Documented limitation for v0.1.
+// RefreshAdminCert mints a fresh os:admin talosconfig signed by the cluster's
+// Talos OS CA, writing it to p.Talosconfig(). It does NOT touch the cluster:
+// the CA (cert + key) is resolved from the configured secrets backend by
+// rendering a controlplane machineconfig, then talosctl mints a new client
+// cert offline. Use when the admin client cert has expired.
+//
+// Flow (all local, no cluster mutation):
+//  1. render a controlplane node -> machineconfig carrying machine.ca {crt,key}
+//  2. talosctl gen secrets --from-controlplane-config -> secrets bundle
+//  3. talosctl gen config --with-secrets --output-types talosconfig -> talosconfig
+//
+// The `hours` argument is accepted for API compatibility; talosctl controls the
+// emitted client-cert lifetime (currently ~1 year), so a stale cert is always
+// re-mintable by re-running this command.
 func RefreshAdminCert(cfg *config.Config, p paths.Paths, node config.Node, hours int) error {
-	return fmt.Errorf("admin-cert regeneration is not implemented in v0.1 of the Go rewrite; " +
-		"copy an existing talosconfig to %s, or use the archived Python prototype (`git checkout python`) " +
-		"which implements this via `talosctl gen` shell-out", p.Talosconfig())
+	if _, err := exec.LookPath("talosctl"); err != nil {
+		return fmt.Errorf("talosctl not found on PATH")
+	}
+
+	// 1. Render a controlplane machineconfig (resolves machine.ca from secrets).
+	cpName, err := firstControlplane(cfg)
+	if err != nil {
+		return err
+	}
+	rendered, err := registry.Render(cfg, p, cpName, false)
+	if err != nil {
+		return fmt.Errorf("render controlplane %q: %w", cpName, err)
+	}
+
+	// Sanity-check the rendered config actually carries a CA cert+key.
+	if _, _, err := ExtractCAFromRenderedConfig(rendered); err != nil {
+		return fmt.Errorf("rendered config lacks usable machine.ca: %w", err)
+	}
+
+	tmp, err := os.MkdirTemp("", "nostos-cert-*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmp)
+	secretsPath := tmp + "/secrets.yaml"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// 2. Build a secrets bundle from the controlplane machineconfig.
+	if out, err := exec.CommandContext(ctx, "talosctl", "gen", "secrets",
+		"--from-controlplane-config", rendered,
+		"-o", secretsPath, "--force").CombinedOutput(); err != nil {
+		return fmt.Errorf("talosctl gen secrets: %s", strings.TrimSpace(string(out)))
+	}
+
+	// 3. Mint a fresh talosconfig (os:admin client cert) from the bundle.
+	if err := os.MkdirAll(p.TalosDir(), 0o700); err != nil {
+		return err
+	}
+	if out, err := exec.CommandContext(ctx, "talosctl", "gen", "config",
+		cfg.Cluster.Name, cfg.Cluster.Endpoint,
+		"--with-secrets", secretsPath,
+		"--output-types", "talosconfig",
+		"-o", p.Talosconfig(), "--force").CombinedOutput(); err != nil {
+		return fmt.Errorf("talosctl gen config: %s", strings.TrimSpace(string(out)))
+	}
+	return nil
+}
+
+// firstControlplane returns the lexically-first controlplane node name, or an
+// error if none is registered.
+func firstControlplane(cfg *config.Config) (string, error) {
+	names := []string{}
+	for n, node := range cfg.Nodes {
+		if node.Role == "controlplane" {
+			names = append(names, n)
+		}
+	}
+	if len(names) == 0 {
+		return "", fmt.Errorf("no controlplane node in config")
+	}
+	sort.Strings(names)
+	return names[0], nil
 }
 
 // ExtractCAFromRenderedConfig reads the base64-decoded machine.ca (cert + key)

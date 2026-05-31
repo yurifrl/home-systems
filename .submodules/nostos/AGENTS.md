@@ -77,6 +77,7 @@ flock is held or the node is reporting Ready.
 | `init`                           | yes       | no          | no      |
 | `build`                          | yes       | no          | no      |
 | `render`                         | yes       | no          | no      |
+| `apply`                          | yes       | YES         | `--yes` (reboot modes) |
 | `node list` / `node show`        | yes       | no          | no      |
 | `status`                         | yes       | no          | no      |
 | `secrets list` / `secrets test`  | yes       | no          | no      |
@@ -97,7 +98,7 @@ list`, `schema`. All read-only or tolerant of repeated writes.
 ## `--dry-run` semantics
 
 When supported (`node install`, `render`, `secrets keys revoke`,
-`cluster cleanup`), `--dry-run`:
+`cluster cleanup`, `apply`), `--dry-run`:
 
 - Spawns **zero** subprocesses.
 - Emits a `{"status":"preview","would_execute":[...]}` envelope.

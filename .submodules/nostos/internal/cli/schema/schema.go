@@ -93,6 +93,13 @@ var Registry = map[string]Meta{
 		Idempotent:  true,
 		Args:        []Arg{{Name: "node", Type: "string", Required: true}},
 	},
+	"apply": {
+		Description:     "Render + apply machineconfig to a running NODE (config-only changes). --all applies to every node.",
+		Destructive:     true,
+		RequiresConfirm: false,
+		Args:            []Arg{{Name: "node", Type: "string", Required: false, Description: "node name; omit when using --all"}},
+		StdoutSchema:    map[string]any{"type": "object", "properties": map[string]any{"status": map[string]any{"type": "string"}, "mode": map[string]any{"type": "string"}, "nodes": map[string]any{"type": "array"}}},
+	},
 	"build": {
 		Description: "Download Talos assets + build iPXE binary.",
 		Idempotent:  true,
@@ -134,7 +141,7 @@ var Registry = map[string]Meta{
 	},
 	"config": {Description: "Config subcommands."},
 	"config.refresh": {
-		Description: "Regenerate admin client certificate.",
+		Description: "Mint a fresh admin talosconfig from the cluster CA (offline; no cluster mutation).",
 		Idempotent:  true,
 	},
 	"secrets": {Description: "Inspect and validate secret backends."},

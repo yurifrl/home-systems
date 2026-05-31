@@ -123,6 +123,54 @@ func Render(cfg *config.Config, p paths.Paths, name string, runValidate bool) (s
 	return out, nil
 }
 
+// ApplyModes is the set of talosctl apply-config --mode values nostos accepts.
+var ApplyModes = []string{"auto", "no-reboot", "reboot", "staged", "try"}
+
+// ApplyModeReboots reports whether a mode can restart the node (and thus
+// warrants a confirmation gate). "auto" can reboot because Talos decides.
+func ApplyModeReboots(mode string) bool {
+	switch mode {
+	case "no-reboot", "try":
+		return false
+	default:
+		return true
+	}
+}
+
+// ValidApplyMode reports whether mode is one of ApplyModes.
+func ValidApplyMode(mode string) bool {
+	for _, m := range ApplyModes {
+		if m == mode {
+			return true
+		}
+	}
+	return false
+}
+
+// Apply runs an authenticated `talosctl apply-config` against a running node,
+// pushing configPath using the generated talosconfig. Unlike the install-time
+// path it does NOT use insecure (-i) mode: the node must already have certs.
+func Apply(p paths.Paths, node config.Node, configPath, mode string) error {
+	if _, err := exec.LookPath("talosctl"); err != nil {
+		return fmt.Errorf("talosctl not found on PATH")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	args := []string{
+		"apply-config",
+		"--talosconfig", p.Talosconfig(),
+		"--nodes", node.IP,
+		"--endpoints", node.IP,
+		"--file", configPath,
+		"--mode", mode,
+	}
+	out, err := exec.CommandContext(ctx, "talosctl", args...).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("talosctl apply-config (%s): %s", mode, strings.TrimSpace(string(out)))
+	}
+	return nil
+}
+
 // Add writes a new node entry to config.yaml atomically. Fails if the name already exists.
 func Add(cfgPath, name string, node config.Node) error {
 	raw := map[string]any{}

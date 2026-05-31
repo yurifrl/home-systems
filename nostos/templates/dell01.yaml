@@ -57,6 +57,7 @@ machine:
   nodeLabels:
     node.kubernetes.io/exclude-from-external-load-balancers: ""
     syscd.dev/storage: dell01
+    node.longhorn.io/create-default-disk: "true"
 
 cluster:
   id: "op://kubernetes/talos/CLUSTER_ID"

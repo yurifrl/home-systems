@@ -26,6 +26,11 @@ spec:
         # Longhorn 1.8.x configuration for Talos Linux
         # Reference: https://longhorn.io/docs/1.8.0/advanced-resources/os-specific-specific/talos-linux-support/
 
+        # Disable pre-upgrade checker job (avoids ArgoCD hook ordering bug
+        # where the job runs before longhorn-service-account exists)
+        preUpgradeChecker:
+          jobEnabled: false
+
         # Enable Longhorn UI (for management)
         ui:
           enabled: true
