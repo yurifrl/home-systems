@@ -65,3 +65,45 @@ spec:
                     limits:
                       cpu: "2"
                       memory: 2Gi
+                # Web UI, exposed only on the private .tech host over the VPN.
+                - name: dashboard
+                  image: ghcr.io/yurifrl/hermes-agent:latest
+                  imagePullPolicy: Always
+                  args: ["dashboard", "--host", "0.0.0.0", "--no-open"]
+                  ports:
+                    - name: http
+                      containerPort: 9119
+                      protocol: TCP
+                  env:
+                    - name: HERMES_HOME
+                      value: /opt/data
+                    - name: OPENAI_BASE_URL
+                      value: http://litellm.litellm.svc.cluster.local:4000/v1
+                  envFrom:
+                    - secretRef:
+                        name: hermes
+                  volumeMounts:
+                    - name: state
+                      mountPath: /opt/data
+                  resources:
+                    requests:
+                      cpu: 50m
+                      memory: 256Mi
+                    limits:
+                      cpu: 500m
+                      memory: 512Mi
+          services:
+            - name: hermes
+              port: 9119
+          virtualServices:
+            # hermes.syscd.tech only (private VPN via tailscale gateway)
+            - name: hermes
+              domains:
+                live: false
+                tech: true
+                xyz: false
+                dev: false
+              service:
+                name: hermes
+                namespace: hermes
+                port: 9119
