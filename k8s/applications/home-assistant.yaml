@@ -32,8 +32,11 @@ spec:
                 tag: latest
           persistence:
             enabled: true
-            # Data migrated from the old local-path volume into this Longhorn PVC
-            existingClaim: ha-migrate-lh
+            # Data migrated from the old local-path volume into this Longhorn PVC.
+            # Chart uses a StatefulSet volumeClaimTemplate (existingClaim is
+            # ignored), so this just matches the live PVC home-assistant-home-assistant-0.
+            storageClass: longhorn
+            size: 5Gi
           initContainers:
             - name: init-hacs
               image: bash
