@@ -55,7 +55,6 @@ func NewRoot(version string) *cobra.Command {
 		newClusterCmd(),
 		newSchemaCmd(),
 		newMCPCmd(),
-		newDashboardCmd(),
 	)
 
 	return root
