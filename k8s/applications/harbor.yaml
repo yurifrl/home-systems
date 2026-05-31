@@ -31,22 +31,22 @@ spec:
           resourcePolicy: keep
           persistentVolumeClaim:
             registry:
-              storageClass: longhorn
+              storageClass: longhorn-single
               size: 20Gi
             chartmuseum:
-              storageClass: longhorn
+              storageClass: longhorn-single
               size: 5Gi
             jobservice:
-              storageClass: longhorn
+              storageClass: longhorn-single
               size: 1Gi
             database:
-              storageClass: longhorn
+              storageClass: longhorn-single
               size: 5Gi
             redis:
-              storageClass: longhorn
+              storageClass: longhorn-single
               size: 1Gi
             trivy:
-              storageClass: longhorn
+              storageClass: longhorn-single
               size: 5Gi
 
         # Database - use internal PostgreSQL
