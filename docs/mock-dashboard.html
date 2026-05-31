@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nostos · live simulator</title>
+<style>
+:root{
+  --charm:#7D56F4;--charm2:#9b7bff;--pink:#F25D94;--pink2:#FF5FA2;--hot:#FF5F87;
+  --mint:#43BF6D;--green:#A8FF60;--yellow:#FFD866;--amber:#FFA94D;--red:#FF5454;--red2:#FF7676;--cyan:#5DE4C7;
+  --ink:#E5E5F0;--dim:#6C7086;--dim2:#414656;--bg:#15151E;--panel:#191922;--termborder:#2a2a3a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#07070c;color:var(--ink);font-family:-apple-system,system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:18px}
+h1{font-size:15px;font-weight:600;margin:0 0 2px}
+.intro{color:var(--dim);font-size:12px;margin:0 0 12px;line-height:1.5}.intro b{color:var(--charm2)}
+.term{background:var(--bg);border:1px solid var(--termborder);border-radius:10px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.55);position:relative;outline:none}
+.term:focus{border-color:var(--charm);box-shadow:0 0 0 1px var(--charm),0 24px 60px rgba(0,0,0,.55)}
+.term.warn{border-color:#5a3a1a}.term.crit{border-color:#6a2020}.term.up{border-color:#3a2a5a}
+.tbar{display:flex;gap:7px;align-items:center;padding:9px 12px;background:#0f0f17;border-bottom:1px solid var(--termborder)}
+.tbar i{width:11px;height:11px;border-radius:50%;display:block}
+.tbar .x1{background:#ff5f56}.tbar .x2{background:#ffbd2e}.tbar .x3{background:#27c93f}
+.tbar .lbl{color:var(--dim);font-size:11px;margin-left:8px;font-family:ui-monospace,monospace}
+.tbar .clock{margin-left:auto;color:var(--dim);font-size:11px;font-family:ui-monospace,monospace}
+.body{padding:15px 17px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;min-height:340px;position:relative}
+.tr{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.nb{background:var(--charm);color:#fff;font-weight:700;padding:1px 8px;border-radius:3px}
+.nb.warn{background:var(--amber);color:#1a1206}.nb.crit{background:var(--red);color:#fff}
+.tr .tt{color:var(--dim)}.tr .rt{margin-left:auto;font-weight:700}
+.tabs{display:flex;gap:3px;margin-bottom:12px;flex-wrap:wrap}
+.tab{color:var(--dim);border:1px solid var(--termborder);border-radius:7px 7px 0 0;border-bottom:none;padding:4px 12px;font-size:11.5px;cursor:pointer;user-select:none}
+.tab:hover{color:var(--ink)}.tab.on{color:#fff;background:var(--charm);border-color:var(--charm)}
+.tab .k{opacity:.6;font-size:10px}
+.panel{border:1px solid var(--charm);border-radius:9px;padding:10px 13px;margin:0 0 10px;background:var(--panel)}
+.panel.pink{border-color:var(--pink)}.panel.warn{border-color:#7a5320}.panel.crit{border-color:#7a2424}.panel.mint{border-color:#2e6b41}
+.panel .ph{font-weight:700;margin-bottom:6px}
+.row{white-space:pre;overflow-x:auto}
+.row.sel{background:#241d3a;border-radius:4px;margin:0 -6px;padding:0 6px}
+.cols{display:flex;gap:10px}.cols .panel{flex:1;margin:0}
+.btn{display:inline-block;border-radius:5px;padding:2px 11px;font-weight:700;font-size:12px;margin-right:7px;cursor:pointer;user-select:none}
+.btn.pink{background:var(--pink);color:#fff}.btn.fix{background:var(--mint);color:#06210f}.btn.ghost{background:#23232e;color:var(--dim)}
+.btn:hover{filter:brightness(1.15)}
+.pb{display:inline-block;width:190px;height:10px;border-radius:6px;background:#23232e;overflow:hidden;vertical-align:middle;margin:0 8px}
+.pf{height:100%;display:block;transition:width .25s}.pf.mint{background:var(--mint)}.pf.grad{background:linear-gradient(90deg,var(--pink),var(--charm))}
+/* disk bar */
+.db{display:inline-block;width:120px;height:8px;border-radius:5px;background:#23232e;overflow:hidden;vertical-align:middle;margin:0 7px}
+.df{height:100%;display:block}.df.ok{background:var(--mint)}.df.mid{background:var(--yellow)}.df.hi{background:var(--red)}
+.help{color:var(--dim);font-size:11.5px;margin-top:8px;border-top:1px solid var(--termborder);padding-top:8px}.help b{color:var(--charm2)}
+.bd{padding:0 7px;border-radius:3px;font-weight:700;font-size:11px}
+.bd.safe{background:#143d24;color:var(--green)}.bd.danger{background:#4a1414;color:var(--red2)}.bd.reboot{background:#3d3414;color:var(--yellow)}.bd.local{background:#243d3d;color:var(--cyan)}
+.toasts{position:absolute;right:12px;top:50px;display:flex;flex-direction:column;gap:7px;width:264px;z-index:5}
+.toast{background:#1c1830;border:1px solid var(--charm);border-left:3px solid var(--mint);border-radius:8px;padding:9px 11px;font-size:11px;line-height:1.4;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:slide .25s ease}
+.toast .t{color:#fff;font-weight:700}.toast .s{color:var(--dim)}
+@keyframes slide{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+/* command palette overlay */
+.pal-bg{position:absolute;inset:0;background:rgba(7,7,12,.72);z-index:8;display:flex;align-items:flex-start;justify-content:center;padding-top:40px}
+.pal{width:86%;max-width:560px;background:#14141d;border:1px solid var(--charm);border-radius:11px;box-shadow:0 24px 60px rgba(0,0,0,.6);overflow:hidden}
+.pal .q{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--termborder);color:var(--ink);font-family:ui-monospace,monospace;font-size:13px}
+.pal .q .pr{color:var(--charm2);font-weight:700}.pal .q .cur{color:var(--pink2)}
+.pal .item{display:flex;align-items:center;gap:10px;padding:8px 14px;font-family:ui-monospace,monospace;font-size:12.5px;cursor:pointer}
+.pal .item.on{background:#241d3a}
+.pal .item .nm{color:#fff;font-weight:700;min-width:160px}
+.pal .item .ds{color:var(--dim);flex:1}
+.pal .foot{padding:8px 14px;border-top:1px solid var(--termborder);color:var(--dim);font-size:11px}
+.charm-t{color:var(--charm2)}.pink-t{color:var(--pink2)}.hot{color:var(--hot)}
+.g{color:var(--green)}.mint-t{color:var(--mint)}.y{color:var(--yellow)}.am{color:var(--amber)}.r{color:var(--red2)}.c{color:var(--cyan)}
+.d{color:var(--dim)}.d2{color:var(--dim2)}.w{color:#fff}.b{font-weight:700}
+.keyhint{margin-top:10px;color:var(--dim);font-size:11px;line-height:1.7}
+.keyhint kbd{background:#1a1a24;border:1px solid var(--termborder);border-bottom-width:2px;border-radius:4px;padding:1px 6px;font-family:ui-monospace,monospace;color:var(--ink);font-size:11px}
+.demo{margin-top:14px;padding:9px 12px;background:#0d0d14;border:1px dashed #33334a;border-radius:9px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.demo .dl{color:var(--dim2);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-right:4px}
+.demo button{font:inherit;font-size:11.5px;cursor:pointer;color:var(--ink);background:#17171f;border:1px solid var(--termborder);border-radius:7px;padding:5px 11px}
+.demo button:hover{border-color:var(--charm);color:#fff}
+</style></head>
+<body><div class="wrap">
+<h1>nostos · <span style="color:var(--charm2)">live simulator</span></h1>
+<p class="intro">Click the terminal to focus. <b>:</b> or <b>⌘K</b> opens the command palette. Cluster starts <b style="color:#FFA94D">degraded</b>; fix it from the <b>Upgrade</b> tab.</p>
+<div class="term" id="term" tabindex="0">
+  <div class="tbar"><i class="x1"></i><i class="x2"></i><i class="x3"></i><span class="lbl">nostos — live</span><span class="clock" id="clock"></span></div>
+  <div class="body" id="screen"></div>
+  <div class="toasts" id="toasts"></div>
+</div>
+<div class="keyhint" id="keyhint"></div>
+<div class="demo" id="demo"><span class="dl">demo controls (not part of the TUI)</span><button data-demo="dell">⚡ simulate Dell PXE boot</button><button data-demo="rk1">⚡ simulate new RK1 in slot</button><button data-demo="reset">↺ reset</button></div>
+</div>
+
+<script>
+const SPIN=['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+const TABS=[['overview','Overview','1'],['nodes','Nodes','2'],['upgrade','Upgrade','3'],['network','Network','4'],['playbooks','Playbooks','5']];
+
+const S={
+  tab:'overview', tick:0, sel:0, netsel:0, target:'v1.13.3', nodeOpen:false,
+  nodes:[
+    {name:'dell01',ip:'.100',mac:'d0:94:66:d9:eb:a5',role:'cp',arch:'amd64',ver:'v1.11.6',kubelet:'v1.32.1',status:'Ready',uptime:'6d 4h',disks:[
+      {dev:'nvme0n1',mount:'/ + /var/lib/longhorn',kind:'longhorn',size:'512G',used:38}]},
+    {name:'tp1',ip:'.107',mac:'02:1e:06:aa:11:07',role:'wk',arch:'arm64',ver:'v1.11.6',kubelet:'v1.32.1',status:'Ready',uptime:'6d 4h',disks:[
+      {dev:'mmcblk0',mount:'/ (system)',kind:'system',size:'58G',used:31},
+      {dev:'nvme0n1',mount:'/var/mnt/storage',kind:'longhorn',size:'1.0T',used:22}]},
+    {name:'tp4',ip:'.114',mac:'02:1e:06:aa:11:14',role:'wk',arch:'arm64',ver:'v1.11.6',kubelet:'v1.32.1',status:'Ready',uptime:'6d 12h',disks:[
+      {dev:'mmcblk0',mount:'/ + /var/lib/longhorn',kind:'longhorn',size:'256G',used:64}]},
+  ],
+  discovered:[{name:'talos-9f02',ip:'.140',arch:'amd64'}],
+  longhorn:'degraded',
+  up:null, detect:null, provisioning:null,
+  palette:{open:false,q:'',sel:0},
+  toasts:[], log:[],
+};
+
+function cmp(a,b){if(a==='—')return -1;const pa=a.replace('v','').split('.').map(Number),pb=b.replace('v','').split('.').map(Number);for(let i=0;i<3;i++){if(pa[i]!=pb[i])return pa[i]-pb[i];}return 0;}
+function order(){return [...S.nodes].sort((a,b)=>(a.role==='cp')-(b.role==='cp')||a.name.localeCompare(b.name));}
+function behind(){return S.nodes.filter(n=>cmp(n.ver,S.target)<0&&n.ver!=='—');}
+function health(){
+  if(S.nodes.some(n=>n.status==='DOWN'))return 'crit';
+  if(S.up)return 'up';
+  if(S.longhorn==='degraded'||behind().length)return 'warn';
+  return 'ok';
+}
+
+/* ---- upgrade sim ---- */
+function startUpgrade(){
+  if(S.up)return;
+  const steps=['v1.12.8','v1.13.3'].filter(v=>S.nodes.some(n=>cmp(n.ver,v)<0&&n.ver!=='—'));
+  if(!steps.length){toast('Already up to date','nothing to do');return;}
+  S.up={steps,si:0,order:order().filter(n=>cmp(n.ver,steps[0])<0).map(n=>n.name),ni:0,prog:0};
+  S.tab='upgrade';log('upgrade started');
+}
+function upgradeTick(){
+  if(!S.up)return;S.up.prog+=14;
+  if(S.up.prog>=100){S.up.prog=0;
+    const name=S.up.order[S.up.ni],step=S.up.steps[S.up.si];
+    S.nodes.find(x=>x.name===name).ver=step;
+    log(name+' → '+step);
+    S.up.ni++;
+    if(S.up.ni>=S.up.order.length){S.up.si++;
+      if(S.up.si>=S.up.steps.length){S.up=null;S.longhorn='healthy';toast('🎉 upgrade complete','all on '+S.target+' · Longhorn recovered · 🔔 Slack + desktop');log('complete');return;}
+      S.up.ni=0;S.up.order=order().filter(x=>cmp(x.ver,S.up.steps[S.up.si])<0).map(x=>x.name);}
+  }
+}
+/* ---- detect / provision ---- */
+function detect(kind){
+  S.detect=kind==='dell'
+   ?{kind:'dell',title:'Dell',line:'MAC d0:94:66:… · vendor Dell Inc · amd64',run:'nostos pxe → node install',role:'cp',newname:'dell02'}
+   :{kind:'rk1',title:'Rockchip RK1',line:'BMC turingpi.local · slot 2 · arm64 · no OS',run:'tpi boot → node install --reinstall',role:'wk',newname:'tp2'};
+  S.tab='network';toast('🔔 new '+S.detect.title,'press enter to provision');log('detected '+S.detect.title);
+}
+function provision(){if(!S.detect)return;const d=S.detect;
+  S.nodes.push({name:d.newname,ip:'.?',role:d.role,arch:d.kind==='dell'?'amd64':'arm64',ver:'—',status:'installing',disks:[
+    {dev:d.kind==='dell'?'nvme0n1':'mmcblk0',mount:'/ + longhorn',kind:'longhorn',size:d.kind==='dell'?'512G':'256G',used:0}]});
+  S.provisioning={name:d.newname,ticks:0};S.detect=null;toast('▶ provisioning '+d.newname,d.run);log('provisioning '+d.newname);
+}
+function provisionTick(){if(!S.provisioning)return;S.provisioning.ticks++;
+  if(S.provisioning.ticks>=6){const n=S.nodes.find(x=>x.name===S.provisioning.name);
+    n.ver=S.target;n.status='Ready';n.ip='.15'+S.nodes.length;n.disks.forEach(d=>d.used=8);
+    toast('✓ '+n.name+' Ready','installed '+S.target+' · joined');log(n.name+' Ready');S.provisioning=null;}
+}
+function toast(t,s){S.toasts.push({t,s,born:S.tick});}
+function log(m){S.log.unshift('['+clockStr()+'] '+m);S.log=S.log.slice(0,6);}
+
+/* ---- command palette ---- */
+const CMDS=[
+ {nm:'status',ds:'cluster health + versions',bd:'safe',act:()=>toast('nostos status','3 nodes · '+health())},
+ {nm:'upgrade → '+'v1.13.3',ds:'rolling OS, cp last',bd:'reboot',act:startUpgrade},
+ {nm:'upgrade --dry-run',ds:'show plan only',bd:'safe',act:()=>{S.tab='upgrade';toast('dry-run','plan: v1.12.8 → v1.13.3 · cp last');}},
+ {nm:'config refresh',ds:'mint admin talosconfig',bd:'safe',act:()=>toast('config refresh','wrote ~/.talos/config')},
+ {nm:'kubeconfig',ds:'refresh kubeconfig',bd:'safe',act:()=>toast('kubeconfig','refreshed from controlplane')},
+ {nm:'status disks',ds:'per-node disk usage',bd:'safe',act:()=>{S.tab='nodes';toast('disks','dell01 38% · tp1 22% · tp4 64%');}},
+ {nm:'render <node>',ds:'machineconfig + secrets',bd:'safe',act:()=>toast('render','rendered · install.image from config')},
+ {nm:'apply <node>',ds:'push config to node',bd:'reboot',act:()=>toast('apply','applied (no-reboot)')},
+ {nm:'node install',ds:'flash via PXE/BMC',bd:'danger',act:()=>{S.tab='network';toast('install','use Network tab to provision');}},
+ {nm:'cluster cleanup',ds:'reconcile k8s + tailscale',bd:'danger',act:()=>toast('cleanup','reconciled · 0 zombies')},
+ {nm:'pxe (serve)',ds:'start PXE server',bd:'safe',act:()=>toast('pxe','serving :8080 + dnsmasq')},
+ {nm:'secrets test tailscale',ds:'oauth check',bd:'safe',act:()=>toast('secrets test','tailscale OAuth OK')},
+ {nm:'nuke',ds:'wipe runtime cache (regenerable)',bd:'local',act:()=>toast('nuke','cache cleared')},
+];
+function palMatches(){const q=S.palette.q.toLowerCase();return CMDS.filter(c=>(c.nm+' '+c.ds).toLowerCase().includes(q));}
+function paletteKey(e){const k=e.key,p=S.palette,m=palMatches();
+  if(k==='Escape'){p.open=false;return;}
+  if(k==='ArrowDown'){p.sel=Math.min(p.sel+1,m.length-1);return;}
+  if(k==='ArrowUp'){p.sel=Math.max(p.sel-1,0);return;}
+  if(k==='Enter'){const c=m[p.sel];p.open=false;if(c)c.act();return;}
+  if(k==='Backspace'){p.q=p.q.slice(0,-1);p.sel=0;return;}
+  if(k.length===1&&!e.metaKey&&!e.ctrlKey){p.q+=k;p.sel=0;return;}
+}
+
+/* ---- helpers ---- */
+function spinner(){return SPIN[S.tick%SPIN.length];}
+function clockStr(){return new Date().toTimeString().slice(0,8);}
+function dbar(p){const c=p<50?'ok':p<75?'mid':'hi';return `<span class="db"><span class="df ${c}" style="width:${p}%"></span></span>`;}
+function pbar(p,c){return `<span class="pb"><span class="pf ${c}" style="width:${p}%"></span></span>`;}
+function pan(cls,head,lines){return `<div class="panel ${cls}">${head?`<div class="ph">${head}</div>`:''}${lines.filter(x=>x!=='').map(l=>`<div class="row">${l}</div>`).join('')}</div>`;}
+function verc(v){return v==='—'?'<span class="d2">—</span>':cmp(v,S.target)<0?'<span class="y">'+v+'</span>':'<span class="mint-t">'+v+'</span>';}
+function nodeRow(n,i,selable){
+  const sp=n.status==='installing'?'<span class="pink-t">'+spinner()+'</span>':n.status==='DOWN'?'<span class="r">○</span>':'<span class="mint-t">●</span>';
+  const ptr=(selable&&i===S.sel)?'<span class="pink-t b">►</span> ':'  ';
+  return `${ptr}${sp} <span class="w">${n.name.padEnd(7)}</span> <span class="d">${n.ip.padEnd(5)} ${n.role}</span> ${verc(n.ver)} <span class="d">${n.status}</span>`;
+}
+function diskTotals(){let used=0,size=0;S.nodes.forEach(n=>n.disks.filter(d=>d.kind==='longhorn').forEach(d=>{const s=parseFloat(d.size)*(d.size.includes('T')?1000:1);size+=s;used+=s*d.used/100;}));return {usedPct:size?Math.round(used/size*100):0,size};}
+function diskCol(p){return p<50?'mint-t':p<75?'y':'r';}
+
+function nodeView(n){
+  const schem=n.arch==='amd64'?'8f04ea6b… <span class="d">(amd64)</span>':'6f9371bc… <span class="d">(arm64 +turingrk1)</span>';
+  const lh=n.disks.filter(d=>d.kind==='longhorn');
+  const lhUsed=lh.length?Math.round(lh.reduce((a,d)=>a+d.used,0)/lh.length):0;
+  const lhCap=lh.map(d=>d.size).join(' + ')||'—';
+  const pods={dell01:['kube-apiserver','kube-scheduler','longhorn-manager'],tp1:['longhorn-manager','board-games','foundry'],tp4:['longhorn-manager','home-assistant','mosquitto']}[n.name]||['longhorn-manager'];
+  const checks=`<span class="mint-t">✔ apid  ✔ kubelet  ${n.role==='cp'?'✔ etcd  ':''}✔ time-sync  ✔ network</span>`;
+  const diskLines=n.disks.flatMap(d=>[
+    `  <span class="w">${d.dev.padEnd(8)}</span> <span class="d">${d.mount}</span>`,
+    `  ${dbar(d.used)} <span class="${diskCol(d.used)}">${String(d.used).padStart(2)}%</span> <span class="d">of ${d.size} · ${d.kind}</span>`]);
+  let o='';
+  o+=pan('',`<span class="w b">${n.name}</span> <span class="d">· ${n.role==='cp'?'controlplane':'worker'} · ${n.arch}</span>`,[
+    `<span class="d">ip</span>      192.168.68${n.ip}   <span class="d">mac</span> ${n.mac||'—'}`,
+    `<span class="d">status</span>  ${n.status==='Ready'?'<span class="mint-t">Ready</span>':'<span class="pink-t">'+spinner()+' '+n.status+'</span>'}   <span class="d">uptime</span> ${n.uptime||'—'}`]);
+  o+=`<div class="cols">`+
+    pan('',`<span class="d">versions</span>`,[
+      `Talos     ${n.ver==='—'?'<span class="d2">installing…</span>':n.ver} ${cmp(n.ver,S.target)<0&&n.ver!=='—'?'<span class="y">→ '+S.target+'</span>':'<span class="mint-t">(latest)</span>'}`,
+      `kubelet   ${n.kubelet||'v1.32.1'}`,
+      `schematic ${schem}`,
+      `extensions <span class="d">tailscale · iscsi-tools · util-linux</span>`,
+      `install   /dev/${n.disks[0].dev}`])+
+    pan('',`<span class="d">health</span>`,[
+      `status  ${n.status==='Ready'?'<span class="mint-t">Ready</span>':'<span class="pink-t">'+n.status+'</span>'}`,
+      `etcd    ${n.role==='cp'?'<span class="mint-t">healthy · leader</span>':'<span class="d2">— (worker)</span>'}`,
+      `checks  ${checks}`])+
+  `</div>`;
+  o+=pan('',`<span class="d">disks (${n.disks.length})</span>`,diskLines);
+  o+=`<div class="cols">`+
+    pan('',`<span class="d">longhorn</span>`,[
+      `replicas  ${lh.length?'<span class="mint-t">7 healthy</span>':'<span class="d2">0</span>'}`,
+      `capacity  ${lhCap}`,
+      `used      ${dbar(lhUsed)} <span class="${diskCol(lhUsed)}">${lhUsed}%</span>`])+
+    pan('',`<span class="d">workloads (pods)</span>`,pods.map(p=>`<span class="mint-t">●</span> ${p}`))+
+  `</div>`;
+  return o;
+}
+function view(){
+  const h=health();
+  const sev=h==='warn'?'warn':h==='crit'?'crit':h==='up'?'up':'';
+  const right=h==='warn'?'<span class="am">▲ degraded</span>':h==='crit'?'<span class="r">✗ CRITICAL</span>':h==='up'?'<span class="pink-t">'+spinner()+' upgrading</span>':'<span class="mint-t">● healthy</span>';
+  let title='talos-default',panels='';
+
+  if(S.tab==='overview'){
+    // status only — NO upgrade CTA here (lives in Upgrade tab)
+    if(h==='ok') panels+=pan('mint','',[`<span class="mint-t">✓ all clear</span> <span class="d">— 3 nodes on ${S.target}, Longhorn healthy</span>`]);
+    else if(h==='up') panels+=pan('','',[`<span class="charm-t">${spinner()} upgrading</span> <span class="d">— step ${S.up.si+1}/${S.up.steps.length} → ${S.up.steps[S.up.si]} · see Upgrade tab</span>`]);
+    else panels+=pan('warn','',[`<span class="am b">▲ ${behind().length?behind().length+' nodes behind upstream':''}${behind().length&&S.longhorn==='degraded'?' · ':''}${S.longhorn==='degraded'?'Longhorn degraded':''}</span>`,`<span class="d">why</span> <span class="r">iscsiadm missing</span> <span class="d">← v1.11.6 ← no iscsi-tools · </span><span class="charm-t">↳ Upgrade tab</span>`]);
+    const dt=diskTotals();
+    panels+=pan('','',[
+      `<span class="d">cluster</span>  3 nodes ${h==='ok'?'<span class="mint-t">healthy</span>':'<span class="am">attention</span>'}   talos ${behind().length?'<span class="y">mixed → '+S.target+'</span>':'<span class="mint-t">'+S.target+'</span>'}`,
+      `<span class="d">argo</span>     <span class="mint-t">${S.longhorn==='healthy'?'19':'18'} ✓</span>  ${S.longhorn==='healthy'?'<span class="d2">0 ◐</span>':'<span class="y">1 ◐ longhorn</span>'}  <span class="d2">0 ✗</span>`,
+      `<span class="d">storage</span>  longhorn ${S.longhorn==='healthy'?'<span class="mint-t">healthy</span>':'<span class="r">degraded</span>'} ${dbar(dt.usedPct)} <span class="d">${dt.usedPct}% of ~1.7T</span>`,
+    ]);
+  }
+  else if(S.tab==='nodes'){
+    if(S.nodeOpen){ title='node · '+S.nodes[S.sel].name; panels+=nodeView(S.nodes[S.sel]); }
+    else {
+    const list=S.nodes.map((n,i)=>`<div class="row ${i===S.sel?'sel':''}" data-open="${i}">${nodeRow(n,i,true)}</div>`).join('');
+    const n=S.nodes[S.sel];
+    const diskLines=n.disks.flatMap(d=>[
+      `  <span class="w">${d.dev.padEnd(8)}</span> <span class="d">${d.mount}</span>`,
+      `  ${dbar(d.used)} <span class="${diskCol(d.used)}">${String(d.used).padStart(2)}%</span> <span class="d">of ${d.size} · ${d.kind}</span>`,
+    ]);
+    const detail=pan('',`<span class="w b">${n.name}</span> <span class="d">· ${n.role==='cp'?'controlplane':'worker'}</span>`,[
+      `Talos   ${n.ver==='—'?'<span class="d2">installing…</span>':n.ver}`,
+      `status  ${n.status==='Ready'?'<span class="mint-t">Ready</span>':'<span class="pink-t">'+spinner()+' '+n.status+'</span>'}`,
+      `disks   <span class="d">${n.disks.length} device${n.disks.length>1?'s':''}</span>`,
+      ...diskLines,
+      `<span class="d">enter → full node view</span>`,
+    ]);
+    panels+=`<div class="cols"><div class="panel"><div class="ph"><span class="d">nodes (${S.nodes.length})</span></div>${list}</div>${detail}</div>`;
+    }
+  }
+  else if(S.tab==='upgrade'){
+    if(S.up){
+      panels+=pan('','',[`<span class="pink-t">${spinner()}</span> <span class="w b">step ${S.up.si+1}/${S.up.steps.length} → ${S.up.steps[S.up.si]}</span> <span class="d">· version-matched talosctl · cp last</span>`]);
+      const rows=order().map(n=>{const step=S.up.steps[S.up.si];let bar,lbl,ic;
+        if(cmp(n.ver,step)>=0){bar=pbar(100,'mint');lbl='<span class="d">'+n.ver+'</span>';ic='<span class="mint-t">✓</span>';}
+        else if(n.name===S.up.order[S.up.ni]){bar=pbar(S.up.prog,'grad');lbl='<span class="d">'+S.up.prog+'%</span>';ic='<span class="pink-t">'+spinner()+'</span>';}
+        else{bar=pbar(0,'');lbl='<span class="d2">queued</span>';ic='<span class="d2">·</span>';}
+        return `${ic} ${n.name.padEnd(7)} ${bar} ${lbl}`;});
+      panels+=pan('','',rows);
+    } else if(behind().length){
+      panels+=pan('warn','',[`<span class="am b">▲ ${behind().length} nodes behind</span> ${S.longhorn==='degraded'?'<span class="d">· Longhorn needs iscsi-tools (v1.13.3)</span>':''}`]);
+      panels+=pan('',`<span class="w b">Roll the cluster to ${S.target}?</span>`,[
+        `<span class="c">v1.12.8</span>  tp1  tp4  dell01`,
+        `<span class="c">v1.13.3</span>  tp1  tp4  dell01  <span class="d">adjacent minors · cp last · health-gated</span>`,
+        `<span class="btn pink" data-act="u">Proceed (u)</span> <span class="btn ghost" data-act="dry">Dry-run</span>`]);
+    } else panels+=pan('mint','',[`<span class="mint-t">✓ all nodes on ${S.target}</span> <span class="d">— nothing to upgrade</span>`]);
+  }
+  else if(S.tab==='network'){
+    title='network';
+    const managed=S.nodes.map((n,i)=>`<div class="row ${i===S.netsel?'sel':''}" data-netsel="${i}">${nodeRow(n,i,false)}</div>`).join('');
+    panels+=pan('',`<span class="d">scan 192.168.68.0/24</span>`,[
+      `<span class="mint-t b">MANAGED</span>`,managed,
+      `<span class="y b">DISCOVERED</span> <span class="d">talos · not adopted</span>`,
+      ...S.discovered.map(d=>`  <span class="y">?</span> ${d.name} ${d.ip} <span class="d">${d.arch}</span>`),
+      `<span class="d b">OTHER</span>  <span class="d2">· turingpi.local .50 BMC  · _gateway .1  · nas .20</span>`].flat());
+    if(S.detect) panels+=pan('warn',`<span class="hot b">▶ New ${S.detect.title}</span>`,[
+      `<span class="d">${S.detect.line}</span>`,`<span class="d">→ ${S.detect.role==='cp'?'controlplane':'worker'} ·</span> <span class="c">${S.detect.run}</span>`,
+      `<span class="btn pink" data-act="prov">enter ↵ provision ${S.detect.newname}</span> <span class="btn ghost" data-act="ignore">ignore</span>`]);
+  }
+  else if(S.tab==='playbooks'){
+    title='playbook · turing-rk1.md';
+    panels+=pan('','',[`<span class="charm-t b"># Turing RK1 (arm64)</span>`,`<span class="d">tp1, tp4 boot from eMMC via the Turing Pi BMC.</span>`,``,`<span class="pink-t b">## Install</span>`,`<span class="d">2.</span> <span class="c">nostos node install tp1 --reinstall --yes</span>`]);
+  }
+
+  const help=S.tab==='upgrade'
+    ?`<b>u</b> start upgrade · <b>:</b> commands · <b>1-5</b> tabs`
+    :S.tab==='network'?`<b>↑↓</b> pick · <b>enter</b> detail · <b>a</b> adopt · <b>:</b> commands`
+    :(S.tab==='nodes'&&S.nodeOpen)?`<b>esc</b> back · <b>u</b> upgrade node · <b>l</b> logs`
+    :S.tab==='nodes'?`<b>↑↓</b> pick · <b>enter</b> open node · <b>:</b> commands`
+    :`<b>1-5</b> tabs · <b>:</b> commands · <b>r</b> refresh`;
+
+  const term=document.getElementById('term');term.className='term '+sev;
+  let palette='';
+  if(S.palette.open){const m=palMatches();
+    palette=`<div class="pal-bg"><div class="pal"><div class="q"><span class="pr">run ›</span> <span>${S.palette.q||'<span class="d">type to filter…</span>'}</span><span class="cur">▍</span></div>`+
+      (m.length?m.map((c,i)=>`<div class="item ${i===S.palette.sel?'on':''}" data-pal="${CMDS.indexOf(c)}"><span class="nm">${c.nm}</span><span class="ds">${c.ds}</span><span class="bd ${c.bd}"> ${c.bd} </span></div>`).join(''):`<div class="item"><span class="ds">no match</span></div>`)+
+      `<div class="foot">↑↓ pick · ↵ run · esc close · all routes through dry-run/confirm</div></div></div>`;
+  }
+  document.getElementById('screen').innerHTML=
+    `<div class="tr"><span class="nb ${sev}">nostos</span><span class="tt">${title}</span><span class="rt">${right}</span></div>`+
+    `<div class="tabs">`+TABS.map(t=>`<span class="tab ${S.tab===t[0]?'on':''}" data-tab="${t[0]}">${t[1]} <span class="k">${t[2]}</span></span>`).join('')+`</div>`+
+    panels+`<div class="help">${help}</div>`+palette;
+
+  S.toasts=S.toasts.filter(t=>S.tick-t.born<14);
+  document.getElementById('toasts').innerHTML=S.toasts.slice(-3).map(t=>`<div class="toast"><div class="t">${t.t}</div><div class="s">${t.s}</div></div>`).join('');
+  document.getElementById('clock').textContent=clockStr();
+}
+
+/* ---- input ---- */
+function key(e){const k=e.key;
+  if(S.palette.open){paletteKey(e);return;}
+  if((e.metaKey&&k.toLowerCase()==='k')||k===':'){S.palette={open:true,q:'',sel:0};return;}
+  if(k>='1'&&k<='5'){S.tab=TABS[+k-1][0];S.nodeOpen=false;return;}
+  if(k==='u'){startUpgrade();return;}
+  if(k==='r'){toast('rescan','probing nodes + LAN');return;}
+  if(k==='ArrowDown'||k==='j'){if(S.tab==='nodes'&&!S.nodeOpen)S.sel=(S.sel+1)%S.nodes.length;if(S.tab==='network')S.netsel=(S.netsel+1)%S.nodes.length;return;}
+  if(k==='ArrowUp'){if(S.tab==='nodes'&&!S.nodeOpen)S.sel=(S.sel-1+S.nodes.length)%S.nodes.length;return;}
+  if(k==='Enter'){if(S.detect){provision();return;}if(S.tab==='nodes'&&!S.nodeOpen){S.nodeOpen=true;return;}if(S.tab==='upgrade'){startUpgrade();}return;}
+  if(k==='Escape'){if(S.nodeOpen){S.nodeOpen=false;return;}S.detect=null;return;}
+}
+const term=document.getElementById('term');
+term.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown',' ','Enter',':'].includes(e.key)||(e.metaKey&&e.key==='k'))e.preventDefault();key(e);view();});
+term.addEventListener('click',e=>{const t=e.target.closest('[data-tab],[data-act],[data-open],[data-netsel],[data-pal]');
+  if(!t){term.focus();return;}
+  if(t.dataset.pal!=null){S.palette.open=false;CMDS[+t.dataset.pal].act();}
+  else if(t.dataset.tab){S.tab=t.dataset.tab;S.nodeOpen=false;}
+  else if(t.dataset.open!=null){S.sel=+t.dataset.open;S.nodeOpen=true;}
+  else if(t.dataset.netsel!=null)S.netsel=+t.dataset.netsel;
+  else if(t.dataset.act){const a=t.dataset.act;if(a==='u')startUpgrade();else if(a==='prov')provision();else if(a==='ignore')S.detect=null;else if(a==='dry'){toast('dry-run','plan: v1.12.8 → v1.13.3');}}
+  term.focus();view();});
+/* demo controls (outside the TUI) */
+document.getElementById('demo').addEventListener('click',e=>{const b=e.target.closest('[data-demo]');if(!b)return;
+  const d=b.dataset.demo;if(d==='dell')detect('dell');else if(d==='rk1')detect('rk1');else if(d==='reset')location.reload();view();});
+setInterval(()=>{S.tick++;upgradeTick();provisionTick();view();},360);
+document.getElementById('keyhint').innerHTML=`<kbd>:</kbd> / <kbd>⌘K</kbd> command palette · <kbd>1</kbd>–<kbd>5</kbd> tabs · <kbd>↑</kbd><kbd>↓</kbd> select · <kbd>enter</kbd> open node · upgrade lives in the <b>Upgrade</b> tab (<kbd>u</kbd>).`;
+view();term.focus();
+</script>
+</body></html>
