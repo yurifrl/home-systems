@@ -17,7 +17,7 @@
 # shared `support` chart does not expose securityContext).
 
 # renovate: datasource=docker depName=python versioning=docker
-ARG PYTHON_VERSION=3.13-slim-trixie
+ARG PYTHON_VERSION=3.14-slim-trixie
 FROM python:${PYTHON_VERSION}
 
 # renovate: datasource=pypi depName=hermes-agent versioning=pep440
