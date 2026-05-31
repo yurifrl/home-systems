@@ -31,6 +31,11 @@ spec:
       helm:
         releaseName: cloudflare
         valuesObject:
+          # Bitnami removed their public Docker Hub images; we run the upstream
+          # registry.k8s.io image, which the chart treats as "insecure".
+          global:
+            security:
+              allowInsecureImages: true
           # CRD source: enables DNSEndpoint objects (the static records migrated
           # from terraform/cloudflare/dns.tf). This release owns the CRD.
           crd:
@@ -63,6 +68,9 @@ spec:
       helm:
         releaseName: tailscale
         valuesObject:
+          global:
+            security:
+              allowInsecureImages: true
           image:
             registry: registry.k8s.io
             repository: external-dns/external-dns
@@ -88,6 +96,9 @@ spec:
       helm:
         releaseName: rfc2136
         valuesObject:
+          global:
+            security:
+              allowInsecureImages: true
           crd.create: false
           image:
             registry: registry.k8s.io
