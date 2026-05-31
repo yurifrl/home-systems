@@ -40,6 +40,12 @@ spec:
           # be served from here. tp1/tp4 are tailscale-attached and break it.
           nodeSelector:
             kubernetes.io/hostname: dell01
+          # dell01 is a control-plane node; tolerate its taint so the gateway
+          # can run there (it is the only node on the LAN for MetalLB L2).
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
           service:
             annotations:
               tailscale.com/expose: "true"

@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-05-31 Talos v1.13.3 Upgrade And Longhorn Storage Capacity
+- Session ID: 019e7bf4-f940-7ded-a97e-f21d6b006f25
+- Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-05-31T02-55-12-704Z_019e7bf4-f940-7ded-a97e-f21d6b006f25.jsonl
+- Session Name: 2026-05-31-1306-dashboard-mock-and-ci
+- Context Name: 2026-05-31-1306-dashboard-mock-and-ci
+
+### Added
+- `nostos upgrade` command (`.submodules/nostos/internal/cli` + `internal/upgrade/`): auto-detects each node's Talos version, fetches the stable release catalog from GitHub, computes the adjacent-minor step path, orders workers-first/control-plane-last, and runs health-gated rolling upgrades. Includes an interactive Bubble Tea TUI (`internal/upgrade/tui`).
+- `internal/upgrade/toolcache.go` (+ test): downloads and caches a `talosctl` binary matching each node's current version per hop, fixing the `too_many_pings` GoAway when a newer client talks to an older server.
+- nostos render now templates `install.image` from config (`{{ .InstallImage }}` = `factory.talos.dev/metal-installer/<schematic>:<version>`), so version/schematic live only in `config.yaml`.
+- `nostos/templates/dell01.yaml`: `machine.disks` partitioning `/dev/sda` (wiped 256GB SATA) mounted at `/var/mnt/storage`, plus kubelet `extraMount` for it.
+- `docs/mock-dashboard.html` — interactive HTML simulator of the proposed nostos dashboard: tabbed Charm-v2 shell (Overview/Nodes/Upgrade/Network/Playbooks), live upgrade state machine (nodes flip version with progress bars, cluster heals from degraded→healthy), command palette (`:` / ⌘K), per-disk usage breakdown, full node-detail view, and auto-detect provisioning (Dell PXE / new RK1). Notifies on completion only; demo/simulate controls live outside the TUI frame.
+
+### Changed
+- `nostos/config.yaml`: `talos_version` v1.10.3 → v1.13.3; schematics bumped to add `iscsi-tools` + `util-linux-tools` (amd64 `8f04ea6b…`, arm64 `6f9371bc…`).
+- `k8s/applications/longhorn.yaml`: removed a duplicate `defaultSettings:` block that silently dropped `defaultDataPath` (Longhorn had been stuck on the 28GB OS partition); added control-plane tolerations + `taintToleration` so dell01 joins Longhorn.
+- `internal/cluster/bootstrap_test.go`: `t.Setenv("HOME", tmp)` so the test no longer clobbers the operator's real `~/.talos/config`/`kubeconfig`.
+- Executed: cluster upgraded v1.10.3 → v1.11.6 → v1.12.8 → v1.13.3 (all 3 nodes); Longhorn migrated to big disks (tp1 NVMe 255GB, dell01 SATA 255GB) via live disk eviction, zero data loss.
+
 ## 2026-05-02 First 3080 Debug Session — Dell As New Control Plane Via PXE
 - Session ID: 019da35b-d9dc-746e-b542-9e9f1d4b2c1d
 - Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-04-19T01-29-59-004Z_019da35b-d9dc-746e-b542-9e9f1d4b2c1d.jsonl
