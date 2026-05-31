@@ -71,9 +71,9 @@
       "file_type": "rationale",
       "source_file": "appdaemon/apps/device_listener_mqtt.py",
       "source_location": "L16",
-      "id": "device_listener_mqtt_rationale_16",
       "community": 0,
-      "norm_label": "handle incoming mqtt messages"
+      "norm_label": "handle incoming mqtt messages",
+      "id": "device_listener_mqtt_rationale_16"
     },
     {
       "label": "device_listener.py",
