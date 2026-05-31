@@ -66,13 +66,11 @@ spec:
                 - name: users
                   secret:
                     secretName: bg-whitelist
-                    items:
-                      - { key: users, path: users }
                 - name: data
                   emptyDir: {}
               volumeMounts:
                 - { name: cfg, mountPath: /app/whitelist-config.yaml, subPath: whitelist-config.yaml }
-                - { name: users, mountPath: /secrets, readOnly: true }
+                - { name: users, mountPath: /secrets/users, readOnly: true }
                 - { name: data, mountPath: /data }
           virtualServices:
             - name: board-games
