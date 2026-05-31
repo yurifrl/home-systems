@@ -21,7 +21,7 @@ ARG PYTHON_VERSION=3.13-slim-trixie
 FROM python:${PYTHON_VERSION}
 
 # renovate: datasource=pypi depName=hermes-agent versioning=pep440
-ARG HERMES_VERSION=0.15.0
+ARG HERMES_VERSION=0.15.2
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
