@@ -38,6 +38,12 @@ spec:
                     - ReadWriteOnce
                   storage: 5Gi
                   storageClassName: longhorn-ha
+              volumes:
+                # Firefox/Camoufox needs more than the default 64Mi /dev/shm.
+                - name: dshm
+                  emptyDir:
+                    medium: Memory
+                    sizeLimit: 1Gi
               containers:
                 - name: hermes
                   image: ghcr.io/yurifrl/hermes-agent:latest
@@ -56,6 +62,9 @@ spec:
                     # All inference flows through LiteLLM so the budget cap applies.
                     - name: OPENAI_BASE_URL
                       value: http://litellm.litellm.svc.cluster.local:4000/v1
+                    # Route browser tools through the Camofox sidecar (same pod).
+                    - name: CAMOFOX_URL
+                      value: http://localhost:9377
                     # OpenAI-compatible API server (like Ollama). The app requires
                     # the env var API_SERVER_KEY; we source it from the renamed
                     # secret key HERMES_API_SERVER_KEY (injected via envFrom too).
@@ -74,6 +83,30 @@ spec:
                   volumeMounts:
                     - name: state
                       mountPath: /opt/data
+                  resources:
+                    requests:
+                      cpu: 100m
+                      memory: 512Mi
+                    limits:
+                      cpu: "2"
+                      memory: 2Gi
+                # Camofox: browser-as-a-service sidecar (anti-detect Camoufox/Firefox).
+                # Public multi-arch image; Hermes routes all browser tools here.
+                - name: camofox
+                  image: ghcr.io/jo-inc/camofox-browser:latest
+                  imagePullPolicy: IfNotPresent
+                  ports:
+                    - name: camofox
+                      containerPort: 9377
+                      protocol: TCP
+                  env:
+                    - name: CAMOFOX_PORT
+                      value: "9377"
+                    - name: MAX_OLD_SPACE_SIZE
+                      value: "2048"
+                  volumeMounts:
+                    - name: dshm
+                      mountPath: /dev/shm
                   resources:
                     requests:
                       cpu: 100m
