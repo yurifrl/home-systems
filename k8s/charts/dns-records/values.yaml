@@ -1,0 +1,44 @@
+# Static Cloudflare DNS records, managed by external-dns via DNSEndpoint CRs.
+# Migrated from terraform/cloudflare/dns.tf. Not secret -- public on purpose.
+#
+# Which external-dns instance manages each record is decided by that instance's
+# domainFilters (see k8s/applications/external-dns.yaml):
+#   - cloudflare instance (proxied) -> syscd.live, syscd.xyz, monaddaydream.com
+#   - tailscale instance (not proxied) -> syscd.tech
+# The per-record `proxied` below is also set explicitly via annotation.
+records:
+  - name: up-syscd-tech
+    dnsName: up.syscd.tech
+    target: digitalocean-nixos-01.tailcecc0.ts.net
+    proxied: false
+    ttl: 300
+
+  - name: up-syscd-live
+    dnsName: up.syscd.live
+    target: 3b90d790-0a11-46ae-9421-d195cc828947.cfargotunnel.com
+    proxied: true
+
+  - name: wildcard-syscd-xyz
+    dnsName: "*.syscd.xyz"
+    target: b31e4822-8b42-44fa-b6ca-7feb86a56ec8.cfargotunnel.com
+    proxied: true
+
+  - name: yagp-monaddaydream
+    dnsName: yagp.monaddaydream.com
+    target: b31e4822-8b42-44fa-b6ca-7feb86a56ec8.cfargotunnel.com
+    proxied: true
+
+  - name: bg-monaddaydream
+    dnsName: bg.monaddaydream.com
+    target: b31e4822-8b42-44fa-b6ca-7feb86a56ec8.cfargotunnel.com
+    proxied: true
+
+  - name: foundry-syscd-live
+    dnsName: foundry.syscd.live
+    target: 8bc2858c-a6a4-474f-9287-5af2c1928578.cfargotunnel.com
+    proxied: true
+
+  - name: rpg-syscd-live
+    dnsName: rpg.syscd.live
+    target: 8bc2858c-a6a4-474f-9287-5af2c1928578.cfargotunnel.com
+    proxied: true

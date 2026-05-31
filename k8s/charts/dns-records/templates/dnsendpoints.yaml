@@ -1,0 +1,17 @@
+{{- range .Values.records }}
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: {{ .proxied | quote }}
+spec:
+  endpoints:
+    - dnsName: {{ .dnsName | quote }}
+      recordType: {{ .recordType | default "CNAME" }}
+      recordTTL: {{ .ttl | default 1 }}
+      targets:
+        - {{ .target | quote }}
+{{- end }}

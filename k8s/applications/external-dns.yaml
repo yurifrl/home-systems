@@ -31,7 +31,12 @@ spec:
       helm:
         releaseName: cloudflare
         valuesObject:
-          crd.create: false
+          # CRD source: enables DNSEndpoint objects (the static records migrated
+          # from terraform/cloudflare/dns.tf). This release owns the CRD.
+          crd:
+            create: true
+            apiversion: externaldns.k8s.io/v1alpha1
+            kind: DNSEndpoint
           image:
             registry: registry.k8s.io
             repository: external-dns/external-dns
@@ -41,9 +46,12 @@ spec:
           interval: 1m
           domainFilters:
             - syscd.live
+            - syscd.xyz
+            - monaddaydream.com
           sources:
             - istio-gateway
             - istio-virtualservice
+            - crd
           provider: cloudflare
           cloudflare:
             secretName: cloudflare-api-token-secret
@@ -67,6 +75,7 @@ spec:
           sources:
             - istio-gateway
             - istio-virtualservice
+            - crd
           provider: cloudflare
           cloudflare:
             secretName: cloudflare-api-token-secret
