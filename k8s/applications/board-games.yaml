@@ -26,39 +26,49 @@ spec:
       helm:
         valuesObject:
           configMaps:
-            - name: board-games-config
+            - name: bg-whitelist-config
               data:
-                config.yaml: |
-                  port: 8080
-                  log_level: info
-                  github:
-                    owner: yurifrl
-                    repo: Obsidian
-                    path: .data/inventory.yaml
-                    ref: heads/main
-                    interval_seconds: 10
+                whitelist-config.yaml: |
+                  defaultRole: viewer
+                  roles:
+                    admin:  { canSeePrices: true, canBid: true, admin: true }
+                    buyer:  { canSeePrices: true, canBid: true }
+                    viewer: { canSeePrices: false, canBid: false }
           externalSecrets:
-            - name: board-games
+            - name: bg-config
           services:
             - name: board-games
               port: 8080
           deployments:
             - name: board-games
               image:
-                repository: ghcr.io/yurifrl/board-games
+                repository: registry.syscd.live/board-games/bg
                 tag: latest
               containerPort: 8080
-              envFrom:
-                - secretRef:
-                    name: board-games
+              env:
+                - { name: PORT, value: "8080" }
+                - { name: BASE_URL, value: "https://bg.syscd.live" }
+                - { name: WHATSAPP_NUMBER, value: "5511999998888" }
+                - name: AUTH_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bg-config
+                      key: AUTH_SECRET
               volumes:
-                - name: config
+                - name: cfg
                   configMap:
-                    name: board-games-config
+                    name: bg-whitelist-config
+                - name: users
+                  secret:
+                    secretName: bg-config
+                    items:
+                      - { key: users, path: users }
+                - name: data
+                  emptyDir: {}
               volumeMounts:
-                - name: config
-                  mountPath: /app/config.yaml
-                  subPath: config.yaml
+                - { name: cfg, mountPath: /app/whitelist-config.yaml, subPath: whitelist-config.yaml }
+                - { name: users, mountPath: /secrets, readOnly: true }
+                - { name: data, mountPath: /data }
           virtualServices:
             - name: board-games
               hosts:
