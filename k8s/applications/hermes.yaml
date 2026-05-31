@@ -56,12 +56,18 @@ spec:
                     # All inference flows through LiteLLM so the budget cap applies.
                     - name: OPENAI_BASE_URL
                       value: http://litellm.litellm.svc.cluster.local:4000/v1
-                    # OpenAI-compatible API server (like Ollama). API_SERVER_KEY
-                    # is injected from the "hermes" secret via envFrom.
+                    # OpenAI-compatible API server (like Ollama). The app requires
+                    # the env var API_SERVER_KEY; we source it from the renamed
+                    # secret key HERMES_API_SERVER_KEY (injected via envFrom too).
                     - name: API_SERVER_HOST
                       value: "0.0.0.0"
                     - name: API_SERVER_PORT
                       value: "8642"
+                    - name: API_SERVER_KEY
+                      valueFrom:
+                        secretKeyRef:
+                          name: hermes
+                          key: HERMES_API_SERVER_KEY
                   envFrom:
                     - secretRef:
                         name: hermes
