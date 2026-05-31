@@ -49,3 +49,8 @@ spec:
                 name: kube-prometheus-stack-alertmanager
                 namespace: monitoring
                 port: 9093
+            - name: longhorn
+              service:
+                name: longhorn-frontend
+                namespace: longhorn-system
+                port: 80

@@ -3,8 +3,6 @@ kind: Application
 metadata:
   name: local-path-provisioner
   namespace: argocd
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   destination:
@@ -12,8 +10,8 @@ spec:
     namespace: local-path-storage
   syncPolicy:
     automated:
-      prune: true
-      selfHeal: true
+      prune: false
+      selfHeal: false
     syncOptions:
       - CreateNamespace=true
   source:
@@ -23,7 +21,7 @@ spec:
     helm:
       values: |
         storageClass:
-          defaultClass: true
+          defaultClass: false
         nodePathMap:
           - node: DEFAULT_PATH_FOR_NON_LISTED_NODES
             paths:

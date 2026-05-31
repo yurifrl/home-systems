@@ -1,0 +1,150 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  source:
+    repoURL: https://charts.longhorn.io
+    chart: longhorn
+    targetRevision: "1.8.1"
+    helm:
+      values: |
+        # Longhorn 1.8.x configuration for Talos Linux
+        # Reference: https://longhorn.io/docs/1.8.0/advanced-resources/os-specific-specific/talos-linux-support/
+
+        # Enable Longhorn UI (for management)
+        ui:
+          enabled: true
+
+        service:
+          ui:
+            type: ClusterIP
+
+        # Resource settings (adjust for your cluster size)
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
+
+        # Default settings optimized for home lab / small cluster
+        defaultSettings:
+          # Data path - must match Talos kubelet mount
+          defaultDataPath: /var/mnt/storage
+
+          # Storage calculation
+          storageMinimalAvailablePercentage: 25
+          storageOverProvisioningPercentage: 100
+
+          # Replica settings - set to 1 for 2-3 node home lab
+          # WARNING: No redundancy at replica=1
+          defaultReplicaCount: 1
+
+          # Disable strict node affinity for small clusters
+          replicaZoneSoftAntiAffinity: false
+          replicaSoftAntiAffinity: true
+          replicaDiskSoftAntiAffinity: true
+
+          # Auto-balance replicas across nodes
+          replicaAutoBalance: least-effort
+
+          # Allow volume creation when degraded (only 1 node available)
+          allowVolumeCreationWithDegradedAvailability: true
+
+          # Snapshot and backup settings
+          createDefaultDiskLabeledNodes: true
+
+          # Upgrade checking
+          upgradeChecker: false
+
+          # Backup target (optional - configure if you have S3)
+          # backupTarget: s3://bucket@region/
+          # backupTargetCredentialSecret: longhorn-backup-credentials
+
+        # Notifier settings (optional - reduces noise in small clusters)
+        defaultSettings:
+          # Only create default disk if node has label
+          createDefaultDiskLabeledNodes: true
+
+        # Persistence for Longhorn itself
+        persistence:
+          defaultClass: true
+          defaultClassReplicaCount: 1
+
+        # Enable monitoring
+        monitoring:
+          enabled: false  # Set true if you have Prometheus
+
+        # Disable PSP for newer Kubernetes versions
+        enablePSP: false
+
+        # Longhorn manager settings
+        longhornManager:
+          logLevel: Info
+
+        # Longhorn driver settings
+        longhornDriver: {}
+
+        # Longhorn UI settings
+        longhornUI: {}
+
+        # Instance manager resources
+        instanceManager:
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+            requests:
+              cpu: 500m
+              memory: 512Mi
+
+---
+# StorageClass for replica=1 (development/testing only)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-single
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: driver.longhorn.io
+parameters:
+  numberOfReplicas: "1"
+  staleReplicaTimeout: "2880"
+  fromBackup: ""
+  fsType: ext4
+  dataLocality: best-effort
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+# StorageClass for replica=2 (minimal HA, requires 2+ nodes)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-ha
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: driver.longhorn.io
+parameters:
+  numberOfReplicas: "2"
+  staleReplicaTimeout: "2880"
+  fromBackup: ""
+  fsType: ext4
+  dataLocality: best-effort
+reclaimPolicy: Delete
+volumeBindingMode: Immediate

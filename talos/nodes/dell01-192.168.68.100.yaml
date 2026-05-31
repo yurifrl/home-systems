@@ -255,6 +255,7 @@ machine:
   nodeLabels:
     node.kubernetes.io/exclude-from-external-load-balancers: ""
     syscd.dev/storage: dell01
+    node.longhorn.io/create-default-disk: "true"
 
 
   # # Provides machine specific control plane configuration options.
