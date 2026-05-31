@@ -28,6 +28,12 @@ spec:
           oauthSecretVolume:
             secret:
               secretName: tailscale-operator-oauth
+          # In-process API server proxy (auth mode): exposes kube-apiserver
+          # over the tailnet at tailscale-operator:443. Requests are
+          # impersonated with the sender's tailnet identity; Kubernetes RBAC
+          # still governs what each identity can do.
+          apiServerProxyConfig:
+            mode: "true"
         
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
