@@ -34,8 +34,6 @@ spec:
       helm:
         valuesObject:
           statefulset:
-            nodeSelector:
-              syscd.dev/storage: tp1
             resources:
               requests:
                 memory: "128Mi"
@@ -46,8 +44,7 @@ spec:
             storage:
               enabled: true
               size: 5Gi
-              storageClassName: local-path
-              existingVolume: zigbee2mqtt-tp1-data
+              storageClassName: longhorn-ha
           service:
             type: ClusterIP
           zigbee2mqtt:

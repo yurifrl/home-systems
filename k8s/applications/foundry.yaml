@@ -31,18 +31,9 @@ spec:
           externalSecrets:
             - name: foundry-secrets
           persistentVolumeClaims:
-            - name: foundry-data
-              volumeName: foundry-data
             - name: foundry-talos-vca-xy1-data
-              volumeName: foundry-talos-vca-xy1-data
-          persistentVolumes:
-            - name: foundry-data
-              path: /var/mnt/storage/foundry-data
-            - name: foundry-talos-vca-xy1-data
-              path: /var/mnt/storage/foundry-data
-              nodeLabelKey: kubernetes.io/hostname
-              nodeLabelValues:
-                - talos-vca-xy1
+              storageClassName: longhorn
+              storage: 10Gi
           services:
             - name: foundry
               port: 30000

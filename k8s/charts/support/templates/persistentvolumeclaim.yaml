@@ -12,6 +12,8 @@ spec:
     requests:
       storage: {{ .storage | default "10Gi" }}
   volumeMode: Filesystem
-  storageClassName: "local-path"
+  storageClassName: {{ .storageClassName | default "longhorn-ha" }}
+  {{- if .volumeName }}
   volumeName: {{ .volumeName }}
+  {{- end }}
 {{- end }}

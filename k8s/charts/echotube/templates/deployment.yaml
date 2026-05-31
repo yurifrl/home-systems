@@ -47,7 +47,6 @@ spec:
               mountPath: /app/cache
       volumes:
         - name: cache
-          persistentVolumeClaim:
-            claimName: echotube-cache-{{ $name }}
+          emptyDir: {}
 ---
 {{- end }}

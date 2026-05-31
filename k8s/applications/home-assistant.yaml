@@ -25,8 +25,6 @@ spec:
       targetRevision: "*"
       helm:
         valuesObject:
-          nodeSelector:
-            syscd.dev/storage: tp1
           addons:
             codeserver:
               enabled: true
@@ -34,8 +32,8 @@ spec:
                 tag: latest
           persistence:
             enabled: true
-            existingVolume: home-assistant-tp1-data
-            storageClass: local-path
+            storageClass: longhorn-ha
+            size: 5Gi
           initContainers:
             - name: init-hacs
               image: bash
