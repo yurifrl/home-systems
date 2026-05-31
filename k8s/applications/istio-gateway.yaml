@@ -31,6 +31,11 @@ spec:
       chart: gateway
       helm:
         valuesObject:
+          # Pin to dell01: it is the only node on the 192.168.68.0/24 LAN, so
+          # with externalTrafficPolicy: Local + MetalLB L2 the .201 VIP can only
+          # be served from here. tp1/tp4 are tailscale-attached and break it.
+          nodeSelector:
+            kubernetes.io/hostname: dell01
           service:
             annotations:
               tailscale.com/expose: "true"
