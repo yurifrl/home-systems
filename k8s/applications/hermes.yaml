@@ -22,11 +22,12 @@ spec:
       path: k8s/charts/support
       helm:
         valuesObject:
-          # Pulls 1Password item "hermes" (Kubernetes vault) into Secret "hermes":
-          #   OPENAI_API_KEY -> the LiteLLM master key value (Hermes auths to
-          #                     the LiteLLM proxy, NOT directly to OpenAI).
+          # Secrets (1Password, Kubernetes vault):
+          #   hermes-secrets -> env vars (loaded via envFrom)
+          #   hermes-files   -> each field mounted as a file under /opt/data/files
           externalSecrets:
-            - name: hermes
+            - name: hermes-secrets
+            - name: hermes-files
           statefulSets:
             - name: hermes
               serviceName: hermes
@@ -44,6 +45,12 @@ spec:
                   emptyDir:
                     medium: Memory
                     sizeLimit: 1Gi
+                # Every key in the hermes-files secret becomes a file here.
+                # optional: pod still starts if the item/secret doesn't exist yet.
+                - name: hermes-files
+                  secret:
+                    secretName: hermes-files
+                    optional: true
               containers:
                 - name: hermes
                   image: ghcr.io/yurifrl/hermes-agent:latest
@@ -78,13 +85,17 @@ spec:
                     - name: API_SERVER_PORT
                       value: "8642"
                   envFrom:
-                    # Loads every key in the "hermes" secret as an env var
+                    # Loads every key in the hermes-secrets secret as an env var
                     # (OPENAI_API_KEY, API_SERVER_KEY, ...). No per-key mapping.
                     - secretRef:
-                        name: hermes
+                        name: hermes-secrets
                   volumeMounts:
                     - name: state
                       mountPath: /opt/data
+                    # Files from the hermes-files secret (certs, SA json, etc.).
+                    - name: hermes-files
+                      mountPath: /opt/data/files
+                      readOnly: true
                   resources:
                     requests:
                       cpu: 100m
