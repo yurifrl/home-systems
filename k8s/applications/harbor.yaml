@@ -43,18 +43,20 @@ spec:
 
         # Database with nodeSelector
         database:
+          type: internal
+          nodeSelector:
+            kubernetes.io/arch: amd64
           internal:
             username: postgres
             password: harborpassword123
-          nodeSelector:
-            kubernetes.io/arch: amd64
 
         # Redis with nodeSelector
         redis:
-          internal:
-            password: harborpassword123
+          type: internal
           nodeSelector:
             kubernetes.io/arch: amd64
+          internal:
+            password: harborpassword123
 
         # Disable unused components
         notary:
