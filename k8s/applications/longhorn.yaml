@@ -160,4 +160,6 @@ parameters:
   fsType: ext4
   dataLocality: best-effort
 reclaimPolicy: Delete
+# Allow online PVC expansion (e.g. growing a StatefulSet volume in place).
+allowVolumeExpansion: true
 volumeBindingMode: Immediate
