@@ -65,19 +65,14 @@ spec:
                     # Route browser tools through the Camofox sidecar (same pod).
                     - name: CAMOFOX_URL
                       value: http://localhost:9377
-                    # OpenAI-compatible API server (like Ollama). The app requires
-                    # the env var API_SERVER_KEY; we source it from the renamed
-                    # secret key HERMES_API_SERVER_KEY (injected via envFrom too).
+                    # Plain config (non-secret). All SECRETS load via envFrom below.
                     - name: API_SERVER_HOST
                       value: "0.0.0.0"
                     - name: API_SERVER_PORT
                       value: "8642"
-                    - name: API_SERVER_KEY
-                      valueFrom:
-                        secretKeyRef:
-                          name: hermes
-                          key: HERMES_API_SERVER_KEY
                   envFrom:
+                    # Loads every key in the "hermes" secret as an env var
+                    # (OPENAI_API_KEY, API_SERVER_KEY, ...). No per-key mapping.
                     - secretRef:
                         name: hermes
                   volumeMounts:
