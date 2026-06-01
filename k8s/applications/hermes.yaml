@@ -23,10 +23,10 @@ spec:
       helm:
         valuesObject:
           # Secrets (1Password, Kubernetes vault):
-          #   hermes-secrets -> env vars (loaded via envFrom)
-          #   hermes-files   -> each field mounted as a file under /opt/data/files
+          #   hermes-env   -> env vars (loaded via envFrom)
+          #   hermes-files -> each field mounted as a file under /opt/data/files
           externalSecrets:
-            - name: hermes-secrets
+            - name: hermes-env
             - name: hermes-files
           statefulSets:
             - name: hermes
@@ -85,10 +85,9 @@ spec:
                     - name: API_SERVER_PORT
                       value: "8642"
                   envFrom:
-                    # Loads every key in the hermes-secrets secret as an env var
-                    # (OPENAI_API_KEY, API_SERVER_KEY, ...). No per-key mapping.
+                    # Loads every key in the hermes-env secret as an env var.
                     - secretRef:
-                        name: hermes-secrets
+                        name: hermes-env
                   volumeMounts:
                     - name: state
                       mountPath: /opt/data
