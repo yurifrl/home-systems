@@ -65,6 +65,13 @@ spec:
                     # Route browser tools through the Camofox sidecar (same pod).
                     - name: CAMOFOX_URL
                       value: http://localhost:9377
+                    # Persist gh/git auth on the volume (HOME=/root is ephemeral).
+                    # Lets `gh auth login` survive restarts; agent's gh/git read
+                    # the saved token file instead of the scrubbed GH_TOKEN env.
+                    - name: GH_CONFIG_DIR
+                      value: /opt/data/.config/gh
+                    - name: GIT_CONFIG_GLOBAL
+                      value: /opt/data/.gitconfig
                     # Plain config (non-secret). All SECRETS load via envFrom below.
                     - name: API_SERVER_HOST
                       value: "0.0.0.0"
