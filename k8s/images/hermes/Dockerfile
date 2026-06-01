@@ -27,13 +27,23 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     HERMES_HOME=/opt/data
 
-# Runtime deps used by the agent's built-in tools (ripgrep, media, git).
+# Runtime deps used by the agent's built-in tools (ripgrep, media, git, gh).
+# The GitHub CLI (gh) gives the bundled github-* skills their richest auth path
+# and is installed from GitHub's official multi-arch apt repo (amd64 + arm64).
 # Build deps (gcc/dev headers) are installed only to compile native wheels,
 # then purged in the same layer to keep the image lean.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        ca-certificates curl git ripgrep ffmpeg \
+        ca-certificates curl git ripgrep ffmpeg wget gnupg \
         gcc python3-dev libffi-dev \
+    && mkdir -p -m 755 /etc/apt/keyrings \
+    && wget -nv -O /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+        https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+        > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends gh \
     && pip install "hermes-agent[all,messaging]==${HERMES_VERSION}" \
     && apt-get purge -y gcc python3-dev libffi-dev \
     && apt-get autoremove -y \
