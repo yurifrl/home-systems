@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-05-31 Crossplane GCP + external-dns Cloudflare Migration; istio-gateway Sync Fix
+- Session ID: 019e79b5-eed4-75d3-8f93-824723f8dddd
+- Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-05-30T16-27-06-836Z_019e79b5-eed4-75d3-8f93-824723f8dddd.jsonl
+- Session Name: 2026-05-31-2240-hermes-config-secrets
+- Context Name: 2026-05-31-2240-hermes-config-secrets
+
+### Changed
+- `k8s/applications/istio-gateway.yaml`: added `helm.skipSchemaValidation: true`. The istio `gateway` chart 1.26.2 ships a `values.schema.json` that the newer Helm used by ArgoCD rejects (even defaults fail on `_internal_defaults_do_not_set`), leaving the app unsyncable; skipping schema validation lets it render and sync again.
+
+### Notes
+- Briefly pinned the gateway to `dell01` (nodeSelector + control-plane toleration) on the theory that only dell01 is on the LAN for MetalLB L2; **reverted** after MetalLB `servicel2status` showed dell01 produces no L2 announcement for the `.201` VIP, which killed reachability. The gateway is reachable on tp1/tp4 (HTTP/80 → 301); net change to the file is only `skipSchemaValidation`.
+- Other work this session lives outside this repo: GCP resources migrated to native Crossplane (charts `crossplane-providers`/`crossplane-gcp`, committed in a prior session block), Cloudflare DNS moved to external-dns `DNSEndpoint`s (chart `dns-records`, `external-dns.yaml` `allowInsecureImages` fix), private values repo `home-systems-values`, and 1Password items `crossplane-gcp` + `argocd-home-systems-values`.
+- UNRESOLVED: istio-gateway HTTPS/443 resets for all hosts (HTTP/80 works). Pre-existing; ruled out DNS, cert, node, MetalLB, ambient, ztunnel. See context `2026-05-31-2240-hermes-config-secrets`.
+
+## 2026-05-31 Remote Kube Access Over Tailscale + nostos Dual-Context Kubeconfig
+- Session ID: 019e7f8d-841f-725c-a533-a62f11abe6de
+- Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-05-31T19-40-41-375Z_019e7f8d-841f-725c-a533-a62f11abe6de.jsonl
+- Session Name: tailscale
+- Context Name: tailscale
+
+### Added
+- `cluster.tailscale_operator` config field (`.submodules/nostos/internal/config/config.go`): optional Tailscale operator hostname; empty disables. Set to `tailscale-operator` in `nostos/config.yaml`.
+- `cluster.ConfigureTailscaleContext` (`.submodules/nostos/internal/cluster/bootstrap.go`): after the talosctl kubeconfig fetch, runs `tailscale configure kubeconfig <host>` (with `KUBECONFIG` pointed at `~/.talos/kubeconfig`) to add the remote API-server-proxy context alongside the LAN context, then restores `admin@talos-default` as the default current-context. Includes `kubeconfigCurrentContext`/`setKubeconfigCurrentContext` helpers that rewrite only the `current-context` key via yaml.Node. Best-effort: warns if the `tailscale` CLI is absent.
+- Two tests in `internal/cluster/bootstrap_test.go` (disabled no-op; adds remote context + restores LAN default using a faked `tailscale` binary).
+
+### Changed
+- `k8s/applications/tailscale.yaml`: enabled the operator's in-process API server proxy in auth mode (`apiServerProxyConfig.mode: "true"`), exposing kube-apiserver over the tailnet at `tailscale-operator:443` with Kubernetes RBAC + tailnet-identity impersonation. Committed `7197f842`, pushed, ArgoCD-synced.
+- `.submodules/nostos/internal/cli/commands.go`: wired `ConfigureTailscaleContext` into the `kubeconfig` and `bootstrap` commands (reports `tailscale context added: …`; JSON output gains `tailscale_context`/`tailscale_warning`).
+
+### Notes
+- Cert provisioning for the proxy initially failed with ACME DNS-01 `SetDNS ... 500 failed to create DNS record`; resolved by deleting the stale offline tailnet device `tailscale-operator-2`. Verified `kubectl get nodes` and `auth can-i '*' '*'` over the proxy.
+- Tailnet grant added in the admin console (not in-repo): `autogroup:admin` -> `tag:k8s-operator` impersonating `system:masters`.
+
 ## 2026-05-31 Talos v1.13.3 Upgrade And Longhorn Storage Capacity
 - Session ID: 019e7bf4-f940-7ded-a97e-f21d6b006f25
 - Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-05-31T02-55-12-704Z_019e7bf4-f940-7ded-a97e-f21d6b006f25.jsonl
