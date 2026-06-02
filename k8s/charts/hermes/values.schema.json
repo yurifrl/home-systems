@@ -6,17 +6,24 @@
       "type": "integer",
       "minimum": 1
     },
-    "strategy": {
+    "updateStrategy": {
       "type": "object",
       "properties": {
         "type": {
           "type": "string",
           "enum": [
-            "Recreate",
-            "RollingUpdate"
+            "RollingUpdate",
+            "OnDelete"
           ]
         }
       }
+    },
+    "podManagementPolicy": {
+      "type": "string",
+      "enum": [
+        "OrderedReady",
+        "Parallel"
+      ]
     },
     "bootstrap": {
       "type": "object",
@@ -198,6 +205,10 @@
         },
         "existingClaim": {
           "type": "string"
+        },
+        "volumeName": {
+          "type": "string",
+          "minLength": 1
         },
         "mountPath": {
           "type": "string",

@@ -24,6 +24,6 @@ Telegram webhook mode enabled on port {{ .Values.telegramWebhook.port }}
 
 Useful commands:
   kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }} -f
-  kubectl exec -it -n {{ .Release.Namespace }} deploy/{{ include "hermes-agent.fullname" . }} -- hermes version
-  kubectl exec -it -n {{ .Release.Namespace }} deploy/{{ include "hermes-agent.fullname" . }} -- sh
+  kubectl exec -it -n {{ .Release.Namespace }} sts/{{ include "hermes-agent.fullname" . }} -- hermes version
+  kubectl exec -it -n {{ .Release.Namespace }} sts/{{ include "hermes-agent.fullname" . }} -- sh
 {{- end }}

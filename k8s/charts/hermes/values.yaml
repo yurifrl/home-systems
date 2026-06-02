@@ -13,8 +13,12 @@ imagePullSecrets: []
 replicaCount: 1
 revisionHistoryLimit: 5
 
-strategy:
-  type: Recreate
+# StatefulSet rollout strategy. RollingUpdate (default) recreates the single
+# pod in place; OnDelete updates only when the pod is manually deleted.
+updateStrategy:
+  type: RollingUpdate
+# Pod creation/scaling ordering for the StatefulSet.
+podManagementPolicy: OrderedReady
 
 # The official image entrypoint already bootstraps Hermes and execs `hermes`.
 # These args become `hermes <args...>`.
@@ -220,6 +224,9 @@ rbac:
 persistence:
   enabled: true
   existingClaim: ""
+  # Name of the StatefulSet volumeClaimTemplate (and the pod volume). The
+  # generated PVC is <volumeName>-<statefulset>-<ordinal>, e.g. state-hermes-0.
+  volumeName: state
   mountPath: /opt/data
   accessMode: ReadWriteOnce
   size: 5Gi
