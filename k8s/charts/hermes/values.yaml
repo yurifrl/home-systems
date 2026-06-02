@@ -88,6 +88,8 @@ env:
   SIGNAL_GROUP_ALLOWED_USERS: ""
   # Browser tools route through the camofox sidecar (same pod).
   CAMOFOX_URL: http://localhost:9377
+  # Inference flows through the in-cluster LiteLLM proxy (OpenAI-compatible).
+  OPENAI_BASE_URL: http://litellm.litellm.svc.cluster.local:4000/v1
 
 extraEnv: []
 extraEnvFrom: []
@@ -98,7 +100,7 @@ secrets:
   annotations: {}
 
 # All keys of the 1Password "hermes-env" item -> Secret -> envFrom.
-# The instance binds target.name + dataFrom in the Application.
+# dataFrom.extract loads ALL keys generically (no per-key hardcoding).
 externalSecret:
   enabled: true
   refreshInterval: 1h
@@ -106,7 +108,7 @@ externalSecret:
     kind: ClusterSecretStore
     name: onepassword
   target:
-    name: ""
+    name: hermes-env
     creationPolicy: Owner
     deletionPolicy: Retain
     template:
@@ -115,7 +117,9 @@ externalSecret:
         annotations: {}
         labels: {}
   data: []
-  dataFrom: []
+  dataFrom:
+    - extract:
+        key: hermes-env
   annotations: {}
   labels: {}
 
@@ -206,9 +210,10 @@ ingress:
   tls: []
   servicePortNumber: null
 
-# Private VPN endpoint via the tailscale gateway. The instance sets hosts.
+# Private VPN endpoint via the tailscale gateway. The instance enables this
+# and sets hosts (its own domain).
 virtualService:
-  enabled: true
+  enabled: false
   gateways:
     - istio-system/tailscale
   hosts: []
