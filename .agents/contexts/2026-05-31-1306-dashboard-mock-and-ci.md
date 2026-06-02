@@ -1,11 +1,11 @@
 ---
-created: 2026-05-31T13:06:00-03:00
+created: 2026-06-01T20:05:00Z
 project: home-systems
-description: Talos v1.13.3 upgrade + Longhorn enablement via nostos, plus an interactive mock dashboard
-context: nostos provisioning tool, Talos rolling upgrade, Longhorn storage, dashboard TUI design
-tags: [nostos, talos, longhorn, upgrade, tui, dashboard, beads]
-session_name: dashboard-mock-and-ci
-purpose: Enable Longhorn by upgrading Talos to v1.13.3 (adding iscsi-tools), make nostos upgrade-aware, and design the nostos dashboard via an interactive HTML mock
+description: Talos v1.10.3→v1.13.3 upgrade, Longhorn enablement + capacity fix, and full local-path→Longhorn storage migration
+context: Bare-metal Talos cluster (dell01 control-plane, tp1/tp4 RK1 workers), ArgoCD GitOps, nostos provisioning tool
+tags: [talos, longhorn, nostos, upgrade, storage-migration, local-path]
+session_name: 2026-05-31-1306-dashboard-mock-and-ci
+purpose: Get distributed storage working on Talos (upgrade for iscsi-tools), give Longhorn real capacity, and migrate every app off local-path onto Longhorn
 session_id: 019e7bf4-f940-7ded-a97e-f21d6b006f25
 provider: pi
 resume_with: cly agent-session resume --provider pi 2026-05-31-1306-dashboard-mock-and-ci
@@ -13,36 +13,37 @@ context_name: 2026-05-31-1306-dashboard-mock-and-ci
 context_file: /Users/yuri/Workdir/Yuri/home-systems/.agents/contexts/2026-05-31-1306-dashboard-mock-and-ci.md
 ---
 
-# Session: dashboard-mock-and-ci
+# Session: Talos v1.13.3 + Longhorn Capacity + Storage Migration
 
-- **Name:** 2026-05-31-1306-dashboard-mock-and-ci
-- **Purpose:** Enable Longhorn (replacing local-path) by rolling Talos v1.10.3 → v1.13.3 with iscsi-tools, make `nostos` upgrade-aware, and design the future nostos dashboard through an interactive HTML mock.
+- **Name:** 2026-05-31-1306-dashboard-mock-and-ci (slug stale; real topic = Talos upgrade + Longhorn + storage migration)
+- **Purpose:** Working distributed storage on Talos with real capacity, all apps off local-path.
 - **Resume:** `cly agent-session resume --provider pi 2026-05-31-1306-dashboard-mock-and-ci`
 
 ## Context
-Home lab: 3-node Talos cluster `talos-default` — dell01 (.100, amd64, controlplane), tp1 (.107, arm64 RK1, worker), tp4 (.114, arm64 RK1, worker). ArgoCD GitOps. Provisioned by `nostos` (Go, in `.submodules/nostos/` — a plain tracked dir, NOT a real git submodule; its git IS the parent repo). Issue tracking via beads (`bd`), umbrella `home-systems-qfn`.
+dell01 (amd64 control-plane, 512GB NVMe OS + 256GB SATA), tp1 (arm64 RK1, 31GB eMMC + 256GB NVMe), tp4 (arm64 RK1, 31GB eMMC only). GitOps via ArgoCD; provisioning via `nostos` (.submodules/nostos, data in nostos/). Beads (`bd`) for tracking.
 
-## Problem
-Longhorn was chosen to replace local-path storage. Longhorn's `longhorn-manager` CrashLoops on Talos because `iscsiadm` is missing — Talos needs the `siderolabs/iscsi-tools` + `util-linux-tools` system extensions, which are baked into the factory installer image (schematic). Required a full Talos upgrade. nostos had no upgrade command and duplicated the install image in templates.
+## Problem → Solution arc
+1. Ceph Rook researched, rejected → Longhorn. Longhorn managers crashed (Talos lacked `iscsiadm`) → needed `iscsi-tools`+`util-linux-tools` extensions → full Talos upgrade.
+2. Made nostos UX-first; upgraded all nodes v1.10.3→v1.11.6→v1.12.8→v1.13.3.
+3. Longhorn stuck on 28GB OS partition (duplicate `defaultSettings` dropped `defaultDataPath`). Migrated tp1 to 256GB NVMe; wiped dell01's 256GB SATA + mounted + tolerations → joined.
+4. Migrated EVERY app off local-path to Longhorn.
 
 ## Decisions
-- Target Talos **v1.13.3** (latest stable); step through adjacent minors **v1.11.6 → v1.12.8 → v1.13.3** (Talos only tests adjacent-minor migrations).
-- New factory schematics (tailscale + iscsi-tools + util-linux-tools): amd64 `8f04ea6b6016f12a593fa8a87441270075c648cb75482c2d9d3db8cecda47da1`; arm64 (+turingrk1 overlay) `6f9371bccd9df78d8c26521528700b463f25bce1cad97691722a4189719e6aa9`.
-- **No etcd snapshot** (user choice). UX-first: `nostos upgrade` computes versions/path/order itself.
-- Per-hop **version-matched talosctl**: PATH talosctl v1.13.3 vs v1.10.3 servers caused gRPC `too_many_pings` GoAway; each one-minor hop now uses a talosctl matching the node's current version.
-- Dashboard: single interactive HTML mock (not multiple files). Notify on done only (progress is on-screen). Demo/simulate controls live OUTSIDE the TUI frame. Upgrade prompts only in the Upgrade tab.
+- Adjacent-minor upgrade stepping; no etcd snapshot; version-matched talosctl per hop.
+- Longhorn data path `/var/mnt/storage`; dell01 SATA wiped (was Windows) per user OK.
+- Migration approach: rsync old local-path PV → temp Longhorn PVC → into chart's final volumeClaimTemplate PVC (charts ignore `existingClaim` for StatefulSets), then ArgoCD rebinds.
+- home-assistant + zigbee2mqtt: data migrated (zero loss). bind9: thrown away (user said; external-dns repopulates). foundry: recreated fresh (defunct, GPU node gone). echotube: PVC removed → emptyDir.
 
-## Current State
-- **nostos code (committed locally, NOT pushed):** qfn.1 render install.image from config (`{{ .InstallImage }}`); qfn.2 `nostos upgrade` (planner ParseVersion/ComputePath/OrderNodes + GitHub catalog + DetectVersion + health-gated exec); qfn.3 upgrade TUI; qfn.4 config.yaml bumped to v1.13.3 + new schematics. `docs/mock-dashboard.html` committed.
-- **qfn.7 (version-matched talosctl + client-version parser fix) — UNCOMMITTED** in working tree; this is what made the live upgrade work.
-- **Live upgrade:** ran in another session, reached **all 3 nodes on v1.11.6** (sweep 1 done); was mid sweep 2/3 (→v1.12.8) last checked. NOT yet on v1.13.3. Resume: `nostos upgrade --to v1.13.3 --yes` (idempotent).
-- **beads:** qfn.1–4 closed; qfn.5 (execute upgrade) + qfn.6 (Longhorn datapath fix + verify) open; qfn.7 + `home-systems-fqt` (test pollutes real ~/.talos/config) open.
-- ArgoCD: longhorn app deployed but managers CrashLoop until nodes get iscsi-tools (v1.13.3). longhorn.yaml needs `defaultDataPath: /var/lib/longhorn` (qfn.6).
-- Dashboard mock: `docs/mock-dashboard.html` (= `.agents/tmp/nostos-sim.html`), interactive, opens in browser.
+## Current State (DONE)
+- All 3 nodes Talos v1.13.3 (kernel 6.18.33), iscsi-tools present.
+- Longhorn disks: tp1 256GB (~242 free), dell01 256GB (~251 free), tp4 30GB (~11 free). ~542GB total, all Ready+Schedulable.
+- **Zero local-path PVCs/PVs cluster-wide**; no local-path StorageClass; local-path-provisioner gone.
+- home-assistant 2/2 Running (migrated data), bind9 1/1 Running (fresh), zigbee2mqtt CrashLoopBackOff (PRE-EXISTING coordinator/SLZB-06 socket issue at 192.168.68.111:6638 — NOT storage; data safe on Longhorn).
+- All beads closed; commits pushed (HEAD ~25e35471).
 
-## Next Steps
-1. Commit qfn.7 (and consider pushing the whole stack).
-2. Finish the live upgrade to v1.13.3 (sweeps 2+3), confirm `talosctl get extensions` shows iscsi-tools; close qfn.5.
-3. qfn.6: set Longhorn `defaultDataPath: /var/lib/longhorn`, refresh the ArgoCD app, verify managers start and `nodes.longhorn.io` are schedulable.
-4. Fix `home-systems-fqt` (a nostos test overwrites the real ~/.talos/config).
-5. Optionally turn the dashboard mock into a real nostos `dashboard` rebuild.
+## Next Steps / Watch-outs
+- **zigbee2mqtt coordinator unreachable** (228 restarts) — pre-existing, separate from storage. Investigate SLZB-06 connectivity.
+- **Two default StorageClasses** (`longhorn` + `longhorn-ha` both default) — set `persistence.defaultClass: false` in k8s/applications/longhorn.yaml so only longhorn-ha is default.
+- tp4 is the capacity constraint (30GB eMMC, no 2nd disk) — keep big replica=2 volumes on tp1+dell01.
+- Concurrent session active in this repo (harbor/registry/board-games) — coordinate on git.
+- nostos test-pollution bug fixed (bootstrap_test.go HOME redirect); fqt closed.

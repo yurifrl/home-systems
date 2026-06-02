@@ -51,6 +51,13 @@
 - `k8s/applications/longhorn.yaml`: removed a duplicate `defaultSettings:` block that silently dropped `defaultDataPath` (Longhorn had been stuck on the 28GB OS partition); added control-plane tolerations + `taintToleration` so dell01 joins Longhorn.
 - `internal/cluster/bootstrap_test.go`: `t.Setenv("HOME", tmp)` so the test no longer clobbers the operator's real `~/.talos/config`/`kubeconfig`.
 - Executed: cluster upgraded v1.10.3 → v1.11.6 → v1.12.8 → v1.13.3 (all 3 nodes); Longhorn migrated to big disks (tp1 NVMe 255GB, dell01 SATA 255GB) via live disk eviction, zero data loss.
+- Migrated ALL apps off `local-path` onto Longhorn: `k8s/applications/{home-assistant,zigbee2mqtt,foundry}.yaml` → `longhorn`/`longhorn-ha` (and unpinned home-assistant/zigbee2mqtt from the `syscd.dev/storage: tp1` nodeSelector); `k8s/charts/bind9` default storageClass → `longhorn-ha`; `k8s/charts/support` PVC template storageClassName now configurable (default `longhorn-ha`) with optional `volumeName`.
+- Runtime cutover: rsynced home-assistant + zigbee2mqtt data from old local-path PVs into new Longhorn PVCs (zero data loss); bind9 recreated fresh (data discarded per user, external-dns repopulates); foundry recreated fresh on Longhorn (was defunct/Pending — GPU node gone). Result: 0 local-path PVCs/PVs cluster-wide, all 10 PVs on longhorn/longhorn-ha.
+
+### Removed
+- `k8s/charts/echotube/templates/pvc.yaml` — echotube no longer uses a PVC; `deployment.yaml` now mounts `emptyDir` for `/app/cache`.
+- `k8s/charts/support-cluster/templates/volumes-tp1.yaml` — deleted the static local PVs (home-assistant/zigbee2mqtt/node-red/teleport/appdaemon on tp1's `/var/mnt/storage`).
+- local-path-provisioner removed from the GitOps flow (no pods, no `local-path` StorageClass remain).
 
 ## 2026-05-02 First 3080 Debug Session — Dell As New Control Plane Via PXE
 - Session ID: 019da35b-d9dc-746e-b542-9e9f1d4b2c1d
