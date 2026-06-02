@@ -104,25 +104,8 @@ spec:
             accessMode: ReadWriteOnce
             size: 20Gi
 
-          # One-shot root init to fix ownership of the migrated volume: the old
-          # pod ran as root (uid 0); this pod runs as uid 1000. fsGroup only fixes
-          # group, not owner, so 0600 files (gh hosts.yml, .git-credentials) would
-          # be unreadable. chown -R 1000:1000 makes uid 1000 the owner.
-          extraInitContainers:
-            - name: migrate-perms
-              image: busybox:1.37
-              command: ["sh", "-c", "chown -R 1000:1000 /opt/data || true"]
-              securityContext:
-                runAsNonRoot: false
-                runAsUser: 0
-                allowPrivilegeEscalation: true
-                readOnlyRootFilesystem: false
-                capabilities:
-                  drop: ["ALL"]
-                  add: ["CHOWN", "FOWNER", "DAC_OVERRIDE"]
-              volumeMounts:
-                - name: state
-                  mountPath: /opt/data
+          # Migration complete: /opt/data is owned 1000:1000, so no chown init
+          # is needed. fsGroup: 1000 covers any new files.
 
           browser:
             shm:
