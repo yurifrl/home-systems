@@ -1,0 +1,875 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "strategy": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Recreate",
+            "RollingUpdate"
+          ]
+        }
+      }
+    },
+    "bootstrap": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "overwrite": {
+          "type": "boolean"
+        },
+        "existingConfigMap": {
+          "type": "string"
+        },
+        "configKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "soulKey": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "apiServer": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "host": {
+          "type": "string",
+          "minLength": 1
+        },
+        "port": {
+          "$ref": "#/definitions/portNumber"
+        },
+        "corsOrigins": {
+          "type": "string"
+        },
+        "modelName": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "webhook": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "port": {
+          "$ref": "#/definitions/portNumber"
+        }
+      }
+    },
+    "telegramWebhook": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "url": {
+          "type": "string"
+        },
+        "port": {
+          "$ref": "#/definitions/portNumber"
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "ClusterIP",
+            "NodePort",
+            "LoadBalancer",
+            "ExternalName"
+          ]
+        },
+        "sessionAffinity": {
+          "type": "string",
+          "enum": [
+            "None",
+            "ClientIP"
+          ]
+        },
+        "externalTrafficPolicy": {
+          "type": "string",
+          "enum": [
+            "",
+            "Cluster",
+            "Local"
+          ]
+        },
+        "internalTrafficPolicy": {
+          "type": "string",
+          "enum": [
+            "",
+            "Cluster",
+            "Local"
+          ]
+        },
+        "loadBalancerSourceRanges": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/servicePort"
+          }
+        }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "servicePortNumber": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/portNumber"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "virtualService": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "gateways": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "servicePortNumber": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/portNumber"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "existingClaim": {
+          "type": "string"
+        },
+        "mountPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessMode": {
+          "type": "string",
+          "enum": [
+            "ReadWriteOnce",
+            "ReadWriteMany",
+            "ReadOnlyMany",
+            "ReadWriteOncePod"
+          ]
+        },
+        "size": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "secrets": {
+      "type": "object",
+      "properties": {
+        "existingSecret": {
+          "type": "string"
+        },
+        "API_SERVER_KEY": {
+          "type": "string"
+        },
+        "TELEGRAM_BOT_TOKEN": {
+          "type": "string"
+        }
+      }
+    },
+    "externalSecret": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "refreshInterval": {
+          "type": "string",
+          "minLength": 1
+        },
+        "secretStoreRef": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "creationPolicy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "deletionPolicy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "template": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "metadata": {
+                  "type": "object",
+                  "properties": {
+                    "annotations": {
+                      "type": "object"
+                    },
+                    "labels": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "dataFrom": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "annotations": {
+          "type": "object"
+        },
+        "labels": {
+          "type": "object"
+        }
+      }
+    },
+    "tenant": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object"
+        }
+      }
+    },
+    "tenantIsolation": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "allowSameNamespace": {
+          "type": "boolean"
+        },
+        "authorizedNamespaces": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "allowDns": {
+          "type": "boolean"
+        },
+        "additionalEgress": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "podAntiAffinity": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "preferredDuringSchedulingIgnoredDuringExecution",
+                "requiredDuringSchedulingIgnoredDuringExecution"
+              ]
+            },
+            "topologyKey": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "policyTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Ingress",
+              "Egress"
+            ]
+          }
+        },
+        "ingress": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "egress": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "operator": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "controllerClass": {
+          "type": "string",
+          "minLength": 1
+        },
+        "installCustomResources": {
+          "type": "boolean"
+        },
+        "managementNamespace": {
+          "type": "string"
+        },
+        "defaultChartValues": {
+          "type": "object"
+        },
+        "tenants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "namespace": {
+                "type": "string",
+                "minLength": 1
+              },
+              "releaseName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "tenantId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "controllerClass": {
+                "type": "string",
+                "minLength": 1
+              },
+              "labels": {
+                "type": "object"
+              },
+              "chartValues": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "persistence": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "replicaCount": {
+            "const": 1
+          },
+          "strategy": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "Recreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "service": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "anyOf": [
+          {
+            "properties": {
+              "service": {
+                "type": "object",
+                "properties": {
+                  "ports": {
+                    "type": "array",
+                    "minItems": 1
+                  }
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "apiServer": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "webhook": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "telegramWebhook": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "ingress": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "service": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "virtualService": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "service": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          },
+          "virtualService": {
+            "type": "object",
+            "properties": {
+              "gateways": {
+                "minItems": 1
+              },
+              "hosts": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "externalSecret": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "externalSecret": {
+            "type": "object",
+            "properties": {
+              "secretStoreRef": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            "anyOf": [
+              {
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "minItems": 1
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "dataFrom": {
+                    "type": "array",
+                    "minItems": 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "telegramWebhook": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "telegramWebhook": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "externalSecret": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "externalSecret": {
+            "type": "object",
+            "properties": {
+              "secretStoreRef": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          },
+          "secrets": {
+            "type": "object",
+            "properties": {
+              "existingSecret": {
+                "maxLength": 0
+              }
+            }
+          }
+        },
+        "anyOf": [
+          {
+            "properties": {
+              "externalSecret": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "minItems": 1
+                  }
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "externalSecret": {
+                "type": "object",
+                "properties": {
+                  "dataFrom": {
+                    "type": "array",
+                    "minItems": 1
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "tenantIsolation": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "tenant": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operator": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "operator": {
+            "type": "object",
+            "properties": {
+              "controllerClass": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "portNumber": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535
+    },
+    "servicePort": {
+      "type": "object",
+      "required": [
+        "port"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+        },
+        "port": {
+          "$ref": "#/definitions/portNumber"
+        },
+        "targetPort": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/portNumber"
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "containerPort": {
+          "$ref": "#/definitions/portNumber"
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "TCP",
+            "UDP",
+            "SCTP"
+          ]
+        },
+        "appProtocol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nodePort": {
+          "type": "integer",
+          "minimum": 30000,
+          "maximum": 32767
+        }
+      }
+    }
+  }
+}

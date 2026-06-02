@@ -1,0 +1,56 @@
+{{- if not .Values.operator.enabled }}
+{{- if .Values.ingress.enabled }}
+{{- if not .Values.service.enabled }}
+{{- fail "ingress.enabled=true requires service.enabled=true" }}
+{{- end }}
+{{- $servicePorts := .Values.service.ports }}
+{{- if eq (len $servicePorts) 0 }}
+  {{- if .Values.apiServer.enabled }}
+    {{- $servicePorts = append $servicePorts (dict "name" "api-server" "port" (.Values.apiServer.port | int) "targetPort" (.Values.apiServer.port | int) "containerPort" (.Values.apiServer.port | int) "protocol" "TCP") }}
+  {{- end }}
+  {{- if .Values.webhook.enabled }}
+    {{- $servicePorts = append $servicePorts (dict "name" "webhook" "port" (.Values.webhook.port | int) "targetPort" (.Values.webhook.port | int) "containerPort" (.Values.webhook.port | int) "protocol" "TCP") }}
+  {{- end }}
+  {{- if .Values.telegramWebhook.enabled }}
+    {{- $servicePorts = append $servicePorts (dict "name" "telegram-webhook" "port" (.Values.telegramWebhook.port | int) "targetPort" (.Values.telegramWebhook.port | int) "containerPort" (.Values.telegramWebhook.port | int) "protocol" "TCP") }}
+  {{- end }}
+{{- end }}
+{{- if eq (len $servicePorts) 0 }}
+{{- fail "ingress.enabled=true requires either explicit service.ports entries or enabled apiServer/webhook/telegramWebhook ports" }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "hermes-agent.fullname" . }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- with .Values.ingress.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          {{- $defaultPort := default (include "hermes-agent.primaryServicePortNumber" $) $.Values.ingress.servicePortNumber }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "hermes-agent.fullname" $ }}
+                port:
+                  number: {{ default $defaultPort .servicePortNumber }}
+          {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,81 @@
+{{- if not .Values.operator.enabled }}
+{{- $tenantPolicyEnabled := .Values.tenantIsolation.enabled -}}
+{{- if and $tenantPolicyEnabled (eq (trim .Values.tenant.id) "") -}}
+{{- fail "tenantIsolation.enabled requires tenant.id" -}}
+{{- end -}}
+{{- if or .Values.networkPolicy.enabled $tenantPolicyEnabled }}
+{{- $servicePorts := include "hermes-agent.servicePorts" . | fromJsonArray -}}
+{{- $policyTypes := list -}}
+{{- if .Values.networkPolicy.enabled -}}
+  {{- $policyTypes = .Values.networkPolicy.policyTypes -}}
+{{- end -}}
+{{- if and $tenantPolicyEnabled (not (has "Ingress" $policyTypes)) -}}
+  {{- $policyTypes = append $policyTypes "Ingress" -}}
+{{- end -}}
+{{- if and (not .Values.networkPolicy.enabled) (eq (len $policyTypes) 0) -}}
+  {{- $policyTypes = list "Ingress" -}}
+{{- end -}}
+{{- $hasTenantEgress := and $tenantPolicyEnabled (or .Values.tenantIsolation.allowDns (gt (len .Values.tenantIsolation.additionalEgress) 0)) -}}
+{{- if and $hasTenantEgress (not (has "Egress" $policyTypes)) -}}
+  {{- $policyTypes = append $policyTypes "Egress" -}}
+{{- end -}}
+{{- $tenantIngressSources := list -}}
+{{- if and $tenantPolicyEnabled .Values.tenantIsolation.allowSameNamespace -}}
+  {{- $tenantIngressSources = append $tenantIngressSources (dict "namespaceSelector" (dict "matchLabels" (dict "kubernetes.io/metadata.name" .Release.Namespace))) -}}
+{{- end -}}
+{{- if and $tenantPolicyEnabled (gt (len .Values.tenantIsolation.authorizedNamespaces) 0) -}}
+  {{- $tenantIngressSources = append $tenantIngressSources (dict "namespaceSelector" (dict "matchExpressions" (list (dict "key" "kubernetes.io/metadata.name" "operator" "In" "values" .Values.tenantIsolation.authorizedNamespaces)))) -}}
+{{- end -}}
+{{- $renderIngress := or (gt (len $tenantIngressSources) 0) (gt (len .Values.networkPolicy.ingress) 0) -}}
+{{- $renderEgress := or $hasTenantEgress (gt (len .Values.networkPolicy.egress) 0) -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "hermes-agent.fullname" . }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "hermes-agent.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    {{- toYaml $policyTypes | nindent 4 }}
+  {{- if $renderIngress }}
+  ingress:
+    {{- if gt (len $tenantIngressSources) 0 }}
+    - from:
+        {{- toYaml $tenantIngressSources | nindent 8 }}
+      {{- if gt (len $servicePorts) 0 }}
+      ports:
+        {{- range $servicePorts }}
+        - protocol: {{ default "TCP" .protocol }}
+          port: {{ .port }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- with .Values.networkPolicy.ingress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  {{- if $renderEgress }}
+  egress:
+    {{- if and $tenantPolicyEnabled .Values.tenantIsolation.allowDns }}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- end }}
+    {{- with .Values.tenantIsolation.additionalEgress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.networkPolicy.egress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}

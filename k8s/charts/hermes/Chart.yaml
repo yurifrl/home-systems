@@ -1,0 +1,23 @@
+apiVersion: v2
+name: hermes
+description: Hermes Agent for home-systems (vendored from the community chart, adapted)
+type: application
+version: 0.1.0
+appVersion: "0.15.2"
+kubeVersion: ">=1.25.0-0"
+keywords:
+  - hermes
+  - ai
+  - agent
+  - llm
+  - gateway
+home: https://hermes-agent.nousresearch.com
+sources:
+  - https://github.com/nousresearch/hermes-agent
+# Vendored from the community chart and adapted for home-systems
+# (1Password ExternalSecrets, istio VirtualService, Longhorn, GHCR image,
+# camofox sidecar, hardened securityContext, RBAC, NetworkPolicy).
+# Upstream: https://github.com/ultraworkers/hermes-agent-helm-chart
+# Upstream commit: e3b685d4d0288668a37216435742cd0a659ebc6c
+maintainers:
+  - name: yurifrl

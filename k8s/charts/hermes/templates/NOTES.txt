@@ -1,0 +1,29 @@
+{{- if not .Values.operator.enabled }}
+Hermes Agent has been installed.
+
+Release: {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+HERMES_HOME: {{ .Values.persistence.mountPath }}
+
+{{- if .Values.service.enabled }}
+Service: {{ include "hermes-agent.fullname" . }}
+{{- else }}
+No Service was created. Enable service/ingress/virtualService only when you want
+network exposure.
+{{- end }}
+
+{{- if .Values.apiServer.enabled }}
+API server enabled on port {{ .Values.apiServer.port }}
+{{- end }}
+{{- if .Values.webhook.enabled }}
+Webhook adapter enabled on port {{ .Values.webhook.port }}
+{{- end }}
+{{- if .Values.telegramWebhook.enabled }}
+Telegram webhook mode enabled on port {{ .Values.telegramWebhook.port }}
+{{- end }}
+
+Useful commands:
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }} -f
+  kubectl exec -it -n {{ .Release.Namespace }} deploy/{{ include "hermes-agent.fullname" . }} -- hermes version
+  kubectl exec -it -n {{ .Release.Namespace }} deploy/{{ include "hermes-agent.fullname" . }} -- sh
+{{- end }}

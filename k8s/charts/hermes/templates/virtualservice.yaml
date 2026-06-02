@@ -1,0 +1,49 @@
+{{- if not .Values.operator.enabled }}
+{{- if .Values.virtualService.enabled }}
+{{- if not .Values.service.enabled }}
+{{- fail "virtualService.enabled=true requires service.enabled=true" }}
+{{- end }}
+{{- $servicePorts := .Values.service.ports }}
+{{- if eq (len $servicePorts) 0 }}
+  {{- if .Values.apiServer.enabled }}
+    {{- $servicePorts = append $servicePorts (dict "name" "api-server" "port" (.Values.apiServer.port | int) "targetPort" (.Values.apiServer.port | int) "containerPort" (.Values.apiServer.port | int) "protocol" "TCP") }}
+  {{- end }}
+  {{- if .Values.webhook.enabled }}
+    {{- $servicePorts = append $servicePorts (dict "name" "webhook" "port" (.Values.webhook.port | int) "targetPort" (.Values.webhook.port | int) "containerPort" (.Values.webhook.port | int) "protocol" "TCP") }}
+  {{- end }}
+  {{- if .Values.telegramWebhook.enabled }}
+    {{- $servicePorts = append $servicePorts (dict "name" "telegram-webhook" "port" (.Values.telegramWebhook.port | int) "targetPort" (.Values.telegramWebhook.port | int) "containerPort" (.Values.telegramWebhook.port | int) "protocol" "TCP") }}
+  {{- end }}
+{{- end }}
+{{- if eq (len $servicePorts) 0 }}
+{{- fail "virtualService.enabled=true requires either explicit service.ports entries or enabled apiServer/webhook/telegramWebhook ports" }}
+{{- end }}
+{{- if eq (len .Values.virtualService.gateways) 0 }}
+{{- fail "virtualService.enabled=true requires at least one entry in virtualService.gateways" }}
+{{- end }}
+{{- if eq (len .Values.virtualService.hosts) 0 }}
+{{- fail "virtualService.enabled=true requires at least one entry in virtualService.hosts" }}
+{{- end }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "hermes-agent.fullname" . }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+spec:
+  gateways:
+    {{- toYaml .Values.virtualService.gateways | nindent 4 }}
+  hosts:
+    {{- toYaml .Values.virtualService.hosts | nindent 4 }}
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: {{ include "hermes-agent.fullname" . }}
+            port:
+              number: {{ default (include "hermes-agent.primaryServicePortNumber" .) .Values.virtualService.servicePortNumber }}
+      timeout: {{ .Values.virtualService.timeout | quote }}
+{{- end }}
+{{- end }}

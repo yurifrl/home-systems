@@ -11,10 +11,10 @@
 # manager) and are the single source of truth for the image tag, which CI
 # derives as "<hermes-version>-py<python-version>".
 #
-# Runs as root (no USER switch) on purpose: the upstream image runs s6 as PID 1
-# (root) and chowns the data volume itself. We keep root so the Longhorn PVC
-# mounted at /opt/data is writable without needing a pod-level fsGroup (the
-# shared `support` chart does not expose securityContext).
+# Runs as a non-root user (uid 1000) with a read-only root filesystem under the
+# hermes Helm chart's hardened securityContext. All runtime writes go to mounted
+# volumes (/opt/data PVC, /tmp emptyDir, HOME=/opt/data/home). kubectl is bundled
+# so the agent can use its (read-only + pod-delete) RBAC.
 
 # renovate: datasource=docker depName=python versioning=docker
 ARG PYTHON_VERSION=3.14-slim-trixie
@@ -22,6 +22,10 @@ FROM python:${PYTHON_VERSION}
 
 # renovate: datasource=pypi depName=hermes-agent versioning=pep440
 ARG HERMES_VERSION=0.15.2
+
+# renovate: datasource=github-releases depName=kubernetes/kubectl
+ARG KUBECTL_VERSION=1.33.0
+ARG TARGETARCH
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -79,8 +83,18 @@ RUN set -eu \
 # State (config.yaml, .env, memory, skills) lives here and is backed by a
 # persistent volume in Kubernetes.
 RUN mkdir -p /opt/data
+
+# kubectl for the agent's read-only + pod-delete RBAC (multi-arch).
+RUN curl -fsSLo /usr/local/bin/kubectl \
+        "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${TARGETARCH:-amd64}/kubectl" \
+    && chmod 0755 /usr/local/bin/kubectl
+
+# Non-root runtime user matching the chart's runAsUser/fsGroup 1000.
+RUN useradd -u 1000 -m -d /home/hermes -s /bin/bash hermes
+
 WORKDIR /opt/data
 VOLUME ["/opt/data"]
+USER 1000
 
 ENTRYPOINT ["hermes"]
 CMD ["gateway", "run"]

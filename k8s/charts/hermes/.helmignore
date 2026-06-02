@@ -1,0 +1,14 @@
+.git/
+.github/
+.omx/
+.DS_Store
+*.swp
+*.tmp
+*.bak
+*.tgz
+node_modules/
+docs/
+website/
+tests/
+tmp/
+

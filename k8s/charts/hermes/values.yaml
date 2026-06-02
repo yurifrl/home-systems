@@ -1,0 +1,354 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: nousresearch/hermes-agent
+  tag: "0.8.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# Hermes stores mutable state under HERMES_HOME, so a single replica is the
+# safe default when persistence is enabled.
+replicaCount: 1
+revisionHistoryLimit: 5
+
+strategy:
+  type: Recreate
+
+# The official image entrypoint already bootstraps Hermes and execs `hermes`.
+# These args become `hermes <args...>`.
+command: []
+args:
+  - gateway
+  - run
+workingDir: /opt/hermes
+
+bootstrap:
+  enabled: true
+  # When true, overwrite the persisted config/SOUL with Helm-rendered content.
+  # When false, seed only if the file does not already exist in the PVC.
+  overwrite: true
+  # Optionally consume config bootstrap data from an externally managed
+  # ConfigMap instead of the chart-managed one.
+  existingConfigMap: ""
+  configKey: config.yaml
+  soulKey: SOUL.md
+
+config:
+  # Raw YAML string rendered via tpl. When non-empty, it takes precedence over
+  # config.values.
+  raw: ""
+  # Partial Hermes config.yaml written into HERMES_HOME/config.yaml.
+  values:
+    model:
+      default: anthropic/claude-opus-4.6
+      provider: auto
+      base_url: https://openrouter.ai/api/v1
+    agent:
+      max_turns: 90
+      gateway_timeout: 1800
+      restart_drain_timeout: 60
+      tool_use_enforcement: auto
+    terminal:
+      backend: local
+      cwd: .
+      timeout: 180
+    display:
+      tool_progress: all
+      interim_assistant_messages: true
+    browser:
+      inactivity_timeout: 120
+      command_timeout: 30
+      allow_private_urls: false
+    compression:
+      enabled: true
+      threshold: 0.5
+      target_ratio: 0.2
+      protect_last_n: 20
+    security:
+      redact_secrets: true
+      tirith_enabled: true
+      tirith_fail_open: true
+
+soul:
+  text: ""
+
+env:
+  WEB_TOOLS_DEBUG: "false"
+  VISION_TOOLS_DEBUG: "false"
+  MOA_TOOLS_DEBUG: "false"
+  IMAGE_TOOLS_DEBUG: "false"
+  HERMES_HUMAN_DELAY_MODE: "off"
+  HERMES_HUMAN_DELAY_MIN_MS: "800"
+  HERMES_HUMAN_DELAY_MAX_MS: "2500"
+  GATEWAY_ALLOW_ALL_USERS: "false"
+  WHATSAPP_ENABLED: "false"
+  WHATSAPP_ALLOWED_USERS: ""
+  TELEGRAM_ALLOWED_USERS: ""
+  TELEGRAM_HOME_CHANNEL: ""
+  DISCORD_ALLOWED_USERS: ""
+  DISCORD_HOME_CHANNEL: ""
+  SLACK_ALLOWED_USERS: ""
+  SIGNAL_ALLOWED_USERS: ""
+  SIGNAL_GROUP_ALLOWED_USERS: ""
+
+extraEnv: []
+extraEnvFrom: []
+
+secrets:
+  existingSecret: ""
+  annotations: {}
+  OPENROUTER_API_KEY: ""
+  OPENAI_API_KEY: ""
+  ANTHROPIC_API_KEY: ""
+  GOOGLE_API_KEY: ""
+  GEMINI_API_KEY: ""
+  GLM_API_KEY: ""
+  KIMI_API_KEY: ""
+  MINIMAX_API_KEY: ""
+  MINIMAX_CN_API_KEY: ""
+  HF_TOKEN: ""
+  XIAOMI_API_KEY: ""
+  AI_GATEWAY_API_KEY: ""
+  NOUS_API_KEY: ""
+  EXA_API_KEY: ""
+  FIRECRAWL_API_KEY: ""
+  FAL_KEY: ""
+  GROQ_API_KEY: ""
+  VOICE_TOOLS_OPENAI_KEY: ""
+  API_SERVER_KEY: ""
+  TELEGRAM_BOT_TOKEN: ""
+  DISCORD_BOT_TOKEN: ""
+  SLACK_BOT_TOKEN: ""
+  SLACK_APP_TOKEN: ""
+  SIGNAL_HTTP_URL: ""
+  SIGNAL_ACCOUNT: ""
+  BROWSERBASE_API_KEY: ""
+  BROWSERBASE_PROJECT_ID: ""
+  HONCHO_API_KEY: ""
+  TINKER_API_KEY: ""
+  WANDB_API_KEY: ""
+  GITHUB_TOKEN: ""
+  SUDO_PASSWORD: ""
+  WEBHOOK_SECRET: ""
+  EMAIL_ADDRESS: ""
+  EMAIL_PASSWORD: ""
+  EMAIL_IMAP_HOST: ""
+  EMAIL_IMAP_PORT: ""
+  EMAIL_SMTP_HOST: ""
+  EMAIL_SMTP_PORT: ""
+  MISTRAL_API_KEY: ""
+  DINGTALK_CLIENT_ID: ""
+  DINGTALK_CLIENT_SECRET: ""
+  FEISHU_APP_ID: ""
+  FEISHU_APP_SECRET: ""
+  FEISHU_ENCRYPT_KEY: ""
+  FEISHU_VERIFICATION_TOKEN: ""
+  WECOM_BOT_ID: ""
+  WECOM_SECRET: ""
+  WECOM_CALLBACK_CORP_ID: ""
+  WECOM_CALLBACK_CORP_SECRET: ""
+  WECOM_CALLBACK_AGENT_ID: ""
+  WECOM_CALLBACK_TOKEN: ""
+  WECOM_CALLBACK_ENCODING_AES_KEY: ""
+  WEIXIN_ACCOUNT_ID: ""
+  WEIXIN_TOKEN: ""
+  BLUEBUBBLES_SERVER_URL: ""
+  BLUEBUBBLES_PASSWORD: ""
+
+externalSecret:
+  enabled: false
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: ""
+  target:
+    name: ""
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    template:
+      type: Opaque
+      metadata:
+        annotations: {}
+        labels: {}
+  data: []
+  dataFrom: []
+  annotations: {}
+  labels: {}
+
+operator:
+  enabled: false
+  controllerClass: hermes.ai/default
+  installCustomResources: true
+  managementNamespace: ""
+  defaultChartValues: {}
+  tenants: []
+
+tenant:
+  id: ""
+  labels: {}
+
+apiServer:
+  enabled: false
+  host: "0.0.0.0"
+  port: 8642
+  corsOrigins: ""
+  modelName: hermes-agent
+
+webhook:
+  enabled: false
+  port: 8644
+
+telegramWebhook:
+  enabled: false
+  url: ""
+  port: 8443
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  automountServiceAccountToken: false
+
+rbac:
+  create: false
+  clusterWide: false
+  annotations: {}
+  rules: []
+
+persistence:
+  enabled: true
+  existingClaim: ""
+  mountPath: /opt/data
+  accessMode: ReadWriteOnce
+  size: 5Gi
+  storageClass: ""
+  annotations: {}
+
+browser:
+  shm:
+    enabled: true
+    mountPath: /dev/shm
+    sizeLimit: 1Gi
+
+service:
+  enabled: false
+  type: ClusterIP
+  annotations: {}
+  labels: {}
+  sessionAffinity: None
+  externalTrafficPolicy: ""
+  internalTrafficPolicy: ""
+  loadBalancerSourceRanges: []
+  # When empty, the chart automatically exposes enabled apiServer/webhook/
+  # telegramWebhook listeners using their configured port values. Explicit
+  # entries override the defaults.
+  # ports:
+  #   - name: api-server
+  #     port: 8642
+  #     targetPort: 8642
+  #     containerPort: 8642
+  #     protocol: TCP
+  ports: []
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: hermes.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  servicePortNumber: null
+
+virtualService:
+  enabled: false
+  gateways: []
+  hosts: []
+  timeout: "3600s"
+  servicePortNumber: null
+
+networkPolicy:
+  enabled: false
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []
+  egress: []
+
+tenantIsolation:
+  enabled: false
+  allowSameNamespace: true
+  authorizedNamespaces: []
+  allowDns: true
+  additionalEgress: []
+  podAntiAffinity:
+    enabled: false
+    type: preferredDuringSchedulingIgnoredDuringExecution
+    topologyKey: kubernetes.io/hostname
+
+pdb:
+  enabled: false
+  minAvailable: 1
+
+# Raw probe specs copied onto the container.
+# Example HTTP probe for the Hermes API server:
+# probes:
+#   liveness:
+#     httpGet:
+#       path: /health
+#       port: api-server
+probes:
+  liveness: {}
+  readiness: {}
+  startup: {}
+
+npmPackages: []
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "2"
+    memory: 4Gi
+
+terminationGracePeriodSeconds: 120
+
+podAnnotations: {}
+deploymentAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+priorityClassName: ""
+runtimeClassName: ""
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+
+extraVolumes: []
+extraVolumeMounts: []
+extraInitContainers: []
+extraContainers: []
+extraObjects: []

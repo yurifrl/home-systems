@@ -16,128 +16,251 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
-      path: k8s/charts/support
+      path: k8s/charts/hermes
       helm:
         valuesObject:
-          # Secrets (1Password, Kubernetes vault):
-          #   hermes-env   -> env vars (loaded via envFrom)
-          #   hermes-files -> each field mounted as a file under /opt/data/files
-          externalSecrets:
-            - name: hermes-env
-            - name: hermes-files
-          statefulSets:
-            - name: hermes
-              serviceName: hermes
-              # Built by .github/workflows/build-hermes.yaml and pushed to GHCR.
-              # The GHCR package must be public, or add an imagePullSecret.
-              volumeClaimTemplates:
-                - name: state
-                  accessModes:
-                    - ReadWriteOnce
-                  storage: 20Gi
-                  storageClassName: longhorn-ha
-              volumes:
-                # Firefox/Camoufox needs more than the default 64Mi /dev/shm.
-                - name: dshm
-                  emptyDir:
-                    medium: Memory
-                    sizeLimit: 1Gi
-                # Every key in the hermes-files secret becomes a file here.
-                # optional: pod still starts if the item/secret doesn't exist yet.
-                - name: hermes-files
-                  secret:
-                    secretName: hermes-files
-                    optional: true
-              containers:
-                - name: hermes
-                  image: ghcr.io/yurifrl/hermes-agent:latest
-                  imagePullPolicy: Always
-                  # /init (s6-overlay) is the image ENTRYPOINT; these are the args.
-                  args: ["gateway", "run"]
-                  ports:
-                    - name: http
-                      containerPort: 8642
-                      protocol: TCP
-                  env:
-                    # HERMES_HOME defaults to /opt/data in the image; set
-                    # explicitly for clarity. State persists on the Longhorn PVC.
-                    - name: HERMES_HOME
-                      value: /opt/data
-                    # All inference flows through LiteLLM so the budget cap applies.
-                    - name: OPENAI_BASE_URL
-                      value: http://litellm.litellm.svc.cluster.local:4000/v1
-                    # Route browser tools through the Camofox sidecar (same pod).
-                    - name: CAMOFOX_URL
-                      value: http://localhost:9377
-                    # Persist gh/git auth on the volume (HOME=/root is ephemeral).
-                    # Lets `gh auth login` survive restarts; agent's gh/git read
-                    # the saved token file instead of the scrubbed GH_TOKEN env.
-                    - name: GH_CONFIG_DIR
-                      value: /opt/data/.config/gh
-                    - name: GIT_CONFIG_GLOBAL
-                      value: /opt/data/.gitconfig
-                    # Plain config (non-secret). All SECRETS load via envFrom below.
-                    - name: API_SERVER_HOST
-                      value: "0.0.0.0"
-                    - name: API_SERVER_PORT
-                      value: "8642"
-                  envFrom:
-                    # Loads every key in the hermes-env secret as an env var.
-                    - secretRef:
-                        name: hermes-env
-                  volumeMounts:
-                    - name: state
-                      mountPath: /opt/data
-                    # Files from the hermes-files secret (certs, SA json, etc.).
-                    - name: hermes-files
-                      mountPath: /opt/data/files
-                      readOnly: true
-                  resources:
-                    requests:
-                      cpu: 100m
-                      memory: 512Mi
-                    limits:
-                      cpu: "2"
-                      memory: 2Gi
-                # Camofox: browser-as-a-service sidecar (anti-detect Camoufox/Firefox).
-                # Public multi-arch image; Hermes routes all browser tools here.
+          image:
+            repository: ghcr.io/yurifrl/hermes-agent
+            tag: latest
+            pullPolicy: Always
+
+          # Hermes config seeded into /opt/data/config.yaml (bootstrap initContainer).
+          config:
+            values:
+              model:
+                provider: openai-api
+                default: gpt
+              security:
+                redact_secrets: true
+
+          # Non-secret env. Secrets come from the hermes-env ExternalSecret (envFrom).
+          # HOME is set automatically by the chart to <mountPath>/home.
+          env:
+            OPENAI_BASE_URL: http://litellm.litellm.svc.cluster.local:4000/v1
+            CAMOFOX_URL: http://localhost:9377
+
+          apiServer:
+            enabled: true
+            host: "0.0.0.0"
+            port: 8642
+
+          service:
+            enabled: true
+
+          tenant:
+            id: hermes
+
+          # All keys of 1Password item "hermes-env" -> Secret -> envFrom.
+          externalSecret:
+            enabled: true
+            refreshInterval: 1h
+            secretStoreRef:
+              kind: ClusterSecretStore
+              name: onepassword
+            target:
+              name: hermes-env
+              creationPolicy: Owner
+              deletionPolicy: Retain
+            dataFrom:
+              - extract:
+                  key: hermes-env
+
+          # Bootstrap seeds config.yaml/SOUL.md only if absent — preserve the
+          # migrated config from the existing volume.
+          bootstrap:
+            enabled: true
+            overwrite: false
+
+          persistence:
+            enabled: true
+            existingClaim: state-hermes-0   # migrate: reuse the existing PVC in place
+            storageClass: longhorn-ha
+            mountPath: /opt/data
+            accessMode: ReadWriteOnce
+            size: 20Gi
+
+          # One-shot root init to fix ownership of the migrated volume: the old
+          # pod ran as root (uid 0); this pod runs as uid 1000. fsGroup only fixes
+          # group, not owner, so 0600 files (gh hosts.yml, .git-credentials) would
+          # be unreadable. chown -R 1000:1000 makes uid 1000 the owner.
+          extraInitContainers:
+            - name: migrate-perms
+              image: busybox:1.37
+              command: ["sh", "-c", "chown -R 1000:1000 /opt/data"]
+              securityContext:
+                runAsNonRoot: false
+                runAsUser: 0
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  add: ["CHOWN"]
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: data
+                  mountPath: /opt/data
+
+          browser:
+            shm:
+              enabled: true
+              mountPath: /dev/shm
+              sizeLimit: 1Gi
+
+          virtualService:
+            enabled: true
+            gateways:
+              - istio-system/tailscale
+            hosts:
+              - hermes.syscd.tech
+            servicePortNumber: 8642
+
+          ingress:
+            enabled: false
+
+          # --- Security / isolation ---
+          podSecurityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+
+          serviceAccount:
+            create: true
+            automountServiceAccountToken: true
+
+          # Read-only cluster-wide + pod delete (as requested).
+          rbac:
+            create: true
+            clusterWide: true
+            rules:
+              - apiGroups: ["*"]
+                resources: ["*"]
+                verbs: ["get", "list", "watch"]
+              - apiGroups: [""]
+                resources: ["pods"]
+                verbs: ["delete"]
+
+          networkPolicy:
+            enabled: true
+            policyTypes:
+              - Ingress
+              - Egress
+            ingress:
+              # From the istio ingress gateway namespace to the API server.
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: istio-system
+                ports:
+                  - protocol: TCP
+                    port: 8642
+            egress:
+              # DNS
+              - to:
+                  - namespaceSelector: {}
+                ports:
+                  - protocol: UDP
+                    port: 53
+                  - protocol: TCP
+                    port: 53
+              # LiteLLM proxy
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: litellm
+                ports:
+                  - protocol: TCP
+                    port: 4000
+              # Kube API server
+              - ports:
+                  - protocol: TCP
+                    port: 443
+              # General HTTPS egress (GitHub, GHCR, web tools)
+              - ports:
+                  - protocol: TCP
+                    port: 443
+                  - protocol: TCP
+                    port: 80
+
+          tenantIsolation:
+            enabled: true
+            allowSameNamespace: true
+            allowDns: true
+
+          pdb:
+            enabled: true
+            minAvailable: 1
+
+          # --- camofox browser sidecar ---
+          extraContainers:
+            - name: camofox
+              image: ghcr.io/jo-inc/camofox-browser:latest
+              imagePullPolicy: IfNotPresent
+              ports:
                 - name: camofox
-                  image: ghcr.io/jo-inc/camofox-browser:latest
-                  imagePullPolicy: IfNotPresent
-                  ports:
-                    - name: camofox
-                      containerPort: 9377
-                      protocol: TCP
-                  env:
-                    - name: CAMOFOX_PORT
-                      value: "9377"
-                    - name: MAX_OLD_SPACE_SIZE
-                      value: "2048"
-                  volumeMounts:
-                    - name: dshm
-                      mountPath: /dev/shm
-                  resources:
-                    requests:
-                      cpu: 100m
-                      memory: 512Mi
-                    limits:
-                      cpu: "2"
-                      memory: 2Gi
-          services:
-            - name: hermes
-              port: 8642
-          virtualServices:
-            # hermes.syscd.tech only (private VPN via tailscale gateway)
-            - name: hermes
-              domains:
-                live: false
-                tech: true
-                xyz: false
-                dev: false
-              service:
-                name: hermes
-                namespace: hermes
-                port: 8642
+                  containerPort: 9377
+                  protocol: TCP
+              env:
+                - name: CAMOFOX_PORT
+                  value: "9377"
+                - name: MAX_OLD_SPACE_SIZE
+                  value: "2048"
+              volumeMounts:
+                - name: dshm
+                  mountPath: /dev/shm
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 512Mi
+                limits:
+                  cpu: "2"
+                  memory: 2Gi
+
+          # --- hermes-files: 1Password file attachments mounted as files ---
+          extraVolumes:
+            - name: hermes-files
+              secret:
+                secretName: hermes-files
+                optional: true
+          extraVolumeMounts:
+            - name: hermes-files
+              mountPath: /opt/data/files
+              readOnly: true
+
+          # Second ExternalSecret pulling 1Password FILE ATTACHMENTS by name.
+          extraObjects:
+            - apiVersion: external-secrets.io/v1
+              kind: ExternalSecret
+              metadata:
+                name: hermes-files
+                annotations:
+                  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+              spec:
+                refreshInterval: 1h
+                secretStoreRef:
+                  kind: ClusterSecretStore
+                  name: onepassword
+                target:
+                  name: hermes-files
+                  creationPolicy: Owner
+                  deletionPolicy: Retain
+                # NOTE: 1Password file ATTACHMENTS are not retrievable via ESO+Connect.
+                # extract returns only text fields. To mount files, store each file's
+                # CONTENTS as a text field (label = filename) in the hermes-files item.
+                dataFrom:
+                  - extract:
+                      key: hermes-files

@@ -1,0 +1,338 @@
+{{- if not .Values.operator.enabled }}
+{{- $replicas := int .Values.replicaCount -}}
+{{- $mountPath := .Values.persistence.mountPath -}}
+{{- $serviceEnabled := .Values.service.enabled -}}
+{{- $apiServerEnabled := .Values.apiServer.enabled -}}
+{{- $servicePorts := include "hermes-agent.servicePorts" . | fromJsonArray -}}
+{{- $affinity := deepCopy (.Values.affinity | default dict) -}}
+{{- $npmEnabled := gt (len .Values.npmPackages) 0 -}}
+{{- $bootstrapConfigMapName := include "hermes-agent.bootstrapConfigMapName" . -}}
+{{- $bootstrapConfigPath := printf "/bootstrap/%s" .Values.bootstrap.configKey -}}
+{{- $bootstrapSoulPath := printf "/bootstrap/%s" .Values.bootstrap.soulKey -}}
+{{- $hasInlineSecretValues := false -}}
+{{- range $key, $value := .Values.secrets }}
+  {{- if and (ne $key "existingSecret") (ne $key "annotations") (ne (printf "%v" $value) "") -}}
+    {{- $hasInlineSecretValues = true -}}
+  {{- end -}}
+{{- end -}}
+{{- $secretManagedExternally := or .Values.externalSecret.enabled .Values.secrets.existingSecret -}}
+{{- if and (gt $replicas 1) .Values.persistence.enabled }}
+{{- fail "Hermes Agent supports only one replica when persistence.enabled=true because HERMES_HOME contains mutable shared state" }}
+{{- end }}
+{{- if and .Values.externalSecret.enabled .Values.secrets.existingSecret }}
+{{- fail "externalSecret.enabled cannot be combined with secrets.existingSecret" }}
+{{- end }}
+{{- if and .Values.externalSecret.enabled $hasInlineSecretValues }}
+{{- fail "externalSecret.enabled cannot be combined with inline secrets.* values" }}
+{{- end }}
+{{- if and $apiServerEnabled (not $secretManagedExternally) (eq (printf "%v" .Values.secrets.API_SERVER_KEY) "") }}
+{{- fail "apiServer.enabled requires secrets.API_SERVER_KEY when neither secrets.existingSecret nor externalSecret.enabled is set" }}
+{{- end }}
+{{- if and .Values.telegramWebhook.enabled (eq (trim .Values.telegramWebhook.url) "") }}
+{{- fail "telegramWebhook.enabled requires telegramWebhook.url" }}
+{{- end }}
+{{- if and .Values.telegramWebhook.enabled (not $secretManagedExternally) (eq (printf "%v" .Values.secrets.TELEGRAM_BOT_TOKEN) "") }}
+{{- fail "telegramWebhook.enabled requires secrets.TELEGRAM_BOT_TOKEN when neither secrets.existingSecret nor externalSecret.enabled is set" }}
+{{- end }}
+{{- if and .Values.tenantIsolation.enabled (not .Values.tenant.id) }}
+{{- fail "tenantIsolation.enabled=true requires tenant.id" }}
+{{- end }}
+{{- $npmHash := "" -}}
+{{- if $npmEnabled -}}
+{{- $npmHash = sha256sum (join "," .Values.npmPackages) -}}
+{{- end -}}
+{{- $overwrite := ternary "true" "false" .Values.bootstrap.overwrite -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hermes-agent.fullname" . }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+  {{- with .Values.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  strategy:
+    type: {{ .Values.strategy.type }}
+  selector:
+    matchLabels:
+      {{- include "hermes-agent.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "hermes-agent.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if .Values.bootstrap.existingConfigMap }}
+        checksum/config: {{ printf "%s|%s|%s" .Values.bootstrap.existingConfigMap .Values.bootstrap.configKey .Values.bootstrap.soulKey | sha256sum }}
+        {{- else }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if .Values.externalSecret.enabled }}
+        checksum/external-secret: {{ include (print $.Template.BasePath "/external-secret.yaml") . | sha256sum }}
+        {{- else if not .Values.secrets.existingSecret }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "hermes-agent.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      {{- with .Values.runtimeClassName }}
+      runtimeClassName: {{ . }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if or .Values.bootstrap.enabled $npmEnabled .Values.extraInitContainers }}
+      initContainers:
+        {{- if .Values.bootstrap.enabled }}
+        - name: bootstrap-config
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              set -eu
+              mkdir -p {{ printf "%s/home" $mountPath | quote }}
+              if [ -f {{ $bootstrapConfigPath | quote }} ]; then
+                if [ "{{ $overwrite }}" = "true" ] || [ ! -f {{ printf "%s/config.yaml" $mountPath | quote }} ]; then
+                  cp {{ $bootstrapConfigPath | quote }} {{ printf "%s/config.yaml" $mountPath | quote }}
+                fi
+              fi
+              if [ -f {{ $bootstrapSoulPath | quote }} ]; then
+                if [ "{{ $overwrite }}" = "true" ] || [ ! -f {{ printf "%s/SOUL.md" $mountPath | quote }} ]; then
+                  cp {{ $bootstrapSoulPath | quote }} {{ printf "%s/SOUL.md" $mountPath | quote }}
+                fi
+              fi
+          env:
+            - name: HERMES_HOME
+              value: {{ $mountPath | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ $mountPath }}
+            - name: bootstrap
+              mountPath: /bootstrap
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
+        {{- if $npmEnabled }}
+        - name: npm-install
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              set -eu
+              mkdir -p {{ printf "%s/home" $mountPath | quote }} {{ printf "%s/npm-global" $mountPath | quote }}
+              hash_file={{ printf "%s/npm-global/.helm-npm-packages-hash" $mountPath | quote }}
+              desired_hash="{{ $npmHash }}"
+              current_hash=""
+              if [ -f "$hash_file" ]; then
+                current_hash="$(cat "$hash_file" 2>/dev/null || true)"
+              fi
+              if [ "$current_hash" != "$desired_hash" ]; then
+                npm install --global --prefix {{ printf "%s/npm-global" $mountPath | quote }}{{- range .Values.npmPackages }} {{ . | quote }}{{- end }}
+                npm cache clean --force || true
+                printf '%s\n' "$desired_hash" > "$hash_file"
+              fi
+          env:
+            - name: HOME
+              value: {{ printf "%s/home" $mountPath | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ $mountPath }}
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
+        {{- with .Values.extraInitContainers }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: hermes-agent
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          args:
+            {{- toYaml .Values.args | nindent 12 }}
+          workingDir: {{ .Values.workingDir }}
+          env:
+            - name: HERMES_HOME
+              value: {{ $mountPath | quote }}
+            - name: HOME
+              value: {{ printf "%s/home" $mountPath | quote }}
+            {{- if $npmEnabled }}
+            - name: PATH
+              value: {{ printf "%s/npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" $mountPath | quote }}
+            - name: NODE_PATH
+              value: {{ printf "%s/npm-global/lib/node_modules" $mountPath | quote }}
+            - name: NPM_CONFIG_PREFIX
+              value: {{ printf "%s/npm-global" $mountPath | quote }}
+            {{- end }}
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ printf "%v" $value | quote }}
+            {{- end }}
+            {{- if $apiServerEnabled }}
+            - name: API_SERVER_ENABLED
+              value: "true"
+            - name: API_SERVER_HOST
+              value: {{ .Values.apiServer.host | quote }}
+            - name: API_SERVER_PORT
+              value: {{ .Values.apiServer.port | quote }}
+            - name: API_SERVER_CORS_ORIGINS
+              value: {{ .Values.apiServer.corsOrigins | quote }}
+            - name: API_SERVER_MODEL_NAME
+              value: {{ .Values.apiServer.modelName | quote }}
+            {{- end }}
+            {{- if .Values.webhook.enabled }}
+            - name: WEBHOOK_ENABLED
+              value: "true"
+            - name: WEBHOOK_PORT
+              value: {{ .Values.webhook.port | quote }}
+            {{- end }}
+            {{- if .Values.telegramWebhook.enabled }}
+            - name: TELEGRAM_WEBHOOK_URL
+              value: {{ .Values.telegramWebhook.url | quote }}
+            - name: TELEGRAM_WEBHOOK_PORT
+              value: {{ .Values.telegramWebhook.port | quote }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if or .Values.externalSecret.enabled .Values.secrets.existingSecret .Values.extraEnvFrom $hasInlineSecretValues }}
+          envFrom:
+            {{- if or .Values.externalSecret.enabled .Values.secrets.existingSecret }}
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+            {{- else }}
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+                optional: true
+            {{- end }}
+            {{- with .Values.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          {{- if or (and $serviceEnabled (gt (len $servicePorts) 0)) $apiServerEnabled }}
+          ports:
+            {{- if $serviceEnabled }}
+            {{- range $i, $port := $servicePorts }}
+            - name: {{ default (printf "port-%d" $i) $port.name }}
+              containerPort: {{- if hasKey $port "containerPort" }} {{ $port.containerPort | int }}{{- else if and (hasKey $port "targetPort") (not (kindIs "string" $port.targetPort)) }} {{ $port.targetPort | int }}{{- else }} {{ $port.port | int }}{{- end }}
+              protocol: {{ default "TCP" $port.protocol }}
+            {{- end }}
+            {{- else if $apiServerEnabled }}
+            - name: api-server
+              containerPort: {{ .Values.apiServer.port }}
+              protocol: TCP
+            {{- end }}
+          {{- end }}
+          {{- with .Values.probes.liveness }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.probes.readiness }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.probes.startup }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ $mountPath }}
+            - name: tmp
+              mountPath: /tmp
+            {{- if .Values.browser.shm.enabled }}
+            - name: dshm
+              mountPath: {{ .Values.browser.shm.mountPath }}
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- with .Values.extraContainers }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      volumes:
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ default (include "hermes-agent.pvcName" .) .Values.persistence.existingClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: bootstrap
+          configMap:
+            name: {{ $bootstrapConfigMapName }}
+        - name: tmp
+          emptyDir: {}
+        {{- if .Values.browser.shm.enabled }}
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.browser.shm.sizeLimit | quote }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- $affinity := deepCopy .Values.affinity }}
+      {{- if and .Values.tenantIsolation.enabled .Values.tenantIsolation.podAntiAffinity.enabled .Values.tenant.id }}
+        {{- $tenantTerm := dict "labelSelector" (dict "matchExpressions" (list (dict "key" (include "hermes-agent.tenantLabelKey" .) "operator" "In" "values" (list .Values.tenant.id)))) "topologyKey" .Values.tenantIsolation.podAntiAffinity.topologyKey }}
+        {{- $tenantAffinity := dict }}
+        {{- if eq .Values.tenantIsolation.podAntiAffinity.type "requiredDuringSchedulingIgnoredDuringExecution" }}
+          {{- $tenantAffinity = dict "podAntiAffinity" (dict "requiredDuringSchedulingIgnoredDuringExecution" (list $tenantTerm)) }}
+        {{- else }}
+          {{- $tenantAffinity = dict "podAntiAffinity" (dict "preferredDuringSchedulingIgnoredDuringExecution" (list (dict "weight" 100 "podAffinityTerm" $tenantTerm))) }}
+        {{- end }}
+        {{- $affinity = mergeOverwrite $affinity $tenantAffinity }}
+      {{- end }}
+      {{- if $affinity }}
+      affinity:
+        {{- toYaml $affinity | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
