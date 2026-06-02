@@ -48,6 +48,15 @@ spec:
             host: "0.0.0.0"
             port: 8642
 
+          # Trimmed for the arm nodes (defaults 1Gi/4Gi were too heavy -> evicted).
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+
           service:
             enabled: true
 
@@ -225,10 +234,10 @@ spec:
               resources:
                 requests:
                   cpu: 100m
-                  memory: 512Mi
+                  memory: 256Mi
                 limits:
-                  cpu: "2"
-                  memory: 2Gi
+                  cpu: "1"
+                  memory: 1Gi
 
           # --- hermes-files: 1Password file attachments mounted as files ---
           extraVolumes:
