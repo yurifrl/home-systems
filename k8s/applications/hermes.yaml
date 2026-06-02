@@ -99,15 +99,15 @@ spec:
           extraInitContainers:
             - name: migrate-perms
               image: busybox:1.37
-              command: ["sh", "-c", "chown -R 1000:1000 /opt/data"]
+              command: ["sh", "-c", "chown -R 1000:1000 /opt/data || true"]
               securityContext:
                 runAsNonRoot: false
                 runAsUser: 0
-                readOnlyRootFilesystem: true
-                allowPrivilegeEscalation: false
+                allowPrivilegeEscalation: true
+                readOnlyRootFilesystem: false
                 capabilities:
-                  add: ["CHOWN"]
                   drop: ["ALL"]
+                  add: ["CHOWN", "FOWNER", "DAC_OVERRIDE"]
               volumeMounts:
                 - name: data
                   mountPath: /opt/data
