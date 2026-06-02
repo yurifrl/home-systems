@@ -1,0 +1,159 @@
+# Disk / storage alerts, evaluated by VMAlert (selectAllByDefault) and routed to
+# discord via the VMAlertmanagerConfig in this chart.
+#
+# Coverage:
+#   * node-filesystem.rules    -> machine disks (node-exporter, e.g. Talos /var)
+#   * kubernetes-storage.rules -> every PVC, incl. VMSingle + Grafana + Longhorn-
+#                                 backed volumes (kubelet volume stats)
+#
+# Note: Longhorn's own metrics are disabled (k8s/applications/longhorn.yaml
+# monitoring.enabled=false); enable it to get Longhorn node-capacity alerts.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: disk-space-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  groups:
+    # ----------------------------------------------------------------
+    # Machine / node filesystems (node-exporter)
+    # Read-only mounts (Talos /, /usr) are excluded via node_filesystem_readonly.
+    # ----------------------------------------------------------------
+    - name: node-filesystem.rules
+      rules:
+        - alert: NodeFilesystemSpaceFillingUp
+          expr: |
+            (
+              node_filesystem_avail_bytes{job=~".*node-exporter.*",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job=~".*node-exporter.*",fstype!="",mountpoint!=""} * 100 < 30
+              and
+              predict_linear(node_filesystem_avail_bytes{job=~".*node-exporter.*",fstype!="",mountpoint!=""}[6h], 24*60*60) < 0
+              and
+              node_filesystem_readonly{job=~".*node-exporter.*",fstype!="",mountpoint!=""} == 0
+            )
+          for: 1h
+          labels:
+            severity: warning
+            service: node-disk
+          annotations:
+            summary: "Node filesystem is predicted to fill up within 24h"
+            description: "Filesystem {{ `{{ $labels.mountpoint }}` }} on {{ `{{ $labels.instance }}` }} has {{ `{{ printf \"%.1f\" $value }}` }}% space left and is filling up fast."
+
+        - alert: NodeFilesystemAlmostOutOfSpace
+          expr: |
+            (
+              node_filesystem_avail_bytes{job=~".*node-exporter.*",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job=~".*node-exporter.*",fstype!="",mountpoint!=""} * 100 < 15
+              and
+              node_filesystem_readonly{job=~".*node-exporter.*",fstype!="",mountpoint!=""} == 0
+            )
+          for: 30m
+          labels:
+            severity: warning
+            service: node-disk
+          annotations:
+            summary: "Node filesystem has less than 15% space left"
+            description: "Filesystem {{ `{{ $labels.mountpoint }}` }} on {{ `{{ $labels.instance }}` }} has only {{ `{{ printf \"%.1f\" $value }}` }}% space left."
+
+        - alert: NodeFilesystemCriticalSpace
+          expr: |
+            (
+              node_filesystem_avail_bytes{job=~".*node-exporter.*",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job=~".*node-exporter.*",fstype!="",mountpoint!=""} * 100 < 8
+              and
+              node_filesystem_readonly{job=~".*node-exporter.*",fstype!="",mountpoint!=""} == 0
+            )
+          for: 5m
+          labels:
+            severity: critical
+            environment: production
+            service: node-disk
+          annotations:
+            summary: "Node filesystem has less than 8% space left"
+            description: "Filesystem {{ `{{ $labels.mountpoint }}` }} on {{ `{{ $labels.instance }}` }} has only {{ `{{ printf \"%.1f\" $value }}` }}% space left."
+
+        - alert: NodeFilesystemAlmostOutOfInodes
+          expr: |
+            (
+              node_filesystem_files_free{job=~".*node-exporter.*",fstype!="",mountpoint!=""} / node_filesystem_files{job=~".*node-exporter.*",fstype!="",mountpoint!=""} * 100 < 10
+              and
+              node_filesystem_readonly{job=~".*node-exporter.*",fstype!="",mountpoint!=""} == 0
+            )
+          for: 30m
+          labels:
+            severity: warning
+            service: node-disk
+          annotations:
+            summary: "Node filesystem is running out of inodes"
+            description: "Filesystem {{ `{{ $labels.mountpoint }}` }} on {{ `{{ $labels.instance }}` }} has only {{ `{{ printf \"%.1f\" $value }}` }}% inodes left."
+
+    # ----------------------------------------------------------------
+    # PersistentVolumeClaims (kubelet volume stats)
+    # Covers VMSingle, Grafana, and every other PVC in the cluster.
+    # ----------------------------------------------------------------
+    - name: kubernetes-storage.rules
+      rules:
+        - alert: KubePersistentVolumeFillingUp
+          expr: |
+            (
+              kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes * 100 < 15
+              and
+              kubelet_volume_stats_used_bytes > 0
+              and
+              predict_linear(kubelet_volume_stats_available_bytes[6h], 4*24*60*60) < 0
+            )
+          for: 1h
+          labels:
+            severity: warning
+            service: pvc-disk
+          annotations:
+            summary: "PersistentVolumeClaim is predicted to fill up within 4 days"
+            description: "PVC {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.persistentvolumeclaim }}` }} has {{ `{{ printf \"%.1f\" $value }}` }}% space left and is filling up."
+
+        - alert: KubePersistentVolumeAlmostFull
+          expr: |
+            (
+              kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes * 100 < 10
+              and
+              kubelet_volume_stats_used_bytes > 0
+            )
+          for: 5m
+          labels:
+            severity: warning
+            service: pvc-disk
+          annotations:
+            summary: "PersistentVolumeClaim has less than 10% space left"
+            description: "PVC {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.persistentvolumeclaim }}` }} has only {{ `{{ printf \"%.1f\" $value }}` }}% space left."
+
+        - alert: KubePersistentVolumeCriticalFull
+          expr: |
+            (
+              kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes * 100 < 4
+              and
+              kubelet_volume_stats_used_bytes > 0
+            )
+          for: 5m
+          labels:
+            severity: critical
+            environment: production
+            service: pvc-disk
+          annotations:
+            summary: "PersistentVolumeClaim has less than 4% space left"
+            description: "PVC {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.persistentvolumeclaim }}` }} has only {{ `{{ printf \"%.1f\" $value }}` }}% space left. Expand it or free space now."
+
+        - alert: KubePersistentVolumeInodesFillingUp
+          expr: |
+            (
+              kubelet_volume_stats_inodes_free / kubelet_volume_stats_inodes * 100 < 10
+              and
+              kubelet_volume_stats_inodes_used > 0
+            )
+          for: 30m
+          labels:
+            severity: warning
+            service: pvc-disk
+          annotations:
+            summary: "PersistentVolumeClaim is running out of inodes"
+            description: "PVC {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.persistentvolumeclaim }}` }} has only {{ `{{ printf \"%.1f\" $value }}` }}% inodes left."

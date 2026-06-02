@@ -1,21 +1,22 @@
 # test: https://blackbox-exporter.syscd.live/probe?module=resolve_dns_syscd&target=bind9.bind9.svc.cluster.local&debug=true
-apiVersion: monitoring.coreos.com/v1
-kind: Probe
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMProbe
 metadata:
   name: dns-dev-domains
   namespace: monitoring
 spec:
+  jobName: "probe/monitoring/dns-dev-domains"
   interval: 30s
   module: resolve_dns_syscd
-  prober:
+  vmProberSpec:
     url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
   targets:
     staticConfig:
-      static:
+      targets:
         - bind9.bind9.svc.cluster.local
 ---
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
 metadata:
   name: resolve-dns-dev-domains-rules
   namespace: monitoring

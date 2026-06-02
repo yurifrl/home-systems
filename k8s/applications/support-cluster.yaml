@@ -39,16 +39,26 @@ spec:
                 name: pyrra
                 namespace: monitoring
                 port: 9099
+            - name: grafana
+              service:
+                name: vmks-grafana
+                namespace: monitoring
+                port: 80
             - name: prometheus
               service:
-                name: kube-prometheus-stack-prometheus
+                name: vmsingle-vmks
                 namespace: monitoring
-                port: 9090
+                port: 8428
             - name: alertmanager
               service:
-                name: kube-prometheus-stack-alertmanager
+                name: vmalertmanager-vmks
                 namespace: monitoring
                 port: 9093
+            - name: vmagent
+              service:
+                name: vmagent-vmks
+                namespace: monitoring
+                port: 8429
             - name: longhorn
               service:
                 name: longhorn-frontend

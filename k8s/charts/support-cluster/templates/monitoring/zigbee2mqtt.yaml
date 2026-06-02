@@ -1,21 +1,22 @@
 # test: https://blackbox-exporter.syscd.live/probe?module=http_2xx&target=http://zigbee2mqtt.zigbee2mqtt.svc.cluster.local:8080/health&debug=true
-apiVersion: monitoring.coreos.com/v1
-kind: Probe
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMProbe
 metadata:
   name: zigbee2mqtt
   namespace: monitoring
 spec:
+  jobName: "probe/monitoring/zigbee2mqtt"
   interval: 30s
   module: http_2xx
-  prober:
+  vmProberSpec:
     url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
   targets:
     staticConfig:
-      static:
+      targets:
         - http://zigbee2mqtt.zigbee2mqtt.svc.cluster.local:8080
 ---
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
 metadata:
   name: zigbee2mqtt-rules
   namespace: monitoring

@@ -25,13 +25,17 @@ spec:
         valuesObject:
           extraKubernetesArgs:
             - --generic-rules
-          prometheusUrl: "http://prometheus.syscd.tech"
+          # VictoriaMetrics single-node serves the Prometheus query API.
+          prometheusUrl: "http://vmsingle-vmks.monitoring.svc.cluster.local:8428"
           dashboards:
             enabled: true
           serviceMonitor:
-            enabled: true
+            # prometheus-operator CRDs are gone after the VM migration; the VM
+            # operator scrapes via VMServiceScrape instead. Disabled to avoid a
+            # hard dependency on monitoring.coreos.com. See follow-up issue.
+            enabled: false
           prometheusRule:
-            enabled: true
+            enabled: false
           validatingWebhookConfiguration:
             enabled: true
           resources:

@@ -1,0 +1,282 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: victoria-metrics-k8s-stack
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # Bring up the operator + CRDs before support-cluster (-1) so its
+    # VMServiceScrape/VMRule/VMAlertmanagerConfig CRs have something to apply against.
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      # Required so the apply stage also honours ignoreDifferences below,
+      # otherwise ArgoCD silently re-writes the Grafana admin password each sync.
+      - RespectIgnoreDifferences=true
+  # https://docs.victoriametrics.com/helm/victoria-metrics-k8s-stack/#argocd-issues
+  ignoreDifferences:
+    # Grafana admin password churns on every sync because Helm `lookup` is not
+    # respected by ArgoCD.
+    - kind: Secret
+      jsonPointers:
+        - /data/admin-password
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/template/metadata/annotations/checksum~1secret
+  sources:
+    - repoURL: https://victoriametrics.github.io/helm-charts/
+      chart: victoria-metrics-k8s-stack
+      targetRevision: "0.81.0"
+      helm:
+        # Keep generated resource names short (63-char limit).
+        valuesObject:
+          nameOverride: vmks
+
+          # ----------------------------------------------------------------
+          # Operator
+          # ----------------------------------------------------------------
+          victoria-metrics-operator:
+            # Disable the admission webhook entirely to avoid the ArgoCD
+            # self-signed-cert re-render loop (no cert-manager in this cluster).
+            admissionWebhooks:
+              enabled: false
+              certManager:
+                enabled: false
+            # Convert existing prometheus-operator objects if any remain.
+            operator:
+              disable_prometheus_converter: false
+
+          # ----------------------------------------------------------------
+          # Storage / query engine (single node)
+          # ----------------------------------------------------------------
+          vmsingle:
+            enabled: true
+            spec:
+              port: "8428"
+              retentionPeriod: "30d"
+              replicaCount: 1
+              extraArgs:
+                # PromQL/MetricsQL exemplar-style features are on by default in VM.
+                search.maxUniqueTimeseries: "1000000"
+              storage:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 3Gi
+              resources:
+                limits:
+                  cpu: 750m
+                  memory: 2Gi
+                requests:
+                  cpu: 250m
+                  memory: 512Mi
+
+          # Single node => no cluster.
+          vmcluster:
+            enabled: false
+
+          # ----------------------------------------------------------------
+          # Scraper
+          # ----------------------------------------------------------------
+          vmagent:
+            enabled: true
+            spec:
+              port: "8429"
+              selectAllByDefault: true
+              scrapeInterval: "30s"
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+              # Annotation-based discovery + Telegraf, migrated 1:1 from the old
+              # kube-prometheus-stack additionalScrapeConfigs.
+              inlineScrapeConfig: |
+                - job_name: 'kubernetes-pods-annotations'
+                  kubernetes_sd_configs:
+                    - role: pod
+                  relabel_configs:
+                    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                      action: keep
+                      regex: true
+                    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                      action: replace
+                      target_label: __metrics_path__
+                      regex: (.+)
+                    - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                      action: replace
+                      regex: ([^:]+)(?::\d+)?;(\d+)
+                      replacement: $1:$2
+                      target_label: __address__
+                - job_name: 'kubernetes-services-annotations'
+                  kubernetes_sd_configs:
+                    - role: service
+                  relabel_configs:
+                    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+                      action: keep
+                      regex: true
+                    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_port]
+                      action: replace
+                      regex: ([^:]+)(?::\d+)?;(\d+)
+                      replacement: $1:$2
+                      target_label: __address__
+                - job_name: 'telegraf'
+                  static_configs:
+                    - targets: ['telegraf.influxdb.svc:8094']
+                  metrics_path: '/metrics'
+                  scheme: 'http'
+
+          # ----------------------------------------------------------------
+          # Alerting / recording rule evaluation
+          # ----------------------------------------------------------------
+          vmalert:
+            enabled: true
+            spec:
+              port: "8080"
+              selectAllByDefault: true
+              evaluationInterval: 20s
+              externalLabels:
+                cluster: talos-default
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 256Mi
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+
+          alertmanager:
+            enabled: true
+            spec:
+              externalURL: https://alertmanager.syscd.live
+              # Merge any VMAlertmanagerConfig in the cluster (the discord
+              # receiver lives in the support-cluster chart).
+              selectAllByDefault: true
+              # VMAlertmanagerConfig enforces a namespace matcher by default,
+              # which would drop alerts whose namespace label != the config's
+              # namespace. Disable it so cluster-wide alerts reach discord.
+              disableNamespaceMatcher: true
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 256Mi
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+            # Fallback root config; the discord routing comes from the
+            # VMAlertmanagerConfig CR (support-cluster chart).
+            config:
+              route:
+                receiver: blackhole
+              receivers:
+                - name: blackhole
+
+          # ----------------------------------------------------------------
+          # Rules / dashboards
+          # ----------------------------------------------------------------
+          # Mirror the previous setup: no kube-prometheus default rules.
+          # Flip create:true if you want VM's curated k8s alerts.
+          defaultRules:
+            create: false
+
+          # Ship the kube-prometheus + VM dashboards as ConfigMaps consumed by
+          # the bundled Grafana sidecar.
+          defaultDashboards:
+            enabled: true
+            annotations:
+              argocd.argoproj.io/sync-options: ServerSideApply=true
+
+          # VictoriaMetrics datasource is injected automatically; add the
+          # non-metrics datasources that used to live in the grafana-operator app.
+          defaultDatasources:
+            extra:
+              - name: Loki
+                type: loki
+                access: proxy
+                url: http://loki.monitoring:3100
+                jsonData:
+                  maxLines: 1000
+              - name: Quickwit
+                type: quickwit-quickwit-datasource
+                access: proxy
+                url: http://quickwit-searcher.quickwit.svc.cluster.local:7280/api/v1
+                jsonData:
+                  index: otel-traces-v0_7
+                  logMessageField: body.message
+                  logLevelField: severity_text
+                  timeField: timestamp
+                  queryType: logs
+              - name: MQTT
+                type: grafana-mqtt-datasource
+                access: proxy
+                url: tcp://mosquitto.mosquitto.svc.cluster.local:1883
+              - name: InfluxDB
+                type: influxdb
+                access: proxy
+                url: http://influxdb-influxdb2.influxdb.svc.cluster.local
+                # NOTE: carried over from the old grafana-operator datasource.
+                # Verify/rotate this token if InfluxDB auth fails.
+                secureJsonData:
+                  token: admin
+                jsonData:
+                  version: Flux
+                  organization: home-systems
+                  defaultBucket: default
+                  tlsSkipVerify: true
+
+          # ----------------------------------------------------------------
+          # Grafana (bundled)
+          # ----------------------------------------------------------------
+          grafana:
+            enabled: true
+            adminUser: admin
+            adminPassword: admin
+            nodeSelector:
+              kubernetes.io/arch: arm64
+            persistence:
+              enabled: true
+              type: pvc
+              size: 5Gi
+            # Datasource plugins required by the extra datasources above.
+            plugins:
+              - quickwit-quickwit-datasource
+              - grafana-mqtt-datasource
+            resources:
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+              requests:
+                cpu: 250m
+                memory: 256Mi
+            # Dashboards are delivered via the dashboard sidecar (defaultDashboards
+            # above provides node-exporter, kube-state-metrics, k8s cluster/pod/
+            # resource and VictoriaMetrics dashboards). The chart forbids combining
+            # `grafana.dashboards` (init-container provisioning) with the sidecar.
+            # The two unique grafana.com extras from the old setup (ArgoCD 19993,
+            # blackbox-exporter 7587) are tracked as follow-up: add them as
+            # ConfigMaps labelled `grafana_dashboard: "1"`.
+            sidecar:
+              dashboards:
+                enabled: true
+              datasources:
+                enabled: true
+
+# References:
+# - https://docs.victoriametrics.com/helm/victoria-metrics-k8s-stack/
+# - https://docs.victoriametrics.com/operator/integrations/prometheus/#objects-conversion
+# - Old stack archived under k8s/lib/ (kube-prometheus-stack.yaml, grafana.yaml)

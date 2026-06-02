@@ -1,6 +1,6 @@
 {{- if .Values.features.prometheusRules }}
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
 metadata:
   name: test-alert-rules
   namespace: monitoring  # Replace with your Prometheus namespace
@@ -25,8 +25,8 @@ spec:
             description: "This is a test alert to verify the Alertmanager configuration."
             runbook_url: "https://your-runbook-url.com/alerts/test-alert"
 ---
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
 metadata:
   name: test-alert2-rules
   namespace: monitoring  # Replace with your Prometheus namespace
@@ -51,8 +51,8 @@ spec:
             description: "This is a test alert to verify the Alertmanager configuration."
             runbook_url: "https://your-runbook-url.com/alerts/test-alert"
 ---
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
 metadata:
   name: cpu-saturation-rules
   namespace: monitoring

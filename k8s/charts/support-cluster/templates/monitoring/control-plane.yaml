@@ -21,23 +21,26 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io 
 ---
 # Test: https://blackbox-exporter.syscd.live/probe?target=https://kubernetes.default.svc/api/v1/namespaces/kube-system/pods&module=http_2xx_control_plane&debug=true
-apiVersion: monitoring.coreos.com/v1
-kind: Probe
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMProbe
 metadata:
   name: control-plane-probe
   namespace: monitoring
 spec:
+  # jobName preserves the legacy Prometheus job label so alert exprs below
+  # (job="probe/monitoring/control-plane-probe") keep matching unchanged.
+  jobName: "probe/monitoring/control-plane-probe"
   interval: 30s
   module: http_2xx_control_plane # k8s/applications/blackbox-exporter.yaml
-  prober:
+  vmProberSpec:
     url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
   targets:
     staticConfig:
-      static:
+      targets:
         - https://kubernetes.default.svc/api/v1/namespaces/kube-system/pods
 ---
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
 metadata:
   name: control-plane-rules
   namespace: monitoring
