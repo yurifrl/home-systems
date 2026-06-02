@@ -63,6 +63,12 @@ spec:
           tenant:
             id: hermes
 
+          # Pin to the amd64 node with memory headroom; the arm SBCs are
+          # overcommitted and evict the ~4Gi pod. Also stops camofox image
+          # re-pulls on node-hop. Longhorn volume attaches cross-node.
+          nodeSelector:
+            kubernetes.io/hostname: dell01
+
           # All keys of 1Password item "hermes-env" -> Secret -> envFrom.
           externalSecret:
             enabled: true
