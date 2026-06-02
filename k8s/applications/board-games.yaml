@@ -4,7 +4,7 @@ metadata:
   name: board-games
   namespace: argocd
   finalizers:
-  - resources-finalizer.argocd.argoproj.io
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   destination:
@@ -20,65 +20,33 @@ spec:
       labels:
         istio.io/dataplane-mode: ambient
   sources:
+    # PRIVATE: real values (image owner, gitSync repo/subPath) for the bg chart.
+    - repoURL: git@github.com:yurifrl/home-systems-values.git
+      targetRevision: HEAD
+      ref: values
+    # App: public board-games chart (Deployment/Service/PVC/ConfigMap).
+    - repoURL: https://github.com/yurifrl/board-games.git
+      targetRevision: HEAD
+      path: chart
+      helm:
+        releaseName: board-games
+        valueFiles:
+          - $values/board-games/values.yaml
+    # Cluster glue: ExternalSecret (1Password) + istio VirtualService.
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/support
       helm:
         valuesObject:
-          configMaps:
-            - name: bg-whitelist-config
-              data:
-                whitelist-config.yaml: |
-                  defaultRole: viewer
-                  roles:
-                    admin:  { canSeePrices: true, canBid: true, admin: true }
-                    buyer:  { canSeePrices: true, canBid: true }
-                    viewer: { canSeePrices: false, canBid: false }
           externalSecrets:
-            - name: bg-config        # 1Password "bg-config": users (role:id), AUTH_SECRET, WHATSAPP_NUMBER
-          services:
             - name: board-games
-              port: 8080
-          deployments:
-            - name: board-games
-              image:
-                repository: harbor-core.harbor.svc.cluster.local/bg
-                tag: latest
-              containerPort: 8080
-              env:
-                - { name: PORT, value: "8080" }
-                - { name: BASE_URL, value: "https://bg.syscd.live" }
-                - name: WHATSAPP_NUMBER
-                  valueFrom:
-                    secretKeyRef:
-                      name: bg-config
-                      key: WHATSAPP_NUMBER
-                - name: AUTH_SECRET
-                  valueFrom:
-                    secretKeyRef:
-                      name: bg-config
-                      key: AUTH_SECRET
-              volumes:
-                - name: cfg
-                  configMap:
-                    name: bg-whitelist-config
-                - name: users
-                  secret:
-                    secretName: bg-config
-                - name: data
-                  emptyDir: {}
-              volumeMounts:
-                - { name: cfg, mountPath: /app/whitelist-config.yaml, subPath: whitelist-config.yaml }
-                - { name: users, mountPath: /secrets/users, readOnly: true }
-                - { name: data, mountPath: /data }
           virtualServices:
             - name: board-games
               hosts:
-                - bg.monaddaydream.com
                 - bg.syscd.live
                 - bg.syscd.tech
+                - bg.monaddaydream.com
               service:
                 name: board-games
                 namespace: board-games
                 port: 8080
-
