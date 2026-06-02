@@ -40,6 +40,11 @@ spec:
       chart: victoria-metrics-k8s-stack
       targetRevision: "0.81.0"
       helm:
+        # Pin the Helm release name so resource names are short and
+        # deterministic (vmks-*, vmsingle-vmks, vmalertmanager-vmks, ...),
+        # matching the virtualservice targets in support-cluster.yaml.
+        # Without this ArgoCD uses the app name as the release name.
+        releaseName: vmks
         # Keep generated resource names short (63-char limit).
         valuesObject:
           nameOverride: vmks
