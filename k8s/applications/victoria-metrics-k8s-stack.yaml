@@ -36,6 +36,17 @@ spec:
       jsonPointers:
         - /spec/template/metadata/annotations/checksum~1secret
   sources:
+    # Recreate the monitoring-namespace external secrets that the retired
+    # kube-prometheus-stack app used to provide (alertmanager-discord is read by
+    # the VMAlertmanagerConfig discord receiver; blackbox-exporter by the probes).
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: alertmanager-discord
+            - name: blackbox-exporter
     - repoURL: https://victoriametrics.github.io/helm-charts/
       chart: victoria-metrics-k8s-stack
       targetRevision: "0.81.0"
