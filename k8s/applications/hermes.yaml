@@ -68,6 +68,11 @@ spec:
           # re-pulls on node-hop. Longhorn volume attaches cross-node.
           nodeSelector:
             kubernetes.io/hostname: dell01
+          # dell01 is the control-plane node (only node with RAM headroom).
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
 
           # All keys of 1Password item "hermes-env" -> Secret -> envFrom.
           externalSecret:
@@ -92,7 +97,8 @@ spec:
 
           persistence:
             enabled: true
-            existingClaim: state-hermes-0   # migrate: reuse the existing PVC in place
+            # volumeName defaults to "state" -> StatefulSet volumeClaimTemplate
+            # generates PVC state-hermes-0, adopting the existing volume in place.
             storageClass: longhorn-ha
             mountPath: /opt/data
             accessMode: ReadWriteOnce
@@ -115,7 +121,7 @@ spec:
                   drop: ["ALL"]
                   add: ["CHOWN", "FOWNER", "DAC_OVERRIDE"]
               volumeMounts:
-                - name: data
+                - name: state
                   mountPath: /opt/data
 
           browser:
