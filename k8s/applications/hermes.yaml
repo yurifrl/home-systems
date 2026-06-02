@@ -234,10 +234,10 @@ spec:
               resources:
                 requests:
                   cpu: 100m
-                  memory: 256Mi
+                  memory: 512Mi
                 limits:
                   cpu: "1"
-                  memory: 1Gi
+                  memory: 2Gi
 
           # --- hermes-files: 1Password file attachments mounted as files ---
           extraVolumes:
