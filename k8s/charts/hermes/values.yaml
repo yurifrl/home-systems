@@ -1,27 +1,21 @@
 nameOverride: ""
 fullnameOverride: ""
 
+# home-systems image (built by .github/workflows/build-hermes.yaml).
 image:
-  repository: nousresearch/hermes-agent
-  tag: "0.8.0"
-  pullPolicy: IfNotPresent
+  repository: ghcr.io/yurifrl/hermes-agent
+  tag: latest
+  pullPolicy: Always
 
 imagePullSecrets: []
 
-# Hermes stores mutable state under HERMES_HOME, so a single replica is the
-# safe default when persistence is enabled.
 replicaCount: 1
 revisionHistoryLimit: 5
 
-# StatefulSet rollout strategy. RollingUpdate (default) recreates the single
-# pod in place; OnDelete updates only when the pod is manually deleted.
 updateStrategy:
   type: RollingUpdate
-# Pod creation/scaling ordering for the StatefulSet.
 podManagementPolicy: OrderedReady
 
-# The official image entrypoint already bootstraps Hermes and execs `hermes`.
-# These args become `hermes <args...>`.
 command: []
 args:
   - gateway
@@ -30,25 +24,19 @@ workingDir: /opt/hermes
 
 bootstrap:
   enabled: true
-  # When true, overwrite the persisted config/SOUL with Helm-rendered content.
-  # When false, seed only if the file does not already exist in the PVC.
-  overwrite: true
-  # Optionally consume config bootstrap data from an externally managed
-  # ConfigMap instead of the chart-managed one.
+  # Seed config.yaml/SOUL.md only if absent — preserve the persisted volume.
+  overwrite: false
   existingConfigMap: ""
   configKey: config.yaml
   soulKey: SOUL.md
 
 config:
-  # Raw YAML string rendered via tpl. When non-empty, it takes precedence over
-  # config.values.
   raw: ""
-  # Partial Hermes config.yaml written into HERMES_HOME/config.yaml.
   values:
     model:
-      default: anthropic/claude-opus-4.6
-      provider: auto
-      base_url: https://openrouter.ai/api/v1
+      # Inference flows through LiteLLM (OPENAI_BASE_URL) which is OpenAI-compat.
+      provider: openai-api
+      default: gpt
     agent:
       max_turns: 90
       gateway_timeout: 1800
@@ -78,6 +66,8 @@ config:
 soul:
   text: ""
 
+# Non-secret env defaults. Secrets are loaded via the hermes-env ExternalSecret
+# (envFrom). HOME is set automatically by the chart to <mountPath>/home.
 env:
   WEB_TOOLS_DEBUG: "false"
   VISION_TOOLS_DEBUG: "false"
@@ -96,77 +86,25 @@ env:
   SLACK_ALLOWED_USERS: ""
   SIGNAL_ALLOWED_USERS: ""
   SIGNAL_GROUP_ALLOWED_USERS: ""
+  # Browser tools route through the camofox sidecar (same pod).
+  CAMOFOX_URL: http://localhost:9377
 
 extraEnv: []
 extraEnvFrom: []
 
+# Inline secrets unused — we load everything from 1Password via externalSecret.
 secrets:
   existingSecret: ""
   annotations: {}
-  OPENROUTER_API_KEY: ""
-  OPENAI_API_KEY: ""
-  ANTHROPIC_API_KEY: ""
-  GOOGLE_API_KEY: ""
-  GEMINI_API_KEY: ""
-  GLM_API_KEY: ""
-  KIMI_API_KEY: ""
-  MINIMAX_API_KEY: ""
-  MINIMAX_CN_API_KEY: ""
-  HF_TOKEN: ""
-  XIAOMI_API_KEY: ""
-  AI_GATEWAY_API_KEY: ""
-  NOUS_API_KEY: ""
-  EXA_API_KEY: ""
-  FIRECRAWL_API_KEY: ""
-  FAL_KEY: ""
-  GROQ_API_KEY: ""
-  VOICE_TOOLS_OPENAI_KEY: ""
-  API_SERVER_KEY: ""
-  TELEGRAM_BOT_TOKEN: ""
-  DISCORD_BOT_TOKEN: ""
-  SLACK_BOT_TOKEN: ""
-  SLACK_APP_TOKEN: ""
-  SIGNAL_HTTP_URL: ""
-  SIGNAL_ACCOUNT: ""
-  BROWSERBASE_API_KEY: ""
-  BROWSERBASE_PROJECT_ID: ""
-  HONCHO_API_KEY: ""
-  TINKER_API_KEY: ""
-  WANDB_API_KEY: ""
-  GITHUB_TOKEN: ""
-  SUDO_PASSWORD: ""
-  WEBHOOK_SECRET: ""
-  EMAIL_ADDRESS: ""
-  EMAIL_PASSWORD: ""
-  EMAIL_IMAP_HOST: ""
-  EMAIL_IMAP_PORT: ""
-  EMAIL_SMTP_HOST: ""
-  EMAIL_SMTP_PORT: ""
-  MISTRAL_API_KEY: ""
-  DINGTALK_CLIENT_ID: ""
-  DINGTALK_CLIENT_SECRET: ""
-  FEISHU_APP_ID: ""
-  FEISHU_APP_SECRET: ""
-  FEISHU_ENCRYPT_KEY: ""
-  FEISHU_VERIFICATION_TOKEN: ""
-  WECOM_BOT_ID: ""
-  WECOM_SECRET: ""
-  WECOM_CALLBACK_CORP_ID: ""
-  WECOM_CALLBACK_CORP_SECRET: ""
-  WECOM_CALLBACK_AGENT_ID: ""
-  WECOM_CALLBACK_TOKEN: ""
-  WECOM_CALLBACK_ENCODING_AES_KEY: ""
-  WEIXIN_ACCOUNT_ID: ""
-  WEIXIN_TOKEN: ""
-  BLUEBUBBLES_SERVER_URL: ""
-  BLUEBUBBLES_PASSWORD: ""
 
+# All keys of the 1Password "hermes-env" item -> Secret -> envFrom.
+# The instance binds target.name + dataFrom in the Application.
 externalSecret:
-  enabled: false
+  enabled: true
   refreshInterval: 1h
   secretStoreRef:
     kind: ClusterSecretStore
-    name: ""
+    name: onepassword
   target:
     name: ""
     creationPolicy: Owner
@@ -190,11 +128,11 @@ operator:
   tenants: []
 
 tenant:
-  id: ""
+  id: hermes
   labels: {}
 
 apiServer:
-  enabled: false
+  enabled: true
   host: "0.0.0.0"
   port: 8642
   corsOrigins: ""
@@ -213,24 +151,30 @@ serviceAccount:
   create: true
   name: ""
   annotations: {}
-  automountServiceAccountToken: false
+  # Required so the agent can use its RBAC via the mounted SA token.
+  automountServiceAccountToken: true
 
+# Cluster read-only + delete pods.
 rbac:
-  create: false
-  clusterWide: false
+  create: true
+  clusterWide: true
   annotations: {}
-  rules: []
+  rules:
+    - apiGroups: ["*"]
+      resources: ["*"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["delete"]
 
 persistence:
   enabled: true
   existingClaim: ""
-  # Name of the StatefulSet volumeClaimTemplate (and the pod volume). The
-  # generated PVC is <volumeName>-<statefulset>-<ordinal>, e.g. state-hermes-0.
   volumeName: state
   mountPath: /opt/data
   accessMode: ReadWriteOnce
-  size: 5Gi
-  storageClass: ""
+  size: 20Gi
+  storageClass: longhorn-ha
   annotations: {}
 
 browser:
@@ -240,7 +184,7 @@ browser:
     sizeLimit: 1Gi
 
 service:
-  enabled: false
+  enabled: true
   type: ClusterIP
   annotations: {}
   labels: {}
@@ -248,15 +192,6 @@ service:
   externalTrafficPolicy: ""
   internalTrafficPolicy: ""
   loadBalancerSourceRanges: []
-  # When empty, the chart automatically exposes enabled apiServer/webhook/
-  # telegramWebhook listeners using their configured port values. Explicit
-  # entries override the defaults.
-  # ports:
-  #   - name: api-server
-  #     port: 8642
-  #     targetPort: 8642
-  #     containerPort: 8642
-  #     protocol: TCP
   ports: []
 
 ingress:
@@ -271,23 +206,59 @@ ingress:
   tls: []
   servicePortNumber: null
 
+# Private VPN endpoint via the tailscale gateway. The instance sets hosts.
 virtualService:
-  enabled: false
-  gateways: []
+  enabled: true
+  gateways:
+    - istio-system/tailscale
   hosts: []
   timeout: "3600s"
-  servicePortNumber: null
+  servicePortNumber: 8642
 
 networkPolicy:
-  enabled: false
+  enabled: true
   policyTypes:
     - Ingress
     - Egress
-  ingress: []
-  egress: []
+  ingress:
+    # From the istio ingress gateway namespace to the API server.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - protocol: TCP
+          port: 8642
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # LiteLLM proxy
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: litellm
+      ports:
+        - protocol: TCP
+          port: 4000
+    # Kube API server
+    - ports:
+        - protocol: TCP
+          port: 443
+    # General HTTPS/HTTP egress (GitHub, GHCR, web tools)
+    - ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
 
 tenantIsolation:
-  enabled: false
+  enabled: true
   allowSameNamespace: true
   authorizedNamespaces: []
   allowDns: true
@@ -298,16 +269,9 @@ tenantIsolation:
     topologyKey: kubernetes.io/hostname
 
 pdb:
-  enabled: false
+  enabled: true
   minAvailable: 1
 
-# Raw probe specs copied onto the container.
-# Example HTTP probe for the Hermes API server:
-# probes:
-#   liveness:
-#     httpGet:
-#       path: /health
-#       port: api-server
 probes:
   liveness: {}
   readiness: {}
@@ -315,13 +279,14 @@ probes:
 
 npmPackages: []
 
+# Trimmed for the arm nodes (upstream 1Gi/4Gi was too heavy and got evicted).
 resources:
   requests:
-    cpu: 500m
-    memory: 1Gi
+    cpu: 250m
+    memory: 512Mi
   limits:
     cpu: "2"
-    memory: 4Gi
+    memory: 2Gi
 
 terminationGracePeriodSeconds: 120
 
@@ -354,8 +319,62 @@ tolerations: []
 affinity: {}
 topologySpreadConstraints: []
 
-extraVolumes: []
-extraVolumeMounts: []
+# camofox browser-as-a-service sidecar (anti-detect Camoufox/Firefox).
+extraContainers:
+  - name: camofox
+    image: ghcr.io/jo-inc/camofox-browser:latest
+    imagePullPolicy: IfNotPresent
+    ports:
+      - name: camofox
+        containerPort: 9377
+        protocol: TCP
+    env:
+      - name: CAMOFOX_PORT
+        value: "9377"
+      - name: MAX_OLD_SPACE_SIZE
+        value: "2048"
+    volumeMounts:
+      - name: dshm
+        mountPath: /dev/shm
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+
+# 1Password "hermes-files" item mounted as files at /opt/data/files.
+# NOTE: 1Password file ATTACHMENTS are not retrievable via ESO+Connect — extract
+# returns only text fields. Store each file's CONTENTS as a text field
+# (label = filename) in the hermes-files item to have it mounted.
+extraVolumes:
+  - name: hermes-files
+    secret:
+      secretName: hermes-files
+      optional: true
+extraVolumeMounts:
+  - name: hermes-files
+    mountPath: /opt/data/files
+    readOnly: true
 extraInitContainers: []
-extraContainers: []
-extraObjects: []
+
+extraObjects:
+  - apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: hermes-files
+      annotations:
+        argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    spec:
+      refreshInterval: 1h
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: onepassword
+      target:
+        name: hermes-files
+        creationPolicy: Owner
+        deletionPolicy: Retain
+      dataFrom:
+        - extract:
+            key: hermes-files

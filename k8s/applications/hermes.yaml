@@ -22,249 +22,34 @@ spec:
       targetRevision: HEAD
       path: k8s/charts/hermes
       helm:
+        # Only what makes THIS instance mine — everything else is chart defaults.
         valuesObject:
-          image:
-            repository: ghcr.io/yurifrl/hermes-agent
-            tag: latest
-            pullPolicy: Always
-
-          # Hermes config seeded into /opt/data/config.yaml (bootstrap initContainer).
-          config:
-            values:
-              model:
-                provider: openai-api
-                default: gpt
-              security:
-                redact_secrets: true
-
-          # Non-secret env. Secrets come from the hermes-env ExternalSecret (envFrom).
-          # HOME is set automatically by the chart to <mountPath>/home.
+          # Inference endpoint (in-cluster LiteLLM).
           env:
             OPENAI_BASE_URL: http://litellm.litellm.svc.cluster.local:4000/v1
-            CAMOFOX_URL: http://localhost:9377
 
-          apiServer:
-            enabled: true
-            host: "0.0.0.0"
-            port: 8642
-
-          # Trimmed for the arm nodes (defaults 1Gi/4Gi were too heavy -> evicted).
-          resources:
-            requests:
-              cpu: 250m
-              memory: 512Mi
-            limits:
-              cpu: "2"
-              memory: 2Gi
-
-          service:
-            enabled: true
-
-          tenant:
-            id: hermes
-
-          # Pin to the amd64 node with memory headroom; the arm SBCs are
-          # overcommitted and evict the ~4Gi pod. Also stops camofox image
-          # re-pulls on node-hop. Longhorn volume attaches cross-node.
-          nodeSelector:
-            kubernetes.io/hostname: dell01
-          # dell01 is the control-plane node (only node with RAM headroom).
-          tolerations:
-            - key: node-role.kubernetes.io/control-plane
-              operator: Exists
-              effect: NoSchedule
-
-          # All keys of 1Password item "hermes-env" -> Secret -> envFrom.
+          # Bind to the 1Password "hermes-env" item (envFrom).
           externalSecret:
-            enabled: true
-            refreshInterval: 1h
-            secretStoreRef:
-              kind: ClusterSecretStore
-              name: onepassword
             target:
               name: hermes-env
-              creationPolicy: Owner
-              deletionPolicy: Retain
             dataFrom:
               - extract:
                   key: hermes-env
 
-          # Bootstrap seeds config.yaml/SOUL.md only if absent — preserve the
-          # migrated config from the existing volume.
-          bootstrap:
-            enabled: true
-            overwrite: false
+          # Reuse the migrated PVC in place.
+          # NOTE: the StatefulSet volumeClaimTemplate is named `state` -> it
+          # generates (and adopts) the existing `state-hermes-0` PVC, so no
+          # existingClaim is needed (that's a Deployment-era knob).
 
-          persistence:
-            enabled: true
-            # volumeName defaults to "state" -> StatefulSet volumeClaimTemplate
-            # generates PVC state-hermes-0, adopting the existing volume in place.
-            storageClass: longhorn-ha
-            mountPath: /opt/data
-            accessMode: ReadWriteOnce
-            size: 20Gi
-
-          # Migration complete: /opt/data is owned 1000:1000, so no chown init
-          # is needed. fsGroup: 1000 covers any new files.
-
-          browser:
-            shm:
-              enabled: true
-              mountPath: /dev/shm
-              sizeLimit: 1Gi
-
+          # Private hostname behind the tailscale gateway.
           virtualService:
-            enabled: true
-            gateways:
-              - istio-system/tailscale
             hosts:
               - hermes.syscd.tech
-            servicePortNumber: 8642
 
-          ingress:
-            enabled: false
-
-          # --- Security / isolation ---
-          podSecurityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            fsGroup: 1000
-            fsGroupChangePolicy: OnRootMismatch
-            seccompProfile:
-              type: RuntimeDefault
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop:
-                - ALL
-            seccompProfile:
-              type: RuntimeDefault
-
-          serviceAccount:
-            create: true
-            automountServiceAccountToken: true
-
-          # Read-only cluster-wide + pod delete (as requested).
-          rbac:
-            create: true
-            clusterWide: true
-            rules:
-              - apiGroups: ["*"]
-                resources: ["*"]
-                verbs: ["get", "list", "watch"]
-              - apiGroups: [""]
-                resources: ["pods"]
-                verbs: ["delete"]
-
-          networkPolicy:
-            enabled: true
-            policyTypes:
-              - Ingress
-              - Egress
-            ingress:
-              # From the istio ingress gateway namespace to the API server.
-              - from:
-                  - namespaceSelector:
-                      matchLabels:
-                        kubernetes.io/metadata.name: istio-system
-                ports:
-                  - protocol: TCP
-                    port: 8642
-            egress:
-              # DNS
-              - to:
-                  - namespaceSelector: {}
-                ports:
-                  - protocol: UDP
-                    port: 53
-                  - protocol: TCP
-                    port: 53
-              # LiteLLM proxy
-              - to:
-                  - namespaceSelector:
-                      matchLabels:
-                        kubernetes.io/metadata.name: litellm
-                ports:
-                  - protocol: TCP
-                    port: 4000
-              # Kube API server
-              - ports:
-                  - protocol: TCP
-                    port: 443
-              # General HTTPS egress (GitHub, GHCR, web tools)
-              - ports:
-                  - protocol: TCP
-                    port: 443
-                  - protocol: TCP
-                    port: 80
-
-          tenantIsolation:
-            enabled: true
-            allowSameNamespace: true
-            allowDns: true
-
-          pdb:
-            enabled: true
-            minAvailable: 1
-
-          # --- camofox browser sidecar ---
-          extraContainers:
-            - name: camofox
-              image: ghcr.io/jo-inc/camofox-browser:latest
-              imagePullPolicy: IfNotPresent
-              ports:
-                - name: camofox
-                  containerPort: 9377
-                  protocol: TCP
-              env:
-                - name: CAMOFOX_PORT
-                  value: "9377"
-                - name: MAX_OLD_SPACE_SIZE
-                  value: "2048"
-              volumeMounts:
-                - name: dshm
-                  mountPath: /dev/shm
-              resources:
-                requests:
-                  cpu: 100m
-                  memory: 512Mi
-                limits:
-                  cpu: "1"
-                  memory: 2Gi
-
-          # --- hermes-files: 1Password file attachments mounted as files ---
-          extraVolumes:
-            - name: hermes-files
-              secret:
-                secretName: hermes-files
-                optional: true
-          extraVolumeMounts:
-            - name: hermes-files
-              mountPath: /opt/data/files
-              readOnly: true
-
-          # Second ExternalSecret pulling 1Password FILE ATTACHMENTS by name.
-          extraObjects:
-            - apiVersion: external-secrets.io/v1
-              kind: ExternalSecret
-              metadata:
-                name: hermes-files
-                annotations:
-                  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-              spec:
-                refreshInterval: 1h
-                secretStoreRef:
-                  kind: ClusterSecretStore
-                  name: onepassword
-                target:
-                  name: hermes-files
-                  creationPolicy: Owner
-                  deletionPolicy: Retain
-                # NOTE: 1Password file ATTACHMENTS are not retrievable via ESO+Connect.
-                # extract returns only text fields. To mount files, store each file's
-                # CONTENTS as a text field (label = filename) in the hermes-files item.
-                dataFrom:
-                  - extract:
-                      key: hermes-files
+          # Pin to dell01 (amd64, has memory headroom; arm SBCs evict the pod).
+          nodeSelector:
+            kubernetes.io/hostname: dell01
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
