@@ -353,10 +353,18 @@ extraContainers:
         cpu: "1"
         memory: 2Gi
 
-# 1Password "hermes-files" item mounted as files at /opt/data/files.
-# NOTE: 1Password file ATTACHMENTS are not retrievable via ESO+Connect — extract
-# returns only text fields. Store each file's CONTENTS as a text field
-# (label = filename) in the hermes-files item to have it mounted.
+# Files mounted at /opt/data/files from the 1Password "hermes-files" item.
+# 1Password FILE ATTACHMENTS are only retrievable by their exact file Name (the
+# extract/find APIs return text fields only). List each attachment's file name
+# under `attachments` in the PRIVATE home-systems-values repo (never here) -
+# names are private. Empty attachments -> falls back to text-field extract.
+files:
+  enabled: true
+  itemKey: hermes-files
+  secretName: hermes-files
+  refreshInterval: 1h
+  attachments: []
+
 extraVolumes:
   - name: hermes-files
     secret:
@@ -418,24 +426,6 @@ extraInitContainers:
         type: RuntimeDefault
 
 extraObjects:
-  - apiVersion: external-secrets.io/v1
-    kind: ExternalSecret
-    metadata:
-      name: hermes-files
-      annotations:
-        argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    spec:
-      refreshInterval: 1h
-      secretStoreRef:
-        kind: ClusterSecretStore
-        name: onepassword
-      target:
-        name: hermes-files
-        creationPolicy: Owner
-        deletionPolicy: Retain
-      dataFrom:
-        - extract:
-            key: hermes-files
   # Dedicated 10Gi PVC for the Obsidian vault (kept on app delete for safety).
   - apiVersion: v1
     kind: PersistentVolumeClaim
