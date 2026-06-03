@@ -383,6 +383,8 @@ extraInitContainers:
           echo "git-login: no GH_TOKEN/GITHUB_TOKEN in hermes-env; skipping" >&2
           exit 0
         fi
+        # gh refuses to persist creds while GH_TOKEN/GITHUB_TOKEN is set in env.
+        unset GH_TOKEN GITHUB_TOKEN
         printf '%s' "$TOKEN" | gh auth login --with-token
         gh auth setup-git
         if [ -n "${GIT_AUTHOR_NAME:-}" ]; then git config --global user.name "$GIT_AUTHOR_NAME"; fi
