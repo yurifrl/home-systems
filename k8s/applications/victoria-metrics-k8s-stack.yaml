@@ -264,21 +264,27 @@ spec:
             adminPassword: admin
             nodeSelector:
               kubernetes.io/arch: arm64
+            # Single replica on a ReadWriteOnce PVC: use Recreate so a new pod
+            # doesn't deadlock waiting to attach a volume still held by the old one.
+            deploymentStrategy:
+              type: Recreate
             persistence:
               enabled: true
               type: pvc
               size: 5Gi
-            # Datasource plugins required by the extra datasources above.
+            # quickwit + mqtt for the extra datasources; victoriametrics-metrics-
+            # datasource backs the chart's default "VictoriaMetrics (DS)" datasource.
             plugins:
               - quickwit-quickwit-datasource
               - grafana-mqtt-datasource
+              - victoriametrics-metrics-datasource
             resources:
               limits:
                 cpu: 1000m
-                memory: 1Gi
+                memory: 2Gi
               requests:
                 cpu: 250m
-                memory: 256Mi
+                memory: 512Mi
             # Dashboards are delivered via the dashboard sidecar (defaultDashboards
             # above provides node-exporter, kube-state-metrics, k8s cluster/pod/
             # resource and VictoriaMetrics dashboards). The chart forbids combining
