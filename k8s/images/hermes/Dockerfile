@@ -89,6 +89,11 @@ RUN curl -fsSLo /usr/local/bin/kubectl \
         "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${TARGETARCH:-amd64}/kubectl" \
     && chmod 0755 /usr/local/bin/kubectl
 
+# op-files-sync: downloads all file attachments of a 1Password item via the
+# Connect REST API (dependency-free, dynamic — no filenames configured).
+COPY op-files-sync /usr/local/bin/op-files-sync
+RUN chmod 0755 /usr/local/bin/op-files-sync
+
 # Non-root runtime user matching the chart's runAsUser/fsGroup 1000.
 RUN useradd -u 1000 -m -d /home/hermes -s /bin/bash hermes
 

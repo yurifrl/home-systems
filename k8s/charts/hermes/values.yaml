@@ -353,31 +353,17 @@ extraContainers:
         cpu: "1"
         memory: 2Gi
 
-# Files mounted at /opt/data/files from the 1Password "hermes-files" item.
-# 1Password FILE ATTACHMENTS are only retrievable by their exact file Name (the
-# extract/find APIs return text fields only). List each attachment's file name
-# under `attachments` in the PRIVATE home-systems-values repo (never here) -
-# names are private. Empty attachments -> falls back to text-field extract.
-files:
-  enabled: true
-  itemKey: hermes-files
-  secretName: hermes-files
-  refreshInterval: 1h
-  attachments: []
+# Files are synced into /opt/data/files dynamically at startup by the op-files
+# init container (1Password Connect REST API — see extraInitContainers below).
+# No filenames are configured anywhere; whatever attachments the hermes-files
+# item has are downloaded by name.
 
 extraVolumes:
-  - name: hermes-files
-    secret:
-      secretName: hermes-files
-      optional: true
   # Obsidian vault on a dedicated PVC (separate from the hermes state volume).
   - name: obsidian
     persistentVolumeClaim:
       claimName: hermes-obsidian
 extraVolumeMounts:
-  - name: hermes-files
-    mountPath: /opt/data/files
-    readOnly: true
   - name: obsidian
     mountPath: /obsidian
 # git-login: authenticate gh + git once at startup using the token from the
@@ -411,6 +397,48 @@ extraInitContainers:
     envFrom:
       - secretRef:
           name: hermes-env
+    volumeMounts:
+      - name: state
+        mountPath: /opt/data
+      - name: tmp
+        mountPath: /tmp
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+      seccompProfile:
+        type: RuntimeDefault
+  # op-files: download ALL file attachments of the 1Password "hermes-files"
+  # item into /opt/data/files via the Connect REST API (fully dynamic, no
+  # filenames). Reads the Connect token from the cluster's op-credentials
+  # secret using the agent's existing cluster read RBAC.
+  - name: op-files
+    image: ghcr.io/yurifrl/hermes-agent:latest
+    imagePullPolicy: Always
+    command:
+      - /bin/sh
+      - -ec
+    args:
+      - |
+        set -eu
+        export HOME=/tmp
+        if ! command -v op-files-sync >/dev/null 2>&1; then
+          echo "op-files: op-files-sync not in image yet; skipping" >&2
+          exit 0
+        fi
+        TOKEN=$(kubectl get secret -n 1password op-credentials -o jsonpath='{.data.token}' 2>/dev/null | base64 -d || true)
+        if [ -z "$TOKEN" ]; then
+          echo "op-files: cannot read Connect token (op-credentials); skipping" >&2
+          exit 0
+        fi
+        OP_CONNECT_HOST=http://onepassword-connect.1password.svc.cluster.local:8080 \
+        OP_CONNECT_TOKEN="$TOKEN" \
+        OP_VAULT=kubernetes \
+        OP_ITEM=hermes-files \
+        OP_DEST=/opt/data/files \
+        op-files-sync
     volumeMounts:
       - name: state
         mountPath: /opt/data

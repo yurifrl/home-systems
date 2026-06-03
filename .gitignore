@@ -28,3 +28,6 @@ nostos/state/
 !.crew/graphs/
 !.crew/artifacts/.gitkeep
 !.crew/graphs/.gitkeep
+# python bytecode
+__pycache__/
+*.pyc
