@@ -20,7 +20,7 @@ spec:
   source:
     repoURL: https://charts.longhorn.io
     chart: longhorn
-    targetRevision: "1.8.1"
+    targetRevision: "1.12.0"
     helm:
       values: |
         # Longhorn 1.8.x configuration for Talos Linux
