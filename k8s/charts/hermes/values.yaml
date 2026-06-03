@@ -90,9 +90,10 @@ env:
   CAMOFOX_URL: http://localhost:9377
   # Inference flows through the in-cluster LiteLLM proxy (OpenAI-compatible).
   OPENAI_BASE_URL: http://litellm.litellm.svc.cluster.local:4000/v1
-  # Obsidian vault lives on the writable PVC (root fs is read-only). This
-  # overrides any OBSIDIAN_PATH coming from the hermes-env secret.
-  OBSIDIAN_PATH: /opt/data/obsidian
+  # Obsidian vault lives on its OWN 10Gi PVC mounted at /obsidian (a volume
+  # mount is writable even with read-only root). Overrides OBSIDIAN_PATH from
+  # the hermes-env secret.
+  OBSIDIAN_PATH: /obsidian
 
 extraEnv: []
 extraEnvFrom: []
@@ -361,10 +362,16 @@ extraVolumes:
     secret:
       secretName: hermes-files
       optional: true
+  # Obsidian vault on a dedicated PVC (separate from the hermes state volume).
+  - name: obsidian
+    persistentVolumeClaim:
+      claimName: hermes-obsidian
 extraVolumeMounts:
   - name: hermes-files
     mountPath: /opt/data/files
     readOnly: true
+  - name: obsidian
+    mountPath: /obsidian
 # git-login: authenticate gh + git once at startup using the token from the
 # hermes-env secret, persisting credentials to HOME (/opt/data/home) so the
 # bundled github skill's `gh auth status` path works and the (token-scrubbed)
@@ -429,3 +436,17 @@ extraObjects:
       dataFrom:
         - extract:
             key: hermes-files
+  # Dedicated 10Gi PVC for the Obsidian vault (kept on app delete for safety).
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: hermes-obsidian
+      annotations:
+        argocd.argoproj.io/sync-options: Prune=false
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: longhorn-ha
+      resources:
+        requests:
+          storage: 10Gi
