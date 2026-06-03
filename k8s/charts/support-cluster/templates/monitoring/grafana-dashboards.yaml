@@ -1,0 +1,22 @@
+{{- /*
+Custom Grafana dashboards delivered as ConfigMaps for the VictoriaMetrics
+stack's Grafana dashboard sidecar (label grafana_dashboard=1, namespace
+monitoring). Datasource refs were repointed to ${datasource} which defaults
+to the VictoriaMetrics datasource. Source: grafana.com gnetId 19993 + 7587.
+*/ -}}
+{{- range $path, $_ := .Files.Glob "dashboards/*.json" }}
+{{- $name := base $path | trimSuffix ".json" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-{{ $name }}
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
+data:
+  {{ $name }}.json: |-
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
