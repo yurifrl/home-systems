@@ -90,6 +90,9 @@ env:
   CAMOFOX_URL: http://localhost:9377
   # Inference flows through the in-cluster LiteLLM proxy (OpenAI-compatible).
   OPENAI_BASE_URL: http://litellm.litellm.svc.cluster.local:4000/v1
+  # Obsidian vault lives on the writable PVC (root fs is read-only). This
+  # overrides any OBSIDIAN_PATH coming from the hermes-env secret.
+  OBSIDIAN_PATH: /opt/data/obsidian
 
 extraEnv: []
 extraEnvFrom: []
