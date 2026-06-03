@@ -206,9 +206,11 @@ spec:
           # Rules / dashboards
           # ----------------------------------------------------------------
           # Mirror the previous setup: no kube-prometheus default rules.
-          # Flip create:true if you want VM's curated k8s alerts.
+          # NOTE: the VM k8s-stack chart gates these with `enabled`, not the
+          # kube-prometheus-stack `create` key. Only our custom rules
+          # (support-cluster: control-plane/dns/slzb/zigbee/disk) fire.
           defaultRules:
-            create: false
+            enabled: false
 
           # Ship the kube-prometheus + VM dashboards as ConfigMaps consumed by
           # the bundled Grafana sidecar.
