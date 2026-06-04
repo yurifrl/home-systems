@@ -35,6 +35,12 @@ spec:
         valuesObject:
           deployments:
             - name: camofox
+              # Pin to dell01: it's amd64, hosts hermes, and has the headroom
+              # for headless Firefox. The arm64 nodes (tp1/tp4) already carry
+              # firecrawl's 7 pods and OOM-killed RabbitMQ when camofox
+              # landed on tp4 alongside redis/postgres/rabbitmq.
+              nodeSelector:
+                kubernetes.io/hostname: dell01
               # /dev/shm needs to be tmpfs-backed memory; the default 64Mi
               # shm is too small for headless Firefox and causes random
               # renderer crashes. 1Gi memory-backed emptyDir matches what
