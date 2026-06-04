@@ -1,0 +1,88 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: camofox
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: camofox
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  sources:
+    # Standalone camofox-browser (Camoufox/Firefox stealth browser as a REST API).
+    # Deployed alongside Firecrawl: Firecrawl handles read-only scraping, camofox
+    # handles interactive flows (click/type/login/JS-heavy pages). Hermes
+    # (k8s/charts/hermes) points its CAMOFOX_URL at this Service.
+    #
+    # NOTE: camofox-browser intentionally excludes ARIA combobox elements from
+    # its ref registry, so any site whose search bar uses the autocomplete
+    # combobox pattern (Mercado Livre, Amazon, eBay, ...) cannot be searched
+    # via browser_type. Workaround in hermes: navigate directly to the search
+    # results URL.
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          deployments:
+            - name: camofox
+              # /dev/shm needs to be tmpfs-backed memory; the default 64Mi
+              # shm is too small for headless Firefox and causes random
+              # renderer crashes. 1Gi memory-backed emptyDir matches what
+              # the old hermes sidecar had.
+              volumes:
+                - name: dshm
+                  emptyDir:
+                    medium: Memory
+                    sizeLimit: 1Gi
+              containers:
+                - name: camofox
+                  image: ghcr.io/jo-inc/camofox-browser:latest
+                  imagePullPolicy: IfNotPresent
+                  ports:
+                    - name: http
+                      containerPort: 9377
+                      protocol: TCP
+                  env:
+                    - name: CAMOFOX_PORT
+                      value: "9377"
+                    - name: MAX_OLD_SPACE_SIZE
+                      value: "2048"
+                  volumeMounts:
+                    - name: dshm
+                      mountPath: /dev/shm
+                  # Liveness against the cheap /health endpoint (always open
+                  # per camofox auth design, even when CAMOFOX_ACCESS_KEY is
+                  # set). Browser warm-up takes ~3 s on first hit, hence the
+                  # generous initialDelay.
+                  readinessProbe:
+                    httpGet:
+                      path: /health
+                      port: http
+                    initialDelaySeconds: 10
+                    periodSeconds: 10
+                  livenessProbe:
+                    httpGet:
+                      path: /health
+                      port: http
+                    initialDelaySeconds: 30
+                    periodSeconds: 30
+                  resources:
+                    requests:
+                      cpu: 100m
+                      memory: 512Mi
+                    limits:
+                      cpu: "1"
+                      memory: 2Gi
+          services:
+            - name: camofox
+              port: 9377

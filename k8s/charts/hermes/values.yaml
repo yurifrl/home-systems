@@ -86,15 +86,19 @@ env:
   SLACK_ALLOWED_USERS: ""
   SIGNAL_ALLOWED_USERS: ""
   SIGNAL_GROUP_ALLOWED_USERS: ""
-  # Browser tools previously routed through the camofox sidecar (same pod).
-  # Disabled: camofox refuses to assign refs to ARIA combobox elements (search
-  # boxes with autocomplete on ML, Amazon, etc.), so browser_type returns 500
-  # whenever the agent tries to search a site. See server.js INTERACTIVE_ROLES
-  # at https://github.com/jo-inc/camofox-browser. Read-only browsing now goes
-  # through the self-hosted Firecrawl deployed by k8s/applications/firecrawl.yaml.
-  # Re-enable by uncommenting CAMOFOX_URL below AND the camofox sidecar in
-  # extraContainers further down.
-  # CAMOFOX_URL: http://localhost:9377
+  # Browser tools route through the standalone camofox Application
+  # (k8s/applications/camofox.yaml) running in its own namespace. Camofox
+  # handles interactive browsing (click/type/login); Firecrawl below
+  # handles read-only scraping/crawling. Hermes' web tools auto-pick
+  # whichever backend is appropriate per call.
+  #
+  # Known camofox limitation: ARIA combobox search bars (Mercado Livre,
+  # Amazon, eBay, ...) get no ref — navigate directly to the search-
+  # results URL instead of typing into nav search boxes.
+  CAMOFOX_URL: http://camofox.camofox.svc.cluster.local:9377
+  # Read-only web tools (web_search / web_extract / web_crawl) route through
+  # the self-hosted Firecrawl deployed by k8s/applications/firecrawl.yaml.
+  # Hermes prefers FIRECRAWL_API_URL over FIRECRAWL_API_KEY when both are set.
   FIRECRAWL_API_URL: http://firecrawl-api.firecrawl.svc.cluster.local:3002
   # Inference flows through the in-cluster LiteLLM proxy (OpenAI-compatible).
   OPENAI_BASE_URL: http://litellm.litellm.svc.cluster.local:4000/v1
@@ -336,34 +340,10 @@ tolerations: []
 affinity: {}
 topologySpreadConstraints: []
 
-# camofox browser-as-a-service sidecar (anti-detect Camoufox/Firefox).
-# Disabled: see CAMOFOX_URL note above. Self-hosted Firecrawl replaces the
-# read-only browsing path; interactive browser tools (click/type/login) are
-# unavailable while this is commented out.
+# camofox now runs as its own Application (k8s/applications/camofox.yaml)
+# in the camofox namespace, not as a hermes sidecar. The hermes pod talks
+# to it via CAMOFOX_URL above.
 extraContainers: []
-# extraContainers:
-#   - name: camofox
-#     image: ghcr.io/jo-inc/camofox-browser:latest
-#     imagePullPolicy: IfNotPresent
-#     ports:
-#       - name: camofox
-#         containerPort: 9377
-#         protocol: TCP
-#     env:
-#       - name: CAMOFOX_PORT
-#         value: "9377"
-#       - name: MAX_OLD_SPACE_SIZE
-#         value: "2048"
-#     volumeMounts:
-#       - name: dshm
-#         mountPath: /dev/shm
-#     resources:
-#       requests:
-#         cpu: 100m
-#         memory: 512Mi
-#       limits:
-#         cpu: "1"
-#         memory: 2Gi
 
 # Files are synced into /opt/data/files dynamically at startup by the op-files
 # init container (1Password Connect REST API — see extraInitContainers below).
