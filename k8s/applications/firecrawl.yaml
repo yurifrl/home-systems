@@ -32,12 +32,10 @@ spec:
           # instead of firecrawl-firecrawl-api.
           fullnameOverride: firecrawl
 
-          # Slim the deploy: kill optional workers, drop nuqWorker replicas
-          # from 5 to 1. Homelab budget; bump back up if throughput hurts.
-          extractWorker:
-            enabled: false
-          nuqPrefetchWorker:
-            enabled: false
+          # Slim the deploy: drop nuqWorker replicas from 5 to 1. Keep
+          # extractWorker and nuqPrefetchWorker on — prefetch is the
+          # dispatcher that pulls from nuq.queue_scrape and feeds nuq-worker;
+          # disabling it leaves jobs queued forever (408 timeouts on /scrape).
           nuqWorker:
             replicaCount: 1
 
