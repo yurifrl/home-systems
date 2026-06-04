@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: firecrawl
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: firecrawl
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  sources:
+    # Upstream Firecrawl helm chart lives as a subPath in the firecrawl repo.
+    # Pinned to main; bump targetRevision to a commit SHA when you want a
+    # stable pin. Service ends up at:
+    #   http://firecrawl-api.firecrawl.svc.cluster.local:3002
+    - repoURL: https://github.com/firecrawl/firecrawl.git
+      targetRevision: main
+      path: examples/kubernetes/firecrawl-helm
+      helm:
+        releaseName: firecrawl
+        valuesObject:
+          # Make service names readable: firecrawl-api / firecrawl-redis / etc
+          # instead of firecrawl-firecrawl-api.
+          fullnameOverride: firecrawl
+
+          # Slim the deploy: kill optional workers, drop nuqWorker replicas
+          # from 5 to 1. Homelab budget; bump back up if throughput hurts.
+          extractWorker:
+            enabled: false
+          nuqPrefetchWorker:
+            enabled: false
+          nuqWorker:
+            replicaCount: 1
+
+          # Ephemeral storage everywhere. Pod restart wipes queues + Postgres
+          # job history; in-flight crawls die, no long-term data is lost.
+          nuqPostgres:
+            persistence:
+              enabled: false
+
+          # Don't pull a "docker-registry-secret" the chart references by
+          # default for private images. We use the public ghcr/dockerhub
+          # tags below.
+          imagePullSecrets: []
+          image:
+            dockerSecretEnabled: false
