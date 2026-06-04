@@ -16,6 +16,10 @@ spec:
         app: {{ .name }}
     spec:
       nodeSelector: {{ toYaml .nodeSelector | nindent 8 }}
+      {{- with .tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes: {{ toYaml .volumes | nindent 8 }}
       hostAliases: {{ toYaml .hostAliases | nindent 8 }}
       containers:
