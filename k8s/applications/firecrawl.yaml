@@ -18,16 +18,33 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
   sources:
-    # Upstream Firecrawl helm chart lives as a subPath in the firecrawl repo.
-    # Pinned to main; bump targetRevision to a commit SHA when you want a
-    # stable pin. Service ends up at:
+    # Forked from upstream firecrawl/firecrawl/examples/kubernetes/firecrawl-helm
+    # at commit 42b46be4f75a (see k8s/charts/firecrawl/.upstream-sha). Only
+    # divergence from upstream: 6 heavy deployments now respect a
+    # `global.{nodeSelector,tolerations}` block (set below) so we can pin
+    # them to dell01. To resync from upstream: re-fetch the templates,
+    # re-apply the `global` block patches in the 6 deployments, bump the
+    # SHA file. Service ends up at:
     #   http://firecrawl-api.firecrawl.svc.cluster.local:3002
-    - repoURL: https://github.com/firecrawl/firecrawl.git
-      targetRevision: main
-      path: examples/kubernetes/firecrawl-helm
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/firecrawl
       helm:
         releaseName: firecrawl
         valuesObject:
+          # Pin the heavy firecrawl pods to dell01 (amd64, plenty of RAM).
+          # The arm64 SBCs (tp1/tp4) OOMed when the chart's default
+          # resource limits stacked up on them. Stateful pods
+          # (rabbitmq/postgres/redis) are NOT pinned and stay where the
+          # scheduler puts them — they're stable on tp4.
+          global:
+            nodeSelector:
+              kubernetes.io/hostname: dell01
+            tolerations:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+                effect: NoSchedule
+
           # Make service names readable: firecrawl-api / firecrawl-redis / etc
           # instead of firecrawl-firecrawl-api.
           fullnameOverride: firecrawl
