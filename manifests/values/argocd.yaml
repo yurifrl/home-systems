@@ -23,6 +23,16 @@ controller:
     - key: node-role.kubernetes.io/control-plane
       effect: NoSchedule
       operator: Exists
+  # Default readinessProbe (timeoutSeconds: 1) causes the application-controller
+  # to be marked NotReady when reconciling many apps at once. Combined with
+  # frequent SandboxChanged events, the pod CrashLoopBackOffs and silently
+  # blocks every cluster sync. Relaxed values prevent that.
+  # See: 2026-06-04 incident where this masked the longhorn upgrade for 22h.
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 30
+    failureThreshold: 5
 
 dex:
   metrics:

@@ -18,6 +18,13 @@
       "matchFileNames": ["k8s/images/hermes/Dockerfile"],
       "automerge": true,
       "automergeType": "pr"
+    },
+    {
+      "description": "Longhorn does not support skip-version minor upgrades (1.8.1 -> 1.12.0 broke the cluster on 2026-06-03). Restrict to patch bumps so a minor walk has to be done deliberately, one version at a time.",
+      "matchManagers": ["argocd"],
+      "matchPackageNames": ["longhorn"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
     }
   ],
   "customManagers": [
