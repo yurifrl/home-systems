@@ -55,6 +55,52 @@ spec:
           # disabling it leaves jobs queued forever (408 timeouts on /scrape).
           nuqWorker:
             replicaCount: 1
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "100m"
+              limits:
+                memory: "1Gi"
+                cpu: "1"
+
+          # Per-service resource overrides. Heap sizes (--max-old-space-size)
+          # were lowered in the forked chart templates to fit a 7 GB node;
+          # limits here cap the cgroup so we get clean OOMKilled signals
+          # instead of node-wide OOM cascades.
+          resources:
+            enabled: true
+          api:
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "200m"
+              limits:
+                memory: "1500Mi"
+                cpu: "2"
+          worker:
+            resources:
+              requests:
+                memory: "384Mi"
+                cpu: "100m"
+              limits:
+                memory: "1Gi"
+                cpu: "1"
+          extractWorker:
+            resources:
+              requests:
+                memory: "384Mi"
+                cpu: "100m"
+              limits:
+                memory: "1Gi"
+                cpu: "1"
+          nuqPrefetchWorker:
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "50m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
 
           # Ephemeral storage everywhere. Pod restart wipes queues + Postgres
           # job history; in-flight crawls die, no long-term data is lost.
