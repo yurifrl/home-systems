@@ -94,7 +94,7 @@ nuqPostgres:
 
 rabbitmq:
   enabled: true
-  image: rabbitmq:3-management
+  image: rabbitmq:4-management
   replicaCount: 1
   resources:
     requests:
