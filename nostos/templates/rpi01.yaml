@@ -1,13 +1,5 @@
-# Talos machineconfig TEMPLATE for dell01 (OptiPlex 3080M, amd64)
-# Role: control plane node at 192.168.68.100
-#
-# Rendered via `task pxe:config NODE=dell01`:
-#   - 1Password secret references (op-colon-slash-slash) are injected
-#   - Output lands in pxe/assets/configs/<mac-hex-hyphens>.yaml
-#   - Served over HTTP during PXE boot via talos.config= kernel arg
-#
-# Secrets are reused from the original cluster (stored in 1Password "kubernetes" vault)
-# so workers (tp1/tp4/rpi) can re-join without regenerating configs.
+# Talos machineconfig TEMPLATE for rpi01 (Raspberry Pi 4, arm64)
+# Role: control plane + worker at 192.168.0.170
 version: v1alpha1
 debug: false
 persist: true
@@ -19,34 +11,26 @@ machine:
     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
     key: "op://kubernetes/talos/MACHINE_CA_KEY"
   certSANs:
-    - 192.168.68.100
+    - 192.168.0.170
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
-    extraMounts:
-      - destination: /var/mnt/storage
-        type: bind
-        source: /var/mnt/storage
-        options:
-          - bind
-          - rshared
-          - rw
   network:
-    hostname: dell01
+    hostname: rpi01
     interfaces:
-      - interface: enp2s0
+      - interface: eth0
         dhcp: false
         addresses:
-          - 192.168.68.100/24
+          - 192.168.0.170/24
         routes:
           - network: 0.0.0.0/0
-            gateway: 192.168.68.1
+            gateway: 192.168.0.1
     nameservers:
-      - 192.168.68.1
+      - 192.168.0.1
       - 8.8.8.8
   install:
-    disk: /dev/nvme0n1
+    disk: /dev/sda
     image: {{ .InstallImage }}
     wipe: true
     extraKernelArgs:
@@ -62,17 +46,8 @@ machine:
     hostDNS:
       enabled: true
       forwardKubeDNSToHost: true
-  # /dev/sda is a 256GB SATA SSD (wiped of its old Windows install) used as
-  # Longhorn storage, mounted at /var/mnt/storage like the tp* workers.
-  disks:
-    - device: /dev/sda
-      partitions:
-        - mountpoint: /var/mnt/storage
-          size: 0
   nodeLabels:
     node.kubernetes.io/exclude-from-external-load-balancers: ""
-    syscd.dev/storage: dell01
-    node.longhorn.io/create-default-disk: "true"
 
 cluster:
   id: "op://kubernetes/talos/CLUSTER_ID"
@@ -101,7 +76,7 @@ cluster:
   apiServer:
     image: registry.k8s.io/kube-apiserver:v1.32.1
     certSANs:
-      - 192.168.68.100
+      - 192.168.0.170
     disablePodSecurityPolicy: true
     admissionControl:
       - name: PodSecurity
@@ -143,58 +118,11 @@ cluster:
     ca:
       crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
       key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
-  # Bootstrap manifests only apply on first cluster-init. Kept here so a fresh
-  # cluster comes up with ArgoCD + 1Password Connect wired.
-  extraManifests:
-    - https://raw.githubusercontent.com/yurifrl/home-systems/refs/heads/main/manifests/argocd.yaml
-    - https://raw.githubusercontent.com/yurifrl/home-systems/refs/heads/main/manifests/applications.yaml
-  inlineManifests:
-    - name: namespace-argocd
-      contents: |
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: argocd
-    - name: namespace-external-secrets
-      contents: |
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: external-secrets
-    - name: secret-op-credentials
-      contents: |
-        apiVersion: v1
-        kind: Secret
-        type: Opaque
-        metadata:
-          name: op-credentials
-          namespace: 1password
-        data:
-          1password-credentials.json: "op://kubernetes/op-credentials/OP_CREDENTIALS_JSON"
-          token: "op://kubernetes/op-credentials/OP_CONNECT_TOKEN"
-    - name: cluster-secret-store-onepassword
-      contents: |
-        apiVersion: external-secrets.io/v1
-        kind: ClusterSecretStore
-        metadata:
-          name: onepassword
-        spec:
-          provider:
-            onepassword:
-              connectHost: http://onepassword-connect.1password.svc.cluster.local:8080
-              vaults:
-                kubernetes: 1
-              auth:
-                secretRef:
-                  connectTokenSecretRef:
-                    name: op-credentials
-                    key: token
-                    namespace: 1password
 ---
 apiVersion: v1alpha1
 kind: ExtensionServiceConfig
 name: tailscale
 environment:
-  - TS_AUTHKEY=tailscale://authkey?description=dell01
+  - TS_AUTHKEY=tailscale://authkey?description=rpi01
   - TS_EXTRA_ARGS=--accept-routes
-  - TS_ROUTES=10.96.0.0/12,192.168.68.0/24
+  - TS_ROUTES=10.96.0.0/12,192.168.0.0/24

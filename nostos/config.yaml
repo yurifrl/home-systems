@@ -60,3 +60,12 @@ nodes:
         slot: 4
         username_ref: op://kubernetes/home-systems/TURING_BMC_USERNAME
         password_ref: op://kubernetes/home-systems/TURING_BMC_PASSWORD
+  rpi01:
+    mac: "e4:5f:01:3c:68:fa"
+    ip: 192.168.0.170
+    role: controlplane
+    arch: arm64
+    install_disk: /dev/sda
+    template: rpi01.yaml
+    # arm64 (rpi_generic overlay): tailscale + iscsi-tools + util-linux-tools
+    schematic_id: d0e797e79d4e8c53a843776a1a5b57a3429aaaf7e8e3246d35df5df9f915da86
