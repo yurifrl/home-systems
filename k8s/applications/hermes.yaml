@@ -18,7 +18,9 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
   sources:
-    # PRIVATE: real values (Discord/WhatsApp identifiers — PII) for hermes.
+    # PRIVATE: real values (Discord/WhatsApp identifiers — PII, gitRepos list)
+    # for hermes. The actual `gitRepos.user` and `gitRepos.repos` come from
+    # this repo (so the repo list isn't public).
     - repoURL: git@github.com:yurifrl/home-systems-values.git
       targetRevision: HEAD
       ref: values
@@ -27,7 +29,7 @@ spec:
       targetRevision: HEAD
       path: k8s/charts/hermes
       helm:
-        # Private env values live in the home-systems-values repo (not public).
+        # Private env values + gitRepos live in the home-systems-values repo.
         valueFiles:
           - $values/hermes/values.yaml
         # Only what makes THIS instance mine — everything else is chart defaults.
@@ -45,3 +47,246 @@ spec:
             - key: node-role.kubernetes.io/control-plane
               operator: Exists
               effect: NoSchedule
+
+          # Generic git repos sync. Real values (user + repos[]) come from
+          # $values/hermes/values.yaml in the private home-systems-values repo.
+          # Defaults below are no-ops when gitRepos.repos is empty.
+          gitRepos:
+            user: ""
+            repos: []
+            mountPath: /workdir
+            syncIntervalSeconds: 300
+
+          # Mount the shared /workdir PVC + a configmap with the rendered repo
+          # list so init/sidecar can read it.
+          extraVolumes:
+            - name: repos
+              persistentVolumeClaim:
+                claimName: hermes-repos
+            - name: git-repos-config
+              configMap:
+                name: hermes-git-repos
+          extraVolumeMounts:
+            - name: repos
+              mountPath: /workdir
+
+          # Redeclare ALL init containers (Helm replaces lists, so we keep the
+          # chart defaults git-login + op-files explicit and append git-clone).
+          extraInitContainers:
+            # git-login: authenticate gh + git once at startup using the token
+            # from hermes-env, persisting credentials to HOME (/opt/data/home).
+            - name: git-login
+              image: ghcr.io/yurifrl/hermes-agent:latest
+              imagePullPolicy: Always
+              command: ["/bin/sh", "-ec"]
+              args:
+                - |
+                  set -eu
+                  export HOME=/opt/data/home
+                  mkdir -p "$HOME/.config/gh"
+                  TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+                  if [ -z "$TOKEN" ]; then
+                    echo "git-login: no GH_TOKEN/GITHUB_TOKEN in hermes-env; skipping" >&2
+                    exit 0
+                  fi
+                  unset GH_TOKEN GITHUB_TOKEN
+                  printf '%s' "$TOKEN" | gh auth login --with-token
+                  gh auth setup-git
+                  if [ -n "${GIT_AUTHOR_NAME:-}" ]; then git config --global user.name "$GIT_AUTHOR_NAME"; fi
+                  if [ -n "${GIT_AUTHOR_EMAIL:-}" ]; then git config --global user.email "$GIT_AUTHOR_EMAIL"; fi
+                  gh auth status
+              envFrom:
+                - secretRef:
+                    name: hermes-env
+              volumeMounts:
+                - name: state
+                  mountPath: /opt/data
+                - name: tmp
+                  mountPath: /tmp
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+                seccompProfile:
+                  type: RuntimeDefault
+
+            # op-files: download all 1Password "hermes-files" attachments into
+            # /opt/data/files via the Connect REST API.
+            - name: op-files
+              image: ghcr.io/yurifrl/hermes-agent:latest
+              imagePullPolicy: Always
+              command: ["/bin/sh", "-ec"]
+              args:
+                - |
+                  set -eu
+                  export HOME=/tmp
+                  if ! command -v op-files-sync >/dev/null 2>&1; then
+                    echo "op-files: op-files-sync not in image yet; skipping" >&2
+                    exit 0
+                  fi
+                  TOKEN=$(kubectl get secret -n 1password op-credentials -o jsonpath='{.data.token}' 2>/dev/null | base64 -d || true)
+                  if [ -z "$TOKEN" ]; then
+                    echo "op-files: cannot read Connect token (op-credentials); skipping" >&2
+                    exit 0
+                  fi
+                  OP_CONNECT_HOST=http://onepassword-connect.1password.svc.cluster.local:8080 \
+                  OP_CONNECT_TOKEN="$TOKEN" \
+                  OP_VAULT=kubernetes \
+                  OP_ITEM=hermes-files \
+                  OP_DEST=/opt/data/files \
+                  op-files-sync
+              volumeMounts:
+                - name: state
+                  mountPath: /opt/data
+                - name: tmp
+                  mountPath: /tmp
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+                seccompProfile:
+                  type: RuntimeDefault
+
+            # git-clone: clone every repo listed in the hermes-git-repos
+            # ConfigMap into /workdir/<name> if not already present. No-op when
+            # the list is empty.
+            - name: git-clone
+              image: ghcr.io/yurifrl/hermes-agent:latest
+              imagePullPolicy: Always
+              command: ["/bin/sh", "-ec"]
+              args:
+                - |
+                  set -eu
+                  export HOME=/opt/data/home
+                  mkdir -p /workdir
+                  if [ ! -s /etc/hermes-git-repos/repos.txt ]; then
+                    echo "git-clone: no repos configured; skipping" >&2
+                    exit 0
+                  fi
+                  while IFS= read -r url; do
+                    [ -z "$url" ] && continue
+                    name="$(basename "$url" .git)"
+                    if [ ! -d "/workdir/$name/.git" ]; then
+                      echo "git-clone: cloning $url -> /workdir/$name"
+                      git clone "$url" "/workdir/$name"
+                    else
+                      echo "git-clone: /workdir/$name already present"
+                    fi
+                  done < /etc/hermes-git-repos/repos.txt
+              envFrom:
+                - secretRef:
+                    name: hermes-env
+              volumeMounts:
+                - name: state
+                  mountPath: /opt/data
+                - name: tmp
+                  mountPath: /tmp
+                - name: repos
+                  mountPath: /workdir
+                - name: git-repos-config
+                  mountPath: /etc/hermes-git-repos
+                  readOnly: true
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+                seccompProfile:
+                  type: RuntimeDefault
+
+          # git-sync sidecar: every syncIntervalSeconds, pull --rebase, commit
+          # any local changes, push. Exits non-zero (crash-loops the sidecar)
+          # when push fails so the failure surfaces in pod status.
+          extraContainers:
+            - name: git-sync
+              image: ghcr.io/yurifrl/hermes-agent:latest
+              imagePullPolicy: Always
+              env:
+                - name: SYNC_INTERVAL
+                  value: "300"
+              command: ["/bin/sh", "-ec"]
+              args:
+                - |
+                  set -eu
+                  export HOME=/opt/data/home
+                  cd /workdir
+                  while :; do
+                    for d in */; do
+                      [ -d "$d/.git" ] || continue
+                      repo="${d%/}"
+                      echo "git-sync: $repo"
+                      cd "/workdir/$repo"
+                      if ! git pull --rebase --autostash; then
+                        echo "git-sync: pull failed for $repo" >&2
+                        exit 1
+                      fi
+                      git add -A
+                      if ! git diff --cached --quiet; then
+                        git -c user.name="${GIT_AUTHOR_NAME:-hermes}" \
+                            -c user.email="${GIT_AUTHOR_EMAIL:-hermes@local}" \
+                            commit -m "auto: $(date -Iseconds)"
+                      fi
+                      # Only push if we are ahead of upstream.
+                      if git status -sb | grep -q '\[ahead'; then
+                        if ! git push; then
+                          echo "git-sync: push failed for $repo" >&2
+                          exit 1
+                        fi
+                      fi
+                      cd /workdir
+                    done
+                    sleep "${SYNC_INTERVAL}"
+                  done
+              envFrom:
+                - secretRef:
+                    name: hermes-env
+              volumeMounts:
+                - name: state
+                  mountPath: /opt/data
+                - name: tmp
+                  mountPath: /tmp
+                - name: repos
+                  mountPath: /workdir
+              resources:
+                requests:
+                  cpu: 25m
+                  memory: 64Mi
+                limits:
+                  cpu: 250m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+                seccompProfile:
+                  type: RuntimeDefault
+
+          # PVC for /workdir + ConfigMap with the rendered repo URLs (templated
+          # via tpl in the chart's extra-objects.yaml; the list lives in the
+          # private values repo at $values/hermes/values.yaml).
+          extraObjects:
+            - apiVersion: v1
+              kind: PersistentVolumeClaim
+              metadata:
+                name: hermes-repos
+                annotations:
+                  argocd.argoproj.io/sync-options: Prune=false
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                storageClassName: longhorn-ha
+                resources:
+                  requests:
+                    storage: 10Gi
+            - apiVersion: v1
+              kind: ConfigMap
+              metadata:
+                name: hermes-git-repos
+              data:
+                repos.txt: |
+                  {{- range $.Values.gitRepos.repos }}
+                  https://github.com/{{ $.Values.gitRepos.user }}/{{ . }}.git
+                  {{- end }}
