@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-06-03 Hermes Chart Stabilization, Refactoring, and Dynamic File Sync
+- Session ID: 019e7c2b-2148-75bd-8a97-f3d8a975f5af
+- Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-05-31T03-54-21-896Z_019e7c2b-2148-75bd-8a97-f3d8a975f5af.jsonl
+- Session Name: hermes-chart-stabilization
+- Context Name: undefined
+
+### Added
+- `k8s/images/hermes/op-files-sync`: Python script that dynamically downloads ALL file attachments from a 1Password item via the Connect REST API (lists item files, downloads each by name). No filenames configured anywhere — fully dynamic.
+- `k8s/charts/hermes/templates/extra-objects.yaml`: fixed YAML document separator bug that concatenated `---apiVersion:` on one line when 2+ extraObjects existed.
+- `k8s/charts/hermes/values.yaml` — git-login init container: authenticates gh CLI + configures git credential helper at startup using the token from hermes-env secret (must `unset GH_TOKEN` first or gh refuses to persist).
+- `k8s/charts/hermes/values.yaml` — op-files init container: calls `op-files-sync` to download 1Password file attachments into `/opt/data/files` using the Connect token from the cluster's `op-credentials` secret (via agent's cluster-read RBAC).
+- `k8s/charts/hermes/values.yaml` — dedicated 10Gi `hermes-obsidian` PVC (extraObjects) mounted at `/obsidian`, separate from hermes state volume. `OBSIDIAN_PATH=/obsidian` env override.
+- `home-systems-values/hermes/values.yaml` (private repo): Discord/WhatsApp identifiers (channel IDs, phone numbers) as env vars, loaded via ArgoCD `$values` multi-source.
+- `.gitignore`: added `__pycache__/` and `*.pyc` entries.
+
+### Changed
+- `k8s/applications/hermes.yaml`: refactored from ~250 lines of inline valuesObject to just 3 keys: `virtualService.hosts` (hermes.syscd.tech), `nodeSelector` (dell01), `tolerations` (control-plane). Converted to multi-source with `$values` ref to private `home-systems-values` repo.
+- `k8s/charts/hermes/values.yaml`: absorbed all defaults from the Application (security contexts, RBAC, networkPolicy, tenantIsolation, PDB, camofox sidecar, externalSecret binding to hermes-env with dataFrom.extract, litellm OPENAI_BASE_URL, CAMOFOX_URL, resources, persistence 20Gi longhorn-ha, bootstrap.overwrite=false, virtualService default disabled). Made chart self-valid against its own schema.
+- `k8s/images/hermes/Dockerfile`: added `COPY op-files-sync /usr/local/bin/op-files-sync` for the dynamic file sync script.
+- `.bin/hermes-helper`: updated container name from `hermes` to `hermes-agent` and secret name from `hermes` to `hermes-env` (local only, gitignored).
+
+### Removed
+- `k8s/charts/hermes/values.yaml`: removed `migrate-perms` init container (privileged root chown) — migration was complete, data already owned 1000:1000.
+- `k8s/charts/hermes/templates/files-external-secret.yaml`: replaced by the dynamic op-files init approach (ESO extract can't retrieve 1Password file attachments).
+- Removed hermes-files secret volume mount (no longer needed; files written directly to PVC by init).
+
 ## 2026-05-31 Crossplane GCP + external-dns Cloudflare Migration; istio-gateway Sync Fix
 - Session ID: 019e79b5-eed4-75d3-8f93-824723f8dddd
 - Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-05-30T16-27-06-836Z_019e79b5-eed4-75d3-8f93-824723f8dddd.jsonl

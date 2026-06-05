@@ -1,128 +1,320 @@
 # Agent Instructions
 
+This file provides guidance to AI coding agents (Claude Code, Codex, pi, etc.) when working with code in this repository.
+
 This project uses **bd** (beads) for issue tracking. Run `bd prime` for full workflow context.
 
-> **Architecture in one line:** Issues live in a local Dolt database
-> (`.beads/dolt/`); cross-machine sync uses `bd dolt push/pull` (a
-> git-compatible protocol), stored under `refs/dolt/data` on your git
-> remote — separate from `refs/heads/*` where your code lives.
-> `.beads/issues.jsonl` is a passive export, not the wire protocol.
->
-> See [SYNC_CONCEPTS.md](https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md)
-> for the one-screen overview and anti-patterns (don't treat JSONL as the
-> source of truth; don't `bd import` during normal operation; don't
-> reach for third-party Dolt hosting before trying the default).
+## Overview
 
-## Quick Reference
+This is a home lab infrastructure repository managing a Kubernetes cluster running on Talos Linux with bare metal nodes (Dell OptiPlex, Turing Pi, and x86 machines). The infrastructure uses GitOps principles with ArgoCD for application deployment, Istio service mesh in ambient mode, and various home automation services.
 
-```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --claim  # Claim work atomically
-bd close <id>         # Complete work
-bd dolt push          # Push beads data to remote
+## Architecture
+
+### Infrastructure Layers
+
+1. **Talos Linux**: Bare metal Kubernetes OS running on:
+   - Control plane: Dell OptiPlex 3080M (192.168.68.100, formerly RPi — decommissioned 2026-05)
+   - Workers: Turing Pi RK1 nodes (192.168.68.107, 192.168.68.114)
+   - GPU worker: x86 PC (192.168.68.104) with NVIDIA GPU support
+
+   Provisioning, machineconfig rendering, and secret injection are owned by
+   **`nostos`** (`.submodules/nostos/`). Direct `talosctl` is still used for
+   ad-hoc dashboard / log inspection.
+
+2. **Kubernetes**: Multi-node cluster managed by Talos
+   - Service mesh: Istio Ambient mode with ztunnel
+   - Monitoring: Prometheus + Grafana stack
+   - Storage: Local path provisioner
+
+3. **GitOps**: ArgoCD manages all applications
+   - `k8s/applications/`: ArgoCD Application manifests
+   - `k8s/charts/`: Local Helm charts
+   - Apps auto-sync from git repository
+
+### Key Components
+
+**Support Chart** (`k8s/charts/support/`):
+- Reusable Helm chart that provides common resources
+- Templates: PVCs, PVs, ExternalSecrets, VirtualServices, ConfigMaps, Deployments, StatefulSets, Services, SLOs
+- Used as a dependency by most applications to reduce duplication
+
+**Custom Charts** (`k8s/charts/`):
+- `appdaemon`: Home Assistant automation daemon
+- `bind9`: Internal DNS server
+- `echotube`: Private YouTube alternative
+- `support-argo-workflows`: Argo Workflows with workflow templates
+- `support-grafana`: Grafana dashboards and configuration
+- `support-cluster`: Cluster-wide utilities
+
+**ArgoCD Application Pattern**:
+Applications typically reference two sources:
+1. Their specific chart from `k8s/charts/*`
+2. The `support` chart for common resources (PVCs, secrets, virtual services)
+
+Example structure from `k8s/applications/argo-workflows.yaml`:
+```yaml
+sources:
+  - path: k8s/charts/support-argo-workflows
+    repoURL: https://github.com/yurifrl/home-systems.git
+  - path: k8s/charts/support
+    repoURL: https://github.com/yurifrl/home-systems.git
+    helm:
+      valuesObject:
+        externalSecrets: [...]
 ```
 
-## Non-Interactive Shell Commands
+### Secrets Management
 
-**ALWAYS use non-interactive flags** with file operations to avoid hanging on confirmation prompts.
+- **1Password** is the primary secret store; **External Secrets Operator**
+  syncs runtime secrets into Kubernetes.
+- **Bare-metal secrets** (Talos machineconfig, Tailscale auth keys, talosconfig)
+  are owned by **`nostos`**:
+  - Templates in `nostos/templates/<node>.yaml` carry `op://...` and
+    `tailscale://authkey` references.
+  - `nostos render <node>` resolves them
+    (mints a fresh Tailscale key per render) into `nostos/state/configs/`
+    (gitignored).
+  - `nostos apply <node>` applies the
+    rendered machineconfig to that node.
+- Legacy worker configs (tp1, tp4, vm-pc01) still live under `talos/nodes/`
+  with `op://` references; `task talos:op:inject` writes injected copies to
+  `talos/op/nodes/`. These workers are slated for nostos onboarding.
+- Never commit `nostos/state/configs/` or `talos/op/` — they contain real
+  secrets.
 
-Shell commands like `cp`, `mv`, and `rm` may be aliased to include `-i` (interactive) mode on some systems, causing the agent to hang indefinitely waiting for y/n input.
+### Service Mesh & Networking
 
-**Use these forms instead:**
+- **Istio Ambient Mode**: Sidecar-less service mesh using ztunnel
+- **MetalLB**: LoadBalancer for bare metal
+- **Istio Gateway**: Ingress gateway for external traffic
+- **VirtualServices**: Defined via support chart for routing
+- **Cloudflare Tunnel**: Exposes services externally
+
+### Monitoring & Observability
+
+- **Prometheus**: Metrics collection
+- **Grafana**: Dashboards and visualization
+- **Loki**: Log aggregation (referenced in hack/lib)
+- **Pyrra**: SLO monitoring
+- **Blackbox Exporter**: Endpoint monitoring
+- **SLOs**: Defined in support chart templates and reference examples in `hack/reference/slos/`
+
+## Development Workflow
+
+### Task Runner
+
+Uses [Task](https://taskfile.dev) for automation. Main taskfiles:
+
+**Nostos Operations** (bare-metal Talos provisioning — always via `go run`):
 ```bash
-# Force overwrite without prompting
-cp -f source dest           # NOT: cp source dest
-mv -f source dest           # NOT: mv source dest
-rm -f file                  # NOT: rm file
+nostos --help
+nostos render <node>     # resolve op:// + mint Tailscale key
+nostos apply <node>      # talosctl apply-config
+nostos up <node>         # end-to-end: build → wipe → pxe → bootstrap
+nostos status            # cluster Ready check
+nostos kubeconfig        # fetch admin kubeconfig
+```
+Full subcommand list: `nostos --help`. See
+`.submodules/nostos/README.md` for the contract and `nostos/README.md` for
+this lab's data layout.
 
-# For recursive operations
-rm -rf directory            # NOT: rm -r directory
-cp -rf source dest          # NOT: cp -r source dest
+**Talos Operations** (legacy / direct `talosctl` against non-nostos workers):
+- `task talos:dashboard` — talosctl dashboard against every node
+- `task talos:op:inject` — inject 1Password into legacy worker YAML (tp1/tp4/vm-pc01)
+- `task talos:op:talosconfig` / `task talos:op:kubeconfig` — fetch `~/.talos/*` from 1Password
+- `task talos:apply` — **deprecated**, errors out and points to nostos
+
+**ArgoCD Operations** (`task argo:*`):
+- `task argo:repo-add` - Add ArgoCD Helm repo
+- `task argo:update` - Update ArgoCD manifests
+- `task argo:apply` - Apply ArgoCD to cluster
+
+**Turing Pi Operations** (`task turing:*`):
+Available in `taskfiles/turing.yml`
+
+**Proxmox Operations** (`task proxmox:*`):
+Available in `taskfiles/proxmox.yml`
+
+### Common Commands
+
+**Nostos** (preferred for managed nodes — currently dell01):
+```bash
+nostos status
+nostos render dell01
+nostos apply  dell01
+nostos upgrade dell01
 ```
 
-**Other commands that may prompt:**
-- `scp` - use `-o BatchMode=yes` for non-interactive
-- `ssh` - use `-o BatchMode=yes` to fail instead of prompting
-- `apt-get` - use `-y` flag
-- `brew` - use `HOMEBREW_NO_AUTO_UPDATE=1` env var
-
-<!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:970c3bf2 -->
-## Beads Issue Tracker
-
-This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
-
-### Quick Reference
-
+**Talos** (direct `talosctl` — still useful for dashboard, logs, manifests):
 ```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --claim  # Claim work
-bd close <id>         # Complete work
+# Dashboard for all nodes
+talosctl -n 192.168.68.100,192.168.68.114,192.168.68.107,192.168.68.115 dashboard
+
+# Apply a hand-built config to a legacy worker (nostos handles dell01)
+talosctl -n <node-ip> apply-config -f talos/op/nodes/<config-file>
+
+# Inspect manifests / logs
+talosctl -n <node-ip> get manifests
+talosctl -n <node-ip> logs <service-name>
 ```
 
-### Rules
+**Kubernetes**:
+```bash
+# Standard kubectl commands
+kubectl get pods -A
+kubectl logs -n <namespace> <pod>
 
-- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
-- Run `bd prime` for detailed command reference and session close protocol
-- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+# ArgoCD
+kubectl get applications -n argocd
+kubectl get applicationsets -n argocd
+```
 
-**Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
+**Istio**:
+```bash
+# Check ztunnel logs for routing
+kubectl -n istio-system logs -l app=ztunnel -f | grep -E "inbound|outbound"
 
-## Agent Context Profiles
+# Get virtual services
+kubectl get virtualservices -A
+```
 
-The managed Beads block is task-tracking guidance, not permission to override repository, user, or orchestrator instructions.
+### Testing
 
-- **Conservative (default)**: Use `bd` for task tracking. Do not run git commits, git pushes, or Dolt remote sync unless explicitly asked. At handoff, report changed files, validation, and suggested next commands.
-- **Minimal**: Keep tool instruction files as pointers to `bd prime`; use the same conservative git policy unless active instructions say otherwise.
-- **Team-maintainer**: Only when the repository explicitly opts in, agents may close beads, run quality gates, commit, and push as part of session close. A current "do not commit" or "do not push" instruction still wins.
+**Argo Workflows**: The `support-argo-workflows` chart includes workflow templates in `files/` directory:
+- `miniflux-youtube-subscribe`: Subscribes Miniflux to YouTube channels
+- Workflows are deployed as ConfigMaps and can be submitted via Argo UI
 
-## Session Completion
+**DNS Testing**: `hack/bind9-test/test-dns.sh` for testing BIND9 DNS
 
-This protocol applies when ending a Beads implementation workflow. It is subordinate to explicit user, repository, and orchestrator instructions.
+**Reference Manifests**: `hack/reference/` contains example configurations:
+- SLOs examples in `hack/reference/slos/`
+- Checkly monitoring examples
+- Prometheus rules
 
-1. **File issues for remaining work** - Create beads for anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished work, update in-progress items
-4. **Handle git/sync by active profile**:
-   ```bash
-   # Conservative/minimal/default: report status and proposed commands; wait for approval.
-   git status
+### Adding a New Service
 
-   # Team-maintainer opt-in only, unless current instructions forbid it:
-   git pull --rebase
-   bd dolt push
-   git push
-   git status
+1. Create ArgoCD Application in `k8s/applications/<service>.yaml`
+2. If custom resources needed, create chart in `k8s/charts/<service>/`
+3. Use `support` chart as second source for common resources:
+   ```yaml
+   sources:
+     - path: k8s/charts/<service>
+       repoURL: https://github.com/yurifrl/home-systems.git
+     - path: k8s/charts/support
+       repoURL: https://github.com/yurifrl/home-systems.git
+       helm:
+         valuesObject:
+           externalSecrets: [...]
+           virtualServices: [...]
    ```
-5. **Hand off** - Summarize changes, validation, issue status, and any blocked sync/commit/push step
+4. For new domains, follow checklist in README.md:
+   - Add DNS entry in Cloudflare
+   - Add domain in Cloudflare tunnel
+   - Add domain in Istio ingress gateway
+   - Add domain in Istio virtual service
 
-**Critical rules:**
-- Explicit user or orchestrator instructions override this Beads block.
-- Do not commit or push without clear authority from the active profile or the current user request.
-- If a required sync or push is blocked, stop and report the exact command and error.
-<!-- END BEADS INTEGRATION -->
+### Home Automation
+
+**AppDaemon** (`appdaemon/`):
+- Python-based automation for Home Assistant
+- Apps in `appdaemon/apps/`
+- Configuration in `appdaemon/apps/apps.yaml`
+- Local development with `docker-compose` using `appdaemon/compose.yaml`
+
+**Automations** (`automations/`):
+- Python automation scripts
+- Uses `uv` for dependency management
+- `mqtt_watch.py`: MQTT monitoring
+
+## Important Patterns
+
+### Multi-Source ArgoCD Applications
+
+Most applications use multiple sources pattern:
+1. Custom chart with application-specific resources
+2. Support chart providing common infrastructure (PVCs, secrets, virtual services)
+
+This reduces duplication and standardizes resource definitions.
+
+### 1Password Secret Injection
+
+For **nostos-managed nodes** (dell01) machineconfigs use `op://` and
+`tailscale://authkey` references that nostos resolves at render time:
+```bash
+nostos render dell01   # resolves into nostos/state/configs/ (gitignored)
+nostos apply  dell01
+```
+
+For **legacy workers** (tp1, tp4, vm-pc01), Talos configs in `talos/nodes/`
+use `op://` references that `task talos:op:inject` resolves into
+`talos/op/nodes/`. Apply with `talosctl -n <ip> apply-config -f <file>`.
+
+Never commit `nostos/state/configs/` or `talos/op/` — they contain real secrets.
+
+### Istio Ambient Mode
+
+Uses ztunnel for L4 networking without sidecars. Services are added to mesh via labels, not injection.
+
+Check ztunnel logs to debug connectivity:
+```bash
+kubectl -n istio-system logs -l app=ztunnel -f | grep -E "inbound|outbound"
+```
+
+## Node-Specific Details
+
+**Control Plane — dell01** (192.168.68.100):
+- Dell OptiPlex 3080M, amd64, NVMe
+- Managed by **`nostos`** (see `nostos/README.md` + `.submodules/nostos/README.md`)
+- Templated from `nostos/templates/dell01.yaml`; rendered machineconfig lives in `nostos/state/configs/` (gitignored)
+- Replaced the original Raspberry Pi controlplane via `nostos up dell01`
+
+**Worker Nodes** (legacy — not yet on nostos):
+- tp1 (192.168.68.107): Turing Pi RK1, ARM64
+- tp4 (192.168.68.114): Turing Pi RK1, ARM64
+- pc01 (192.168.68.104): x86 with NVIDIA GPU
+- Configs: `talos/nodes/*.yaml`; render via `task talos:op:inject`, apply with
+  `talosctl -n <ip> apply-config -f talos/op/nodes/<file>`
+- Pending Tailscale-key refresh + reinstall to migrate them into
+  `nostos/config.yaml`
+
+Talos factory images include platform-specific extensions (NVIDIA drivers, QEMU guest agent, Tailscale).
+
+## Provisioning a new bare-metal node
+
+Use `nostos` (`.submodules/nostos/`) — invocations are always `go run` (no
+binary, no install step):
+
+```bash
+nostos node add <name>   # interactive wizard (MAC, IP, role, disk, template)
+nostos build             # once per schematic/version change
+nostos up   <name>       # end-to-end: wipe → pxe serve → bootstrap
+nostos status            # verify Ready
+```
+
+See `nostos/README.md` for the data-dir layout and
+`.submodules/nostos/README.md` for the complete CLI reference.
+
+## Documentation
+
+Additional docs in `docs/`:
+- `argocd.md`: ArgoCD password management
+- `talos.md`: Detailed Talos setup and troubleshooting
+- `istio.md`: Istio installation and ztunnel debugging
+- `proxmox.md`, `turingpi.md`, `nas.md`: Hardware setup
+- `dns.md`: DNS configuration
+- `home-assistant.md`: Home Assistant integration
+
+## Kubernetes Contexts
+
+This project has two kubectl contexts. If the current context fails, switch to the other one:
+
+- `tailscale-operator.tailcecc0.ts.net`
+- `admin@talos-default`
+
+Use `kubectl config use-context <name>` to switch.
 
 <!-- BEGIN BEADS CODEX SETUP: generated by bd setup codex -->
-## Beads Issue Tracker
+## Beads
 
-Use Beads (`bd`) for durable task tracking in repositories that include it. Use the `beads` skill at `.agents/skills/beads/SKILL.md` (project install) or `~/.agents/skills/beads/SKILL.md` (global install) for Beads workflow guidance, then use the `bd` CLI for issue operations.
-
-### Quick Reference
-
-```bash
-bd ready                # Find available work
-bd show <id>            # View issue details
-bd update <id> --claim  # Claim work
-bd close <id>           # Complete work
-bd prime                # Refresh Beads context
-```
-
-### Rules
-
-- Use `bd` for all task tracking; do not create markdown TODO lists.
-- Run `bd prime` when Beads context is missing or stale. Codex 0.129.0+ can load Beads context automatically through native hooks; use `/hooks` to inspect or toggle them.
-- Keep persistent project memory in Beads via `bd remember`; do not create ad hoc memory files.
-
-**Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
+Use `bd` for task tracking. Full reference: `.agents/skills/beads/SKILL.md` or run `bd prime`. Do not create markdown TODO lists.
 <!-- END BEADS CODEX SETUP -->
