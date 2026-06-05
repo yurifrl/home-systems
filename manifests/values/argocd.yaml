@@ -132,3 +132,20 @@ configs:
 
     # -- Timeout to refresh application data as well as target manifests cache
     timeout.hard.reconciliation: 0s
+
+    # Skip listing every Crossplane GCP provider's CRDs during cluster cache
+    # sync. The conversion webhooks for these CRDs (provider-gcp-iam,
+    # provider-gcp-storage, provider-gcp-cloudplatform) point at the
+    # provider's webhook Service, but those provider Deployments and
+    # ProviderRevisions are unhealthy/missing. The dead webhooks 404 the
+    # entire ComparisonError chain, which blocked every Argo Application
+    # from reconciling. Excluding these apiGroups decouples Argo from the
+    # outage. Remove this once the GCP providers are healthy again.
+    resource.exclusions: |
+      - apiGroups:
+          - cloudplatform.gcp.upbound.io
+          - iam.gcp.upbound.io
+          - storage.gcp.upbound.io
+          - gcp.upbound.io
+        kinds:
+          - "*"
