@@ -32,11 +32,17 @@ spec:
       helm:
         releaseName: firecrawl
         valuesObject:
-          # Pin the heavy firecrawl pods to dell01 (amd64, plenty of RAM).
-          # The arm64 SBCs (tp1/tp4) OOMed when the chart's default
-          # resource limits stacked up on them. Stateful pods
-          # (rabbitmq/postgres/redis) are NOT pinned and stay where the
-          # scheduler puts them — they're stable on tp4.
+          # Pin ALL firecrawl pods to dell01 (amd64, 7.2 GB RAM, lots of
+          # CPU). The arm64 SBCs (tp1/tp4) are saturated with 20+ system
+          # services each (cert-manager, crossplane, external-dns, argo,
+          # 1Password Connect, ...) and Kubernetes overcommits memory
+          # limits 220%+ on tp4. RabbitMQ kept self-shutting on tp4 due
+          # to its internal `system_memory_high_watermark` /
+          # `disk_almost_full` alarms once it shared the node with all
+          # those neighbours, and workers ECONNREFUSED to it on a loop.
+          # Stateful pods (postgres/rabbitmq/redis) are tiny next to the
+          # workers, so co-locating everything on dell01 is the clean
+          # answer.
           global:
             nodeSelector:
               kubernetes.io/hostname: dell01

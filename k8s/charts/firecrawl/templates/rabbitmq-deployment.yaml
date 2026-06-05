@@ -15,6 +15,14 @@ spec:
       labels:
         app: {{ include "firecrawl.name" . }}-rabbitmq
     spec:
+      {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.global.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: rabbitmq
           image: {{ .Values.rabbitmq.image }}
