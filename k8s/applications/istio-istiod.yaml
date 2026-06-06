@@ -35,7 +35,7 @@ spec:
         - '.spec.template.spec.containers[].env[]?.valueFrom.resourceFieldRef.divisor'
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: "1.30.0"
+    targetRevision: "1.26.2"
     chart: istiod
     helm:
       valuesObject:
@@ -43,8 +43,8 @@ spec:
         pilot:
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: 200m
+              cpu: 250m
               memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi

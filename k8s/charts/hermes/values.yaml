@@ -341,98 +341,52 @@ topologySpreadConstraints: []
 # to it via CAMOFOX_URL above.
 extraContainers: []
 
-# Files are synced into /opt/data/files dynamically at startup by the op-files
-# init container (1Password Connect REST API — see extraInitContainers below).
-# No filenames are configured anywhere; whatever attachments the hermes-files
-# item has are downloaded by name.
+# Files are synced into /opt/data/files dynamically at startup by the
+# `opFiles.enabled` chart-managed init container (1Password Connect REST
+# API). No filenames are configured anywhere; whatever attachments the
+# `opFiles.item` has are downloaded by name.
 
 extraVolumes: []
 extraVolumeMounts: []
+extraInitContainers: []
+
+# ---------------------------------------------------------------------------
+# Built-in init containers + sync sidecar (hctl-driven). All disabled by
+# default so the chart stays portable; the home-systems Application turns
+# them on for this lab.
+# ---------------------------------------------------------------------------
+
 # git-login: authenticate gh + git once at startup using the token from the
-# hermes-env secret, persisting credentials to HOME (/opt/data/home) so the
-# bundled github skill's `gh auth status` path works and the (token-scrubbed)
-# agent shell can still push. Reuses the hermes image (has gh/git).
-extraInitContainers:
-  - name: git-login
-    image: ghcr.io/yurifrl/hermes-agent:latest
-    imagePullPolicy: Always
-    command:
-      - /bin/sh
-      - -ec
-    args:
-      - |
-        set -eu
-        export HOME=/opt/data/home
-        mkdir -p "$HOME/.config/gh"
-        TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
-        if [ -z "$TOKEN" ]; then
-          echo "git-login: no GH_TOKEN/GITHUB_TOKEN in hermes-env; skipping" >&2
-          exit 0
-        fi
-        # gh refuses to persist creds while GH_TOKEN/GITHUB_TOKEN is set in env.
-        unset GH_TOKEN GITHUB_TOKEN
-        printf '%s' "$TOKEN" | gh auth login --with-token
-        gh auth setup-git
-        if [ -n "${GIT_AUTHOR_NAME:-}" ]; then git config --global user.name "$GIT_AUTHOR_NAME"; fi
-        if [ -n "${GIT_AUTHOR_EMAIL:-}" ]; then git config --global user.email "$GIT_AUTHOR_EMAIL"; fi
-        gh auth status
-    envFrom:
-      - secretRef:
-          name: hermes-env
-    volumeMounts:
-      - name: state
-        mountPath: /opt/data
-      - name: tmp
-        mountPath: /tmp
-    securityContext:
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-          - ALL
-      seccompProfile:
-        type: RuntimeDefault
-  # op-files: download ALL file attachments of the 1Password "hermes-files"
-  # item into /opt/data/files via the Connect REST API (fully dynamic, no
-  # filenames). Reads the Connect token from the cluster's op-credentials
-  # secret using the agent's existing cluster read RBAC.
-  - name: op-files
-    image: ghcr.io/yurifrl/hermes-agent:latest
-    imagePullPolicy: Always
-    command:
-      - /bin/sh
-      - -ec
-    args:
-      - |
-        set -eu
-        export HOME=/tmp
-        if ! command -v op-files-sync >/dev/null 2>&1; then
-          echo "op-files: op-files-sync not in image yet; skipping" >&2
-          exit 0
-        fi
-        TOKEN=$(kubectl get secret -n 1password op-credentials -o jsonpath='{.data.token}' 2>/dev/null | base64 -d || true)
-        if [ -z "$TOKEN" ]; then
-          echo "op-files: cannot read Connect token (op-credentials); skipping" >&2
-          exit 0
-        fi
-        OP_CONNECT_HOST=http://onepassword-connect.1password.svc.cluster.local:8080 \
-        OP_CONNECT_TOKEN="$TOKEN" \
-        OP_VAULT=kubernetes \
-        OP_ITEM=hermes-files \
-        OP_DEST=/opt/data/files \
-        op-files-sync
-    volumeMounts:
-      - name: state
-        mountPath: /opt/data
-      - name: tmp
-        mountPath: /tmp
-    securityContext:
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-          - ALL
-      seccompProfile:
-        type: RuntimeDefault
+# external secret, persisting credentials to HOME so the (token-scrubbed)
+# agent shell can still push. Backed by `hctl auth login`.
+auth:
+  gitLogin:
+    enabled: false
+
+# op-files: download every file attachment of a 1Password item into a path
+# under /opt/data via the Connect REST API. Backed by `hctl op files sync`.
+# `connectCredentialsSecret` is read with the agent's existing cluster-read
+# RBAC; format is NS/NAME[:KEY] (default key: 'token').
+opFiles:
+  enabled: false
+  host: http://onepassword-connect.1password.svc.cluster.local:8080
+  vault: kubernetes
+  item: hermes-files
+  dest: /opt/data/files
+  connectCredentialsSecret: 1password/op-credentials
+
+# git-repos: clone a fixed list of GitHub repos into <mountPath>/<name> at
+# startup, then run a periodic + on-exit pull/commit/push loop in a sidecar.
+# Storage is `emptyDir` — repos are re-clonable from GitHub on every restart;
+# the `syncInterval` cycle plus the SIGTERM-trapped final pass guarantee a
+# backup commit before pod deletion. Backed by `hctl repos clone` + `hctl
+# repos sync`. The actual `user`/`repos` list is private and lives in the
+# home-systems-values repo (merged via $values/hermes/values.yaml).
+gitRepos:
+  enabled: false
+  user: ""
+  repos: []
+  mountPath: /workdir
+  syncInterval: 1h
 
 extraObjects: []

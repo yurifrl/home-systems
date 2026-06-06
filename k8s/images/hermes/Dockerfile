@@ -89,10 +89,12 @@ RUN curl -fsSLo /usr/local/bin/kubectl \
         "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${TARGETARCH:-amd64}/kubectl" \
     && chmod 0755 /usr/local/bin/kubectl
 
-# op-files-sync: downloads all file attachments of a 1Password item via the
-# Connect REST API (dependency-free, dynamic — no filenames configured).
-COPY op-files-sync /usr/local/bin/op-files-sync
-RUN chmod 0755 /usr/local/bin/op-files-sync
+# hctl — in-container helper CLI used by the Helm chart's init/sidecar
+# containers (auth login, op files sync, repos clone, repos sync). One Python
+# entrypoint, stdlib-only, replaces the legacy op-files-sync script and the
+# inline shell blobs that used to live in k8s/applications/hermes.yaml.
+COPY hctl /usr/local/bin/hctl
+RUN chmod 0755 /usr/local/bin/hctl
 
 # Non-root runtime user matching the chart's runAsUser/fsGroup 1000.
 RUN useradd -u 1000 -m -d /home/hermes -s /bin/bash hermes

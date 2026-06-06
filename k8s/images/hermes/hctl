@@ -1,0 +1,404 @@
+#!/usr/bin/env python3
+"""hctl — in-container helper CLI for the Hermes image.
+
+Replaces the long inline shell blobs that used to live in the Helm chart's
+init/sidecar containers. Subcommands:
+
+  hctl auth login
+      gh auth login + setup-git using GH_TOKEN/GITHUB_TOKEN from the
+      hermes-env secret. Persists credentials to $HOME so subsequent git
+      pushes work. Idempotent. Soft-skips when no token is set.
+
+  hctl op files sync
+      Download every file attachment of a 1Password item via the Connect
+      REST API into a directory. Dynamic by design — no filenames are
+      configured. Equivalent to the legacy `op-files-sync` script. Soft-
+      skips when env is incomplete.
+
+  hctl repos clone --user U --repos a,b,c [--dest /workdir]
+      Clone every <user>/<name> repo into <dest>/<name> if absent. Idempotent.
+
+  hctl repos sync --dir /workdir [--interval 1h]
+      Long-running loop. Every <interval>, for each repo in <dir>:
+        git pull --rebase --autostash
+        git add -A; commit if dirty
+        git push if ahead
+      On SIGTERM/SIGINT runs ONE final cycle (the "on-exit backup commit")
+      then exits 0. Exits 1 (crash-loop) on push failure mid-loop so the
+      failure surfaces in pod status.
+
+All subcommands are stdlib-only — the image base has python3, git, gh.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import signal
+import subprocess
+import sys
+import time
+import urllib.parse
+import urllib.request
+from pathlib import Path
+
+
+# ─────────────────────────────────────── helpers ──
+
+def _env(name: str, default: str = "") -> str:
+    return os.environ.get(name, default).strip()
+
+
+def _run(cmd: list[str], cwd: str | None = None, check: bool = True,
+         capture: bool = False) -> subprocess.CompletedProcess:
+    """Thin subprocess.run wrapper that always inherits stdio unless capture."""
+    kwargs: dict = {"cwd": cwd}
+    if capture:
+        kwargs["capture_output"] = True
+        kwargs["text"] = True
+    return subprocess.run(cmd, check=check, **kwargs)
+
+
+def _parse_duration(s: str) -> int:
+    """Parse '30s', '5m', '1h', '2d' → seconds. Bare integers are seconds."""
+    s = s.strip().lower()
+    if not s:
+        raise ValueError("empty duration")
+    if s[-1] in ("s", "m", "h", "d"):
+        n = int(s[:-1])
+        return n * {"s": 1, "m": 60, "h": 3600, "d": 86400}[s[-1]]
+    return int(s)
+
+
+def _log(msg: str) -> None:
+    print(f"hctl: {msg}", flush=True)
+
+
+def _err(msg: str) -> None:
+    print(f"hctl: {msg}", file=sys.stderr, flush=True)
+
+
+# ─────────────────────────────────────── auth login ──
+
+def cmd_auth_login(_args) -> int:
+    """Authenticate gh + git from $GH_TOKEN/$GITHUB_TOKEN, persist creds to $HOME."""
+    home = _env("HOME") or "/opt/data/home"
+    os.environ["HOME"] = home
+    Path(home, ".config", "gh").mkdir(parents=True, exist_ok=True)
+
+    token = _env("GH_TOKEN") or _env("GITHUB_TOKEN")
+    if not token:
+        _err("auth login: no GH_TOKEN/GITHUB_TOKEN; skipping")
+        return 0
+
+    # gh refuses to persist creds while GH_TOKEN/GITHUB_TOKEN is set in env.
+    for v in ("GH_TOKEN", "GITHUB_TOKEN"):
+        os.environ.pop(v, None)
+
+    # Stream token via stdin so it never lands in argv.
+    subprocess.run(
+        ["gh", "auth", "login", "--with-token"],
+        input=token, text=True, check=True,
+    )
+
+    _run(["gh", "auth", "setup-git"])
+
+    name = _env("GIT_AUTHOR_NAME")
+    email = _env("GIT_AUTHOR_EMAIL")
+    if name:
+        _run(["git", "config", "--global", "user.name", name])
+    if email:
+        _run(["git", "config", "--global", "user.email", email])
+
+    _run(["gh", "auth", "status"])
+    return 0
+
+
+# ─────────────────────────────────────── op files sync ──
+
+def cmd_op_files_sync(args) -> int:
+    """Download every file attachment of a 1Password item via Connect REST API.
+
+    Config resolution order (first non-empty wins):
+      flag  >  env
+    Token can come from:
+      --token              (literal; testing only)
+      --token-file PATH    (mounted secret)
+      --connect-credentials-secret NS/NAME[:KEY]
+                           (kubectl get secret … -o jsonpath; KEY default 'token')
+      OP_CONNECT_TOKEN env (fallback)
+    """
+    host = (args.host or _env("OP_CONNECT_HOST")).rstrip("/")
+    vault = args.vault or _env("OP_VAULT")
+    item = args.item or _env("OP_ITEM")
+    dest = args.dest or _env("OP_DEST")
+
+    token = (args.token or "").strip()
+    if not token and args.token_file:
+        try:
+            token = Path(args.token_file).read_text().strip()
+        except FileNotFoundError:
+            _err(f"op files sync: token file {args.token_file} not found")
+            return 0
+    if not token and args.connect_credentials_secret:
+        ref = args.connect_credentials_secret
+        key = "token"
+        if ":" in ref:
+            ref, key = ref.rsplit(":", 1)
+        if "/" not in ref:
+            _err("op files sync: --connect-credentials-secret must be NS/NAME[:KEY]")
+            return 10
+        ns, name = ref.split("/", 1)
+        try:
+            out = _run(
+                ["kubectl", "get", "secret", "-n", ns, name,
+                 "-o", f"jsonpath={{.data.{key}}}"],
+                capture=True, check=True,
+            ).stdout.strip()
+            import base64
+            token = base64.b64decode(out).decode().strip() if out else ""
+        except subprocess.CalledProcessError as e:
+            _err(f"op files sync: kubectl get secret failed: {e}")
+            return 0
+    if not token:
+        token = _env("OP_CONNECT_TOKEN")
+
+    if not all([host, vault, item, dest]):
+        _err("op files sync: missing host/vault/item/dest; skipping")
+        return 0
+    if not token:
+        _err("op files sync: no token available; skipping")
+        return 0
+
+    def get(path: str, raw: bool = False):
+        req = urllib.request.Request(host + path, headers={"Authorization": "Bearer " + token})
+        data = urllib.request.urlopen(req, timeout=20).read()
+        return data if raw else json.loads(data)
+
+    vaults = get("/v1/vaults")
+    vid = next((v["id"] for v in vaults if v.get("name") == vault), None)
+    if not vid:
+        _err(f"op files sync: vault {vault!r} not found; skipping")
+        return 0
+
+    q = urllib.parse.quote(f'title eq "{item}"')
+    items = get(f"/v1/vaults/{vid}/items?filter={q}")
+    if not items:
+        _err(f"op files sync: item {item!r} not found in vault {vault!r}; skipping")
+        return 0
+    iid = items[0]["id"]
+
+    full = get(f"/v1/vaults/{vid}/items/{iid}")
+    files = full.get("files", []) or []
+
+    os.makedirs(dest, exist_ok=True)
+    written = 0
+    for f in files:
+        name = os.path.basename(f.get("name", "")).strip()
+        if not name:
+            continue
+        cp = f.get("content_path") or f"/v1/vaults/{vid}/items/{iid}/files/{f['id']}/content"
+        blob = get(cp, raw=True)
+        out = os.path.join(dest, name)
+        with open(out, "wb") as fh:
+            fh.write(blob)
+        os.chmod(out, 0o600)
+        _log(f"op files sync: wrote {name} ({len(blob)} bytes)")
+        written += 1
+
+    _log(f"op files sync: done, {written} file(s) from item {item!r}")
+    return 0
+
+
+# ─────────────────────────────────────── repos clone ──
+
+def _parse_repos(spec: str) -> list[str]:
+    return [r.strip() for r in spec.split(",") if r.strip()]
+
+
+def cmd_repos_clone(args) -> int:
+    """Clone <user>/<name> for each name in --repos into <dest>/<name>."""
+    user = args.user.strip()
+    repos = _parse_repos(args.repos)
+    dest = args.dest
+
+    if not user:
+        _err("repos clone: --user is required")
+        return 10
+    if not repos:
+        _log("repos clone: no repos configured; skipping")
+        return 0
+
+    os.makedirs(dest, exist_ok=True)
+    for name in repos:
+        target = os.path.join(dest, name)
+        url = f"https://github.com/{user}/{name}.git"
+        if os.path.isdir(os.path.join(target, ".git")):
+            _log(f"repos clone: {target} already present")
+            continue
+        _log(f"repos clone: cloning {url} -> {target}")
+        _run(["git", "clone", url, target])
+    return 0
+
+
+# ─────────────────────────────────────── repos sync ──
+
+class _StopSignal(Exception):
+    """Raised inside the sync loop when SIGTERM/SIGINT is received."""
+
+
+def _list_repos(root: str) -> list[str]:
+    try:
+        names = sorted(os.listdir(root))
+    except FileNotFoundError:
+        return []
+    out = []
+    for name in names:
+        if os.path.isdir(os.path.join(root, name, ".git")):
+            out.append(name)
+    return out
+
+
+def _sync_one(repo_dir: str) -> None:
+    """One pull/commit/push pass for a single repo. Raises on push failure."""
+    name = os.path.basename(repo_dir)
+    _log(f"sync: {name} — pull")
+    rc = subprocess.run(
+        ["git", "pull", "--rebase", "--autostash"],
+        cwd=repo_dir,
+    ).returncode
+    if rc != 0:
+        raise RuntimeError(f"pull failed for {name}")
+
+    subprocess.run(["git", "add", "-A"], cwd=repo_dir, check=True)
+
+    diff = subprocess.run(
+        ["git", "diff", "--cached", "--quiet"],
+        cwd=repo_dir,
+    ).returncode
+    if diff != 0:
+        author = _env("GIT_AUTHOR_NAME") or "hermes"
+        email = _env("GIT_AUTHOR_EMAIL") or "hermes@local"
+        ts = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+        _log(f"sync: {name} — commit")
+        subprocess.run(
+            [
+                "git",
+                "-c", f"user.name={author}",
+                "-c", f"user.email={email}",
+                "commit", "-m", f"auto: {ts}",
+            ],
+            cwd=repo_dir, check=True,
+        )
+
+    status = subprocess.run(
+        ["git", "status", "-sb"],
+        cwd=repo_dir, capture_output=True, text=True, check=True,
+    ).stdout
+    if "[ahead" in status:
+        _log(f"sync: {name} — push")
+        rc = subprocess.run(["git", "push"], cwd=repo_dir).returncode
+        if rc != 0:
+            raise RuntimeError(f"push failed for {name}")
+
+
+def _sync_pass(root: str) -> None:
+    """One full pass over every repo under <root>. Stops on first failure."""
+    for name in _list_repos(root):
+        _sync_one(os.path.join(root, name))
+
+
+def cmd_repos_sync(args) -> int:
+    """Periodic + on-exit commit+push loop. SIGTERM/SIGINT runs final pass."""
+    root = args.dir
+    interval_s = _parse_duration(args.interval)
+    _log(f"repos sync: dir={root} interval={interval_s}s")
+
+    stop = {"flag": False}
+
+    def _handler(signum, _frame):
+        _log(f"repos sync: caught signal {signum}; will run final pass and exit")
+        stop["flag"] = True
+
+    signal.signal(signal.SIGTERM, _handler)
+    signal.signal(signal.SIGINT, _handler)
+
+    while not stop["flag"]:
+        try:
+            _sync_pass(root)
+        except RuntimeError as e:
+            _err(f"repos sync: {e}")
+            return 1
+        # Sleep in 1s slices so SIGTERM is responsive.
+        for _ in range(interval_s):
+            if stop["flag"]:
+                break
+            time.sleep(1)
+
+    # Final pass on the way out.
+    _log("repos sync: final pass before exit")
+    try:
+        _sync_pass(root)
+    except RuntimeError as e:
+        _err(f"repos sync: final pass failed: {e}")
+        return 1
+    return 0
+
+
+# ─────────────────────────────────────── argparse wiring ──
+
+def _build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(prog="hctl", description="In-container helper for Hermes.")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    # auth
+    auth = sub.add_parser("auth", help="auth subcommands").add_subparsers(dest="auth_cmd", required=True)
+    auth_login = auth.add_parser("login", help="gh auth login + setup-git from env token")
+    auth_login.set_defaults(func=cmd_auth_login)
+
+    # op files sync
+    op = sub.add_parser("op", help="1Password helpers").add_subparsers(dest="op_cmd", required=True)
+    op_files = op.add_parser("files", help="files helpers").add_subparsers(dest="op_files_cmd", required=True)
+    op_files_sync = op_files.add_parser("sync", help="download all attachments of an op item")
+    op_files_sync.add_argument("--host", default="", help="OP Connect host (default: $OP_CONNECT_HOST)")
+    op_files_sync.add_argument("--vault", default="", help="vault name (default: $OP_VAULT)")
+    op_files_sync.add_argument("--item", default="", help="item title (default: $OP_ITEM)")
+    op_files_sync.add_argument("--dest", default="", help="output directory (default: $OP_DEST)")
+    op_files_sync.add_argument("--token", default="", help="Connect token (testing only)")
+    op_files_sync.add_argument("--token-file", default="", help="path to file containing Connect token")
+    op_files_sync.add_argument("--connect-credentials-secret", default="",
+                               help="NS/NAME[:KEY] of a kubectl-fetched secret holding the token")
+    op_files_sync.set_defaults(func=cmd_op_files_sync)
+
+    # repos
+    repos = sub.add_parser("repos", help="git repos helpers").add_subparsers(dest="repos_cmd", required=True)
+
+    rc = repos.add_parser("clone", help="clone every <user>/<name> into <dest>/<name>")
+    rc.add_argument("--user", required=True, help="github user/org")
+    rc.add_argument("--repos", required=True, help="comma-separated list of repo names")
+    rc.add_argument("--dest", default="/workdir", help="destination directory (default: /workdir)")
+    rc.set_defaults(func=cmd_repos_clone)
+
+    rs = repos.add_parser("sync", help="periodic + on-exit pull/commit/push loop")
+    rs.add_argument("--dir", default="/workdir", help="root containing one repo per child dir")
+    rs.add_argument("--interval", default="1h", help="duration between cycles (e.g. 30s, 5m, 1h)")
+    rs.set_defaults(func=cmd_repos_sync)
+
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except subprocess.CalledProcessError as e:
+        _err(f"{e}")
+        sys.exit(e.returncode or 1)
+    except Exception as e:  # noqa: BLE001
+        _err(f"error: {e}")
+        sys.exit(1)

@@ -100,7 +100,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or .Values.bootstrap.enabled $npmEnabled .Values.extraInitContainers }}
+      {{- if or .Values.bootstrap.enabled $npmEnabled .Values.extraInitContainers .Values.auth.gitLogin.enabled .Values.opFiles.enabled .Values.gitRepos.enabled }}
       initContainers:
         {{- if .Values.bootstrap.enabled }}
         - name: bootstrap-config
@@ -167,6 +167,77 @@ spec:
               mountPath: {{ $mountPath }}
             - name: tmp
               mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
+        {{- if .Values.auth.gitLogin.enabled }}
+        - name: git-login
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["hctl", "auth", "login"]
+          env:
+            - name: HOME
+              value: {{ printf "%s/home" $mountPath | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          volumeMounts:
+            - name: {{ $dataVolumeName }}
+              mountPath: {{ $mountPath }}
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
+        {{- if .Values.opFiles.enabled }}
+        - name: op-files
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - hctl
+            - op
+            - files
+            - sync
+            - --host={{ .Values.opFiles.host }}
+            - --vault={{ .Values.opFiles.vault }}
+            - --item={{ .Values.opFiles.item }}
+            - --dest={{ .Values.opFiles.dest }}
+            - --connect-credentials-secret={{ .Values.opFiles.connectCredentialsSecret }}
+          env:
+            - name: HOME
+              value: /tmp
+          volumeMounts:
+            - name: {{ $dataVolumeName }}
+              mountPath: {{ $mountPath }}
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
+        {{- if .Values.gitRepos.enabled }}
+        - name: repos-clone
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - hctl
+            - repos
+            - clone
+            - --user={{ .Values.gitRepos.user }}
+            - --repos={{ join "," .Values.gitRepos.repos }}
+            - --dest={{ .Values.gitRepos.mountPath }}
+          env:
+            - name: HOME
+              value: {{ printf "%s/home" $mountPath | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          volumeMounts:
+            - name: {{ $dataVolumeName }}
+              mountPath: {{ $mountPath }}
+            - name: tmp
+              mountPath: /tmp
+            - name: {{ include "hermes-agent.workdirVolumeName" . }}
+              mountPath: {{ .Values.gitRepos.mountPath }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- end }}
@@ -285,8 +356,45 @@ spec:
             {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
+            {{- if .Values.gitRepos.enabled }}
+            - name: {{ include "hermes-agent.workdirVolumeName" . }}
+              mountPath: {{ .Values.gitRepos.mountPath }}
+            {{- end }}
         {{- with .Values.extraContainers }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.gitRepos.enabled }}
+        - name: repos-sync
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - hctl
+            - repos
+            - sync
+            - --dir={{ .Values.gitRepos.mountPath }}
+            - --interval={{ .Values.gitRepos.syncInterval }}
+          env:
+            - name: HOME
+              value: {{ printf "%s/home" $mountPath | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          volumeMounts:
+            - name: {{ $dataVolumeName }}
+              mountPath: {{ $mountPath }}
+            - name: tmp
+              mountPath: /tmp
+            - name: {{ include "hermes-agent.workdirVolumeName" . }}
+              mountPath: {{ .Values.gitRepos.mountPath }}
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
         {{- end }}
       volumes:
         {{- if .Values.persistence.existingClaim }}
@@ -310,6 +418,10 @@ spec:
         {{- end }}
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.gitRepos.enabled }}
+        - name: {{ include "hermes-agent.workdirVolumeName" . }}
+          emptyDir: {}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       {{- with .Values.nodeSelector }}

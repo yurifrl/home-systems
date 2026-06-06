@@ -65,6 +65,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- default (include "hermes-agent.configMapName" .) .Values.bootstrap.existingConfigMap -}}
 {{- end -}}
 
+{{- define "hermes-agent.workdirVolumeName" -}}
+workdir
+{{- end -}}
+
 {{- define "hermes-agent.generatedSecretName" -}}
 {{- printf "%s-secrets" (include "hermes-agent.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

@@ -1,0 +1,60 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hermes
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: hermes
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  sources:
+    # PRIVATE values: env (Discord/WhatsApp identifiers — PII) + the
+    # gitRepos.user/gitRepos.repos list. Lives in home-systems-values so the
+    # repo list isn't public.
+    - repoURL: git@github.com:yurifrl/home-systems-values.git
+      targetRevision: HEAD
+      ref: values
+    # App: the hermes chart. All container/init/sidecar wiring lives in the
+    # chart itself (driven by structured values: auth.gitLogin, opFiles,
+    # gitRepos). Inline shell blobs were replaced by the in-image `hctl` CLI.
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/hermes
+      helm:
+        valueFiles:
+          - $values/hermes/values.yaml
+        valuesObject:
+          virtualService:
+            enabled: true
+            hosts:
+              - hermes.syscd.tech
+
+          # Pin to dell01 (amd64, has memory headroom; arm SBCs evict the pod).
+          nodeSelector:
+            kubernetes.io/hostname: dell01
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
+
+          # Turn on the chart-managed plumbing for this lab.
+          # The chart renders the corresponding init/sidecar containers
+          # calling `hctl`. gitRepos.user + gitRepos.repos[] are merged
+          # in from $values/hermes/values.yaml (private).
+          auth:
+            gitLogin:
+              enabled: true
+          opFiles:
+            enabled: true
+          gitRepos:
+            enabled: true
