@@ -68,7 +68,7 @@ spec:
                     - name: CAMOFOX_PORT
                       value: "9377"
                     - name: MAX_OLD_SPACE_SIZE
-                      value: "2048"
+                      value: "384"
                   volumeMounts:
                     - name: dshm
                       mountPath: /dev/shm
@@ -90,11 +90,11 @@ spec:
                     periodSeconds: 30
                   resources:
                     requests:
-                      cpu: 100m
-                      memory: 512Mi
+                      cpu: 50m
+                      memory: 256Mi
                     limits:
-                      cpu: "1"
-                      memory: 2Gi
+                      cpu: "500m"
+                      memory: 512Mi
           services:
             - name: camofox
               port: 9377

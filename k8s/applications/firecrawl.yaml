@@ -55,51 +55,69 @@ spec:
           # instead of firecrawl-firecrawl-api.
           fullnameOverride: firecrawl
 
-          # Slim the deploy: drop nuqWorker replicas from 5 to 1. Keep
-          # extractWorker and nuqPrefetchWorker on — prefetch is the
-          # dispatcher that pulls from nuq.queue_scrape and feeds nuq-worker;
-          # disabling it leaves jobs queued forever (408 timeouts on /scrape).
+          # Hobby / low-use sizing. Browser-side scrapes are 1-2 URLs at a
+          # time, no AI extract, no full-site crawls. Trim every component to
+          # the floor that still works:
+          #   - extractWorker disabled (AI extract feature unused)
+          #   - all replicaCount=1 (chart defaults already)
+          #   - small memory requests so dell01 keeps headroom for hermes,
+          #     argocd, control-plane services
+          #   - heap sizes already lowered in the forked chart templates
+          #     (api 1024, workers 768, prefetch 384)
+          extractWorker:
+            enabled: false
+
           nuqWorker:
             replicaCount: 1
             resources:
               requests:
-                memory: "512Mi"
+                memory: "384Mi"
                 cpu: "100m"
               limits:
-                memory: "1Gi"
+                memory: "768Mi"
                 cpu: "1"
 
-          # Per-service resource overrides. Heap sizes (--max-old-space-size)
-          # were lowered in the forked chart templates to fit a 7 GB node;
-          # limits here cap the cgroup so we get clean OOMKilled signals
-          # instead of node-wide OOM cascades.
+          # Per-service resource overrides. resources.enabled=true makes the
+          # chart honour these blocks; without it, no requests/limits are
+          # set at all and the kernel OOM-killer reacts to node-wide pressure
+          # instead of per-pod limits.
           resources:
             enabled: true
           api:
             resources:
               requests:
-                memory: "512Mi"
-                cpu: "200m"
+                memory: "256Mi"
+                cpu: "100m"
               limits:
-                memory: "1500Mi"
-                cpu: "2"
+                memory: "1Gi"
+                cpu: "1"
           worker:
             resources:
               requests:
-                memory: "384Mi"
-                cpu: "100m"
+                memory: "256Mi"
+                cpu: "50m"
               limits:
-                memory: "1Gi"
-                cpu: "1"
-          extractWorker:
-            resources:
-              requests:
-                memory: "384Mi"
-                cpu: "100m"
-              limits:
-                memory: "1Gi"
+                memory: "768Mi"
                 cpu: "1"
           nuqPrefetchWorker:
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "50m"
+              limits:
+                memory: "384Mi"
+                cpu: "500m"
+          nuqPostgres:
+            persistence:
+              enabled: false
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "50m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+          rabbitmq:
             resources:
               requests:
                 memory: "256Mi"
@@ -107,12 +125,6 @@ spec:
               limits:
                 memory: "512Mi"
                 cpu: "500m"
-
-          # Ephemeral storage everywhere. Pod restart wipes queues + Postgres
-          # job history; in-flight crawls die, no long-term data is lost.
-          nuqPostgres:
-            persistence:
-              enabled: false
 
           # Don't pull a "docker-registry-secret" the chart references by
           # default for private images. We use the public ghcr/dockerhub
