@@ -23,7 +23,7 @@ spec:
       - ServerSideApply=true
   source:
     repoURL: https://helm.cilium.io/
-    targetRevision: "1.18.0"
+    targetRevision: "1.19.4"
     chart: cilium
     helm:
       # Mirrors nostos/manifests/cilium/values-base.yaml + values-phase1.yaml
