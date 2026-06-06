@@ -182,6 +182,11 @@ rbac:
     - apiGroups: [""]
       resources: ["pods"]
       verbs: ["delete"]
+    # Required for backup volume labeling
+    - apiGroups: ["longhorn.io"]
+      resources: ["volumes"]
+      verbs: ["get", "list", "update", "patch"]
+
 
 persistence:
   enabled: true
@@ -192,6 +197,13 @@ persistence:
   size: 20Gi
   storageClass: longhorn-ha
   annotations: {}
+
+  backup:
+    enabled: false
+    schedule: "0 2 * * 0"
+    retain: 7
+    concurrency: 1
+    restore: ""  # Set to backup name to restore
 
 browser:
   shm:

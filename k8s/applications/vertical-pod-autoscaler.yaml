@@ -34,7 +34,7 @@ spec:
     helm:
       valuesObject:
         serviceMonitor:
-          enabled: true
+          enabled: false
         recommender:
           extraArgs:
             - --pod-recommendation-min-cpu-millicores=50

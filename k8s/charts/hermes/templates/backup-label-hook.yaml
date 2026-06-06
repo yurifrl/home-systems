@@ -1,0 +1,49 @@
+{{- if not .Values.operator.enabled }}
+{{- if and .Values.persistence.enabled .Values.persistence.backup.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "hermes-agent.fullname" . }}-backup-label
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "hermes-agent.serviceAccountName" . }}
+      containers:
+        - name: kubectl
+          image: bitnami/kubectl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              PVC="{{ include "hermes-agent.fullname" . }}-{{ .Values.persistence.volumeName }}-0"
+              NS="{{ .Release.Namespace }}"
+              JOB="backup-{{ include "hermes-agent.fullname" . }}"
+              VOLUME=""
+              i=1
+              while [ "$i" -le 60 ]; do
+                VOLUME=$(kubectl get pvc "$PVC" -n "$NS" -o jsonpath='{.spec.volumeName}' 2>/dev/null || true)
+                if [ -n "$VOLUME" ] && [ "$VOLUME" != "<no value>" ]; then
+                  break
+                fi
+                echo "Waiting for PVC to bind... ($i/60)"
+                sleep 5
+                i=$((i + 1))
+              done
+              if [ -z "$VOLUME" ] || [ "$VOLUME" = "<no value>" ]; then
+                echo "ERROR: PVC $PVC not bound after 5 minutes"
+                exit 1
+              fi
+              echo "Labeling volume $VOLUME for $JOB"
+              kubectl -n longhorn-system label volume "$VOLUME" \
+                "recurring-job.longhorn.io/$JOB=enabled" --overwrite
+              echo "Done."
+{{- end }}
+{{- end }}

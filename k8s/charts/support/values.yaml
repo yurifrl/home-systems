@@ -6,6 +6,20 @@ persistentVolumeClaims: []
   #   storage: 1Gi
   #   storageClassName: local-storage
   #   volumeName: volume-name
+  #   restore: ""                  # Set to a backup name to restore this PVC from backup
+
+# Longhorn Backups configuration
+# Backs up any EXISTING PVC by name, regardless of what created it
+# (StatefulSet volumeClaimTemplate, Deployment-mounted PVC, upstream chart, etc).
+# For each entry the support chart creates:
+#   1. a Longhorn RecurringJob (the schedule)
+#   2. a post-install Job that resolves the PVC -> Longhorn volume and labels it
+#   3. shared RBAC so the Job can label volumes in longhorn-system
+longhornBackups: []
+  # - pvc: my-pvc-name           # name of an existing PVC (required)
+  #   schedule: "0 2 * * 0"      # optional, default weekly Sunday 2 AM
+  #   retain: 7                  # optional, default 7
+  #   concurrency: 1             # optional, default 1
 
 # Persistent Volumes configuration
 persistentVolumes: []

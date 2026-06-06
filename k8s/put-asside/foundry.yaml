@@ -34,6 +34,10 @@ spec:
             - name: foundry-talos-vca-xy1-data
               storageClassName: longhorn
               storage: 10Gi
+          longhornBackups:
+            - pvc: foundry-talos-vca-xy1-data
+              schedule: "0 2 * * 0"
+              retain: 14
           services:
             - name: foundry
               port: 30000

@@ -1,0 +1,20 @@
+{{- if .Values.longhornBackups }}
+{{- range .Values.longhornBackups }}
+---
+# Backup schedule for PVC "{{ .pvc }}"
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: backup-{{ .pvc }}
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/managed-by: support
+    support.home-systems/source-namespace: {{ $.Release.Namespace }}
+spec:
+  cron: {{ .schedule | default "0 2 * * 0" | quote }}
+  task: backup
+  retain: {{ .retain | default 7 }}
+  concurrency: {{ .concurrency | default 1 }}
+  groups: []
+{{- end }}
+{{- end }}

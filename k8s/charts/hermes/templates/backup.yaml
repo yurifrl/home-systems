@@ -1,0 +1,18 @@
+{{- if not .Values.operator.enabled }}
+{{- if .Values.persistence.backup.enabled }}
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: backup-{{ include "hermes-agent.fullname" . }}
+  namespace: longhorn-system
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+spec:
+  cron: {{ .Values.persistence.backup.schedule | quote }}
+  task: backup
+  retain: {{ .Values.persistence.backup.retain }}
+  concurrency: {{ .Values.persistence.backup.concurrency }}
+  groups: []
+{{- end }}
+{{- end }}

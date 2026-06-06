@@ -5,6 +5,10 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ .name | required "name is required" }}
   namespace: {{ $.Release.Namespace | default .namespace }}
+  {{- if .restore }}
+  annotations:
+    longhorn.io/volumeBackup: {{ .restore | quote }}
+  {{- end }}
 spec:
   accessModes:
     - {{ .accessMode | default "ReadWriteOnce" }}

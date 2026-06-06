@@ -455,9 +455,14 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: {{ $dataVolumeName }}
-        {{- with .Values.persistence.annotations }}
+        {{- if or .Values.persistence.annotations .Values.persistence.backup.restore }}
         annotations:
+          {{- with .Values.persistence.annotations }}
           {{- toYaml . | nindent 10 }}
+          {{- end }}
+          {{- if .Values.persistence.backup.restore }}
+          longhorn.io/volumeBackup: {{ .Values.persistence.backup.restore | quote }}
+          {{- end }}
         {{- end }}
       spec:
         accessModes:

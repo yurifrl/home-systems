@@ -1,0 +1,96 @@
+{{- if .Values.longhornBackups }}
+---
+# Shared RBAC so the label hook can resolve PVCs and label Longhorn volumes
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: support-backup-labeler
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: support-backup-labeler-{{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list"]
+  - apiGroups: ["longhorn.io"]
+    resources: ["volumes"]
+    verbs: ["get", "list", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: support-backup-labeler-{{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation
+subjects:
+  - kind: ServiceAccount
+    name: support-backup-labeler
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: support-backup-labeler-{{ .Release.Namespace }}
+{{- range .Values.longhornBackups }}
+---
+# Resolve PVC "{{ .pvc }}" -> Longhorn volume and label it for backup-{{ .pvc }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: label-backup-{{ .pvc }}
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: support-backup-labeler
+      containers:
+        - name: kubectl
+          image: bitnami/kubectl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              PVC="{{ .pvc }}"
+              NS="{{ $.Release.Namespace }}"
+              JOB="backup-{{ .pvc }}"
+              echo "Resolving volume for PVC $PVC in $NS..."
+              VOLUME=""
+              i=1
+              while [ "$i" -le 60 ]; do
+                VOLUME=$(kubectl get pvc "$PVC" -n "$NS" -o jsonpath='{.spec.volumeName}' 2>/dev/null || true)
+                if [ -n "$VOLUME" ] && [ "$VOLUME" != "<no value>" ]; then
+                  break
+                fi
+                echo "Waiting for PVC to bind... ($i/60)"
+                sleep 5
+                i=$((i + 1))
+              done
+              if [ -z "$VOLUME" ] || [ "$VOLUME" = "<no value>" ]; then
+                echo "ERROR: PVC $PVC not bound after 5 minutes"
+                exit 1
+              fi
+              echo "Labeling volume $VOLUME for $JOB"
+              kubectl -n longhorn-system label volume "$VOLUME" \
+                "recurring-job.longhorn.io/$JOB=enabled" --overwrite
+              echo "Done."
+{{- end }}
+{{- end }}

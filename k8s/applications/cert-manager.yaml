@@ -28,7 +28,7 @@ spec:
           prometheus:
             enabled: true
             servicemonitor:
-              enabled: true
+              enabled: false
           resources:
             limits:
               cpu: 100m

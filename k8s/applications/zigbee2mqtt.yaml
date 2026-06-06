@@ -80,3 +80,9 @@ spec:
                 name: zigbee2mqtt
                 namespace: zigbee2mqtt
                 port: 8080
+          # Backup the PVC created by the upstream chart's volumeClaimTemplate.
+          # Verify the PVC name after first deploy: kubectl -n zigbee2mqtt get pvc
+          longhornBackups:
+            - pvc: data-zigbee2mqtt-0
+              schedule: "0 2 * * 0"
+              retain: 14

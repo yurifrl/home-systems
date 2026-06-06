@@ -108,5 +108,11 @@ spec:
                 name: home-assistant
                 namespace: home-assistant
                 port: 8080
+          # Backup the PVC created by the upstream chart's volumeClaimTemplate.
+          longhornBackups:
+            - pvc: home-assistant-home-assistant-0
+              schedule: "0 2 * * 0"
+              retain: 30
+
              
 # Chart: https://github.com/pajikos/home-assistant-helm-chart

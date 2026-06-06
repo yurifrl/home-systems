@@ -1,0 +1,98 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # CNI is the lowest-level dependency: everything (incl. istio-cni at -5)
+    # needs pod networking first. argocd itself is -10; cilium sits just above.
+    argocd.argoproj.io/sync-wave: "-9"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: false          # never let ArgoCD prune the live CNI out from under the cluster
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  source:
+    repoURL: https://helm.cilium.io/
+    targetRevision: "1.18.0"
+    chart: cilium
+    helm:
+      # Mirrors nostos/manifests/cilium/values-base.yaml + values-phase1.yaml
+      # (the manual bootstrap install uses those files; this is the day-2 owner).
+      valuesObject:
+        ipam:
+          mode: kubernetes
+        # --- Talos: no kernel-module loading; use Talos cgroup/bpffs ---
+        securityContext:
+          capabilities:
+            ciliumAgent:
+              - CHOWN
+              - KILL
+              - NET_ADMIN
+              - NET_RAW
+              - IPC_LOCK
+              - SYS_ADMIN
+              - SYS_RESOURCE
+              - DAC_OVERRIDE
+              - FOWNER
+              - SETGID
+              - SETUID
+            cleanCiliumState:
+              - NET_ADMIN
+              - SYS_ADMIN
+              - SYS_RESOURCE
+        cgroup:
+          autoMount:
+            enabled: false
+          hostRoot: /sys/fs/cgroup
+        # --- Stretched cluster over Tailscale (nodes ride 100.x); flannel ran
+        # VXLAN @ MTU 1450. Mirror it. Lower toward 1230 if offsite (rpi01,
+        # ~1280B WireGuard path) shows fragmentation/drops.
+        routingMode: tunnel
+        tunnelProtocol: vxlan
+        MTU: 1450
+        # --- hostDNS (forwardKubeDNSToHost:true) conflicts with BPF masquerade
+        # (siderolabs/talos#9200). Keep BPF masq off. ---
+        bpf:
+          masquerade: false
+        # --- Phase 1: keep kube-proxy (lowest-risk Istio Ambient coexistence) ---
+        kubeProxyReplacement: false
+        # --- Istio Ambient coexistence: set from day one ---
+        socketLB:
+          hostNamespaceOnly: true   # bpf-lb-sock-hostns-only: true
+        cni:
+          exclusive: false          # cni-exclusive: false — do not evict istio-cni
+        # --- Observability. ArgoCD renders helm server-side every sync, so the
+        # default tls.auto.method=helm would regenerate certs each render. Use
+        # cronJob (runtime generation) so certs are stable and NOTHING secret is
+        # committed to git. (Opt-in alt: pre-seed certs via ESO/1Password and set
+        # hubble.tls.auto.enabled=false.) ---
+        hubble:
+          enabled: true
+          tls:
+            auto:
+              enabled: true
+              method: cronJob
+          relay:
+            enabled: true
+          ui:
+            enabled: true
+          metrics:
+            enabled:
+              - dns
+              - drop
+              - tcp
+              - flow
+              - icmp
+              - http
+        operator:
+          replicas: 1               # single control-plane today; raise when rpi01 joins
