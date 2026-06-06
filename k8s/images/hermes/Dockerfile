@@ -21,7 +21,7 @@ ARG PYTHON_VERSION=3.14-slim-trixie
 FROM python:${PYTHON_VERSION}
 
 # renovate: datasource=pypi depName=hermes-agent versioning=pep440
-ARG HERMES_VERSION=0.15.2
+ARG HERMES_VERSION=0.16.0
 
 # renovate: datasource=github-releases depName=kubernetes/kubectl
 ARG KUBECTL_VERSION=1.33.0
