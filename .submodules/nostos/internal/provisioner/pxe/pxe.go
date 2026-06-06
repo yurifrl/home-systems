@@ -15,8 +15,8 @@ import (
 
 	"github.com/yurifrl/nostos/internal/cluster"
 	"github.com/yurifrl/nostos/internal/config"
-	pxeserver "github.com/yurifrl/nostos/internal/pxe"
 	"github.com/yurifrl/nostos/internal/provisioner"
+	pxeserver "github.com/yurifrl/nostos/internal/pxe"
 )
 
 const Method = "pxe"
@@ -40,9 +40,12 @@ type Provisioner struct {
 	serveTO     time.Duration
 }
 
-// New is the registered factory.
+// New is the registered factory. serveTO defaults to 0 (no timeout): the
+// install flow must wait until the node fetches its config or the operator
+// Ctrl+C's, because the node may be powered on at any time. An operator can
+// opt into a bound via SetServeTimeout.
 func New(deps provisioner.Deps) provisioner.Provisioner {
-	return &Provisioner{deps: deps, serveTO: 10 * time.Minute}
+	return &Provisioner{deps: deps, serveTO: 0}
 }
 
 // Method returns "pxe".
@@ -51,10 +54,11 @@ func (p *Provisioner) Method() string { return Method }
 // ContentionKey returns the single PXE-server key.
 func (p *Provisioner) ContentionKey(_ *config.Node) string { return "pxe:server" }
 
-// MaxWaitMaintenance is the maximum time we permit a node to spend in
-// maintenance mode after PXE boot. PXE flows are fast; 10 minutes is
-// generous.
-func (p *Provisioner) MaxWaitMaintenance() time.Duration { return 10 * time.Minute }
+// MaxWaitMaintenance returns 0: PXE imposes NO provisioner-side bound on the
+// maintenance/config-fetch wait. The node can be powered on whenever, so the
+// wait ends only on config-fetch (tap) or operator Ctrl+C (ctx cancel). An
+// operator can still opt into a bound via the install ServeTimeout knob.
+func (p *Provisioner) MaxWaitMaintenance() time.Duration { return 0 }
 
 // Preflight checks server-side prerequisites (assets present, dnsmasq, iface).
 func (p *Provisioner) Preflight(ctx context.Context, node *config.Node, emit provisioner.EventEmitter) error {
@@ -75,6 +79,13 @@ func (p *Provisioner) Preflight(ctx context.Context, node *config.Node, emit pro
 func (p *Provisioner) Prepare(ctx context.Context, node *config.Node, emit provisioner.EventEmitter) error {
 	cfg := p.deps.Cfg
 	pa := p.deps.Paths
+
+	// A (re)install must always serve the install chain, not the
+	// boot-from-disk script: clear any prior installed-state for this MAC
+	// regardless of skipWipe. Best-effort — never block the install on it.
+	if err := pxeserver.ClearInstalled(pa.InstalledMACs(), node.MAC); err != nil {
+		emitInfo(emit, "warning: clear installed-state: "+err.Error())
+	}
 
 	if !p.skipWipe {
 		if err := cluster.QueueWipe(pa.PendingWipes(), node.MAC); err != nil {
@@ -118,26 +129,53 @@ func (p *Provisioner) Boot(ctx context.Context, node *config.Node, emit provisio
 	emitInfo(emit, fmt.Sprintf("PXE server on %s (%s); power on %s", ni.Interface, ni.IP, node.MAC))
 	p.expectedCfg = "/configs/" + node.MACHyphen() + ".yaml"
 
+	// Snapshot the operator-host/local IPs so the tap can reject a
+	// config-fetch that originates from this machine (e.g. a hand-rolled
+	// curl) instead of the booting node.
+	localIPs := make(map[string]bool)
+	for _, ip := range srv.LocalIPs() {
+		localIPs[ip] = true
+	}
+
 	done := make(chan struct{})
 	p.tapDone = done
 	expected := p.expectedCfg
 	go func() {
 		defer close(done)
+		// bootChainIPs tracks source IPs that fetched the boot chain
+		// (boot.ipxe / vmlinuz / initramfs). A booting node always fetches
+		// the kernel+initramfs before it can fetch its config, so a
+		// config-fetch is only trusted from an IP seen here. The goroutine
+		// is single-threaded over reqCh, so a plain map needs no locking.
+		bootChainIPs := make(map[string]bool)
 		for {
 			select {
-			case path, ok := <-reqCh:
+			case req, ok := <-reqCh:
 				if !ok {
 					return
 				}
+				path := req.Path
 				switch {
 				case strings.HasSuffix(path, "/boot.ipxe"):
+					bootChainIPs[req.SourceIP] = true
 					emit(provisioner.Event{Phase: provisioner.PhaseBoot, Kind: "download", Message: "iPXE chainloaded boot.ipxe", At: p.deps.Clock.Now()})
 				case strings.Contains(path, "vmlinuz"):
+					bootChainIPs[req.SourceIP] = true
 					emit(provisioner.Event{Phase: provisioner.PhaseBoot, Kind: "download", Message: "downloading kernel", At: p.deps.Clock.Now()})
 				case strings.Contains(path, "initramfs"):
+					bootChainIPs[req.SourceIP] = true
 					emit(provisioner.Event{Phase: provisioner.PhaseBoot, Kind: "download", Message: "downloading initramfs", At: p.deps.Clock.Now()})
 				case path == expected:
-					emit(provisioner.Event{Phase: provisioner.PhaseApply, Kind: "config-fetched", Message: "Talos fetched its config — installing", At: p.deps.Clock.Now()})
+					if shouldEmitConfigFetched(req, localIPs, bootChainIPs) {
+						// The node fetched its config -> it is committing to
+						// install to disk. Mark installed so the post-install
+						// reboot is served the boot-from-disk script and settles.
+						// Best-effort: log on error, never fail the install.
+						if err := pxeserver.MarkInstalled(p.deps.Paths.InstalledMACs(), node.MAC); err != nil {
+							emit(provisioner.Event{Phase: provisioner.PhaseApply, Kind: "info", Message: "warning: mark installed-state: " + err.Error(), At: p.deps.Clock.Now()})
+						}
+						emit(provisioner.Event{Phase: provisioner.PhaseApply, Kind: "config-fetched", Message: "Talos fetched its config — installing", At: p.deps.Clock.Now()})
+					}
 				}
 			case <-serveCtx.Done():
 				return
@@ -147,16 +185,53 @@ func (p *Provisioner) Boot(ctx context.Context, node *config.Node, emit provisio
 	return nil
 }
 
+// shouldEmitConfigFetched decides whether a request for the expected config
+// path is a genuine node-side fetch worth reporting as "installing".
+//
+// The config-fetched signal is the core of the false-progress bug: any HTTP
+// hit to the config path used to trip it, including a curl run from the
+// operator host. Two conditions must hold to accept it:
+//
+//   - The source is NOT a local/operator-host IP (loopback or any IP the PXE
+//     server is bound to). A curl from this machine is excluded.
+//   - The source previously fetched the boot chain (boot.ipxe / vmlinuz /
+//     initramfs). A booting node always pulls kernel+initramfs before it can
+//     fetch its config, so this positively identifies the real node. The
+//     node's DHCP-assigned (proxy-mode) IP is generally NOT node.IP, so we do
+//     not match against the final static IP.
+func shouldEmitConfigFetched(req pxeserver.HTTPRequest, localIPs, bootChainIPs map[string]bool) bool {
+	if req.SourceIP == "" {
+		return false
+	}
+	if localIPs[req.SourceIP] || req.SourceIP == "127.0.0.1" || req.SourceIP == "::1" {
+		return false
+	}
+	return bootChainIPs[req.SourceIP]
+}
+
 // WaitMaintenance blocks until either the config-fetch is observed or
 // ctx deadline expires. PXE delivers config in-band, so once the
 // node has fetched the config we treat the node as having reached
 // post-maintenance.
+//
+// When serveTO <= 0 (the default) there is NO kill timer: the wait is
+// unbounded and ends only on ctx cancel (operator Ctrl+C / parent deadline)
+// or the tap goroutine signaling an early finish. When serveTO > 0 the
+// operator opted into a bound, so we arm the kill timer.
 func (p *Provisioner) WaitMaintenance(ctx context.Context, node *config.Node, emit provisioner.EventEmitter) error {
 	emitProgress(emit, fmt.Sprintf("waiting for %s to fetch its machineconfig", node.IP))
-	timer := p.deps.Clock.NewTimer(p.serveTO)
-	defer timer.Stop()
 	// Note: actual config-fetch is detected by the tap; here we just
 	// wait either for ctx done or tap goroutine ending early.
+	if p.serveTO <= 0 {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-p.tapDoneEarly():
+			return nil
+		}
+	}
+	timer := p.deps.Clock.NewTimer(p.serveTO)
+	defer timer.Stop()
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -221,7 +296,8 @@ func (p *Provisioner) Cleanup(ctx context.Context, node *config.Node, emit provi
 // SetSkipWipe is used by the orchestrator to honor InstallOpts.SkipWipe.
 func (p *Provisioner) SetSkipWipe(v bool) { p.skipWipe = v }
 
-// SetServeTimeout overrides the default 10m serve timeout.
+// SetServeTimeout overrides the default (0 = no timeout) serve bound. Only a
+// positive duration arms the kill timer in WaitMaintenance.
 func (p *Provisioner) SetServeTimeout(d time.Duration) {
 	if d > 0 {
 		p.serveTO = d

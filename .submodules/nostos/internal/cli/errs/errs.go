@@ -140,7 +140,7 @@ func FromGo(err error) *Error {
 		return Timeout("E_TIMEOUT", msg).Wrap(err)
 	case containsAny(msg, "connection refused", "no route", "DNS", "dial tcp", "i/o timeout"):
 		return Network("E_NETWORK", msg).Wrap(err)
-	case containsAny(msg, "unauthorized", "forbidden", "401", "403", "credential"):
+	case containsAny(msg, "unauthorized", "forbidden", "401", "403", "credential", "sudo required"):
 		return Auth("E_AUTH", msg).Wrap(err)
 	case containsAny(msg, "already exists", "conflict", "in use", "locked"):
 		return Conflict("E_CONFLICT", msg).Wrap(err)

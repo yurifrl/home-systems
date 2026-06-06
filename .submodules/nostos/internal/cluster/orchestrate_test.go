@@ -15,9 +15,9 @@ type fakeProv struct {
 	max time.Duration
 }
 
-func (f *fakeProv) Method() string                       { return "fake" }
-func (f *fakeProv) ContentionKey(*config.Node) string    { return "fake" }
-func (f *fakeProv) MaxWaitMaintenance() time.Duration    { return f.max }
+func (f *fakeProv) Method() string                    { return "fake" }
+func (f *fakeProv) ContentionKey(*config.Node) string { return "fake" }
+func (f *fakeProv) MaxWaitMaintenance() time.Duration { return f.max }
 func (f *fakeProv) Preflight(context.Context, *config.Node, provisioner.EventEmitter) error {
 	return nil
 }
@@ -57,10 +57,16 @@ func TestChooseWaitTimeout(t *testing.T) {
 			want: 17 * time.Minute,
 		},
 		{
-			name: "all_zero_falls_back_to_boot_timeout",
+			name: "all_zero_is_unbounded",
 			opts: InstallOpts{BootTimeout: 9 * time.Minute},
 			prov: &fakeProv{max: 0},
-			want: 9 * time.Minute,
+			want: 0,
+		},
+		{
+			name: "boot_timeout_is_not_a_fallback",
+			opts: InstallOpts{BootTimeout: 99 * time.Minute},
+			prov: &fakeProv{max: 0},
+			want: 0,
 		},
 	}
 	for _, tc := range cases {

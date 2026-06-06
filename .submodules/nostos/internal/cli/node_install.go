@@ -3,6 +3,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -14,6 +15,7 @@ import (
 	"github.com/yurifrl/nostos/internal/cli/errs"
 	"github.com/yurifrl/nostos/internal/cli/inputx"
 	"github.com/yurifrl/nostos/internal/cluster"
+	"github.com/yurifrl/nostos/internal/pxe"
 	"github.com/yurifrl/nostos/internal/registry"
 
 	// Register provisioner factories.
@@ -91,6 +93,9 @@ func newNodeInstallCmd() *cobra.Command {
 				}
 			}
 			if err := <-done; err != nil {
+				if errors.Is(err, pxe.ErrSudoRequired) {
+					return errs.Auth("E_SUDO_REQUIRED", err.Error()).WithHint("run: nostos pxe setup")
+				}
 				return errs.FromGo(err)
 			}
 			if outputMode == "json" {

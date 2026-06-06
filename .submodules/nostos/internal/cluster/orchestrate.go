@@ -58,18 +58,18 @@ type InstallOpts struct {
 }
 
 func (o *InstallOpts) withDefaults() {
-	if o.ServeTimeout == 0 {
-		o.ServeTimeout = 10 * time.Minute
-	}
+	// ServeTimeout intentionally has NO default: 0 means "wait indefinitely"
+	// for the node to fetch its config (the operator powers the node on
+	// whenever). An operator can opt into a bound via --serve-timeout.
 	if o.BootTimeout == 0 {
 		o.BootTimeout = 10 * time.Minute
 	}
 	if o.BootstrapTimeout == 0 {
 		o.BootstrapTimeout = 5 * time.Minute
 	}
-	if o.WaitMaintenanceDeadline == 0 {
-		o.WaitMaintenanceDeadline = 20 * time.Minute
-	}
+	// WaitMaintenanceDeadline also has NO default: 0 means "unbounded"
+	// maintenance/config-fetch wait (see chooseWaitTimeout). Only an explicit
+	// non-zero value imposes a bound.
 }
 
 // Install drives node from power-on through Ready. The flow is method
@@ -184,7 +184,17 @@ func Install(
 		return err
 	}
 
-	waitCtx, cancel := context.WithTimeout(ctx, chooseWaitTimeout(opts, prov))
+	// chooseWaitTimeout returns 0 to mean "unbounded": the node may be powered
+	// on at any time, so the maintenance/config-fetch wait must not self-kill.
+	// Use a deadline-less cancelable ctx in that case; only a positive bound
+	// arms WithTimeout. Either way cancel() runs after WaitMaintenance returns.
+	var waitCtx context.Context
+	var cancel context.CancelFunc
+	if d := chooseWaitTimeout(opts, prov); d > 0 {
+		waitCtx, cancel = context.WithTimeout(ctx, d)
+	} else {
+		waitCtx, cancel = context.WithCancel(ctx)
+	}
 	werr := prov.WaitMaintenance(waitCtx, &node, emit)
 	cancel()
 	if werr != nil {
@@ -286,9 +296,12 @@ func probeApid(node config.Node) bool {
 var _ = errors.New
 
 // chooseWaitTimeout picks the WaitMaintenance ctx deadline. A non-zero
-// provisioner-supplied bound wins; otherwise we honor opts.WaitMaintenanceDeadline
-// (already defaulted in withDefaults) and fall back to opts.BootTimeout when both
-// are zero.
+// provisioner-supplied bound wins; otherwise we honor opts.WaitMaintenanceDeadline.
+// When all of provMax / WaitMaintenanceDeadline are zero it returns 0, which the
+// caller treats as UNBOUNDED (no deadline) — the node may be powered on at any
+// time, so the maintenance/config-fetch wait must not self-kill. BootTimeout is
+// deliberately NOT a fallback here: it governs only the later "wait for node at
+// static IP" phase.
 func chooseWaitTimeout(opts InstallOpts, prov provisioner.Provisioner) time.Duration {
 	if provMax := prov.MaxWaitMaintenance(); provMax > 0 {
 		return provMax
@@ -296,5 +309,5 @@ func chooseWaitTimeout(opts InstallOpts, prov provisioner.Provisioner) time.Dura
 	if opts.WaitMaintenanceDeadline > 0 {
 		return opts.WaitMaintenanceDeadline
 	}
-	return opts.BootTimeout
+	return 0
 }

@@ -60,6 +60,9 @@ func (p Paths) Kubeconfig() string   { return filepath.Join(p.TalosDir(), "kubec
 func (p Paths) Cache() string        { return filepath.Join(p.State(), "cache") }
 func (p Paths) Logs() string         { return filepath.Join(p.State(), "logs") }
 func (p Paths) PendingWipes() string { return filepath.Join(p.State(), "pending-wipes.json") }
+func (p Paths) InstalledMACs() string {
+	return filepath.Join(p.State(), "installed-macs.json")
+}
 
 // EnsureState mkdirs every state subdirectory.
 func (p Paths) EnsureState() error {

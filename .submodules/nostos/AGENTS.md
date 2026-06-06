@@ -158,6 +158,51 @@ echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | nostos mcp | jq '.result
 A `tools/call` invocation returns the same JSON payload as
 `nostos <command> --output json`.
 
+## AI-agent provisioning guardrails
+
+These rules come from a real postmortem: a reprovision of dell01 (the SOLE
+control-plane) took ~2h for what was ultimately "start the PXE server, restart
+the machine." Half the failure was tooling, half was how the agent drove it.
+The rules below encode the agent-side half. They are about observability and
+reasoning discipline, not about new flags.
+
+The supported observable path is `nostos pxe status`, `nostos pxe doctor`, and
+`--log-json`. Use these instead of watching a TTY. Run the long install as a
+detached background process that writes structured logs to a file
+(`--log-json <file>`), then read that file and poll `nostos pxe status` /
+`nostos pxe doctor`. Never make provisioning state depend on a terminal you
+cannot read.
+
+1. **Never run a critical long-running process in a terminal you cannot read.**
+   Flying blind on `cmux` split panes forced the agent to depend on pasted
+   logs and phone photos of the node console. Detach the process, write
+   `--log-json` to a file, and read the file.
+
+2. **Treat first-boot link/DNS/NTP noise as in-progress, not fatal.** Messages
+   like `Link is 10Mbps`, `network unreachable`, or a benign firmware warning
+   are normal during bring-up. The agent stitched them into a confident but
+   WRONG "the NIC is broken" story. Do not declare a hardware failure without
+   observing one clean, full boot cycle end-to-end.
+
+3. **Never probe a signal in a way that trips the detector for that signal.**
+   The agent ran its own `curl` against the machineconfig URL to "check" the
+   PXE server; nostos's config-fetched detector fired on that curl and emitted
+   a FALSE "installing" status the agent reported as real progress. Use
+   `nostos pxe status` / `nostos pxe doctor` to observe, not hand-rolled
+   requests against the served endpoints.
+
+4. **Prefer the simplest explanation first.** "The node just needs to be
+   restarted while the server is up" beats a hardware-failure theory. The
+   agent reached for exotic explanations before the trivial one and burned
+   hours. Exhaust the boring causes before the interesting ones.
+
+5. **Observe before you destroy.** For destructive single-point-of-failure
+   operations (wiping the sole control-plane etcd), establish full
+   observability FIRST, confirm the happy path on one clean attempt, and only
+   THEN investigate. The agent wiped the control-plane early, then flailed for
+   ~2h with no observability and never watched a single clean cycle before
+   declaring failure.
+
 ## Where to find more
 
 - `nostos schema` — every method, flag, exit code.
