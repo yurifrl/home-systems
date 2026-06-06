@@ -57,3 +57,7 @@ spec:
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 3
+          {{- if and .Values.resources.enabled .Values.playwright.resources }}
+          resources:
+            {{- toYaml .Values.playwright.resources | nindent 12 }}
+          {{- end }}

@@ -125,6 +125,14 @@ spec:
               limits:
                 memory: "512Mi"
                 cpu: "500m"
+          playwright:
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "1Gi"
+                cpu: "1"
 
           # Don't pull a "docker-registry-secret" the chart references by
           # default for private images. We use the public ghcr/dockerhub
