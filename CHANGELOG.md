@@ -1,5 +1,49 @@
 # Changelog
 
+## 2026-06-06 nostos PXE Reliability, Sudo-less Daemon, and Observability
+- Session ID: 019e9ea1-4f85-748d-8813-59ca60ba0376
+- Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-06-06T20-30-32-325Z_019e9ea1-4f85-748d-8813-59ca60ba0376.jsonl
+- Session Name: 2026-06-06-1911-pxe-boot-fixes
+- Context Name: 2026-06-06-1911-pxe-boot-fixes
+
+Planned `.agents/drafts/nostos-pxe-reliable-ai-friendly.md` into beads epic `home-systems-3wt` (10 issues, all closed) and implemented every issue in the `nostos` Go CLI (`.submodules/nostos/`). Full suite: `go build`/`go vet` clean, `go test ./...` 279 pass / 27 packages. Nothing committed.
+
+### Added
+- `internal/pxe/setup.go` + `nostos pxe setup`: installs a scoped NOPASSWD sudoers drop-in at `/etc/sudoers.d/nostos-pxe` (validated via `visudo -cf`) so the PXE server runs `dnsmasq` password-less; exposes `SudoersInstalled()`, `dnsmasqBinary()`, dry-run preview. Schema `pxe.setup`.
+- `internal/pxe/doctor.go` + `nostos pxe doctor`: 7-check preflight (assets, dnsmasq, viable interfaces, gateway collision, HTTP port bindable, HTTP self-test fetch, sudoers/privileged-ports); single JSON object on pass (exit 0), typed `errs.Validation` with report under `details.report` on fail (exit 10). Schema `pxe.doctor`.
+- `internal/pxe/events.go` + `nostos pxe status [NODE]`: per-MAC NDJSON event store at `state/pxe/events.ndjson`; `ClassifyHTTPPath`, `ParseDnsmasqLine` (DHCP discover/ack/tftp + interface), `FoldState` (DHCPACK-driven IP→MAC correlation); lifecycle phases discover→ready; `--log-json` detached tail. Schema `pxe.status`.
+- `internal/pxe/installed.go` + `paths.InstalledMACs()`: per-MAC installed-state (`state/installed-macs.json`); dynamic `/boot.ipxe?mac=${mac:hexhyp}` handler serves a boot-from-disk iPXE `exit` script to installed MACs (no BIOS boot-order change, no never-settling loop), install chain otherwise.
+- AI-agent provisioning guardrails sections in `.submodules/nostos/AGENTS.md` and root `AGENTS.md` (observe-before-destroy, observable-runs-only, transient-vs-fatal, do-not-trip-detectors, simplest-explanation-first; "Lesson learned (2026-06-06)").
+- Tests: `serve_test.go`, `setup_test.go`, `doctor_test.go`, `events_test.go`, `installed_test.go`, plus additions to `pxe_test.go`/`orchestrate_test.go`.
+
+### Changed
+- `internal/pxe/serve.go`: serve on ALL LAN-viable interfaces (`detectNetworks`/`candidateNetworks`); per-interface next-server via dnsmasq interface tags (stage-1 omits server IP, stage-2 per-iface HTTP URL); gateway-collision guard drops any NIC whose IP equals its `.1`; `--bind-interfaces`. `httpRequests` now carries `HTTPRequest{Path,SourceIP}`; added `LocalIPs()`. ServeMux routes dynamic `/boot.ipxe` + static FileServer under one logging middleware (which also records the event store + tees dnsmasq stdout/stderr through a line parser). Added `ErrSudoRequired`/`CheckSudo()` (called in `Preflight`, before the destructive wipe).
+- `internal/provisioner/pxe/pxe.go`: `shouldEmitConfigFetched()` gates config-fetch on node source IP (excludes operator host) + boot-chain correlation, fixing the false "installing" an operator `curl` used to trigger; `Prepare` clears installed-state, config-fetch marks it; `serveTO`/`MaxWaitMaintenance` default 0 (no kill timer).
+- `internal/cluster/orchestrate.go`: no-timeout maintenance wait — `chooseWaitTimeout` 0 = unbounded (`context.WithCancel`), `withDefaults` no longer forces 10m/20m; node can be powered on whenever, Ctrl+C still cancels.
+- `internal/cli/commands.go`: `pxe` gains `setup`/`doctor`/`status` subcommands; `--serve-timeout` default 0 ("0 = wait indefinitely"); status `--log-json` flag, `enrollable`/`interface` columns + enroll hint.
+- `internal/cli/node_install.go` + `internal/cli/errs/errs.go`: map `ErrSudoRequired` to `errs.Auth` (exit 12, hint `nostos pxe setup`); `FromGo` classifies "sudo required" as auth.
+- Decision (bead `.10`): skip Linux `CAP_NET_BIND_SERVICE`; sudo/sudoers is the supported privilege model on all platforms.
+- `gofmt`-cleaned only files authored this session (left 3 pre-existing committed gofmt-dirty files untouched).
+
+## 2026-06-06 Cilium CNI Migration and Permanent 1Password Bootstrap Fix
+- Session ID: 019e9e83-c6f8-79ba-a512-a5878040c344
+- Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-06-06T19-58-16-824Z_019e9e83-c6f8-79ba-a512-a5878040c344.jsonl
+- Session Name: 2026-06-06-1907-pxe-reliable-ai-friendly
+- Context Name: 2026-06-06-1907-pxe-reliable-ai-friendly
+
+### Added
+- `k8s/applications/cilium.yaml`: ArgoCD Application for Cilium 1.18.0 (helm.cilium.io), day-2 owner of the CNI. sync-wave `-9`, `prune:false`, Talos cap/cgroup overrides, `routingMode:tunnel`/`vxlan`, `MTU:1450`, `kubeProxyReplacement:false` (Phase 1), Istio-safe `socketLB.hostNamespaceOnly:true` + `cni.exclusive:false`, `bpf.masquerade:false`, Hubble with `tls.auto.method=cronJob`.
+- `nostos/manifests/cilium/values-base.yaml`, `values-phase1.yaml`, `values-phase2.yaml`: Helm values for the manual bootstrap install (Phase 1 keep kube-proxy; Phase 2 kube-proxy-free via KubePrism 7445), plus `cilium-phase1-rendered.yaml` (rendered, secret-free).
+- `nostos/templates/dell01.yaml`: new `namespace-1password` inline manifest before `secret-op-credentials` so the Secret's namespace always exists at bootstrap (closes an ordering race in the auto-seed of `op-credentials`).
+
+### Changed
+- `nostos/templates/dell01.yaml` and `nostos/templates/rpi01.yaml`: `cluster.network.cni.name` `flannel` -> `none` (Cilium is now the CNI; Talos must not bootstrap flannel).
+- 1Password item `op://kubernetes/op-credentials` (out-of-repo): re-stored `OP_CREDENTIALS_JSON` and `OP_CONNECT_TOKEN` as clean single-base64 sourced from the proven-working live k8s secret, fixing the double-encoding + embedded `\r` that broke Connect and `talosctl validate`. Makes cluster rebuilds auto-seed `op-credentials` correctly with no manual step.
+- Live cluster (out-of-repo): re-seeded the malformed `op-credentials` secret, restarted Connect + ESO -> ClusterSecretStore `onepassword` Valid/Ready; bind9, cloudflare-tunnel, external-dns x2, tailscale-operator recovered.
+
+### Removed
+- Reverted an interim manual recovery detour: `docs/nostos-guide.md` §2.5 recovery section and the `task kubernetes:op-credentials` / Taskfile include were added then removed in favor of the automatic inline-manifest mechanism. `taskfiles/kubernetes.yml` restored to its original content.
+
 ## 2026-06-06 Hermes hctl CLI, Generic Repo Sync, Obsidian Removal
 - Session ID: 019e9578-e332-7ace-8235-26deeb545c82
 - Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-06-05T01-49-48-210Z_019e9578-e332-7ace-8235-26deeb545c82.jsonl
