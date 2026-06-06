@@ -1,5 +1,78 @@
 # Changelog
 
+## 2026-06-06 Hermes hctl CLI, Generic Repo Sync, Obsidian Removal
+- Session ID: 019e9578-e332-7ace-8235-26deeb545c82
+- Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-06-05T01-49-48-210Z_019e9578-e332-7ace-8235-26deeb545c82.jsonl
+- Session Name: 2026-06-06-1137-flash-command-deployment
+- Context Name: 2026-06-06-1137-flash-command-deployment
+
+### Added
+- `k8s/images/hermes/hctl`: single-file Python CLI baked into the hermes image, stdlib-only. Subcommands: `auth login` (gh + git auth from `$GH_TOKEN`/`$GITHUB_TOKEN`), `op files sync` (1Password Connect REST attachments; supports `--connect-credentials-secret NS/NAME[:KEY]` to fetch the token via `kubectl get secret`), `repos clone --user U --repos a,b --dest /workdir`, `repos sync --dir /workdir --interval 1h` (long-running loop with SIGTERM/SIGINT trap that runs one final commit+push pass before exit; non-zero exit on push failure to surface in pod status).
+- `k8s/charts/hermes/templates/_helpers.tpl`: `hermes-agent.workdirVolumeName` helper.
+- Chart-managed init containers + sync sidecar in `k8s/charts/hermes/templates/statefulset.yaml`: `git-login`, `op-files`, `repos-clone` init containers and the `repos-sync` sidecar, all invoking `hctl`. `/workdir` is an inline `emptyDir` mounted on both `hermes-agent` and `repos-sync`.
+- Structured chart values (default-disabled to keep the chart portable): `auth.gitLogin.enabled`, `opFiles.{enabled,host,vault,item,dest,connectCredentialsSecret}`, `gitRepos.{enabled,user,repos,mountPath,syncInterval}`.
+- Session checkpoint context at `.agents/contexts/2026-06-06-1137-flash-command-deployment.md`.
+
+### Changed
+- `k8s/applications/hermes.yaml` collapsed from 300+ lines to ~60: only `virtualService.hosts`, `nodeSelector`, `tolerations`, and `auth/opFiles/gitRepos` feature flags. Private `gitRepos.user/repos` are merged from `$values/hermes/values.yaml` in `home-systems-values`.
+- `k8s/images/hermes/Dockerfile`: drops the `op-files-sync` COPY; copies `hctl` to `/usr/local/bin/hctl` and chmods 0755.
+- `k8s/charts/hermes/values.yaml`: removed Obsidian env (`OBSIDIAN_PATH`), Obsidian extra volume + mount, and the `hermes-obsidian` PVC; cleared the inline `extraInitContainers` git-login + op-files blobs (now rendered by the chart from structured values).
+
+### Removed
+- `k8s/images/hermes/op-files-sync` (replaced by `hctl op files sync`; moved to the normalized trash path under `/tmp/agents/removed/`).
+- All Obsidian-specific configuration from the Hermes chart (env, volume mount, dedicated PVC).
+
+## 2026-06-06 Remote Pi Onboarding, Nostos Flash Command, Cluster DNS Recovery
+- Session ID: 019e92b3-0b8b-77c2-aed5-e1427247e838
+- Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-06-04T12-54-27-979Z_019e92b3-0b8b-77c2-aed5-e1427247e838.jsonl
+- Session Name: remote pi
+- Context Name: remote pi
+
+### Added
+- `nostos flash` command (`internal/cli/flash.go`, `internal/cli/flash_test.go`): produces a flashable Talos disk image for any node — downloads raw image, mints fresh Tailscale auth key, renders machineconfig, writes to `--out FILE` (optional `--compress`) or `--device /dev/diskN` (gated on `--yes`). Full `--dry-run` plan envelope. Registered in cobra root and the `nostos schema` registry.
+- `internal/image/` package (`builder.go`, `eeprom.go`, `builder_test.go`): `Builder` struct decompresses .raw.xz with `ulikunitz/xz`, writes to file (xz-compressed optional) or block device, emits a sidecar machineconfig, and for RPi nodes (`overlay: rpi_generic`) also emits an EEPROM recovery directory with `start4.elf`, `fixup4.dat`, `recovery.bin`, `pieeprom.bin`, `boot.conf` (`BOOT_ORDER=0xf21`).
+- Multi-arch build in `internal/pxe/build.go`: `CollectAssetSpecs` walks every node in config, dedupes by (schematic, arch); `BuildAllNodes`, `DownloadAssetsForSpec`, `DownloadRPiFirmware`, `DownloadTalosRawImage` cache assets per spec; RPi nodes pull `start4.elf` + `fixup4.dat` from `raspberrypi/firmware`.
+- `internal/config/config.go`: `Node.Overlay` (rpi_generic|turing_rk1) and `Node.Serial` fields added with validators.
+- `nostos/templates/rpi01.yaml`: full machineconfig template for the offsite Pi 4 (controlplane, arm64, eth0 at 192.168.0.170, Tailscale extension with `--accept-routes`).
+- `nostos/config.yaml`: `rpi01` node entry (MAC `e4:5f:01:3c:68:fa`, arm64 schematic `d0e797e7…`, overlay `rpi_generic`, install_disk `/dev/sda`).
+- OpenSpec change `openspec/changes/nostos-flash-command/`: full proposal, design, three capability specs (image-build, zero-touch-enroll, multi-arch-assets), 33 implementation tasks (32 done; only the manual hardware e2e is outstanding).
+- `docs/remote-node.md`: zero-touch enrollment guide covering rpi01-style offsite onboarding.
+
+### Changed
+- `internal/pxe/serve.go`: removed the `192.168.68.x` hardcoding from `detectNetwork` / `ipForInterface`; PXE server now auto-detects any RFC1918 private interface and derives the dnsmasq DHCP range + gateway from it (`inferDefaults`).
+- `nostos build` (`internal/cli/commands.go`): default invocation is now multi-arch — walks every node and reports per-spec progress. `--arch` and `--legacy` preserve the v0.1 single-arch behaviour.
+- `internal/registry/registry.go`: `Render` now warns to stderr when a rendered template has the Tailscale extension but no `--accept-routes` (warns by default; was the cross-subnet routing pitfall before — kept as a hint, not an error).
+- All home-node templates have `TS_EXTRA_ARGS=--accept-routes` defaulted on (`tp1.yaml`, `tp4.yaml`, `dell01.yaml`, `rpi01.yaml`). NOTE: the dell01 default was reverted later in the session — see Removed.
+- `nostos/templates/dell01.yaml`: pinned `machine.kubelet.nodeIP.validSubnets: [192.168.68.0/24]` so kubelet always picks the LAN IP as InternalIP (Talos was auto-selecting the Tailscale CGNAT IP, which broke kube-proxy Service-VIP DNAT). Added `cluster.allowSchedulingOnControlPlanes: true` so dell01 can host workloads while workers are out.
+- `k8s/applications/istio-{base,cni,gateway,istiod,ztunnel}.yaml`: `targetRevision` rolled back from `1.30.0` to `1.26.2` to match the running istiod pod (chart 1.30 ConfigMaps use `omitNil` template func that 1.26 istiod can't parse, causing CrashLoopBackOff).
+- `.submodules/nostos/AGENTS.md`: documented `flash` command invariants in the idempotency table; noted the per-invocation Tailscale-key minting cost.
+- `.submodules/nostos/README.md` + `nostos/README.md`: `flash` quickstart, rpi01 entry, multi-arch build doc.
+
+### Removed
+- `TS_EXTRA_ARGS=--accept-routes` from `nostos/templates/dell01.yaml`: enabling it had imported `10.244.0.0/16 → tailscale0` (cluster pod CIDR) into dell01's routing table from advertised peer routes, breaking pod return-traffic asymmetrically and crashlooping CoreDNS for 25h+ (268 restarts). Architectural rule established: never `--accept-routes` on a node hosting cluster pods. Cross-LAN reach should use Tailscale CGNAT (`100.x.x.x`) only.
+## 2026-06-05 Camofox Standalone, Self-Hosted Firecrawl, Browser Stack Trim
+- Session ID: 019e8ae4-7c3c-7c96-aeb0-74aa13625541
+- Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-06-03T00-31-30-364Z_019e8ae4-7c3c-7c96-aeb0-74aa13625541.jsonl
+- Session Name: hermes-browser-backends-trim
+- Context Name: undefined
+
+### Added
+- `k8s/applications/camofox.yaml`: standalone ArgoCD Application running `ghcr.io/jo-inc/camofox-browser:latest` via the support chart. ClusterIP service on 9377; 1 GiB memory-backed `/dev/shm`; pinned to dell01 with control-plane toleration; `/health` liveness/readiness probes.
+- `k8s/applications/firecrawl.yaml`: ArgoCD Application that points at the local fork at `k8s/charts/firecrawl/` (was briefly upstream `firecrawl/firecrawl/examples/kubernetes/firecrawl-helm`, switched after we needed `nodeSelector` patches that upstream chart didn't expose). Sets `fullnameOverride: firecrawl`, pins all 9 deployments to dell01, drops `nuqWorker.replicaCount` to 1, keeps `nuqPrefetchWorker` enabled (it's the dispatcher), disables `extractWorker`, and overrides per-service `resources` for hobby sizing.
+- `k8s/charts/firecrawl/`: forked from upstream commit `42b46be4f75a` (recorded in `.upstream-sha`). Single divergence from upstream: a `global.{nodeSelector,tolerations}` block plus per-component `resources` blocks added to all deployment templates (`deployment.yaml`, `worker-deployment.yaml`, `nuq-worker-deployment.yaml`, `nuq-prefetch-worker-deployment.yaml`, `extract-worker-deployment.yaml`, `playwright-deployment.yaml`, `rabbitmq-deployment.yaml`, `redis-deployment.yaml`, `nuq-postgres-deployment.yaml`). Heap sizes lowered: api 6→1 GB, worker/nuq-worker/extract 3→0.75 GB, prefetch 2→0.4 GB. New `global:` block in `values.yaml`.
+- `k8s/charts/firecrawl/templates/playwright-deployment.yaml`: added a `resources:` block gated on `.Values.resources.enabled` so playwright honours per-service overrides (was the only workload running unbounded; got OOMKilled until this landed).
+- `k8s/charts/support/templates/deployment.yaml`: added an optional `tolerations:` block via `{{- with .tolerations }}` so support-chart deployments can tolerate the control-plane taint (used by the new camofox Application).
+- `manifests/values/argocd.yaml`: `configs.cm.resource.exclusions` excluding every `*.gcp.upbound.io` apiGroup (`cloudplatform`, `iam`, `storage`, `gcp.upbound.io`) from ArgoCD's cluster cache sync. The Crossplane GCP providers' conversion webhooks were 404'ing every `ComparisonError` chain, blocking every Argo Application. Excluding decouples Argo from that outage.
+
+### Changed
+- `k8s/charts/hermes/values.yaml`: `extraContainers` set to `[]` (was the inline camofox sidecar). `CAMOFOX_URL` repointed from `http://localhost:9377` to `http://camofox.camofox.svc.cluster.local:9377`. Added `FIRECRAWL_API_URL=http://firecrawl-api.firecrawl.svc.cluster.local:3002`. Hermes' web tools auto-pick `FIRECRAWL_API_URL` over `FIRECRAWL_API_KEY` when both are set.
+- `k8s/applications/camofox.yaml`: trimmed to hobby sizing — `requests: 50m / 256Mi`, `limits: 500m / 512Mi`, `MAX_OLD_SPACE_SIZE=384` (idle Camoufox RSS is ~165 MB).
+- `k8s/applications/firecrawl.yaml`: per-service overrides slashed — api 256Mi/1Gi, worker 256Mi/768Mi, nuq-worker 384Mi/768Mi, nuq-prefetch-worker 128Mi/384Mi, rabbitmq 256Mi/512Mi, nuq-postgres 128Mi/512Mi, playwright 256Mi/1Gi. Net memory request drop ~1.5 GB on dell01 plus one fewer pod (extractWorker disabled).
+
+### Removed
+- The in-pod camofox sidecar from the hermes StatefulSet (commented out in `values.yaml`, then replaced entirely by `extraContainers: []`). Hermes-0 is now `1/1` not `2/2`; camofox lives in its own namespace.
+- `extractWorker` deployment from firecrawl (AI-extract feature unused). One fewer pod on dell01.
+
 ## 2026-06-03 Hermes Chart Stabilization, Refactoring, and Dynamic File Sync
 - Session ID: 019e7c2b-2148-75bd-8a97-f3d8a975f5af
 - Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-05-31T03-54-21-896Z_019e7c2b-2148-75bd-8a97-f3d8a975f5af.jsonl
