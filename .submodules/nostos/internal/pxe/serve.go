@@ -133,6 +133,7 @@ func (s *Server) KillStaleDnsmasq() {
 // Start launches HTTP + dnsmasq. Returns on ctx cancel or dnsmasq exit.
 // Progress events are surfaced via HTTPRequests().
 func (s *Server) Start(ctx context.Context, net NetworkInfo) error {
+	s.inferDefaults(net)
 	s.KillStaleHTTP()
 	s.KillStaleDnsmasq()
 	if err := s.StageTFTP(); err != nil {
@@ -295,7 +296,8 @@ func loggingMiddleware(next http.Handler, s *Server) http.Handler {
 	})
 }
 
-// ipForInterface looks up the first IPv4 192.168.68.x address of an interface.
+// ipForInterface returns the first usable IPv4 address on the interface,
+// preferring private (RFC 1918) ranges over link-local / loopback.
 func ipForInterface(name string) (string, error) {
 	iface, err := net.InterfaceByName(name)
 	if err != nil {
@@ -305,23 +307,44 @@ func ipForInterface(name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	var fallback string
 	for _, a := range addrs {
-		if ipn, ok := a.(*net.IPNet); ok {
-			if ip4 := ipn.IP.To4(); ip4 != nil && strings.HasPrefix(ip4.String(), "192.168.68.") {
-				return ip4.String(), nil
-			}
+		ipn, ok := a.(*net.IPNet)
+		if !ok {
+			continue
+		}
+		ip4 := ipn.IP.To4()
+		if ip4 == nil {
+			continue
+		}
+		if ip4.IsLoopback() || ip4.IsLinkLocalUnicast() || ip4.IsUnspecified() {
+			continue
+		}
+		if ip4.IsPrivate() {
+			return ip4.String(), nil
+		}
+		if fallback == "" {
+			fallback = ip4.String()
 		}
 	}
-	return "", fmt.Errorf("no 192.168.68.x IPv4 address on %s", name)
+	if fallback != "" {
+		return fallback, nil
+	}
+	return "", fmt.Errorf("no usable IPv4 address on %s", name)
 }
 
-// detectNetwork finds an ethernet interface with a 192.168.68.x IPv4 address.
-// Skips loopback / utun / awdl / bridge / etc.
+// detectNetwork finds an ethernet-like interface with a routable IPv4 address.
+// Prefers RFC1918 private subnets; skips loopback / utun / awdl / bridge / etc.
+//
+// Default DHCP range / gateway are derived from the chosen interface so the
+// PXE server adapts to whatever subnet the operator host happens to be on
+// (10.x, 172.16-31.x, 192.168.x).
 func detectNetwork() (NetworkInfo, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return NetworkInfo{}, err
 	}
+	var fallback NetworkInfo
 	for _, iface := range ifaces {
 		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
 			continue
@@ -347,12 +370,45 @@ func detectNetwork() (NetworkInfo, error) {
 			if ip4 == nil {
 				continue
 			}
-			if strings.HasPrefix(ip4.String(), "192.168.68.") {
+			if ip4.IsLoopback() || ip4.IsLinkLocalUnicast() || ip4.IsUnspecified() {
+				continue
+			}
+			if ip4.IsPrivate() {
 				return NetworkInfo{Interface: iface.Name, IP: ip4.String()}, nil
+			}
+			if fallback.IP == "" {
+				fallback = NetworkInfo{Interface: iface.Name, IP: ip4.String()}
 			}
 		}
 	}
-	return NetworkInfo{}, errors.New("no interface found on 192.168.68.0/24; plug in the operator host or pass --iface")
+	if fallback.IP != "" {
+		return fallback, nil
+	}
+	return NetworkInfo{}, errors.New("no usable IPv4 interface found; pass --iface to override")
+}
+
+// inferDefaults updates DHCP range and gateway to match the detected
+// interface's subnet. Used after Preflight() chose a NetworkInfo so the
+// dnsmasq invocation lines up with the operator's actual LAN.
+func (s *Server) inferDefaults(ni NetworkInfo) {
+	if ni.IP == "" {
+		return
+	}
+	ip := net.ParseIP(ni.IP).To4()
+	if ip == nil {
+		return
+	}
+	// Default to /24 unless the operator overrode the gateway.
+	if s.Gateway == DefaultGateway {
+		// gateway = first host of the /24
+		s.Gateway = fmt.Sprintf("%d.%d.%d.1", ip[0], ip[1], ip[2])
+	}
+	if s.DHCPRangeStart == DefaultDHCPRangeStart {
+		s.DHCPRangeStart = fmt.Sprintf("%d.%d.%d.200", ip[0], ip[1], ip[2])
+	}
+	if s.DHCPRangeEnd == DefaultDHCPRangeEnd {
+		s.DHCPRangeEnd = fmt.Sprintf("%d.%d.%d.210", ip[0], ip[1], ip[2])
+	}
 }
 
 func dnsmasqAvailable() bool {

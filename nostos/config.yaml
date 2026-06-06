@@ -67,5 +67,6 @@ nodes:
     arch: arm64
     install_disk: /dev/sda
     template: rpi01.yaml
+    overlay: rpi_generic
     # arm64 (rpi_generic overlay): tailscale + iscsi-tools + util-linux-tools
     schematic_id: d0e797e79d4e8c53a843776a1a5b57a3429aaaf7e8e3246d35df5df9f915da86

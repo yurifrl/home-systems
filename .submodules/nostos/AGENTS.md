@@ -78,6 +78,7 @@ flock is held or the node is reporting Ready.
 | `build`                          | yes       | no          | no      |
 | `render`                         | yes       | no          | no      |
 | `apply`                          | yes       | YES         | `--yes` (reboot modes) |
+| `flash`                           | yes (1)   | YES (2)     | `--yes` (when --device) |
 | `node list` / `node show`        | yes       | no          | no      |
 | `status`                         | yes       | no          | no      |
 | `secrets list` / `secrets test`  | yes       | no          | no      |
@@ -95,10 +96,20 @@ Safe to retry under any failure: `init`, `build`, `render`, `status`,
 `node list`, `node show`, `secrets list`, `secrets test`, `secrets keys
 list`, `schema`. All read-only or tolerant of repeated writes.
 
+(1) `flash` is idempotent for the asset-download / image-extraction steps,
+but every invocation **mints a fresh Tailscale auth key**. Re-running
+`flash` for the same node leaves a trail of unused (but expiring) keys on
+the Tailscale tailnet — clean them up with `nostos secrets keys list` +
+`nostos secrets keys revoke <id>` if you ship the same node many times.
+
+(2) `ship --device /dev/diskN` writes directly to a block device and is
+destructive. `ship --out FILE` only writes a file under the operator's
+control and is non-destructive.
+
 ## `--dry-run` semantics
 
 When supported (`node install`, `render`, `secrets keys revoke`,
-`cluster cleanup`, `apply`), `--dry-run`:
+`cluster cleanup`, `apply`, `flash`), `--dry-run`:
 
 - Spawns **zero** subprocesses.
 - Emits a `{"status":"preview","would_execute":[...]}` envelope.

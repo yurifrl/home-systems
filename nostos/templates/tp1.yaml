@@ -645,4 +645,5 @@ kind: ExtensionServiceConfig
 name: tailscale
 environment:
   - TS_AUTHKEY=tailscale://authkey?description=tp1
+  - TS_EXTRA_ARGS=--accept-routes
   - TS_ROUTES=10.96.0.0/12,192.168.68.0/24

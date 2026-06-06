@@ -43,6 +43,7 @@ func NewRoot(version string) *cobra.Command {
 		newApplyCmd(),
 		newUpgradeCmd(),
 		newBuildCmd(),
+		newFlashCmd(),
 		newPxeCmd(),
 		newStatusCmd(),
 		newWipeCmd(),

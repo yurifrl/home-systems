@@ -129,7 +129,25 @@ func Render(cfg *config.Config, p paths.Paths, name string, runValidate bool) (s
 			return out, err
 		}
 	}
+	warnIfMissingAcceptRoutes(name, rendered)
 	return out, nil
+}
+
+// warnIfMissingAcceptRoutes emits a stderr warning when a rendered template
+// includes a Tailscale extension but lacks --accept-routes. Without
+// accept-routes, cross-subnet etcd peer communication breaks (offsite nodes
+// can't reach controlplanes on other LANs even though Tailscale is up).
+func warnIfMissingAcceptRoutes(name, rendered string) {
+	if !strings.Contains(rendered, "name: tailscale") {
+		return
+	}
+	if strings.Contains(rendered, "--accept-routes") {
+		return
+	}
+	fmt.Fprintf(os.Stderr,
+		"warn: %s template has Tailscale but no --accept-routes (TS_EXTRA_ARGS=--accept-routes); cross-subnet routing may break\n",
+		name,
+	)
 }
 
 // templateData is the value passed to the Go text/template render pass. It

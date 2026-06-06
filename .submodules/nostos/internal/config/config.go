@@ -121,6 +121,17 @@ type Node struct {
 	// Required for SBCs that need a different overlay than the cluster default
 	// (e.g. Turing RK1 needs siderolabs/sbc-rockchip overlay; x86 nodes don't).
 	SchematicID string `yaml:"schematic_id,omitempty" validate:"omitempty,len=64"`
+	// Overlay is the Talos imager overlay name for SBC-specific image layout
+	// (e.g. "rpi_generic", "turing_rk1"). When set, ship/build commands know
+	// to fetch SBC-specific firmware (start4.elf for rpi_generic) and to
+	// produce SBC-specific image artifacts (EEPROM recovery partition for
+	// rpi_generic). Empty = generic metal image.
+	Overlay string `yaml:"overlay,omitempty" validate:"omitempty,oneof=rpi_generic turing_rk1"`
+	// Serial is the SBC hardware serial number used for per-device TFTP
+	// path matching during PXE boot (RPi 4 only). Optional. 8 hex chars,
+	// from `/proc/cpuinfo` or boot screen. Currently informational only;
+	// reserved for future RPi PXE/TFTP support.
+	Serial string `yaml:"serial,omitempty" validate:"omitempty,len=8,hexadecimal"`
 }
 
 // EffectiveSchematic returns the node's SchematicID when set, otherwise the

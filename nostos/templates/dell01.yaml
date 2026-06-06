@@ -24,6 +24,13 @@ machine:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
+    # Force kubelet to register with the LAN IP, not the Tailscale IP.
+    # Otherwise pod-to-Service VIP traffic gets DNAT'd to the TS IP and
+    # dropped by Tailscale's netfilter rules (pods aren't TS-authorized
+    # sources). This is what broke DNS on 2026-06-05.
+    nodeIP:
+      validSubnets:
+        - 192.168.68.0/24
     extraMounts:
       - destination: /var/mnt/storage
         type: bind
@@ -77,6 +84,11 @@ machine:
 cluster:
   id: "op://kubernetes/talos/CLUSTER_ID"
   secret: "op://kubernetes/talos/CLUSTER_SECRET"
+  # Home lab: controlplane nodes also run workloads. Without this, the
+  # default node-role.kubernetes.io/control-plane:NoSchedule taint blocks
+  # scheduling whenever the worker nodes are unhealthy (as we hit during
+  # the 2026-06-05 DNS outage with tp1/tp4 NotReady).
+  allowSchedulingOnControlPlanes: true
   controlPlane:
     endpoint: https://192.168.68.100:6443
   clusterName: talos-default
@@ -196,5 +208,5 @@ kind: ExtensionServiceConfig
 name: tailscale
 environment:
   - TS_AUTHKEY=tailscale://authkey?description=dell01
-  - TS_EXTRA_ARGS=--accept-routes
-  - TS_ROUTES=10.96.0.0/12,192.168.68.0/24
+  - TS_ROUTES=192.168.68.0/24
+  - TS_EXTRA_ARGS=--reset

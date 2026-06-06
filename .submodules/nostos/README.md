@@ -35,6 +35,48 @@ go run ./.submodules/nostos/cmd/nostos build
 go run ./.submodules/nostos/cmd/nostos up dell01     # end-to-end install
 ```
 
+## `flash`: zero-touch remote nodes
+
+`nostos flash <node>` produces a flashable Talos disk image for a node that
+lives at a remote site (different LAN, joined via Tailscale). The image
+carries the rendered machineconfig as a sidecar; the operator at the remote
+site plugs in power + ethernet, you `talosctl apply-config --insecure` once,
+and the node joins the cluster via the tailnet.
+
+```bash
+# preview the plan
+nostos flash rpi01 --out /tmp/rpi01.raw.xz --compress --dry-run
+
+# build the image (downloads Talos raw image, mints Tailscale key, renders config)
+nostos flash rpi01 --out /tmp/rpi01.raw.xz --compress
+
+# or flash directly to a connected SD/SSD (asks for confirmation):
+nostos flash rpi01 --device /dev/disk10 --yes
+```
+
+For RPi nodes (`overlay: rpi_generic`), `flash` also emits a small
+`<name>-eeprom/` directory with `start4.elf`, `fixup4.dat`, `recovery.bin`,
+`pieeprom.bin`, and `boot.conf` (BOOT_ORDER=0xf21). Copy those onto a FAT32
+SD card, boot the Pi 4 once to flash the EEPROM, then swap to the Talos
+disk for normal boot.
+
+### Cross-subnet routing
+
+All node templates ship with `TS_EXTRA_ARGS=--accept-routes` by default so
+every node accepts subnet routes advertised by its peers. Without this,
+etcd peer-to-peer traffic across LANs (e.g. an offsite Pi reaching a
+home-LAN controlplane) silently fails. `nostos render` emits a stderr
+warning if it produces a config that has Tailscale but no `--accept-routes`.
+
+## Multi-arch build
+
+`nostos build` (no flags) iterates every node in `config.yaml`, collects
+unique `(schematic_id, arch)` pairs, and downloads kernel + initramfs for
+each. RPi nodes (`overlay: rpi_generic`) also pull `start4.elf` and
+`fixup4.dat` from the official `raspberrypi/firmware` repository. Pass
+`--arch <amd64|arm64>` or `--legacy` to fall back to the v0.1 single-arch
+path.
+
 ## Requirements
 
 - Go 1.22+

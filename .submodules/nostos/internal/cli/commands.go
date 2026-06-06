@@ -20,6 +20,7 @@ import (
 
 func newBuildCmd() *cobra.Command {
 	var arch string
+	var legacy bool
 	cmd := &cobra.Command{
 		Use:   "build",
 		Short: "Download Talos assets + build iPXE binary",
@@ -28,18 +29,54 @@ func newBuildCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := pxe.BuildAll(cmd.Context(), cfg, p, arch); err != nil {
+			// Default: multi-arch build over all nodes in config. Pass --arch
+			// (or --legacy) to fall back to the single-arch v0.1 path.
+			if arch != "" || legacy {
+				if arch == "" {
+					arch = "amd64"
+				}
+				if err := pxe.BuildAll(cmd.Context(), cfg, p, arch); err != nil {
+					return err
+				}
+				if outputMode == "json" {
+					return outputJSON(map[string]string{"status": "built", "assets": p.Assets(), "arch": arch})
+				}
+				fmt.Fprintf(cmd.OutOrStdout(), "Assets ready in %s\n", p.Assets())
+				return nil
+			}
+			specs := pxe.CollectAssetSpecs(cfg)
+			if err := pxe.BuildAllNodes(cmd.Context(), cfg, p); err != nil {
 				return err
 			}
 			if outputMode == "json" {
-				return outputJSON(map[string]string{"status": "built", "assets": p.Assets(), "arch": arch})
+				rows := make([]map[string]any, 0, len(specs))
+				for _, s := range specs {
+					rows = append(rows, map[string]any{
+						"schematic": s.Schematic,
+						"arch":      s.Arch,
+						"version":   s.Version,
+						"rpi":       s.IsRPi,
+					})
+				}
+				return outputJSON(map[string]any{"status": "built", "assets": p.Assets(), "specs": rows})
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "Assets ready in %s\n", p.Assets())
+			fmt.Fprintf(cmd.OutOrStdout(), "Assets ready in %s (built %d schematic/arch pairs)\n", p.Assets(), len(specs))
+			for _, s := range specs {
+				fmt.Fprintf(cmd.OutOrStdout(), "  %s/%s%s\n", s.Schematic[:12]+"...", s.Arch, rpiTag(s.IsRPi))
+			}
 			return nil
 		}),
 	}
-	cmd.Flags().StringVar(&arch, "arch", "amd64", "target architecture (amd64|arm64)")
+	cmd.Flags().StringVar(&arch, "arch", "", "target architecture (amd64|arm64); empty = multi-arch over all nodes")
+	cmd.Flags().BoolVar(&legacy, "legacy", false, "force single-arch v0.1 path (cluster default schematic only)")
 	return cmd
+}
+
+func rpiTag(isRPi bool) string {
+	if isRPi {
+		return " [+rpi-firmware]"
+	}
+	return ""
 }
 
 func newPxeCmd() *cobra.Command {

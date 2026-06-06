@@ -104,6 +104,22 @@ var Registry = map[string]Meta{
 		Description: "Download Talos assets + build iPXE binary.",
 		Idempotent:  true,
 	},
+	"flash": {
+		Description:     "Build a flashable Talos disk image for NODE (downloads raw image, mints Tailscale key, renders config, optionally writes to a device).",
+		Destructive:     true, // when --device is used
+		RequiresConfirm: false, // flash asks for --yes only when --device is set
+		Args:            []Arg{{Name: "node", Type: "string", Required: true, Description: "node name from config.yaml"}},
+		StdoutSchema: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"status": map[string]any{"type": "string"},
+				"node":   map[string]any{"type": "string"},
+				"image":  map[string]any{"type": "string"},
+				"config": map[string]any{"type": "string"},
+				"eeprom": map[string]any{"type": "string"},
+			},
+		},
+	},
 	"pxe": {
 		Description: "Start PXE server (HTTP + dnsmasq) until Ctrl+C.",
 	},

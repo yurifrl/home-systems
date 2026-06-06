@@ -18,6 +18,11 @@ nostos/
 
 - **dell01** — Dell OptiPlex 3080M, amd64, `192.168.68.100`, controlplane.
   Replaced the original Raspberry Pi controlplane on 2026-05-03.
+- **rpi01** — Raspberry Pi 4 Model B, arm64, offsite at `192.168.0.170`,
+  controlplane (joins via Tailscale subnet routing). Built and flashed via
+  `nostos flash rpi01 --device /dev/diskN`. Uses the `rpi_generic` overlay
+  for SBC-aware boot layout, and ships with an EEPROM recovery bundle
+  for fresh Pi 4 hardware.
 
 Workers (tp1 on 192.168.68.107, tp4 on 192.168.68.114, vm-pc01 on
 192.168.68.102) are not yet in `config.yaml` — their Tailscale authkeys
@@ -36,6 +41,10 @@ task nostos:bootstrap NODE=dell01   # talosctl bootstrap + fetch kubeconfig
 
 # Direct invocation
 go run ./.submodules/nostos/cmd/nostos --config nostos/config.yaml <cmd>
+
+# Ship a remote-node disk image (zero-touch enrollment)
+go run ./.submodules/nostos/cmd/nostos --config nostos/config.yaml \
+    flash rpi01 --out /tmp/rpi01.raw.xz --compress
 ```
 
 ## Recovery
