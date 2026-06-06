@@ -294,6 +294,32 @@ nostos status            # verify Ready
 See `nostos/README.md` for the data-dir layout and
 `.submodules/nostos/README.md` for the complete CLI reference.
 
+### AI-agent provisioning guardrails (HARD RULES)
+
+Provisioning the sole control-plane (dell01) is a single-point-of-failure
+operation. Full detail and rationale live in
+`.submodules/nostos/AGENTS.md` (section "AI-agent provisioning guardrails").
+The five rules, tersely:
+
+1. **Never run a critical long-running process in a terminal you cannot read.**
+   Detach the install, write `--log-json` to a file, and read the file. Use
+   `nostos pxe status` / `nostos pxe doctor` instead of watching a TTY.
+2. **Treat first-boot link/DNS/NTP noise as in-progress, not fatal.** Do not
+   declare a hardware failure without observing one clean boot cycle end-to-end.
+3. **Never probe a signal in a way that trips the detector for that signal.**
+   A hand-rolled `curl` against the machineconfig URL trips nostos's
+   config-fetched detector and fakes an "installing" status.
+4. **Prefer the simplest explanation first.** "Just restart the node while the
+   server is up" beats a hardware-failure theory.
+5. **Observe before you destroy.** Establish full observability and confirm the
+   happy path on one clean attempt BEFORE wiping the sole control-plane.
+
+**Lesson learned (2026-06-06):** During a dell01 reprovision, an agent wiped
+the sole control-plane early, ran the install in unreadable cmux panes,
+misread benign first-boot noise as a dead NIC, and tripped the config-fetched
+detector with its own curl - turning a trivial "start the PXE server, restart
+the machine" into a ~2h flail. Observe before you destroy.
+
 ## Documentation
 
 Additional docs in `docs/`:
