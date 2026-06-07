@@ -17,7 +17,10 @@
 # so the agent can use its (read-only + pod-delete) RBAC.
 
 # renovate: datasource=docker depName=python versioning=docker
-ARG PYTHON_VERSION=3.14-slim-trixie
+# Pinned to 3.13: hermes-agent (below) requires Python >=3.11,<3.14, so 3.14
+# breaks `pip install hermes-agent`. Do not bump past 3.13 until upstream
+# hermes-agent supports 3.14.
+ARG PYTHON_VERSION=3.13-slim-trixie
 FROM python:${PYTHON_VERSION}
 
 # renovate: datasource=pypi depName=hermes-agent versioning=pep440

@@ -20,6 +20,13 @@
       "automergeType": "pr"
     },
     {
+      "description": "hermes-agent requires Python >=3.11,<3.14. Cap the hermes image base so Renovate cannot reintroduce the 3.14 build break (pip install hermes-agent fails on 3.14).",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": ["k8s/images/hermes/Dockerfile"],
+      "matchPackageNames": ["python"],
+      "allowedVersions": "<3.14"
+    },
+    {
       "description": "Longhorn does not support skip-version minor upgrades (1.8.1 -> 1.12.0 broke the cluster on 2026-06-03). Restrict to patch bumps so a minor walk has to be done deliberately, one version at a time.",
       "matchManagers": ["argocd"],
       "matchPackageNames": ["longhorn"],
