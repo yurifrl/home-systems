@@ -46,6 +46,18 @@ serviceAccountKeys: []
 #      namespace: monitoring
 #      name: victoriametrics-gcs-key
 
+# --- HMAC keys (S3-interop credentials, e.g. Longhorn GCS backup target) ----
+# Crossplane mints an HMAC key for the referenced SA and writes the secret to
+# the connection secret (keys: access_id, secret). The accessId also appears in
+# the MR status. Real entries live in the PRIVATE values repo.
+hmacKeys: []
+#  - name: longhorn-gcs-hmac
+#    serviceAccountRef: longhorn-sa
+#    state: ACTIVE
+#    writeConnectionSecretToRef:
+#      namespace: longhorn-system
+#      name: longhorn-gcs-hmac
+
 # --- Bucket IAM bindings (grants SAs access to buckets) ----------------------
 bucketIAMMembers: []
 #  - name: victoriametrics-bucket-admin

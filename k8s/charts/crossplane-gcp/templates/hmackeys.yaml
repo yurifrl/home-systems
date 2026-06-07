@@ -1,0 +1,22 @@
+{{- $pc := .Values.providerConfig.name }}
+{{- $dp := .Values.deletionPolicy }}
+{{- range .Values.hmacKeys }}
+---
+apiVersion: storage.gcp.upbound.io/v1beta1
+kind: HMACKey
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ .deletionPolicy | default $dp }}
+  providerConfigRef:
+    name: {{ $pc }}
+  {{- with .writeConnectionSecretToRef }}
+  writeConnectionSecretToRef:
+    namespace: {{ .namespace }}
+    name: {{ .name }}
+  {{- end }}
+  forProvider:
+    serviceAccountEmailRef:
+      name: {{ .serviceAccountRef }}
+    state: {{ .state | default "ACTIVE" }}
+{{- end }}

@@ -22,6 +22,39 @@ secrets:
     ephemeral:   false
     preauthorized: true
     description: nostos
+bootstrap:
+  # Cluster-bootstrap tier. When present, `nostos render` synthesizes three
+  # inline manifests into each controlplane machineconfig (root op-credentials
+  # Secret, nostos-bootstrap-config ConfigMap, controller bundle) instead of the
+  # old hand-written cluster.inlineManifests/extraManifests blobs. Takes effect
+  # only on a fresh cluster-init (`nostos up`); the in-cluster controller then
+  # drives namespaces, ESO, ClusterSecretStore, Cilium, ArgoCD, and app-gen.
+  cilium:
+    version: v1.18.0
+    values:
+      # Phase 1: keep kube-proxy (lowest-risk coexistence with Istio Ambient).
+      # See nostos/manifests/cilium/values-phase1.yaml.
+      kubeProxyReplacement: false
+  argocd:
+    version: v3.4.3
+  repos:
+    - url: https://github.com/yurifrl/home-systems.git
+      path: k8s/applications
+      revision: main
+  namespaces: [argocd, external-secrets, 1password]
+  controller_image:
+    # Tag MUST already exist as a multi-arch manifest list before any cluster
+    # boots with this config, or the controller pod ImagePullBackOffs pre-CNI.
+    repo: ghcr.io/yurifrl/nostos-bootstrap
+    tag: bootstrap-v0.1.0
+  root_secret:
+    # The irreducible 1Password Connect Secret. op:// refs are resolved at
+    # render time; values land under Secret.data (already base64 in 1Password).
+    name: op-credentials
+    namespace: 1password
+    data:
+      1password-credentials.json: op://kubernetes/op-credentials/OP_CREDENTIALS_JSON
+      token: op://kubernetes/op-credentials/OP_CONNECT_TOKEN
 nodes:
   dell01:
     mac: "d0:94:66:d9:eb:a5"

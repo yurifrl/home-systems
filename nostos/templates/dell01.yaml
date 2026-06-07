@@ -94,7 +94,11 @@ cluster:
   clusterName: talos-default
   network:
     cni:
-      name: flannel
+      # Cilium is the CNI. Talos must NOT bootstrap flannel. With cni:none the
+      # node stays NotReady until Cilium is installed (manual `helm install`
+      # during the bootstrap window; ArgoCD app k8s/applications/cilium.yaml
+      # adopts it for day-2). See nostos/manifests/cilium/.
+      name: none
     dnsDomain: cluster.local
     podSubnets:
       - 10.244.0.0/16
@@ -155,53 +159,6 @@ cluster:
     ca:
       crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
       key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
-  # Bootstrap manifests only apply on first cluster-init. Kept here so a fresh
-  # cluster comes up with ArgoCD + 1Password Connect wired.
-  extraManifests:
-    - https://raw.githubusercontent.com/yurifrl/home-systems/refs/heads/main/manifests/argocd.yaml
-    - https://raw.githubusercontent.com/yurifrl/home-systems/refs/heads/main/manifests/applications.yaml
-  inlineManifests:
-    - name: namespace-argocd
-      contents: |
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: argocd
-    - name: namespace-external-secrets
-      contents: |
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: external-secrets
-    - name: secret-op-credentials
-      contents: |
-        apiVersion: v1
-        kind: Secret
-        type: Opaque
-        metadata:
-          name: op-credentials
-          namespace: 1password
-        data:
-          1password-credentials.json: "op://kubernetes/op-credentials/OP_CREDENTIALS_JSON"
-          token: "op://kubernetes/op-credentials/OP_CONNECT_TOKEN"
-    - name: cluster-secret-store-onepassword
-      contents: |
-        apiVersion: external-secrets.io/v1
-        kind: ClusterSecretStore
-        metadata:
-          name: onepassword
-        spec:
-          provider:
-            onepassword:
-              connectHost: http://onepassword-connect.1password.svc.cluster.local:8080
-              vaults:
-                kubernetes: 1
-              auth:
-                secretRef:
-                  connectTokenSecretRef:
-                    name: op-credentials
-                    key: token
-                    namespace: 1password
 ---
 apiVersion: v1alpha1
 kind: ExtensionServiceConfig

@@ -57,7 +57,10 @@ cluster:
   clusterName: talos-default
   network:
     cni:
-      name: flannel
+      # Cilium is the CNI (see dell01.yaml / nostos/manifests/cilium/). cni:none
+      # so Talos does not bootstrap flannel. rpi01 is offsite over Tailscale:
+      # if cross-site pod traffic fragments, lower Cilium MTU toward 1230.
+      name: none
     dnsDomain: cluster.local
     podSubnets:
       - 10.244.0.0/16

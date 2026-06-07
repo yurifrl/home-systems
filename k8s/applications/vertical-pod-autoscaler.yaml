@@ -22,9 +22,9 @@ spec:
       name: vertical-pod-autoscaler-admission-controller-cert
       jsonPointers:
         - /data
-    - group: admissionregistration.k8s.io/v1
+    - group: admissionregistration.k8s.io
       kind: MutatingWebhookConfiguration
-      name: vertical-pod-autoscaler-admission-controller
+      name: vpa-webhook-config
       jsonPointers:
         - /webhooks/0/clientConfig/caBundle
   source:

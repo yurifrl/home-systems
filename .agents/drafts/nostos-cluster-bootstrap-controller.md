@@ -131,15 +131,44 @@ Today's 5 inline blobs + 2 extra URLs + manual Cilium **collapse into**:
 Each step gates the next (wait + timeout + retry). Failures are logged with
 cause and surfaced in `BootstrapStatus`; the loop retries (self-heal).
 
-## 6. Self-healing model & boundary with ArgoCD
+## 6. Self-healing model & boundary with ArgoCD (bootstrap-to-handoff)
 
-- Controller **exclusively owns** Cilium, ESO+store, ArgoCD, and the generated
-  root Application(s). ArgoCD does **not** manage these → no split-brain.
-- ArgoCD owns everything in the user's repo.
-- "Self-heal" = if Cilium/ESO/ArgoCD/root-app drift or vanish, the controller
-  re-applies from config. Upgrades happen by changing `config.yaml` → re-render →
-  re-apply machineconfig → controller reconciles (see issue #5/#7 on the
-  config-update loop).
+The controller is a **bootstrap-to-handoff** controller, NOT a perpetual
+reconciler. If it kept syncing every tier forever it would just be a worse
+ArgoCD. Its job is to get each tier *up enough to stop blocking anyone*, then
+hand ownership to ArgoCD and stop touching it.
+
+### Per-tier "unblock" condition (when it's done enough to hand off)
+| Tier | Unblock condition | Day-2 owner after handoff |
+|---|---|---|
+| Cilium | all nodes `Ready` (CNI serving → unblocks all scheduling) | ArgoCD app `k8s/applications/cilium.yaml` |
+| ESO + store | `ClusterSecretStore` Valid (secrets resolvable) | ArgoCD app (user repo) |
+| ArgoCD | `argocd-server` healthy | n/a — this IS the handoff target |
+
+### Handoff rule
+- When a tier's unblock condition is met **AND** ArgoCD is healthy (the day-2
+  owner exists), the controller marks that tier **handed-off** (recorded in the
+  status ConfigMap) and **stops applying/reconciling it**. ArgoCD owns it now.
+  No split-brain, because exactly one of {controller, ArgoCD} touches a tier at
+  a time, and ownership transfers one-way (controller → ArgoCD).
+- The controller does **not** re-apply Cilium/ESO once handed off — even if they
+  drift — because ArgoCD's apps now reconcile them.
+
+### Steady state = watchdog on ArgoCD only
+- Once all tiers are handed off, the controller's persistent job shrinks to ONE
+  check: *is ArgoCD alive/healthy?*
+  - ArgoCD healthy → **idle** (cheap liveness poll; touches nothing).
+  - ArgoCD vanished/unhealthy → **re-engage**: re-bootstrap only the part of the
+    chain needed to get ArgoCD back (e.g., if a fresh node has no CNI, or ArgoCD
+    was deleted), then hand off again.
+- This is the line that keeps it from "reimplementing ArgoCD": it self-heals the
+  *path to ArgoCD*, never the tiers ArgoCD already owns.
+
+### Upgrades
+- Cilium/ESO/ArgoCD **version + config** upgrades are an ArgoCD (git) concern
+  after handoff — NOT the controller's. The controller's embedded manifests are
+  only the *initial* install used to reach handoff; ArgoCD's apps carry the
+  authoritative day-2 spec.
 
 ## 7. Observability ("single place to look")
 
