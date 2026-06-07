@@ -266,14 +266,11 @@ spec:
             adminPassword: admin
             nodeSelector:
               kubernetes.io/arch: arm64
-            # Single replica on a ReadWriteOnce PVC: use Recreate so a new pod
-            # doesn't deadlock waiting to attach a volume still held by the old one.
-            deploymentStrategy:
-              type: Recreate
+            # Stateless: dashboards, datasources and the admin user are all
+            # declarative (sidecar ConfigMaps + values), so no PVC is needed.
+            # The Grafana SQLite DB is ephemeral and rebuilt on every start.
             persistence:
-              enabled: true
-              type: pvc
-              size: 5Gi
+              enabled: false
             # quickwit + mqtt for the extra datasources; victoriametrics-metrics-
             # datasource backs the chart's default "VictoriaMetrics (DS)" datasource.
             plugins:
