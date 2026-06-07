@@ -42,7 +42,9 @@ serviceAccountKeys: []
 #  - name: victoriametrics-sa-key
 #    serviceAccountRef: victoriametrics-sa
 #    keyAlgorithm: KEY_ALG_RSA_2048
-#    includeSecureJsonData: true
+#    writeConnectionSecretToRef:
+#      namespace: monitoring
+#      name: victoriametrics-gcs-key
 
 # --- Bucket IAM bindings (grants SAs access to buckets) ----------------------
 bucketIAMMembers: []
