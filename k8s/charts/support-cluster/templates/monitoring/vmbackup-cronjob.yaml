@@ -1,0 +1,54 @@
+{{- if .Values.vmbackup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Values.vmbackup.name | default "vmbackup" }}
+  namespace: monitoring
+spec:
+  schedule: {{ .Values.vmbackup.schedule | default "0 */6 * * *" | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: vmbackup
+              image: {{ .Values.vmbackup.image | default "victoriametrics/vmbackup:v1.144.0" }}
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  /vmbackup-prod \
+                    -storageDataPath=/vm-data \
+                    -dst=gs://{{ .Values.vmbackup.gcs.bucket }}/$(date +%Y%m%d-%H%M%S) \
+                    -snapshot.createURL=http://vmsingle-vmks.monitoring.svc:8428/snapshot/create
+              env:
+                - name: GOOGLE_APPLICATION_CREDENTIALS
+                  value: /etc/gcs/credentials.json
+              volumeMounts:
+                - name: vm-data
+                  mountPath: /vm-data
+                - name: gcs-credentials
+                  mountPath: /etc/gcs
+                  readOnly: true
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+          volumes:
+            - name: vm-data
+              persistentVolumeClaim:
+                claimName: vmsingle-vmks
+            - name: gcs-credentials
+              secret:
+                secretName: {{ .Values.vmbackup.gcs.credentialsSecret | default "victoriametrics-gcs-key" }}
+                items:
+                  - key: private_key
+                    path: credentials.json
+{{- end }}

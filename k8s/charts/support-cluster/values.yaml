@@ -26,3 +26,13 @@ tailscale:
         - 10.0.0.0/16
         - 10.1.0.0/16
         - 10.69.0.0/16
+
+# VictoriaMetrics backup to GCS
+vmbackup:
+  enabled: true
+  name: vmbackup
+  schedule: "0 */6 * * *"  # Every 6 hours
+  image: victoriametrics/vmbackup:v1.144.0
+  gcs:
+    bucket: syscd-victoriametrics-b40bd8e6-829a-4f80-beef-9748fddce913
+    credentialsSecret: victoriametrics-gcs-key
