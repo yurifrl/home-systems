@@ -38,6 +38,12 @@ spec:
           service:
             annotations:
               tailscale.com/expose: "true"
+              # Stable tailnet device name so *.syscd.tech doesn't break when the
+              # gateway restarts. Without it the operator auto-numbers the device
+              # (istio-system-istio-gateway-N) and the suffix bumps on re-register,
+              # leaving the external-dns target (in support-cluster gateways.yaml)
+              # pointing at a dead device. FQDN: syscd-gateway.tailcecc0.ts.net
+              tailscale.com/hostname: "syscd-gateway"
             externalTrafficPolicy: Local
             type: LoadBalancer
             loadBalancerIP: "192.168.68.201"
