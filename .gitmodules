@@ -1,3 +1,0 @@
-[submodule ".submodules/nostos"]
-	path = .submodules/nostos
-	url = git@github.com:yurifrl/nostos.git
