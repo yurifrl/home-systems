@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-06-07 VictoriaMetrics GCS Backup Attempt and Storage-Model Course Correction
+- Session ID: 019e9f20-dabb-7712-8b92-e7145be43ada
+- Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-06-06T22-49-51-036Z_019e9f20-dabb-7712-8b92-e7145be43ada.jsonl
+- Session Name: 2026-06-07-0255-longhorn-gcs-backup
+- Context Name: 2026-06-07-0255-longhorn-gcs-backup
+
+### Added
+- `home-systems-values/gcp/values.yaml`: GCS buckets `victoriametrics` and `longhorn` (with SA, ServiceAccountKey, BucketIAMMember entries) for backup destinations; later added `writeConnectionSecretToRef` so backup credential secrets are produced declaratively.
+- `k8s/charts/crossplane-gcp/templates/serviceaccountkeys.yaml` + `bucketiammembers.yaml`: chart templates for ServiceAccountKey (with connection-secret support) and BucketIAMMember; matching placeholders in `crossplane-gcp/values.yaml`.
+- Restored pre-VM-migration apps `k8s/lib/kube-prometheus-stack.yaml` and `k8s/lib/grafana.yaml` (recovered from `d8afcace~1`), parked in `k8s/lib/` (archived, uncommitted).
+
+### Changed
+- `manifests/values/argocd.yaml`: removed the `resource.exclusions` workaround for `*.gcp.upbound.io` (GCP providers verified healthy) so ArgoCD reconciles crossplane GCP resources via GitOps instead of manual `kubectl apply`.
+- `hack/lib/velero.yaml`: anonymized real backup bucket name + GCP project id to placeholders (non-deployed reference file).
+- `~/.agents/MEMORY.md`: added hard rule — avoid local `kubectl apply`; edit git, commit, push, sync via ArgoCD.
+
+### Removed
+- Reverted the Longhorn-based VM backup approach: `k8s/applications/longhorn.yaml` restored to original single-source; deleted `home-systems-values/longhorn/values.yaml`; reverted vmbackup sidecar wiring in `k8s/applications/victoria-metrics-k8s-stack.yaml` and deleted `home-systems-values/victoriametrics/values.yaml`. Removed the leaked real bucket name + dead `vmbackup-cronjob.yaml` from `k8s/charts/support-cluster`. Rationale: Longhorn volume backup does not showcase VM, and full-feature VM backup (`vmbackupmanager`) is Enterprise-only; VM has no S3-tiered query model the user actually wanted.
+- Scratch files under `.agents/tmp/` (bucket-iam.yaml, sa-key.yaml, patch-vmsingle.yaml, longhorn-gcs.yaml) created and deleted within the session.
+
 ## 2026-06-06 nostos PXE Reliability, Sudo-less Daemon, and Observability
 - Session ID: 019e9ea1-4f85-748d-8813-59ca60ba0376
 - Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-06-06T20-30-32-325Z_019e9ea1-4f85-748d-8813-59ca60ba0376.jsonl
