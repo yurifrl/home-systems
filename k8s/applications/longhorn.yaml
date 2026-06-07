@@ -17,146 +17,116 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-  sources:
-    - repoURL: https://charts.longhorn.io
-      chart: longhorn
-      targetRevision: "1.12.0"
-      helm:
-        # PRIVATE: backupTarget URL holds the real GCS bucket name; it is
-        # merged in from home-systems-values, never committed to this repo.
-        valueFiles:
-          - $values/longhorn/values.yaml
-        values: |
-          # Longhorn 1.8.x configuration for Talos Linux
-          # Reference: https://longhorn.io/docs/1.8.0/advanced-resources/os-specific-specific/talos-linux-support/
+  source:
+    repoURL: https://charts.longhorn.io
+    chart: longhorn
+    targetRevision: "1.12.0"
+    helm:
+      values: |
+        # Longhorn 1.8.x configuration for Talos Linux
+        # Reference: https://longhorn.io/docs/1.8.0/advanced-resources/os-specific-specific/talos-linux-support/
 
-          # Disable pre-upgrade checker job (avoids ArgoCD hook ordering bug
-          # where the job runs before longhorn-service-account exists)
-          preUpgradeChecker:
-            jobEnabled: false
+        # Disable pre-upgrade checker job (avoids ArgoCD hook ordering bug
+        # where the job runs before longhorn-service-account exists)
+        preUpgradeChecker:
+          jobEnabled: false
 
-          # Enable Longhorn UI (for management)
+        # Enable Longhorn UI (for management)
+        ui:
+          enabled: true
+
+        service:
           ui:
-            enabled: true
+            type: ClusterIP
 
-          service:
-            ui:
-              type: ClusterIP
+        # Resource settings (adjust for your cluster size)
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
 
-          # Resource settings (adjust for your cluster size)
+        # Default settings optimized for home lab / small cluster
+        defaultSettings:
+          # Data path - must match Talos kubelet mount
+          defaultDataPath: /var/mnt/storage
+
+          # Storage calculation
+          storageMinimalAvailablePercentage: 25
+          storageOverProvisioningPercentage: 100
+
+          # Replica settings - set to 1 for 2-3 node home lab
+          # WARNING: No redundancy at replica=1
+          defaultReplicaCount: 1
+
+          # Disable strict node affinity for small clusters
+          replicaZoneSoftAntiAffinity: false
+          replicaSoftAntiAffinity: true
+          replicaDiskSoftAntiAffinity: true
+
+          # Auto-balance replicas across nodes
+          replicaAutoBalance: least-effort
+
+          # Allow volume creation when degraded (only 1 node available)
+          allowVolumeCreationWithDegradedAvailability: true
+
+          # Snapshot and backup settings
+          createDefaultDiskLabeledNodes: true
+
+          # Upgrade checking
+          upgradeChecker: false
+
+          # Tolerate the control-plane taint so instance-manager/engine pods
+          # can run on dell01 (which holds a 256GB SATA disk).
+          taintToleration: "node-role.kubernetes.io/control-plane:NoSchedule"
+
+          # Backup target (optional - configure if you have S3)
+          # backupTarget: s3://bucket@region/
+          # backupTargetCredentialSecret: longhorn-backup-credentials
+
+        # Persistence for Longhorn itself
+        persistence:
+          defaultClass: true
+          defaultClassReplicaCount: 1
+
+        # Enable monitoring
+        monitoring:
+          enabled: false  # Set true if you have Prometheus
+
+        # Disable PSP for newer Kubernetes versions
+        enablePSP: false
+
+        # Longhorn manager settings
+        longhornManager:
+          logLevel: Info
+          # Run on control-plane nodes too (dell01 has the 256GB SATA)
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
+
+        # Longhorn driver settings
+        longhornDriver:
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
+
+        # Longhorn UI settings
+        longhornUI: {}
+
+        # Instance manager resources
+        instanceManager:
           resources:
             limits:
-              cpu: 500m
-              memory: 1Gi
+              cpu: "1"
+              memory: 2Gi
             requests:
-              cpu: 250m
+              cpu: 500m
               memory: 512Mi
 
-          # Default settings optimized for home lab / small cluster
-          defaultSettings:
-            # Data path - must match Talos kubelet mount
-            defaultDataPath: /var/mnt/storage
-
-            # Storage calculation
-            storageMinimalAvailablePercentage: 25
-            storageOverProvisioningPercentage: 100
-
-            # Replica settings - set to 1 for 2-3 node home lab
-            # WARNING: No redundancy at replica=1
-            defaultReplicaCount: 1
-
-            # Disable strict node affinity for small clusters
-            replicaZoneSoftAntiAffinity: false
-            replicaSoftAntiAffinity: true
-            replicaDiskSoftAntiAffinity: true
-
-            # Auto-balance replicas across nodes
-            replicaAutoBalance: least-effort
-
-            # Allow volume creation when degraded (only 1 node available)
-            allowVolumeCreationWithDegradedAvailability: true
-
-            # Snapshot and backup settings
-            createDefaultDiskLabeledNodes: true
-
-            # Upgrade checking
-            upgradeChecker: false
-
-            # Tolerate the control-plane taint so instance-manager/engine pods
-            # can run on dell01 (which holds a 256GB SATA disk).
-            taintToleration: "node-role.kubernetes.io/control-plane:NoSchedule"
-
-            # Backup target + credential are set from the PRIVATE values file
-            # ($values/longhorn/values.yaml) so the real GCS bucket name stays
-            # out of this public repo. See home-systems-values/longhorn/values.yaml.
-
-          # Persistence for Longhorn itself
-          persistence:
-            defaultClass: true
-            defaultClassReplicaCount: 1
-
-          # Enable monitoring
-          monitoring:
-            enabled: false  # Set true if you have Prometheus
-
-          # Disable PSP for newer Kubernetes versions
-          enablePSP: false
-
-          # Longhorn manager settings
-          longhornManager:
-            logLevel: Info
-            # Run on control-plane nodes too (dell01 has the 256GB SATA)
-            tolerations:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-                effect: NoSchedule
-
-          # Longhorn driver settings
-          longhornDriver:
-            tolerations:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-                effect: NoSchedule
-
-          # Longhorn UI settings
-          longhornUI: {}
-
-          # Instance manager resources
-          instanceManager:
-            resources:
-              limits:
-                cpu: "1"
-                memory: 2Gi
-              requests:
-                cpu: 500m
-                memory: 512Mi
-
-    # S3-compatible credential for the GCS backup target. Synced from
-    # 1Password (item: longhorn-backup) the same way every other secret here is.
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/support
-      helm:
-        valuesObject:
-          externalSecrets:
-            - name: longhorn-backup-credentials
-              namespace: longhorn-system
-              data:
-                - secretKey: access_key_id
-                  key: longhorn-backup
-                  property: access_key_id
-                - secretKey: secret_access_key
-                  key: longhorn-backup
-                  property: secret_access_key
-              template:
-                data:
-                  AWS_ACCESS_KEY_ID: "{{ .access_key_id }}"
-                  AWS_SECRET_ACCESS_KEY: "{{ .secret_access_key }}"
-                  AWS_ENDPOINTS: "https://storage.googleapis.com"
-    # PRIVATE: real GCS backup-target URL (bucket name). $values source.
-    - repoURL: git@github.com:yurifrl/home-systems-values.git
-      targetRevision: HEAD
-      ref: values
 ---
 # StorageClass for replica=1 (development/testing only)
 apiVersion: storage.k8s.io/v1
@@ -193,19 +163,3 @@ reclaimPolicy: Delete
 # Allow online PVC expansion (e.g. growing a StatefulSet volume in place).
 allowVolumeExpansion: true
 volumeBindingMode: Immediate
-
----
-# Native Longhorn scheduled backup: daily, keep 7. Applies to all volumes in
-# the "default" recurring-job group (Longhorn's default for unlabeled volumes).
-apiVersion: longhorn.io/v1beta2
-kind: RecurringJob
-metadata:
-  name: daily-backup
-  namespace: longhorn-system
-spec:
-  cron: "0 2 * * *"
-  task: backup
-  groups:
-    - default
-  retain: 7
-  concurrency: 1
