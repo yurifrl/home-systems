@@ -37,6 +37,20 @@ serviceAccounts: []
 #    accountId: foundry-gcs-access-sa
 #    displayName: Foundry GCS Access Service Account
 
+# --- Service account keys (for external auth like VM, not Workload Identity) -
+serviceAccountKeys: []
+#  - name: victoriametrics-sa-key
+#    serviceAccountRef: victoriametrics-sa
+#    keyAlgorithm: KEY_ALG_RSA_2048
+#    includeSecureJsonData: true
+
+# --- Bucket IAM bindings (grants SAs access to buckets) ----------------------
+bucketIAMMembers: []
+#  - name: victoriametrics-bucket-admin
+#    bucketRef: victoriametrics
+#    role: roles/storage.admin
+#    member: "serviceAccount:victoriametrics-gcs-sa@PROJECT_ID.iam.gserviceaccount.com"
+
 # --- Project services (API enablement) -------------------------------------
 projectServices: []
 #  - name: iam

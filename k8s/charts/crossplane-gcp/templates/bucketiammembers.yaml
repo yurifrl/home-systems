@@ -1,0 +1,18 @@
+{{- $pc := .Values.providerConfig.name }}
+{{- $dp := .Values.deletionPolicy }}
+{{- range .Values.bucketIAMMembers }}
+---
+apiVersion: storage.gcp.upbound.io/v1beta1
+kind: BucketIAMMember
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ .deletionPolicy | default $dp }}
+  providerConfigRef:
+    name: {{ $pc }}
+  forProvider:
+    bucketRef:
+      name: {{ .bucketRef }}
+    role: {{ .role }}
+    member: {{ .member }}
+{{- end }}
