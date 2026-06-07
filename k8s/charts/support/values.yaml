@@ -152,3 +152,8 @@ configMaps: []
   #     key2: |
   #       multiline
   #       value
+# Longhorn Backup Target configuration
+longhornBackupTarget:
+  enabled: false
+  onePasswordItem: "longhorn-backup-target"
+  # onePassword field 'backupTarget' should contain: s3://bucket@region/

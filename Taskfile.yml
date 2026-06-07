@@ -9,3 +9,4 @@ includes:
   turing: ./taskfiles/turing.yml
   proxmox: ./taskfiles/proxmox.yml
   clusterbootstrap: ./taskfiles/clusterbootstrap.yml
+  backup: ./taskfiles/backup.yml

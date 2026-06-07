@@ -1,0 +1,146 @@
+version: '3'
+
+vars:
+  LONGHORN_NAMESPACE: longhorn-system
+
+tasks:
+  list:
+    desc: "List PVCs configured for backup"
+    cmds:
+      - |
+        echo "PVCs with backup enabled:"
+        kubectl -n longhorn-system get recurringjobs -l app.kubernetes.io/managed-by=support \
+          -o custom-columns='PVC:.metadata.labels.app' --no-headers 2>/dev/null | sort || \
+        echo "  (none yet - Argo hasn't synced put-aside apps)"
+
+  status:
+    desc: "Show last backup for a PVC"
+    requires:
+      vars: [PVC]
+    cmds:
+      - |
+        echo "Last backups for {{.PVC}}:"
+        kubectl -n longhorn-system get backups -l app={{.PVC}} \
+          --sort-by=.status.snapshotCreatedAt 2>/dev/null | tail -5 || \
+        echo "No backups found"
+
+  default:
+    desc: "Show help for backup commands"
+    cmds:
+      - |
+        echo "Backup commands:"
+        echo ""
+        echo "  task backup:list                      # List configured PVCs"
+        echo "  task backup:status PVC=<name>         # Show last backup"
+        echo "  task backup:trigger PVC=<name>        # Trigger one-off backup"
+        echo "  task backup:all                       # Backup all configured PVCs"
+        echo ""
+        echo "Available PVCs:"
+        kubectl get pvc --all-namespaces -o custom-columns='  - PVC:.metadata.name,NS:.metadata.namespace,STATUS:.status.phase' --no-headers 2>/dev/null | head -10 || true
+        echo ""
+        echo "Quick commands:"
+        echo "  task backup:zigbee2mqtt     # backup zigbee2mqtt-data"
+        echo "  task backup:foundry         # backup foundry-talos-vca-xy1-data"
+        echo "  task backup:homeassistant   # backup home-assistant-home-assistant-0"
+
+  trigger:
+    desc: "Trigger one-off backup - use: task backup:trigger PVC=<name> [NAMESPACE=<ns>]"
+    vars:
+      PVC: '{{.PVC}}'
+      NAMESPACE: '{{default "default" .NAMESPACE}}'
+    cmds:
+      - |
+        PVC="{{.PVC}}"
+        if [ -z "$PVC" ]; then
+          task backup:default
+          exit 1
+        fi
+        set -e
+        NS="{{.NAMESPACE}}"
+        TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+        SNAPSHOT="manual-${PVC}-${TIMESTAMP}"
+        BACKUP="manual-backup-${PVC}-${TIMESTAMP}"
+        
+        echo "Looking up volume for $NS/$PVC..."
+        VOLUME=$(kubectl get pvc "$PVC" -n "$NS" -o jsonpath='{.spec.volumeName}')
+        echo "  Volume: $VOLUME"
+        
+        echo "Creating snapshot $SNAPSHOT..."
+        cat <<'SNAPSHOT_EOF' | kubectl -n longhorn-system apply -f -
+        apiVersion: longhorn.io/v1beta2
+        kind: Snapshot
+        metadata:
+          name: SNAPSHOT_PLACEHOLDER
+        spec:
+          volume: "VOLUME_PLACEHOLDER"
+        SNAPSHOT_EOF
+        sed -i.bak "s/SNAPSHOT_PLACEHOLDER/$SNAPSHOT/g; s/VOLUME_PLACEHOLDER/$VOLUME/g" /dev/stdin || true
+        
+        # Actually create
+        kubectl -n longhorn-system create -f - <<EOF
+        apiVersion: longhorn.io/v1beta2
+        kind: Snapshot
+        metadata:
+          name: $SNAPSHOT
+        spec:
+          volume: "$VOLUME"
+        EOF
+        
+        echo "Creating backup $BACKUP..."
+        kubectl -n longhorn-system create -f - <<EOF
+        apiVersion: longhorn.io/v1beta2
+        kind: Backup
+        metadata:
+          name: $BACKUP
+          labels:
+            app: "${PVC}"
+            trigger: manual
+        spec:
+          snapshotName: "$SNAPSHOT"
+        EOF
+        
+        echo "Done. Check: task backup:status PVC=$PVC"
+
+  all:
+    desc: "Trigger backup for ALL configured PVCs"
+    cmds:
+      - |
+        echo "Backing up all PVCs..."
+        kubectl -n longhorn-system get recurringjobs -l app.kubernetes.io/managed-by=support \
+          -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | sed 's/backup-//' | \
+        while read -r PVC; do
+          [ -z "$PVC" ] && continue
+          NS=$(kubectl -n longhorn-system get "recurringjob/backup-$PVC" \
+            -o jsonpath='{.metadata.labels.support\.home-systems/source-namespace}' 2>/dev/null || echo "default")
+          echo "=== $NS/$PVC ==="
+          task backup:trigger PVC="$PVC" NAMESPACE="$NS" 2>&1 || echo "FAILED: $PVC"
+        done
+
+  # Quick aliases
+  zigbee2mqtt:
+    desc: "Backup zigbee2mqtt-data"
+    cmds:
+      - task backup:trigger PVC=data-volume-zigbee2mqtt-0 NAMESPACE=zigbee2mqtt
+
+  foundry:
+    desc: "Backup foundry-talos-vca-xy1-data"
+    cmds:
+      - task backup:trigger PVC=foundry-talos-vca-xy1-data NAMESPACE=foundry
+
+  homeassistant:
+    desc: "Backup home-assistant-home-assistant-0"
+    cmds:
+      - task backup:trigger PVC=home-assistant-home-assistant-0 NAMESPACE=home-assistant
+
+  hermes:
+    desc: "Backup hermes-state-0"
+    cmds:
+      - task backup:trigger PVC=hermes-state-0 NAMESPACE=hermes
+
+  restore:
+    desc: "List backups for restore - use: task backup:restore PVC=<name>"
+    requires:
+      vars: [PVC]
+    cmds:
+      - kubectl -n longhorn-system get backups -l app={{.PVC}} \
+          --sort-by=.status.snapshotCreatedAt 2>/dev/null | tail -10

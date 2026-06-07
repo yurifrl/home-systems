@@ -1,0 +1,84 @@
+{{- if .Values.longhornBackupTarget.enabled }}
+---
+# ExternalSecret to fetch Longhorn backup target from 1Password
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: longhorn-backup-target
+  namespace: longhorn-system
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: longhorn-backup-target
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    template:
+      type: Opaque
+      data:
+        # Format: s3://bucket-name@region/
+        backupTarget: "{{`{{ .backupTarget }}`}}"
+  dataFrom:
+    - extract:
+        key: {{ .Values.longhornBackupTarget.onePasswordItem | quote }}
+---
+# Post-install Job to configure Longhorn backup target from secret
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: configure-longhorn-backup-target
+  namespace: longhorn-system
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: longhorn-support
+      containers:
+        - name: kubectl
+          image: bitnami/kubectl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              NS="longhorn-system"
+              
+              # Wait for secret to exist
+              echo "Waiting for longhorn-backup-target secret..."
+              for i in $(seq 1 30); do
+                if kubectl -n "$NS" get secret longhorn-backup-target >/dev/null 2>&1; then
+                  echo "Secret found"
+                  break
+                fi
+                sleep 2
+              done
+              
+              # Get values from secret
+              BACKUP_TARGET=$(kubectl -n "$NS" get secret longhorn-backup-target -o jsonpath='{.data.backupTarget}' | base64 -d)
+              
+              echo "Configuring Longhorn backup target: $BACKUP_TARGET"
+              
+              # Patch the Longhorn setting
+              kubectl -n "$NS" get settings.longhorn.io backup-target >/dev/null 2>&1 || \
+                kubectl -n "$NS" create -f - <<EOF
+              apiVersion: longhorn.io/v1beta1
+              kind: Setting
+              metadata:
+                name: backup-target
+              value: "$BACKUP_TARGET"
+              EOF
+              
+              # Patch existing
+              kubectl -n "$NS" patch settings.backup-target --type merge -p "{\"value\":\"$BACKUP_TARGET\"
+              
+              # Also ensure credential secret reference is set
+              kubectl -n "$NS" patch settings.backup-target-credential-secret --type merge -p '{"value":"longhorn-gcs-key"}'
+              
+              echo "Longhorn backup target configured."
+{{- end }}
