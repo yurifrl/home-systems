@@ -162,3 +162,6 @@ longhornBackupTarget:
   hmacConnectionSecret: "longhorn-gcs-hmac"
   kubernetesStore: "kubernetes-longhorn-system"
   s3Endpoint: "https://storage.googleapis.com"
+  # HMAC access ID (not a secret, but pairs with the bucket) - set from the
+  # private values repo. Required when enabled=true.
+  accessKeyId: ""
