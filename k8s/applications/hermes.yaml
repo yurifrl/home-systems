@@ -59,6 +59,26 @@ spec:
           gitRepos:
             enabled: true
 
+          # The chart's default NetworkPolicy only allows ingress to the
+          # api-server (:8642). The extra sidecars below (hermes-pages :8080,
+          # hermes-dashboard :9119) also receive traffic from the istio
+          # gateway, so open those ports too — otherwise the gateway->pod hop
+          # is dropped and the VirtualServices time out.
+          networkPolicy:
+            enabled: true
+            ingress:
+              - from:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: istio-system
+                ports:
+                  - protocol: TCP
+                    port: 8642
+                  - protocol: TCP
+                    port: 8080
+                  - protocol: TCP
+                    port: 9119
+
           # hermes-pages: serve the cloned hermes-pages repo
           # (/workdir/hermes-pages, populated by repos-clone/repos-sync) as a
           # static site. busybox httpd, no config file, shares the gitRepos
@@ -88,6 +108,48 @@ spec:
                   memory: 16Mi
                 limits:
                   memory: 32Mi
+
+            # hermes-dashboard: the web dashboard (+ Kanban tab) as a sidecar.
+            # Separate process from the gateway; shares the /opt/data PVC so it
+            # reads the same config, sessions, and kanban.db. Bound to 0.0.0.0
+            # so the istio gateway can reach it; --insecure skips the dashboard's
+            # own auth gate because hermes.syscd.live sits behind Cloudflare
+            # Access (Google-capable SSO) at the edge. readOnlyRootFilesystem is
+            # relaxed because the dashboard may build/cache its frontend.
+            - name: hermes-dashboard
+              image: ghcr.io/yurifrl/hermes-agent:latest
+              imagePullPolicy: Always
+              command: ["hermes", "dashboard", "--host", "0.0.0.0", "--port", "9119", "--no-open", "--insecure"]
+              ports:
+                - name: dashboard
+                  containerPort: 9119
+              env:
+                - name: HERMES_HOME
+                  value: /opt/data
+                - name: HOME
+                  value: /opt/data/home
+              envFrom:
+                - secretRef:
+                    name: hermes-env
+              volumeMounts:
+                - name: state
+                  mountPath: /opt/data
+                - name: tmp
+                  mountPath: /tmp
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: false
+                capabilities:
+                  drop:
+                    - ALL
+                seccompProfile:
+                  type: RuntimeDefault
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 512Mi
 
           extraObjects:
             # Expose the busybox sidecar (:8080) on a dedicated Service.
@@ -120,5 +182,38 @@ spec:
                     route:
                       - destination:
                           host: hermes-pages
+                          port:
+                            number: 80
+            # Expose the dashboard sidecar (:9119) on a dedicated Service.
+            - apiVersion: v1
+              kind: Service
+              metadata:
+                name: hermes-dashboard
+              spec:
+                selector:
+                  app.kubernetes.io/name: hermes
+                  app.kubernetes.io/instance: hermes
+                ports:
+                  - name: http
+                    port: 80
+                    targetPort: 9119
+            # Route hermes.syscd.live (public cloudflare gateway, behind
+            # Cloudflare Access) to the dashboard.
+            - apiVersion: networking.istio.io/v1beta1
+              kind: VirtualService
+              metadata:
+                name: hermes-dashboard
+              spec:
+                gateways:
+                  - istio-system/cloudflare
+                hosts:
+                  - hermes.syscd.live
+                http:
+                  - match:
+                      - uri:
+                          prefix: /
+                    route:
+                      - destination:
+                          host: hermes-dashboard
                           port:
                             number: 80
