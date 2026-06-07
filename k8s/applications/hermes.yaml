@@ -137,7 +137,7 @@ spec:
             - name: hermes-dashboard
               image: ghcr.io/yurifrl/hermes-agent:latest
               imagePullPolicy: Always
-              command: ["hermes", "dashboard", "--host", "0.0.0.0", "--port", "9119", "--no-open", "--insecure"]
+              command: ["hermes", "dashboard", "--host", "0.0.0.0", "--port", "9119", "--no-open"]
               ports:
                 - name: dashboard
                   containerPort: 9119
