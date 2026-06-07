@@ -410,5 +410,15 @@ gitRepos:
   repos: []
   mountPath: /workdir
   syncInterval: 1h
+  # Persist the cloned repos across pod restarts. When disabled (default) the
+  # workdir is an emptyDir, so every restart re-clones every repo from scratch
+  # — fine for small repos, painfully slow for large ones. When enabled, the
+  # workdir is a PVC (volumeClaimTemplate), so repos-clone only does an
+  # incremental fetch on restart, cutting deploy downtime dramatically.
+  persistence:
+    enabled: false
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 10Gi
 
 extraObjects: []

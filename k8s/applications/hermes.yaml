@@ -62,6 +62,15 @@ spec:
             enabled: true
           gitRepos:
             enabled: true
+            # Persist /workdir so repos aren't re-cloned from scratch on every
+            # pod roll (Obsidian alone is ~1GB; emptyDir made each deploy take
+            # ~15min). longhorn-single: no HA replica needed, the repos are
+            # re-clonable from GitHub. repos-sync keeps them fresh; repos-clone
+            # only fetches deltas after the first clone.
+            persistence:
+              enabled: true
+              storageClass: longhorn-single
+              size: 15Gi
 
           # The chart's default NetworkPolicy only allows ingress to the
           # api-server (:8642). The extra sidecars below (hermes-pages :8080,

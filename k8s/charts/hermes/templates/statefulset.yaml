@@ -419,7 +419,7 @@ spec:
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if .Values.gitRepos.enabled }}
+        {{- if and .Values.gitRepos.enabled (not .Values.gitRepos.persistence.enabled) }}
         - name: {{ include "hermes-agent.workdirVolumeName" . }}
           emptyDir: {}
         {{- end }}
@@ -451,8 +451,11 @@ spec:
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-  {{- if and .Values.persistence.enabled (not .Values.persistence.existingClaim) }}
+  {{- $stateVct := and .Values.persistence.enabled (not .Values.persistence.existingClaim) }}
+  {{- $workdirVct := and .Values.gitRepos.enabled .Values.gitRepos.persistence.enabled }}
+  {{- if or $stateVct $workdirVct }}
   volumeClaimTemplates:
+    {{- if $stateVct }}
     - metadata:
         name: {{ $dataVolumeName }}
         {{- if or .Values.persistence.annotations .Values.persistence.backup.restore }}
@@ -473,5 +476,19 @@ spec:
         resources:
           requests:
             storage: {{ .Values.persistence.size | quote }}
+    {{- end }}
+    {{- if $workdirVct }}
+    - metadata:
+        name: {{ include "hermes-agent.workdirVolumeName" . }}
+      spec:
+        accessModes:
+          - {{ .Values.gitRepos.persistence.accessMode | default "ReadWriteOnce" }}
+        {{- if .Values.gitRepos.persistence.storageClass }}
+        storageClassName: {{ .Values.gitRepos.persistence.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.gitRepos.persistence.size | default "10Gi" | quote }}
+    {{- end }}
   {{- end }}
 {{- end }}
