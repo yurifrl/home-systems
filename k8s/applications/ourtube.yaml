@@ -1,0 +1,99 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ourtube
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ourtube
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/ourtube.git
+      targetRevision: HEAD
+      path: charts
+      helm:
+        valuesObject:
+          channels:
+            - name: Linus Tech Tips
+              channelId: UCXuqSBlHAE6Xw-yeJA0Tunw
+            - name: RedLetterMedia
+              channelId: UCrTNhL_yO3tPTdQ5XgmmWjA
+            - name: Legends of Avantris
+              channelId: UCiER8p540j2SosO7OX7E0VA
+            - name: Shut Up & Sit Down
+              channelId: UCyRhIGDUKdIOw07Pd8pHxCw
+            - name: Estranha História
+              channelId: UCDjzWHhTShC59KtduL-jeig
+            - name: Tom Cardy
+              channelId: UCW7AGm8JSBEEew61dJIgl_A
+            - name: This Aged Great!
+              channelId: UC2J6g9iavgANTSKEemLFOTA
+            - name: Aging Wheels
+              channelId: UC1lIHn3KlcJimyxsVugP4uw
+            - name: Expleened (Storymode)
+              channelId: UCGeIjGngCkErevSNHdZYD5Q
+            - name: The Adam Friedland Show
+              channelId: UC6ext5UAbrLT2e5y5BC6RTQ
+            - name: Boy Boy
+              channelId: UC_S45UpAYVuc0fYEcHN9BVQ
+            - name: Incognito Mode
+              channelId: UC8Q7XEy86Q7T-3kNpNjYgwA
+            - name: Jenna Phipps
+              channelId: UCejzv0MInydp0Isrza8e0tw
+            - name: NileRed
+              channelId: UCFhXFikryT4aFcLkLw2LBLA
+            - name: Internet Historian
+              channelId: UCR1D15p_vdP3HkrH8wgjQRw
+            - name: LEMMiNO
+              channelId: UCRcgy6GzDeccI7dkbbBna3Q
+            - name: No Pun Included
+              channelId: UCtU-oQXFKUMFvhunPrx7U-w
+            - name: Mustard
+              channelId: UC1ZBQ-F-yktYD4m5AzM6pww
+            - name: hbomberguy
+              channelId: UClt01z1wHHT7c5lKcU8pxRQ
+            - name: Lindsay Ellis
+              channelId: UCG1h-Wqjtwz7uUANw6gazRw
+            - name: ContraPoints
+              channelId: UCNvsIonJdJ5E4EXMa65VYpA
+            - name: YMS
+              channelId: UCSc16oMxxlcJSb9SXkjwMjA
+            - name: STRANGE ÆONS
+              channelId: UCrq3JYirgV-BLluzTF6X_7A
+            - name: fig tree
+              channelId: UCnCk_o6ySiM_ZzxubCv899Q
+            - name: Jenny Nicholson
+              channelId: UC7-E5xhZBZdW-8d7V80mzfg
+            - name: Folding Ideas
+              channelId: UCyNtlmLB73-7gtlBz00XOQQ
+            - name: Paul E.T.
+              channelId: UC6me-RzbQFQ-kRyr6BlGZWg
+            - name: Stuff Made Here
+              channelId: UCj1VqrHhDte54oLgPG4xpuQ
+            - name: Quinns Quest
+              channelId: UCCJD5wGU6pLiCHKH2Sr_4fg
+            - name: OneShortEye
+              channelId: UC2P1bJ-udK3UhVX2QvnkS9g
+            - name: Zwigs
+              channelId: UCj564l7fIN58l-1lgnfOpSA
+            - name: Philip Thompson
+              channelId: UCL5rT0UDW0HzGqKwNiN2XxQ
+            - name: Not An Engineer
+              channelId: UCXh9mHdcBD-3aGCiECZMP1Q
+            - name: The McElroy Family
+              channelId: UC6k_GngLDtxbkUlZOq6_h5g
+            - name: Questing Beast
+              channelId: UCvYwePdbWSEwUa-Pk02u3Zw
+            - name: Zee Bashew
+              channelId: UCCXR2kCo7Lcw_BKwWxo09kw
+            - name: Alex Hillman
+              channelId: UCFfH-JnmTDr5izA35fHQe5g
