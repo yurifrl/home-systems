@@ -34,10 +34,14 @@ spec:
         valueFiles:
           - $values/hermes/values.yaml
         valuesObject:
+          # The chart's built-in VirtualService exposed the api-server (:8642)
+          # at hermes.syscd.tech. The 'hermes' name now belongs to the web
+          # dashboard (extraObjects below, across all TLD aliases), so disable
+          # this one to avoid a host collision. The api-server stays reachable
+          # in-cluster at hermes:8642 (Hermes Desktop's remote backend should
+          # point at the dashboard URL anyway).
           virtualService:
-            enabled: true
-            hosts:
-              - hermes.syscd.tech
+            enabled: false
 
           # Pin to dell01 (amd64, has memory headroom; arm SBCs evict the pod).
           nodeSelector:
@@ -172,9 +176,14 @@ spec:
                 name: hermes-pages
               spec:
                 gateways:
+                  - istio-system/dev
                   - istio-system/cloudflare
+                  - istio-system/tailscale
                 hosts:
                   - hermes-pages.syscd.live
+                  - hermes-pages.syscd.tech
+                  - hermes-pages.syscd.xyz
+                  - hermes-pages.syscd.dev
                 http:
                   - match:
                       - uri:
@@ -205,9 +214,14 @@ spec:
                 name: hermes-dashboard
               spec:
                 gateways:
+                  - istio-system/dev
                   - istio-system/cloudflare
+                  - istio-system/tailscale
                 hosts:
                   - hermes.syscd.live
+                  - hermes.syscd.tech
+                  - hermes.syscd.xyz
+                  - hermes.syscd.dev
                 http:
                   - match:
                       - uri:
