@@ -46,6 +46,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates curl git ripgrep ffmpeg wget gnupg \
         gcc python3-dev libffi-dev \
+        fish less vim htop jq tree tmux procps iproute2 fzf bat fd-find \
+    && ln -sf /usr/bin/batcat /usr/local/bin/bat \
+    && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
     && mkdir -p -m 755 /etc/apt/keyrings \
     && wget -nv -O /etc/apt/keyrings/githubcli-archive-keyring.gpg \
         https://cli.github.com/packages/githubcli-archive-keyring.gpg \
@@ -100,7 +103,9 @@ COPY hctl /usr/local/bin/hctl
 RUN chmod 0755 /usr/local/bin/hctl
 
 # Non-root runtime user matching the chart's runAsUser/fsGroup 1000.
-RUN useradd -u 1000 -m -d /home/hermes -s /bin/bash hermes
+# Default shell is fish for a comfortable interactive `kubectl exec` experience
+# (the app itself runs via the `hermes` entrypoint, not a login shell).
+RUN useradd -u 1000 -m -d /home/hermes -s /usr/bin/fish hermes
 
 WORKDIR /opt/data
 VOLUME ["/opt/data"]
