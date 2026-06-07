@@ -31,3 +31,4 @@ nostos/state/
 # python bytecode
 __pycache__/
 *.pyc
+.submodules/nostos
