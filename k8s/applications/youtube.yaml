@@ -22,12 +22,6 @@ spec:
       path: charts
       helm:
         valuesObject:
-          virtualService:
-            enabled: true
-            gateways:
-              - istio-system/tailscale
-            hosts:
-              - youtube.tailcecc0.ts.net
           channels:
             - name: Linus Tech Tips
               channelId: UCXuqSBlHAE6Xw-yeJA0Tunw
