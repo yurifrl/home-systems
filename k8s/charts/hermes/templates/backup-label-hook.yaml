@@ -23,7 +23,7 @@ spec:
             - -c
             - |
               set -e
-              PVC="{{ include "hermes-agent.fullname" . }}-{{ .Values.persistence.volumeName }}-0"
+              PVC="{{ .Values.persistence.volumeName }}-{{ include "hermes-agent.fullname" . }}-0"
               NS="{{ .Release.Namespace }}"
               JOB="backup-{{ include "hermes-agent.fullname" . }}"
               VOLUME=""

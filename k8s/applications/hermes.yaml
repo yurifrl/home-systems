@@ -55,6 +55,11 @@ spec:
           # The chart renders the corresponding init/sidecar containers
           # calling `hctl`. gitRepos.user + gitRepos.repos[] are merged
           # in from $values/hermes/values.yaml (private).
+          persistence:
+            backup:
+              enabled: true
+              schedule: "0 2 * * 0"
+              retain: 14
           auth:
             gitLogin:
               enabled: true
