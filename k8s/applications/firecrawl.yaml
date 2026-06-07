@@ -1,0 +1,142 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: firecrawl
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: firecrawl
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  sources:
+    # Forked from upstream firecrawl/firecrawl/examples/kubernetes/firecrawl-helm
+    # at commit 42b46be4f75a (see k8s/charts/firecrawl/.upstream-sha). Only
+    # divergence from upstream: 6 heavy deployments now respect a
+    # `global.{nodeSelector,tolerations}` block (set below) so we can pin
+    # them to dell01. To resync from upstream: re-fetch the templates,
+    # re-apply the `global` block patches in the 6 deployments, bump the
+    # SHA file. Service ends up at:
+    #   http://firecrawl-api.firecrawl.svc.cluster.local:3002
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/firecrawl
+      helm:
+        releaseName: firecrawl
+        valuesObject:
+          # Pin ALL firecrawl pods to dell01 (amd64, 7.2 GB RAM, lots of
+          # CPU). The arm64 SBCs (tp1/tp4) are saturated with 20+ system
+          # services each (cert-manager, crossplane, external-dns, argo,
+          # 1Password Connect, ...) and Kubernetes overcommits memory
+          # limits 220%+ on tp4. RabbitMQ kept self-shutting on tp4 due
+          # to its internal `system_memory_high_watermark` /
+          # `disk_almost_full` alarms once it shared the node with all
+          # those neighbours, and workers ECONNREFUSED to it on a loop.
+          # Stateful pods (postgres/rabbitmq/redis) are tiny next to the
+          # workers, so co-locating everything on dell01 is the clean
+          # answer.
+          global:
+            nodeSelector:
+              kubernetes.io/hostname: dell01
+            tolerations:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+                effect: NoSchedule
+
+          # Make service names readable: firecrawl-api / firecrawl-redis / etc
+          # instead of firecrawl-firecrawl-api.
+          fullnameOverride: firecrawl
+
+          # Hobby / low-use sizing. Browser-side scrapes are 1-2 URLs at a
+          # time, no AI extract, no full-site crawls. Trim every component to
+          # the floor that still works:
+          #   - extractWorker disabled (AI extract feature unused)
+          #   - all replicaCount=1 (chart defaults already)
+          #   - small memory requests so dell01 keeps headroom for hermes,
+          #     argocd, control-plane services
+          #   - heap sizes already lowered in the forked chart templates
+          #     (api 1024, workers 768, prefetch 384)
+          extractWorker:
+            enabled: false
+
+          nuqWorker:
+            replicaCount: 1
+            resources:
+              requests:
+                memory: "384Mi"
+                cpu: "100m"
+              limits:
+                memory: "768Mi"
+                cpu: "1"
+
+          # Per-service resource overrides. resources.enabled=true makes the
+          # chart honour these blocks; without it, no requests/limits are
+          # set at all and the kernel OOM-killer reacts to node-wide pressure
+          # instead of per-pod limits.
+          resources:
+            enabled: true
+          api:
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "1Gi"
+                cpu: "1"
+          worker:
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "50m"
+              limits:
+                memory: "768Mi"
+                cpu: "1"
+          nuqPrefetchWorker:
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "50m"
+              limits:
+                memory: "384Mi"
+                cpu: "500m"
+          nuqPostgres:
+            persistence:
+              enabled: false
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "50m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+          rabbitmq:
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "50m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+          playwright:
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "1Gi"
+                cpu: "1"
+
+          # Don't pull a "docker-registry-secret" the chart references by
+          # default for private images. We use the public ghcr/dockerhub
+          # tags below.
+          imagePullSecrets: []
+          image:
+            dockerSecretEnabled: false
