@@ -275,6 +275,16 @@ networkPolicy:
       ports:
         - protocol: TCP
           port: 4000
+    # 1Password Connect API (op-files init container syncs files via
+    # onepassword-connect.1password.svc:8080). Without this the op-files
+    # init container hangs on a blocked TCP connect and the pod never starts.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: 1password
+      ports:
+        - protocol: TCP
+          port: 8080
     # Kube API server
     - ports:
         - protocol: TCP
