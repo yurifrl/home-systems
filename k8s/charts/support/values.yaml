@@ -152,8 +152,13 @@ configMaps: []
   #     key2: |
   #       multiline
   #       value
-# Longhorn Backup Target configuration
+# Longhorn Backup Target credentials
+# Reshapes the Crossplane HMACKey connection secret (longhorn-gcs-hmac, keys:
+# access_id/secret) into the AWS_* credential secret Longhorn needs. Requires
+# the kubernetes-longhorn-system ClusterSecretStore (support-cluster chart).
 longhornBackupTarget:
   enabled: false
-  onePasswordItem: "longhorn"
-  secretName: "longhorn-backup-target"
+  credentialSecret: "longhorn-backup-credentials"
+  hmacConnectionSecret: "longhorn-gcs-hmac"
+  kubernetesStore: "kubernetes-longhorn-system"
+  s3Endpoint: "https://storage.googleapis.com"
