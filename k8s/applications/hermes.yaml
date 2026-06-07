@@ -58,3 +58,67 @@ spec:
             enabled: true
           gitRepos:
             enabled: true
+
+          # hermes-pages: serve the cloned hermes-pages repo
+          # (/workdir/hermes-pages, populated by repos-clone/repos-sync) as a
+          # static site. busybox httpd, no config file, shares the gitRepos
+          # workdir emptyDir. Exposed at hermes-pages.syscd.live (the
+          # *.syscd.live wildcard already covers DNS + tunnel + gateway).
+          extraContainers:
+            - name: hermes-pages
+              image: busybox:1.37
+              command: ["httpd", "-f", "-v", "-p", "8080", "-h", "/workdir/hermes-pages"]
+              ports:
+                - name: pages
+                  containerPort: 8080
+              volumeMounts:
+                - name: workdir
+                  mountPath: /workdir
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+                seccompProfile:
+                  type: RuntimeDefault
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  memory: 32Mi
+
+          extraObjects:
+            # Expose the busybox sidecar (:8080) on a dedicated Service.
+            - apiVersion: v1
+              kind: Service
+              metadata:
+                name: hermes-pages
+              spec:
+                selector:
+                  app.kubernetes.io/name: hermes
+                  app.kubernetes.io/instance: hermes
+                ports:
+                  - name: http
+                    port: 80
+                    targetPort: 8080
+            # Route hermes-pages.syscd.live (public cloudflare gateway) to it.
+            - apiVersion: networking.istio.io/v1beta1
+              kind: VirtualService
+              metadata:
+                name: hermes-pages
+              spec:
+                gateways:
+                  - istio-system/cloudflare
+                hosts:
+                  - hermes-pages.syscd.live
+                http:
+                  - match:
+                      - uri:
+                          prefix: /
+                    route:
+                      - destination:
+                          host: hermes-pages
+                          port:
+                            number: 80
