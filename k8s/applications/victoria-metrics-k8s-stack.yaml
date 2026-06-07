@@ -56,6 +56,12 @@ spec:
         # matching the virtualservice targets in support-cluster.yaml.
         # Without this ArgoCD uses the app name as the release name.
         releaseName: vmks
+        # PRIVATE: the vmsingle backup sidecar (vmsingle.spec.containers/volumes).
+        # The real GCS bucket name is embedded in the vmbackup command string, so
+        # the whole sidecar block lives in home-systems-values, never this repo.
+        # Loaded before valuesObject; deep-merges with the vmsingle.spec below.
+        valueFiles:
+          - $values/victoriametrics/values.yaml
         # Keep generated resource names short (63-char limit).
         valuesObject:
           nameOverride: vmks
@@ -299,6 +305,13 @@ spec:
                 enabled: true
               datasources:
                 enabled: true
+
+    # PRIVATE: real GCS backup bucket name for the vmsingle vmbackup sidecar.
+    # Referenced as $values by the VM chart source above. Nothing secret in
+    # this public repo.
+    - repoURL: git@github.com:yurifrl/home-systems-values.git
+      targetRevision: HEAD
+      ref: values
 
 # References:
 # - https://docs.victoriametrics.com/helm/victoria-metrics-k8s-stack/

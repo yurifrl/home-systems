@@ -56,9 +56,9 @@ spec:
             backupStorageLocation:
               - name: default
                 provider: gcp
-                bucket: syscd-backups-4b2339d2-ad04-4ba1-a184-dab578a2545d 
+                bucket: REPLACE_WITH_BACKUP_BUCKET # real name lives in home-systems-values
                 config:
-                  serviceAccount: velero@syscd-443112.iam.gserviceaccount.com
+                  serviceAccount: velero@PROJECT_ID.iam.gserviceaccount.com
 
             volumeSnapshotLocation:
               - name: default
