@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ourtube
+  name: youtube
   namespace: argocd
   finalizers:
   - resources-finalizer.argocd.argoproj.io
@@ -9,7 +9,7 @@ spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: ourtube
+    namespace: youtube
   syncPolicy:
     automated:
       prune: true
@@ -22,6 +22,12 @@ spec:
       path: charts
       helm:
         valuesObject:
+          virtualService:
+            enabled: true
+            gateways:
+              - istio-system/tailscale
+            hosts:
+              - youtube.tailcecc0.ts.net
           channels:
             - name: Linus Tech Tips
               channelId: UCXuqSBlHAE6Xw-yeJA0Tunw
