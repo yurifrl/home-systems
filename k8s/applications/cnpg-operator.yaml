@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cnpg-operator
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # Bring up the CloudNativePG operator + CRDs (Cluster, Database, Backup,
+    # ScheduledBackup, ...) before any Cluster CR (postgres.yaml is at -1) so
+    # the custom resources have something to apply against.
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cnpg-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  sources:
+    - repoURL: https://cloudnative-pg.github.io/charts
+      chart: cloudnative-pg
+      # Operator chart cloudnative-pg-v0.27.1 (ships operator v1.27.x + CRDs).
+      targetRevision: "0.27.1"
+      helm:
+        valuesObject:
+          # Single small home-lab control loop; one replica is plenty.
+          replicaCount: 1
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi

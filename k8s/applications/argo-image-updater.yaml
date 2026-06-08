@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-image-updater
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  sources:
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argocd-image-updater
+      # Latest chart 1.2.2 -> appVersion v1.2.1 (CRD/ImageUpdater model).
+      targetRevision: "1.2.2"
+      helm:
+        releaseName: argocd-image-updater
+        valuesObject:
+          crds:
+            install: true
+            keep: true

@@ -1,0 +1,98 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgres
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # Cluster CR comes up AFTER the operator+CRDs (cnpg-operator is at -2).
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: databases
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  sources:
+    # Upstream CloudNativePG "cluster" chart (same repo as the operator chart).
+    # It renders a CNPG `Cluster` CR (+ optional PodMonitor/PrometheusRule/
+    # ScheduledBackup) from values. cluster-v0.6.1 is the current release.
+    - repoURL: https://cloudnative-pg.github.io/charts
+      chart: cluster
+      targetRevision: "0.6.1"
+      helm:
+        # Pin the resource name to `pg` (otherwise it derives from the release
+        # name). This is the CNPG Cluster name other apps connect to.
+        valuesObject:
+          fullnameOverride: pg
+
+          # PostgreSQL major version.
+          version:
+            postgresql: "16"
+
+          cluster:
+            # Single instance for now. Bumpable later: raise to 3 for HA
+            # (CNPG manages streaming replication + failover automatically).
+            instances: 1
+
+            # PostgreSQL container image.
+            # TODO(home-systems-jfr.6): switch to the Supabase-extensions image
+            # once built/published, e.g. ghcr.io/yurifrl/cnpg-postgres:16 .
+            # Default stays on the stock CNPG image so this Cluster is valid and
+            # syncs today.
+            imageName: ghcr.io/cloudnative-pg/postgresql:16
+
+            storage:
+              storageClass: longhorn-ha
+              size: 2Gi
+
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+
+            monitoring:
+              # Emit a PodMonitor. The VictoriaMetrics operator (prometheus-
+              # converter is ON) auto-converts it to a VMPodScrape, so no
+              # VM-specific config is needed here.
+              enabled: true
+              podMonitor:
+                enabled: true
+              # Don't import the chart's default CNPG alert rules unreviewed;
+              # the VM stack owns alerting. Flip on later if the alerts are wanted.
+              prometheusRule:
+                enabled: false
+
+          # ---------------------------------------------------------------------
+          # MANY DATABASES: do NOT add extra bootstrap DBs. Each additional
+          # logical DB is its own declarative CNPG `Database` CR (one per DB).
+          # This chart can render them via the top-level `databases:` list, e.g.:
+          #   databases:
+          #     - name: foo
+          #       owner: foo
+          # ---------------------------------------------------------------------
+
+          # ---------------------------------------------------------------------
+          # BACKUPS — OPEN DECISION (CNPG-native, self-contained, NO external GCS).
+          # Left DISABLED so the Cluster is clean/valid today (a half-wired
+          # backup target makes the Cluster unhealthy). Pick one, then enable:
+          #   (i)  In-cluster MinIO as a Barman S3 target (preferred): deploy
+          #        MinIO, then set backups.enabled=true, provider=s3,
+          #        endpointURL=http://minio.minio.svc:9000, s3.bucket=cnpg,
+          #        and point secret at MinIO creds; add a scheduledBackups entry.
+          #   (ii) Longhorn CSI volume snapshots via a scheduledBackups entry
+          #        with method=volumeSnapshot (no object store needed).
+          # TODO(home-systems-jfr.4): choose (i) or (ii) and enable.
+          # ---------------------------------------------------------------------
+          backups:
+            enabled: false

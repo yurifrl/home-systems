@@ -1,0 +1,70 @@
+name: Build CNPG Postgres Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'k8s/images/cnpg/**'
+      - '.github/workflows/build-cnpg.yaml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/cnpg-postgres
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Read versions from Dockerfile
+        id: vers
+        run: |
+          DF=k8s/images/cnpg/Dockerfile
+          # Numeric base PG version (e.g. 16.10 from 16.10-system-trixie).
+          PGV=$(grep -oP '^ARG BASE_PG_VERSION=\K[0-9]+\.[0-9]+' "$DF")
+          echo "pgv=$PGV" >> "$GITHUB_OUTPUT"
+          echo "Building cnpg-postgres on PostgreSQL $PGV"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ steps.vers.outputs.pgv }}
+            type=sha
+
+      # Multi-arch: every bundled extension is a plain C/pgxs build, so both
+      # linux/amd64 and linux/arm64 compile cleanly under QEMU. If pg_graphql
+      # (Rust/pgrx, see the Dockerfile TODO) is ever added and only builds on
+      # amd64, drop arm64 here and document it.
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: k8s/images/cnpg
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
