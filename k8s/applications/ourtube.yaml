@@ -9,7 +9,7 @@ spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: youtube
+    namespace: ourtube
   syncPolicy:
     automated:
       prune: true
@@ -21,9 +21,6 @@ spec:
       targetRevision: HEAD
       path: charts
       helm:
-        # Pin release name so the deployed Deployment/Service keep the name
-        # "youtube" (the VirtualService still routes to service youtube/youtube).
-        releaseName: youtube
         valuesObject:
           channels:
             - name: Linus Tech Tips
@@ -107,8 +104,11 @@ spec:
       helm:
         valuesObject:
           virtualServices:
-            - name: youtube
+            - name: ourtube
+              # Only the public domain stays youtube.syscd.* ; every internal
+              # resource (deploy/svc/cm/namespace/VS) is named ourtube.
+              hostname: youtube
               service:
-                name: youtube
-                namespace: youtube
+                name: ourtube
+                namespace: ourtube
                 port: 3000
