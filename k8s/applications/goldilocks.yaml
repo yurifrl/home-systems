@@ -16,42 +16,63 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+  ignoreDifferences:
+    # The bundled VPA admission-controller cert hook (kept off below, but
+    # guard anyway) and webhook caBundle are mutated at runtime.
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
   sources:
-    # Fairwinds Goldilocks — recommends resource requests/limits by reading
-    # VPA recommendations and surfacing them in a dashboard.
-    # https://github.com/FairwindsOps/goldilocks
+    # Fairwinds Goldilocks — recommends resource requests/limits and surfaces
+    # them in a dashboard. https://github.com/FairwindsOps/goldilocks
     #
-    # We DO NOT let Goldilocks bundle its own VPA: the cluster already runs a
-    # standalone, better-tuned VPA install (k8s/applications/vertical-pod-autoscaler.yaml,
-    # namespace `vpa`) with custom recommender args, control-plane tolerations
-    # and ServiceMonitors managed by support-cluster. Goldilocks' chart ships
-    # `vpa.enabled: false` by default (VPA is an opt-in sub-chart), so nothing
-    # comes bundled and there is no duplicate VPA to remove — we simply reuse
-    # the existing one.
+    # VPA is provided by Goldilocks' own bundled sub-chart (vpa.enabled=true)
+    # so we run a single chart instead of a separate standalone VPA install.
+    # We run the recommender ONLY (updater + admission-controller disabled):
+    # Goldilocks needs recommendations, not auto-eviction/mutation of pods.
     - repoURL: https://charts.fairwinds.com/stable
       chart: goldilocks
       targetRevision: "10.3.0"
       helm:
         releaseName: goldilocks
         valuesObject:
-          # Reuse the existing standalone VPA in the `vpa` namespace.
+          # Bundled Vertical Pod Autoscaler (recommender-only).
           vpa:
-            enabled: false
+            enabled: true
+            updater:
+              enabled: false
+            admissionController:
+              enabled: false
+            recommender:
+              # Match the floors the previous standalone install used so tiny
+              # home-lab workloads don't get unrealistically small targets.
+              extraArgs:
+                v: "4"
+                pod-recommendation-min-cpu-millicores: 50
+                pod-recommendation-min-memory-mb: 128
+              resources:
+                limits:
+                  memory: 512Mi
+                requests:
+                  cpu: 50m
+                  memory: 256Mi
+              tolerations:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: NoSchedule
           metrics-server:
             enabled: false
 
-          # Opt-in per namespace: label a namespace with
-          #   goldilocks.fairwinds.com/enabled=true
-          # to have Goldilocks create (recommendation-only, updateMode "Off")
-          # VPAs for its workloads. We intentionally leave `on-by-default`
-          # unset so we don't blanket the cluster with VPA objects.
-          #
-          # Note: the existing VPA updater runs with
-          # --vpa-object-default-update-mode=Auto, but that only applies to
-          # VPAs that omit an updateMode. Goldilocks always sets updateMode
-          # explicitly ("Off"), so nothing here triggers auto-eviction.
+          # on-by-default: monitor EVERY namespace automatically. Goldilocks
+          # creates recommendation-only (updateMode "Off") VPAs for all
+          # workloads; opt a namespace OUT with the label
+          #   goldilocks.fairwinds.com/enabled=false
           controller:
             enabled: true
+            flags:
+              on-by-default: true
             tolerations:
               - key: node-role.kubernetes.io/control-plane
                 operator: Exists
@@ -59,6 +80,8 @@ spec:
           dashboard:
             enabled: true
             replicaCount: 1
+            flags:
+              on-by-default: true
             tolerations:
               - key: node-role.kubernetes.io/control-plane
                 operator: Exists
