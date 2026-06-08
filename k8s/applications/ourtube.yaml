@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: youtube
+  name: ourtube
   namespace: argocd
   finalizers:
   - resources-finalizer.argocd.argoproj.io
@@ -21,6 +21,9 @@ spec:
       targetRevision: HEAD
       path: charts
       helm:
+        # Pin release name so the deployed Deployment/Service keep the name
+        # "youtube" (the VirtualService still routes to service youtube/youtube).
+        releaseName: youtube
         valuesObject:
           channels:
             - name: Linus Tech Tips
