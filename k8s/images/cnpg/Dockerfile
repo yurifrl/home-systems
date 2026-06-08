@@ -31,8 +31,8 @@ ARG BASE_IMAGE=ghcr.io/cloudnative-pg/postgresql:${BASE_PG_VERSION}
 # against the base PG major above.
 # renovate: datasource=github-releases depName=eulerto/wal2json
 ARG WAL2JSON_VERSION=wal2json_2_6
-# pgjwt has no tagged releases; pin to a known-good commit on master.
-ARG PGJWT_REF=f3d82fd1f37b493abe5f989088f1c660f9e8b3c8
+# pgjwt has no tagged releases and no reliably-pinnable SHA; we clone its
+# default branch shallowly in the build stage (SQL-only, stable).
 # renovate: datasource=github-releases depName=michelp/pgsodium
 ARG PGSODIUM_VERSION=v3.1.9
 # renovate: datasource=github-releases depName=supabase/pg_net
@@ -50,7 +50,6 @@ FROM ${BASE_IMAGE} AS builder
 
 ARG PG_MAJOR
 ARG WAL2JSON_VERSION
-ARG PGJWT_REF
 ARG PGSODIUM_VERSION
 ARG PG_NET_VERSION
 ARG VAULT_VERSION
@@ -76,9 +75,10 @@ RUN git clone --depth 1 --branch "${WAL2JSON_VERSION}" \
     && make USE_PGXS=1 install
 
 # pgjwt — SQL-only JWT helpers (depends on pgcrypto, shipped in contrib).
-RUN git clone https://github.com/michelp/pgjwt.git pgjwt \
+# No tagged releases and no stable pinnable SHA we can rely on; clone the
+# default branch shallowly. It's a tiny, stable SQL-only extension.
+RUN git clone --depth 1 https://github.com/michelp/pgjwt.git pgjwt \
     && cd pgjwt \
-    && git checkout "${PGJWT_REF}" \
     && make install
 
 # pgsodium — libsodium-backed crypto. Needs libsodium-dev at build time.
