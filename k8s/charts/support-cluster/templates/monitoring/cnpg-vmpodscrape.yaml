@@ -1,0 +1,27 @@
+{{- if eq .Values.monitoringProvider "victoriametrics" }}
+# VMPodScrape for the CloudNativePG cluster `pg` (namespace: databases).
+# Replaces the chart's Prometheus-Operator PodMonitor (disabled in
+# k8s/applications/postgres.yaml) because this lab runs the VictoriaMetrics
+# operator, not Prometheus Operator. CNPG serves metrics on pod port 9187
+# (named "metrics"). Pods are labelled cnpg.io/cluster=<clusterName>.
+# Dashboard: support-cluster/dashboards/cloudnative-pg.json (gnetId 20417).
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMPodScrape
+metadata:
+  name: cnpg-pg
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+spec:
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+  selector:
+    matchLabels:
+      cnpg.io/cluster: pg
+  namespaceSelector:
+    matchNames:
+      - databases
+{{- end }}

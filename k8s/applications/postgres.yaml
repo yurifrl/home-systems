@@ -62,12 +62,14 @@ spec:
                 memory: 512Mi
 
             monitoring:
-              # Emit a PodMonitor. The VictoriaMetrics operator (prometheus-
-              # converter is ON) auto-converts it to a VMPodScrape, so no
-              # VM-specific config is needed here.
+              # Keep the metrics exporter ON (CNPG serves /metrics on :9187),
+              # but DO NOT emit a Prometheus-Operator PodMonitor: this lab has
+              # no monitoring.coreos.com CRDs (it runs the VictoriaMetrics
+              # operator). A native VMPodScrape lives in the support-cluster
+              # chart: k8s/charts/support-cluster/templates/monitoring/cnpg-vmpodscrape.yaml
               enabled: true
               podMonitor:
-                enabled: true
+                enabled: false
               # Don't import the chart's default CNPG alert rules unreviewed;
               # the VM stack owns alerting. Flip on later if the alerts are wanted.
               prometheusRule:
