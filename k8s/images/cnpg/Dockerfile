@@ -89,10 +89,14 @@ RUN git clone --depth 1 --branch "${PGSODIUM_VERSION}" \
     && make install
 
 # pg_net — async HTTP via libcurl + a background worker. C extension (pgxs).
+# -Wno-error=attribute-warning: trixie's libcurl headers attach an
+# attribute-warning to curl_easy_setopt when the value arg isn't a `long`;
+# pg_net v0.14.0 trips it and its build treats warnings as errors. The hint is
+# benign (the calls work), so downgrade just that one warning from error.
 RUN git clone --depth 1 --branch "${PG_NET_VERSION}" \
         https://github.com/supabase/pg_net.git pg_net \
     && cd pg_net \
-    && make \
+    && make PG_CFLAGS="-Wno-error=attribute-warning" \
     && make install
 
 # supabase_vault — secrets storage; pairs with pgsodium at runtime. pgxs build.
