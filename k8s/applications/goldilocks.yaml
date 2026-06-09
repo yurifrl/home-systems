@@ -17,51 +17,23 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-  ignoreDifferences:
-    # The bundled VPA admission-controller cert hook (kept off below, but
-    # guard anyway) and webhook caBundle are mutated at runtime.
-    - group: admissionregistration.k8s.io
-      kind: MutatingWebhookConfiguration
-      jsonPointers:
-        - /webhooks/0/clientConfig/caBundle
   sources:
     # Fairwinds Goldilocks — recommends resource requests/limits and surfaces
     # them in a dashboard. https://github.com/FairwindsOps/goldilocks
     #
-    # VPA is provided by Goldilocks' own bundled sub-chart (vpa.enabled=true)
-    # so we run a single chart instead of a separate standalone VPA install.
-    # We run the recommender ONLY (updater + admission-controller disabled):
-    # Goldilocks needs recommendations, not auto-eviction/mutation of pods.
+    # VPA is NOT bundled here: we reuse the standalone VPA install
+    # (k8s/applications/vertical-pod-autoscaler.yaml, namespace `vpa`), which
+    # is tuned and wired into monitoring. Goldilocks just reads its
+    # recommendations.
     - repoURL: https://charts.fairwinds.com/stable
       chart: goldilocks
       targetRevision: "10.3.0"
       helm:
         releaseName: goldilocks
         valuesObject:
-          # Bundled Vertical Pod Autoscaler (recommender-only).
+          # Reuse the external standalone VPA (namespace `vpa`).
           vpa:
-            enabled: true
-            updater:
-              enabled: false
-            admissionController:
-              enabled: false
-            recommender:
-              # Match the floors the previous standalone install used so tiny
-              # home-lab workloads don't get unrealistically small targets.
-              extraArgs:
-                v: "4"
-                pod-recommendation-min-cpu-millicores: 50
-                pod-recommendation-min-memory-mb: 128
-              resources:
-                limits:
-                  memory: 512Mi
-                requests:
-                  cpu: 50m
-                  memory: 256Mi
-              tolerations:
-                - key: node-role.kubernetes.io/control-plane
-                  operator: Exists
-                  effect: NoSchedule
+            enabled: false
           metrics-server:
             enabled: false
 
