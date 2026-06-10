@@ -73,7 +73,7 @@ nuqPrefetchWorker:
 nuqPostgres:
   replicaCount: 1
   image:
-    repository: docker.io/winkkgmbh/nuq-postgres
+    repository: ghcr.io/firecrawl/nuq-postgres
     tag: latest
     pullPolicy: Always
   auth:
@@ -105,13 +105,13 @@ rabbitmq:
       cpu: "500m"
 
 image:
-  repository: docker.io/winkkgmbh/firecrawl
+  repository: ghcr.io/firecrawl/firecrawl
   tag: "latest"
   pullPolicy: Always
   dockerSecretEnabled: false
 
 playwright:
-  repository: docker.io/winkkgmbh/firecrawl-playwright
+  repository: ghcr.io/firecrawl/playwright-service
   tag: "latest"
   pullPolicy: Always
   replicaCount: 1
