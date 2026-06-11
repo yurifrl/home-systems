@@ -1,0 +1,127 @@
+# ============================================================================
+# crossplane-proxmox: replicate the proxmox/ VM configs as Crossplane managed
+# resources via provider-proxmox-bpg (group virtualenvironmentvm.proxmoxbpg.crossplane.io).
+#
+# Source of truth for the VM specs is proxmox/100.conf (talos-pc01) and
+# proxmox/101.conf (windows). The two VMs are templated explicitly (not a
+# generic loop) so the mapping to each .conf line stays auditable.
+# ============================================================================
+
+# --- ProviderConfig + connection to the Proxmox API ------------------------
+providerConfig:
+  name: proxmox
+  # Proxmox VE API endpoint (trailing slash required by the bpg provider).
+  endpoint: https://192.168.68.112:8006/
+  # Self-signed cluster cert -> skip TLS verification.
+  insecure: true
+  # SSH user the provider uses for disk-import / file ops that the API can't do.
+  sshUsername: root
+
+# --- Credentials Secret ----------------------------------------------------
+# The provider reads a single Secret key holding a JSON blob with the bpg
+# client config (endpoint/username/password/insecure/ssh_username...).
+# Prefer an API token over the root password in real use.
+credentials:
+  secretName: proxmox-creds
+  secretNamespace: crossplane-system
+  secretKey: credentials
+  # When true, an ExternalSecret materialises the JSON blob from 1Password
+  # (ClusterSecretStore "onepassword"). The 1Password item must expose a field
+  # named like `credentials` whose value is the JSON blob the bpg provider
+  # expects. When false, the Secret must be created out-of-band.
+  externalSecret:
+    enabled: true
+    onepasswordKey: crossplane-proxmox
+    property: credentials
+
+# Orphan keeps the live VMs if the MR is deleted while importing existing infra;
+# flip to Delete once reconciliation is trusted.
+deletionPolicy: Orphan
+
+# Whether Crossplane should power the VMs on after creating them. Kept false by
+# default because both VMs passthrough the SAME GPU (0000:01:00.0) and cannot
+# run simultaneously, and to avoid surprise boots of the cluster node.
+started: false
+
+# Common Proxmox placement defaults (overridable per VM below).
+defaults:
+  nodeName: pc01
+  datastoreId: local-lvm
+  bridge: vmbr0
+
+# ============================================================================
+# VM definitions (mirror proxmox/100.conf and proxmox/101.conf 1:1).
+# ============================================================================
+vms:
+  # --- proxmox/100.conf : talos-pc01 (VM 100) ------------------------------
+  talosPc01:
+    enabled: true
+    name: talos-pc01
+    vmId: 100
+    onBoot: true                       # onboot: 1
+    machine: q35                       # machine: q35
+    scsiHardware: virtio-scsi-single   # scsihw: virtio-scsi-single
+    osType: l26                        # ostype: l26
+    smbiosUuid: ce1486a7-768b-4012-bfb9-debba1aac475
+    bootOrder: [scsi0, ide2, net0]     # boot: order=scsi0;ide2;net0
+    cpu:
+      cores: 4                         # cores: 4
+      sockets: 1                       # sockets: 1
+      type: x86-64-v2-AES              # cpu: x86-64-v2-AES
+    memoryMiB: 12288                   # memory: 12288
+    netMac: BC:24:11:45:72:B6          # net0 virtio mac
+    disk:
+      interface: scsi0                 # scsi0: local-lvm:...,size=30G
+      sizeGiB: 30
+    cdrom:
+      interface: ide2                  # ide2: local:iso/...,media=cdrom
+      fileId: local:iso/talos-1.10.0-metal-amd64.iso
+    vga: std                           # vga: std
+    hostpci:
+      - device: hostpci0               # hostpci0: 0000:01:00.0,pcie=1
+        id: "0000:01:00.0"
+        pcie: true
+
+  # --- proxmox/101.conf : windows (VM 101) ---------------------------------
+  # DISABLED: provider-proxmox-bpg allows only ONE cdrom block, but this config
+  # has TWO optical drives (ide0 virtio-win + ide2 Win11). Cannot be replicated
+  # faithfully with this provider. See README "Known limitations".
+  windows:
+    enabled: false
+    name: windows
+    vmId: 101
+    onBoot: false                      # (no onboot line -> default off)
+    bios: ovmf                         # bios: ovmf
+    machine: pc-q35-9.2+pve1           # machine: pc-q35-9.2+pve1
+    scsiHardware: virtio-scsi-pci      # scsihw: virtio-scsi-pci
+    osType: win11                      # ostype: win11
+    smbiosUuid: 4623676c-033a-4880-9727-675adef0023b
+    bootOrder: [virtio0, ide2, ide0, net0]   # boot: order=virtio0;ide2;ide0;net0
+    cpu:
+      cores: 4                         # cores: 4
+      sockets: 1                       # sockets: 1
+      type: host                       # cpu: host,hidden=1,flags=+pcid
+      flags: ["+pcid"]
+    memoryMiB: 12288                   # memory: 12288
+    netMac: BC:24:11:AE:67:41          # net0 virtio mac
+    disk:
+      interface: virtio0               # virtio0: local-lvm:...,iothread=1,size=64G
+      sizeGiB: 64
+      iothread: true
+    efiDisk:
+      type: "4m"                       # efidisk0: ...,efitype=4m,pre-enrolled-keys=1
+      preEnrolledKeys: true
+    tpmState:
+      version: v2.0                    # tpmstate0: ...,version=v2.0
+    cdroms:
+      - interface: ide0                # ide0: local:iso/virtio-win.iso
+        fileId: local:iso/virtio-win.iso
+      - interface: ide2                # ide2: local:iso/Win11_24H2_English_x64.iso
+        fileId: local:iso/Win11_24H2_English_x64.iso
+    hostpci:
+      - device: hostpci0               # hostpci0: 01:00.0,pcie=1,x-vga=1
+        id: "0000:01:00.0"
+        pcie: true
+        xvga: true
+      - device: hostpci1               # hostpci1: 01:00.1
+        id: "0000:01:00.1"

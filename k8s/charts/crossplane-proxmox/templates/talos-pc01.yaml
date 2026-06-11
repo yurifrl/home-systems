@@ -1,0 +1,60 @@
+{{- $v := .Values.vms.talosPc01 }}
+{{- if $v.enabled }}
+{{- $d := .Values.defaults }}
+apiVersion: virtualenvironmentvm.proxmoxbpg.crossplane.io/v1alpha1
+kind: EnvironmentVM
+metadata:
+  name: {{ $v.name }}
+  annotations:
+    # bpg provider imports/owns a VM by its bare numeric id (it Atoi's this).
+    crossplane.io/external-name: {{ $v.vmId | quote }}
+spec:
+  deletionPolicy: {{ .Values.deletionPolicy }}
+  providerConfigRef:
+    name: {{ .Values.providerConfig.name }}
+  forProvider:
+    nodeName: {{ $d.nodeName }}
+    vmId: {{ $v.vmId }}
+    name: {{ $v.name }}
+    machine: {{ $v.machine }}
+    scsiHardware: {{ $v.scsiHardware }}
+    onBoot: {{ $v.onBoot }}
+    started: {{ .Values.started }}
+    bootOrder:
+      {{- range $v.bootOrder }}
+      - {{ . }}
+      {{- end }}
+    agent:
+      - enabled: true
+    operatingSystem:
+      - type: {{ $v.osType }}
+    cpu:
+      - cores: {{ $v.cpu.cores }}
+        sockets: {{ $v.cpu.sockets }}
+        type: {{ $v.cpu.type | quote }}
+    memory:
+      - dedicated: {{ $v.memoryMiB }}
+    smbios:
+      - uuid: {{ $v.smbiosUuid }}
+    vga:
+      - type: {{ $v.vga }}
+    networkDevice:
+      - bridge: {{ $d.bridge }}
+        model: virtio
+        macAddress: {{ $v.netMac }}
+        firewall: true
+    disk:
+      - datastoreId: {{ $d.datastoreId }}
+        interface: {{ $v.disk.interface }}
+        size: {{ $v.disk.sizeGiB }}
+    cdrom:
+      - enabled: true
+        interface: {{ $v.cdrom.interface }}
+        fileId: {{ $v.cdrom.fileId }}
+    hostpci:
+      {{- range $v.hostpci }}
+      - device: {{ .device }}
+        id: {{ .id | quote }}
+        pcie: {{ .pcie | default false }}
+      {{- end }}
+{{- end }}

@@ -1,0 +1,8 @@
+apiVersion: v2
+name: crossplane-proxmox
+description: >-
+  Proxmox VE QEMU virtual machines as Crossplane managed resources, replicating
+  the hand-written configs in proxmox/ (talos-pc01 = VM 100, windows = VM 101).
+type: application
+version: 0.1.0
+appVersion: "1.15.0"

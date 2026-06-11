@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: crossplane-proxmox
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # After the providers are installed and healthy (providers app is -1).
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: crossplane-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      # ProviderConfig/MR CRDs are installed by the providers app; tolerate them
+      # being briefly absent on first sync.
+      - SkipDryRunOnMissingResource=true
+  source:
+    repoURL: https://github.com/yurifrl/home-systems.git
+    targetRevision: HEAD
+    path: k8s/charts/crossplane-proxmox

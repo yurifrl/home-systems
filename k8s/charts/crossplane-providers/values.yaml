@@ -10,6 +10,12 @@ providers:
     package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v2.5.4
   - name: provider-gcp-iam
     package: xpkg.upbound.io/upbound/provider-gcp-iam:v2.5.4
+  # Proxmox VE provider (Upjet-generated wrapper around bpg/terraform-provider-proxmox).
+  # Community provider; manages QEMU VMs as cluster-scoped managed resources
+  # (group virtualenvironmentvm.proxmoxbpg.crossplane.io). Used by the
+  # crossplane-proxmox chart to replicate the proxmox/ VM configs.
+  - name: provider-proxmox-bpg
+    package: xpkg.upbound.io/valkiriaaquaticamendi/provider-proxmox-bpg:v1.15.0
 
 # ExternalSecret that materialises the GCP service-account key JSON used by the
 # ProviderConfig. The 1Password item must expose a field whose value is the raw

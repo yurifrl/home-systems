@@ -1,0 +1,38 @@
+apiVersion: proxmoxbpg.crossplane.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: {{ .Values.providerConfig.name }}
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: {{ .Values.credentials.secretNamespace }}
+      name: {{ .Values.credentials.secretName }}
+      key: {{ .Values.credentials.secretKey }}
+{{- if .Values.credentials.externalSecret.enabled }}
+---
+# JSON blob consumed by the bpg provider, synced from 1Password via External
+# Secrets. The 1Password item must expose a property whose value is the JSON:
+#   {"endpoint":"https://192.168.68.112:8006/","username":"root@pam",
+#    "password":"...","insecure":"true","ssh_username":"root"}
+# (or an api_token instead of username/password).
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: {{ .Values.credentials.secretName }}
+  namespace: {{ .Values.credentials.secretNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: onepassword
+    kind: ClusterSecretStore
+  target:
+    name: {{ .Values.credentials.secretName }}
+  data:
+    - secretKey: {{ .Values.credentials.secretKey }}
+      remoteRef:
+        key: {{ .Values.credentials.externalSecret.onepasswordKey }}
+        property: {{ .Values.credentials.externalSecret.property }}
+{{- end }}

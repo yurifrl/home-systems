@@ -1,0 +1,76 @@
+{{- $v := .Values.vms.windows }}
+{{- if $v.enabled }}
+{{- $d := .Values.defaults }}
+apiVersion: virtualenvironmentvm.proxmoxbpg.crossplane.io/v1alpha1
+kind: EnvironmentVM
+metadata:
+  name: {{ $v.name }}
+  annotations:
+    # Import/own VM {{ $v.vmId }} on the target node by its numeric id.
+    crossplane.io/external-name: {{ $d.nodeName }}/{{ $v.vmId }}
+spec:
+  deletionPolicy: {{ .Values.deletionPolicy }}
+  providerConfigRef:
+    name: {{ .Values.providerConfig.name }}
+  forProvider:
+    nodeName: {{ $d.nodeName }}
+    vmId: {{ $v.vmId }}
+    name: {{ $v.name }}
+    bios: {{ $v.bios }}
+    machine: {{ $v.machine }}
+    scsiHardware: {{ $v.scsiHardware }}
+    onBoot: {{ $v.onBoot }}
+    started: {{ .Values.started }}
+    bootOrder:
+      {{- range $v.bootOrder }}
+      - {{ . }}
+      {{- end }}
+    agent:
+      - enabled: true
+    operatingSystem:
+      - type: {{ $v.osType }}
+    cpu:
+      - cores: {{ $v.cpu.cores }}
+        sockets: {{ $v.cpu.sockets }}
+        type: {{ $v.cpu.type | quote }}
+        flags:
+          {{- range $v.cpu.flags }}
+          - {{ . | quote }}
+          {{- end }}
+    memory:
+      - dedicated: {{ $v.memoryMiB }}
+    smbios:
+      - uuid: {{ $v.smbiosUuid }}
+    networkDevice:
+      - bridge: {{ $d.bridge }}
+        model: virtio
+        macAddress: {{ $v.netMac }}
+        firewall: true
+    disk:
+      - datastoreId: {{ $d.datastoreId }}
+        interface: {{ $v.disk.interface }}
+        size: {{ $v.disk.sizeGiB }}
+        iothread: {{ $v.disk.iothread | default false }}
+    efiDisk:
+      - datastoreId: {{ $d.datastoreId }}
+        type: {{ $v.efiDisk.type | quote }}
+        preEnrolledKeys: {{ $v.efiDisk.preEnrolledKeys }}
+    tpmState:
+      - datastoreId: {{ $d.datastoreId }}
+        version: {{ $v.tpmState.version | quote }}
+    cdrom:
+      {{- range $v.cdroms }}
+      - enabled: true
+        interface: {{ .interface }}
+        fileId: {{ .fileId }}
+      {{- end }}
+    hostpci:
+      {{- range $v.hostpci }}
+      - device: {{ .device }}
+        id: {{ .id | quote }}
+        pcie: {{ .pcie | default false }}
+        {{- if .xvga }}
+        xvga: {{ .xvga }}
+        {{- end }}
+      {{- end }}
+{{- end }}
