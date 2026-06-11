@@ -1,0 +1,70 @@
+# Talos machineconfig for talos-pc01 (Proxmox VM 100, provisioned by Crossplane
+# via k8s/charts/crossplane-proxmox). Role: worker, amd64, virtio-scsi disk
+# (/dev/sda). Crossplane creates/boots the VM; this applies the OS install:
+#   op inject -i nostos/templates/talos-pc01.yaml -o /tmp/talos-pc01.final.yaml
+#   talosctl apply-config --insecure -n <vm-ip> -f /tmp/talos-pc01.final.yaml
+version: v1alpha1
+debug: false
+persist: true
+
+machine:
+  type: worker
+  token: "op://kubernetes/talos/MACHINE_TOKEN"
+  ca:
+    crt: "op://kubernetes/talos/MACHINE_CA_CRT"
+    key: ""
+  certSANs:
+    - 192.168.68.104
+  kubelet:
+    image: ghcr.io/siderolabs/kubelet:v1.32.1
+    defaultRuntimeSeccompProfileEnabled: true
+    disableManifestsDirectory: true
+  network:
+    hostname: pc01
+    interfaces:
+      - interface: eth0
+        dhcp: false
+        addresses:
+          - 192.168.68.104/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.68.1
+    nameservers:
+      - 192.168.68.1
+      - 8.8.8.8
+  install:
+    disk: /dev/sda
+    image: factory.talos.dev/installer/8f04ea6b6016f12a593fa8a87441270075c648cb75482c2d9d3db8cecda47da1:v1.13.3
+    wipe: true
+    extraKernelArgs:
+      - talos.dashboard.disabled=0
+  features:
+    rbac: true
+    stableHostname: true
+    apidCheckExtKeyUsage: true
+    diskQuotaSupport: true
+    kubePrism:
+      enabled: true
+      port: 7445
+    hostDNS:
+      enabled: true
+      forwardKubeDNSToHost: true
+
+cluster:
+  id: "op://kubernetes/talos/CLUSTER_ID"
+  secret: "op://kubernetes/talos/CLUSTER_SECRET"
+  controlPlane:
+    endpoint: https://192.168.68.100:6443
+  clusterName: talos-default
+  network:
+    cni:
+      name: none
+    dnsDomain: cluster.local
+    podSubnets:
+      - 10.244.0.0/16
+    serviceSubnets:
+      - 10.96.0.0/12
+  token: "op://kubernetes/talos/CLUSTER_TOKEN"
+  ca:
+    crt: "op://kubernetes/talos/CLUSTER_CA_CRT"
+    key: ""
