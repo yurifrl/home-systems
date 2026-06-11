@@ -64,7 +64,9 @@ isos:
     fileName: talos-1.10.0-metal-amd64.iso
     url: https://github.com/siderolabs/talos/releases/download/v1.10.0/metal-amd64.iso
   virtioWin:
-    enabled: true
+    # Build INGREDIENT for the Win11 combined ISO (hack/build-win11-combined.sh),
+    # not a VM cdrom, so it is not reconciled as a Crossplane managed resource.
+    enabled: false
     fileName: virtio-win.iso
     url: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
   win11:
