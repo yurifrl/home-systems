@@ -1,0 +1,29 @@
+{{- /*
+ISO install media as Crossplane managed resources (EnvironmentDownloadFile).
+Satisfies the bpg provider's create-time ISO-existence check declaratively.
+*/ -}}
+{{- $iso := .Values.isos }}
+{{- $d := .Values.defaults }}
+{{- range $key, $img := (dict "talos" $iso.talos "virtioWin" $iso.virtioWin "win11" $iso.win11) }}
+{{- if $img.enabled }}
+apiVersion: virtualenvironmentdownloadfile.proxmoxbpg.crossplane.io/v1alpha1
+kind: EnvironmentDownloadFile
+metadata:
+  name: iso-{{ $img.fileName | lower | replace "_" "-" | replace "." "-" }}
+  annotations:
+    crossplane.io/external-name: {{ $iso.datastoreId }}:iso/{{ $img.fileName }}
+spec:
+  deletionPolicy: {{ $.Values.deletionPolicy }}
+  providerConfigRef:
+    name: {{ $.Values.providerConfig.name }}
+  forProvider:
+    nodeName: {{ $d.nodeName }}
+    contentType: iso
+    datastoreId: {{ $iso.datastoreId }}
+    fileName: {{ $img.fileName }}
+    url: {{ $img.url | quote }}
+    overwrite: true
+    verify: false
+---
+{{- end }}
+{{- end }}

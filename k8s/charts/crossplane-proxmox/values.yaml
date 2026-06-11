@@ -49,6 +49,30 @@ defaults:
   datastoreId: local-lvm
   bridge: vmbr0
 
+# --- ISO images (EnvironmentDownloadFile managed resources) ----------------
+# Known limitation #1: the bpg provider validates ISO volumes at VM-create
+# time, so the install media must exist on the `local` datastore first. These
+# are reconciled by Crossplane (provider tells Proxmox to fetch the URL), so
+# the prerequisite is itself declarative instead of a manual upload.
+#   - Talos + virtio-win have stable direct URLs.
+#   - Win11 has NO stable Microsoft URL; set isos.win11.url to a self-hosted
+#     copy (or build via UUP dump and host it) and flip enabled: true.
+isos:
+  datastoreId: local
+  talos:
+    enabled: true
+    fileName: talos-1.10.0-metal-amd64.iso
+    url: https://github.com/siderolabs/talos/releases/download/v1.10.0/metal-amd64.iso
+  virtioWin:
+    enabled: true
+    fileName: virtio-win.iso
+    url: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+  win11:
+    # No stable upstream URL; provide a self-hosted copy then enable.
+    enabled: false
+    fileName: Win11_24H2_English_x64.iso
+    url: ""
+
 # ============================================================================
 # VM definitions (mirror proxmox/100.conf and proxmox/101.conf 1:1).
 # ============================================================================
