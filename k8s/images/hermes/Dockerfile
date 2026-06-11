@@ -58,6 +58,7 @@ RUN apt-get update \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends gh nodejs \
     && pip install "hermes-agent[all,messaging]==${HERMES_VERSION}" \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && apt-get purge -y gcc python3-dev libffi-dev \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
