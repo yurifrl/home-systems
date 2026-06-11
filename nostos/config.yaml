@@ -103,3 +103,36 @@ nodes:
     overlay: rpi_generic
     # arm64 (rpi_generic overlay): tailscale + iscsi-tools + util-linux-tools
     schematic_id: d0e797e79d4e8c53a843776a1a5b57a3429aaaf7e8e3246d35df5df9f915da86
+  vm01:
+    # VMware Fusion VM on Apple Silicon (arm64). Not PXE/TPI-bootable: boot the
+    # VM from the Talos arm64 ISO, then `talosctl apply-config --insecure`.
+    # mac is only needed to satisfy validation; set the VM's real MAC if you
+    # ever wire up PXE. EDIT: set the real IP and install_disk.
+    mac: "00:0c:29:00:00:01"
+    ip: 192.168.68.120
+    role: worker
+    arch: arm64
+    install_disk: /dev/vda
+    template: vm01.yaml
+    # arm64 generic VM: tailscale + iscsi-tools + util-linux-tools, NO overlay.
+    # Generate at https://factory.talos.dev (metal/arm64) and paste the id here.
+    schematic_id: 8f04ea6b6016f12a593fa8a87441270075c648cb75482c2d9d3db8cecda47da1
+    # boot.method is unused for a manually-ISO-booted VM (render ignores it),
+    # but config validation only accepts pxe|tpi, so we set pxe.
+    boot:
+      method: pxe
+  pc01:
+    # Bare-metal Proxmox VE host (Gigabyte B450 Aorus Elite V2, AMI UEFI,
+    # Realtek GbE, dual M.2 NVMe). PXE-booted into the Proxmox installer
+    # instead of Talos; nostos resolves the newest Proxmox release at serve
+    # time. Once Proxmox is on disk it hosts a Talos worker VM + a Windows VM.
+    mac: "fc:3c:d7:27:66:17"
+    ip: 192.168.68.101
+    role: worker
+    arch: amd64
+    install_disk: /dev/nvme0n1
+    os:
+      name: proxmox
+      version: latest
+    boot:
+      method: pxe
