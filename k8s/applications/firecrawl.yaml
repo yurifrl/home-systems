@@ -108,18 +108,19 @@ spec:
                 memory: "256Mi"
                 cpu: "500m"
           nuqPostgres:
-            # Turned OFF (2026-06-10): postgres scaled to zero to relieve dell01.
-            # The NUQ workers / api that depend on it will error - accepted.
-            replicaCount: 0
+            # Re-enabled (2026-06-10). Ephemeral: no PVC/volume - emptyDir only
+            # (persistence.enabled=false), queue state is disposable. Lean
+            # requests/limits, just enough for the NUQ queue DB.
+            replicaCount: 1
             persistence:
               enabled: false
             resources:
               requests:
                 memory: "128Mi"
-                cpu: "50m"
+                cpu: "100m"
               limits:
                 memory: "512Mi"
-                cpu: "500m"
+                cpu: "1"
           rabbitmq:
             resources:
               requests:
