@@ -85,3 +85,4 @@
 {"id":"int-51df6edc1b7f806a6ed91647049b8a15","kind":"field_change","created_at":"2026-06-07T23:42:45.749915Z","actor":"Yuri","issue_id":"home-systems-jfr.6","extra":{"field":"status","new_value":"closed","old_value":"in_progress"}}
 {"id":"int-6f0f8f79a7016871e76c85fb7e259b03","kind":"field_change","created_at":"2026-06-08T02:51:41.576946Z","actor":"Yuri","issue_id":"home-systems-jfr.6","extra":{"field":"status","new_value":"open","old_value":"closed"}}
 {"id":"int-29fa67208ca690da97dfb6143c5b7cfc","kind":"field_change","created_at":"2026-06-08T03:04:15.168307Z","actor":"Yuri","issue_id":"home-systems-jfr.6","extra":{"field":"status","new_value":"closed","old_value":"open"}}
+{"id":"int-dba6be78ba3f2eec1a9c4f5edbb10088","kind":"field_change","created_at":"2026-06-08T15:44:50.13873Z","actor":"Yuri","issue_id":"home-systems-8zk","extra":{"field":"status","new_value":"in_progress","old_value":"open"}}
