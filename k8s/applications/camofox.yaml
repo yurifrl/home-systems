@@ -35,12 +35,12 @@ spec:
         valuesObject:
           deployments:
             - name: camofox
-              # Pin to dell01: it's amd64, hosts hermes, and has the headroom
-              # for headless Firefox. The arm64 nodes (tp1/tp4) already carry
-              # firecrawl's 7 pods and OOM-killed RabbitMQ when camofox
-              # landed on tp4 alongside redis/postgres/rabbitmq.
+              # Pin to pc01 (amd64, ~12Gi RAM, mostly idle). Moved off dell01
+              # (2026-06-11): headless Firefox + firecrawl were OOM-killing the
+              # 8Gi sole control-plane. pc01 has ample headroom; hermes still
+              # reaches camofox in-cluster via CAMOFOX_URL (Service is global).
               nodeSelector:
-                kubernetes.io/hostname: dell01
+                kubernetes.io/hostname: pc01
               # dell01 is the control-plane node and carries the standard
               # NoSchedule taint; tolerate it (same pattern as hermes).
               tolerations:

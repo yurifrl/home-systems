@@ -43,9 +43,14 @@ spec:
           # Stateful pods (postgres/rabbitmq/redis) are tiny next to the
           # workers, so co-locating everything on dell01 is the clean
           # answer.
+          # Pin ALL firecrawl pods to pc01 (amd64, ~12Gi RAM, mostly idle).
+          # Moved off dell01 (2026-06-11): firecrawl's working set kept
+          # tripping Talos' node-wide OOM-killer on the 8Gi sole control-plane,
+          # taking apiserver/scheduler/cilium (and hermes) down with it. pc01
+          # is amd64 so the official ghcr images (incl. nuq-postgres) run as-is.
           global:
             nodeSelector:
-              kubernetes.io/hostname: dell01
+              kubernetes.io/hostname: pc01
             tolerations:
               - key: node-role.kubernetes.io/control-plane
                 operator: Exists
