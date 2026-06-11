@@ -6,8 +6,8 @@ kind: EnvironmentVM
 metadata:
   name: {{ $v.name }}
   annotations:
-    # Import/own VM {{ $v.vmId }} on the target node by its numeric id.
-    crossplane.io/external-name: {{ $d.nodeName }}/{{ $v.vmId }}
+    # Import/own VM by its bare numeric id (the bpg provider Atoi's external-name).
+    crossplane.io/external-name: {{ $v.vmId | quote }}
 spec:
   deletionPolicy: {{ .Values.deletionPolicy }}
   providerConfigRef:
@@ -59,11 +59,9 @@ spec:
       - datastoreId: {{ $d.datastoreId }}
         version: {{ $v.tpmState.version | quote }}
     cdrom:
-      {{- range $v.cdroms }}
       - enabled: true
-        interface: {{ .interface }}
-        fileId: {{ .fileId }}
-      {{- end }}
+        interface: {{ $v.cdrom.interface }}
+        fileId: {{ $v.cdrom.fileId }}
     hostpci:
       {{- range $v.hostpci }}
       - device: {{ .device }}

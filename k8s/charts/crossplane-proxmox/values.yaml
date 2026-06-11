@@ -107,9 +107,12 @@ vms:
         pcie: true
 
   # --- proxmox/101.conf : windows (VM 101) ---------------------------------
-  # DISABLED: provider-proxmox-bpg allows only ONE cdrom block, but this config
-  # has TWO optical drives (ide0 virtio-win + ide2 Win11). Cannot be replicated
-  # faithfully with this provider. See README "Known limitations".
+  # provider-proxmox-bpg allows only ONE cdrom block (verified: "Too many cdrom
+  # blocks"). proxmox/101.conf used TWO (ide0 virtio-win + ide2 Win11) plus a
+  # 3rd autounattend CD. We collapse all of that into ONE combined ISO
+  # (Win11 media + virtio viostor driver + autounattend.xml at root), built by
+  # hack/build-win11-combined.sh and placed on the local datastore. This both
+  # satisfies the single-cdrom limit and makes the install hands-free.
   windows:
     enabled: false
     name: windows
@@ -137,11 +140,9 @@ vms:
       preEnrolledKeys: true
     tpmState:
       version: v2.0                    # tpmstate0: ...,version=v2.0
-    cdroms:
-      - interface: ide0                # ide0: local:iso/virtio-win.iso
-        fileId: local:iso/virtio-win.iso
-      - interface: ide2                # ide2: local:iso/Win11_24H2_English_x64.iso
-        fileId: local:iso/Win11_24H2_English_x64.iso
+    cdrom:                             # single combined ISO (one-cdrom limit)
+      interface: ide2
+      fileId: local:iso/Win11_24H2_combined.iso
     hostpci:
       - device: hostpci0               # hostpci0: 01:00.0,pcie=1,x-vga=1
         id: "0000:01:00.0"
