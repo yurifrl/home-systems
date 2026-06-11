@@ -67,18 +67,8 @@ spec:
           extractWorker:
             enabled: false
 
-          # --- NUQ / postgres stack DISABLED (2026-06-10) -------------------
-          # dell01 (sole control-plane, ~7.6Gi RAM) was OOM-spiralling: the
-          # node-wide OOM-killer kept SIGKILLing the apiserver/scheduler/
-          # controller-manager, cilium, etc. The NUQ queue (nuq-worker +
-          # nuq-postgres + nuq-prefetch + rabbitmq) is the heaviest, most
-          # optional slice of firecrawl for our hobby/low-use scraping, so
-          # scale it to zero / disable it. Hermes only does 1-2 URL browser
-          # scrapes; the redis/bull path (api + worker + playwright + redis)
-          # covers that. Revert by restoring replicaCount/enabled below if a
-          # job actually needs the NUQ engine.
           nuqWorker:
-            replicaCount: 0
+            replicaCount: 1
             resources:
               requests:
                 memory: "384Mi"
@@ -93,8 +83,23 @@ spec:
           # instead of per-pod limits.
           resources:
             enabled: true
+          api:
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "1Gi"
+                cpu: "1"
+          worker:
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "50m"
+              limits:
+                memory: "768Mi"
+                cpu: "1"
           nuqPrefetchWorker:
-            enabled: false
             resources:
               requests:
                 memory: "128Mi"
@@ -102,9 +107,9 @@ spec:
               limits:
                 memory: "384Mi"
                 cpu: "500m"
-          # Disable postgres: scale to zero (chart has no enabled flag, but
-          # replicaCount:0 leaves only the empty Deployment/Service, 0 pods).
           nuqPostgres:
+            # Turned OFF (2026-06-10): postgres scaled to zero to relieve dell01.
+            # The NUQ workers / api that depend on it will error - accepted.
             replicaCount: 0
             persistence:
               enabled: false
@@ -115,9 +120,7 @@ spec:
               limits:
                 memory: "512Mi"
                 cpu: "500m"
-          # RabbitMQ is only the NUQ broker - useless without nuq-workers.
           rabbitmq:
-            enabled: false
             resources:
               requests:
                 memory: "256Mi"
@@ -125,25 +128,6 @@ spec:
               limits:
                 memory: "512Mi"
                 cpu: "500m"
-          # --- realistic limits for the kept core (api/worker/playwright) ---
-          # Tightened so each container's own cgroup limit OOM-kills just that
-          # pod instead of the node-wide killer reaping the control plane.
-          api:
-            resources:
-              requests:
-                memory: "256Mi"
-                cpu: "100m"
-              limits:
-                memory: "768Mi"
-                cpu: "1"
-          worker:
-            resources:
-              requests:
-                memory: "256Mi"
-                cpu: "50m"
-              limits:
-                memory: "512Mi"
-                cpu: "750m"
           playwright:
             resources:
               requests:

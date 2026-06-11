@@ -93,27 +93,8 @@ spec:
                       cpu: 50m
                       memory: 256Mi
                     limits:
-                      # Headless Firefox + the node server realistically sit
-                      # around 400-700Mi; cap at 768Mi so the container's own
-                      # cgroup OOM-kills just camofox instead of the node-wide
-                      # killer reaping dell01's control plane.
-                      cpu: "1"
-                      memory: 768Mi
+                      cpu: "500m"
+                      memory: 512Mi
           services:
             - name: camofox
               port: 9377
-          # Expose camofox on the public .live Cloudflare domain
-          # (camofox.syscd.live). Other domains stay off - this is an
-          # internal browser API that hermes also reaches in-cluster via
-          # CAMOFOX_URL.
-          virtualServices:
-            - name: camofox
-              service:
-                name: camofox
-                namespace: camofox
-                port: 9377
-              domains:
-                live: true
-                tech: false
-                xyz: false
-                dev: false
