@@ -46,6 +46,10 @@ spec:
         model: virtio
         macAddress: {{ $v.netMac }}
         firewall: true
+    {{- if $v.vga }}
+    vga:
+      - type: {{ $v.vga }}
+    {{- end }}
     disk:
       - datastoreId: {{ $d.datastoreId }}
         interface: {{ $v.disk.interface }}
@@ -62,6 +66,7 @@ spec:
       - enabled: true
         interface: {{ $v.cdrom.interface }}
         fileId: {{ $v.cdrom.fileId }}
+    {{- if $v.passthrough }}
     hostpci:
       {{- range $v.hostpci }}
       - device: {{ .device }}
@@ -71,4 +76,5 @@ spec:
         xvga: {{ .xvga }}
         {{- end }}
       {{- end }}
+    {{- end }}
 {{- end }}

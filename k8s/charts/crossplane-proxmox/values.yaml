@@ -119,6 +119,14 @@ vms:
     enabled: false
     name: windows
     vmId: 101
+    # proxmox/101.conf documents TWO variants: an install-time "# vnc" (std VGA)
+    # variant and a production "# no vnc" GPU-passthrough variant. They cannot
+    # both apply at once, and the GPU (0000:01:00.0) is also used by talos-pc01,
+    # so only one VM can own it at a time.
+    #   install:    vga=std,  passthrough=false  (observable, no GPU conflict)
+    #   production: vga="",    passthrough=true   (requires talos-pc01 stopped)
+    vga: std
+    passthrough: false
     onBoot: false                      # (no onboot line -> default off)
     bios: ovmf                         # bios: ovmf
     machine: pc-q35-9.2+pve1           # machine: pc-q35-9.2+pve1

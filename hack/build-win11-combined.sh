@@ -42,7 +42,7 @@ cp "$AUTOUNATTEND" "$WORK/iso/autounattend.xml"
 
 # 4) repack as a BIOS+UEFI bootable ISO (Windows boot files)
 xorriso -as mkisofs \
-  -iso-level 3 -udf -volid "WIN11_24H2" \
+  -iso-level 3 -full-iso9660-filenames -volid "WIN11_24H2" \
   -b boot/etfsboot.com -no-emul-boot -boot-load-size 8 -boot-info-table \
   -eltorito-alt-boot -e efi/microsoft/boot/efisys.bin -no-emul-boot \
   -o "$OUT" "$WORK/iso"
