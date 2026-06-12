@@ -27,7 +27,7 @@ spec:
     # recommendations.
     - repoURL: https://charts.fairwinds.com/stable
       chart: goldilocks
-      targetRevision: "10.3.0"
+      targetRevision: "10.4.0"
       helm:
         releaseName: goldilocks
         valuesObject:
