@@ -3,7 +3,7 @@
 # so the one-cdrom limit of provider-proxmox-bpg is respected while still:
 #   - booting the Windows 11 installer,
 #   - carrying the virtio (viostor/NetKVM) drivers under \virtio, and
-#   - auto-running proxmox/autounattend.xml for a hands-free install.
+#   - auto-running the chart's autounattend.xml for a hands-free install.
 #
 # Run on the Proxmox host (Debian). Produces:
 #   /var/lib/vz/template/iso/Win11_24H2_combined.iso
@@ -12,7 +12,7 @@
 # Inputs already present on the host:
 #   - a base Win11 24H2 ISO (built via UUP dump; see UUID below)
 #   - virtio-win.iso  (downloaded as a Crossplane EnvironmentDownloadFile)
-#   - autounattend.xml (this repo: proxmox/autounattend.xml, scp'd to /root)
+#   - autounattend.xml (this repo: k8s/charts/crossplane-proxmox/files/autounattend.xml, scp'd to /root)
 set -euo pipefail
 
 ISO_DIR=/var/lib/vz/template/iso
