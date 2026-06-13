@@ -38,9 +38,12 @@ credentials:
 # flip to Delete once reconciliation is trusted.
 deletionPolicy: Orphan
 
-# Whether Crossplane should power the VMs on after creating them. Kept false by
-# default because both VMs passthrough the SAME GPU (0000:01:00.0) and cannot
-# run simultaneously, and to avoid surprise boots of the cluster node.
+# Default power state. Per-VM `started:` (vms.talosPc01.started /
+# vms.windows.started) overrides this. Because both VMs passthrough the SAME
+# GPU (0000:01:00.0), AT MOST ONE may be `started: true` with passthrough at a
+# time. To switch GPU ownership, flip the two `started:` values in one commit
+# and let Crossplane stop one and start the other (do NOT `qm stop` by hand --
+# Crossplane would just restart it to match desired state).
 started: false
 
 # Common Proxmox placement defaults (overridable per VM below).
@@ -85,6 +88,7 @@ vms:
     name: talos-pc01
     vmId: 100
     onBoot: true                       # onboot: 1
+    started: true                      # GPU owner by default (cluster worker)
     machine: q35                       # machine: q35
     scsiHardware: virtio-scsi-single   # scsihw: virtio-scsi-single
     osType: l26                        # ostype: l26
@@ -128,6 +132,7 @@ vms:
     vga: std
     passthrough: false
     onBoot: false                      # (no onboot line -> default off)
+    started: false                     # off by default; flip on to take the GPU
     bios: ovmf                         # bios: ovmf
     machine: pc-q35-9.2+pve1           # machine: pc-q35-9.2+pve1
     scsiHardware: virtio-scsi-pci      # scsihw: virtio-scsi-pci
