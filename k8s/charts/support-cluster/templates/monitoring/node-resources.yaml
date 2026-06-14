@@ -1,6 +1,6 @@
-# Node resource-depletion alerts (CPU, memory, load), evaluated by VMAlert
-# (selectAllByDefault) and routed to discord via the VMAlertmanagerConfig in
-# this chart. Disk/inode depletion is covered separately in disk.yaml.
+# Node resource-depletion alerts (CPU, memory) — critical-only, evaluated by
+# VMAlert (selectAllByDefault) and routed to discord via the VMAlertmanagerConfig
+# in this chart. Disk/inode depletion is covered separately in disk.yaml.
 #
 # All exprs filter to job=~".*node-exporter.*" so the duplicate
 # kubernetes-services-annotations scrape of node-exporter is excluded and each
@@ -22,20 +22,6 @@ spec:
     # ----------------------------------------------------------------
     - name: node-memory.rules
       rules:
-        - alert: NodeMemoryHigh
-          expr: |
-            (
-              node_memory_MemAvailable_bytes{job=~".*node-exporter.*"}
-              / node_memory_MemTotal_bytes{job=~".*node-exporter.*"} * 100 < 15
-            )
-          for: 15m
-          labels:
-            severity: warning
-            service: node-memory
-          annotations:
-            summary: "Node memory is running low"
-            description: "Node {{ `{{ $labels.instance }}` }} has only {{ `{{ printf \"%.1f\" $value }}` }}% memory available."
-
         - alert: NodeMemoryCritical
           expr: |
             (
@@ -57,21 +43,6 @@ spec:
     # ----------------------------------------------------------------
     - name: node-cpu.rules
       rules:
-        - alert: NodeCPUHigh
-          expr: |
-            (
-              1 - avg by (instance) (
-                rate(node_cpu_seconds_total{job=~".*node-exporter.*",mode="idle"}[5m])
-              )
-            ) * 100 > 90
-          for: 15m
-          labels:
-            severity: warning
-            service: node-cpu
-          annotations:
-            summary: "Node CPU utilisation is high"
-            description: "Node {{ `{{ $labels.instance }}` }} CPU utilisation has been above 90% ({{ `{{ printf \"%.1f\" $value }}` }}%) for 15m."
-
         - alert: NodeCPUCritical
           expr: |
             (
@@ -88,21 +59,3 @@ spec:
             summary: "Node CPU is saturated"
             description: "Node {{ `{{ $labels.instance }}` }} CPU utilisation has been above 97% ({{ `{{ printf \"%.1f\" $value }}` }}%) for 30m."
 
-    # ----------------------------------------------------------------
-    # Load average relative to core count (node-exporter)
-    # ----------------------------------------------------------------
-    - name: node-load.rules
-      rules:
-        - alert: NodeLoadHigh
-          expr: |
-            (
-              node_load5{job=~".*node-exporter.*"}
-              / count by (instance) (node_cpu_seconds_total{job=~".*node-exporter.*",mode="idle"})
-            ) > 2
-          for: 15m
-          labels:
-            severity: warning
-            service: node-load
-          annotations:
-            summary: "Node load average exceeds 2x core count"
-            description: "Node {{ `{{ $labels.instance }}` }} 5m load average is {{ `{{ printf \"%.2f\" $value }}` }}x the number of CPU cores."
