@@ -34,6 +34,13 @@ spec:
                 repository: ghcr.io/yurifrl/syscd-app
                 tag: latest
                 pullPolicy: Always
+              # Image is built amd64-only; pin to the amd64 control-plane node.
+              nodeSelector:
+                kubernetes.io/hostname: dell01
+              tolerations:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+                  effect: NoSchedule
               containerPort: 8080
               readinessProbe:
                 httpGet:

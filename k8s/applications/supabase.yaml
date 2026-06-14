@@ -58,6 +58,22 @@ spec:
                 - secretKey: password
                   key: supabase
                   property: dashboard-password
+            # CNPG declarative role passwords live in the `databases` namespace
+            # (the pg cluster's ns) as a basic-auth secret. All Supabase login
+            # roles share secret.db.password; postgres.yaml points each role's
+            # passwordSecret at this `supabase-db` secret.
+            - name: supabase-db-roles
+              namespace: databases
+              targetName: supabase-db
+              template:
+                type: kubernetes.io/basic-auth
+                data:
+                  username: supabase_admin
+                  password: "{{ .password }}"
+              data:
+                - secretKey: password
+                  key: supabase
+                  property: db-password
           # CNPG also needs the db password as a secret in the databases
           # namespace (authenticator/supabase_admin passwordSecret). Mirror it.
           virtualServices:
