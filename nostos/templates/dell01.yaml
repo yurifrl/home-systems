@@ -24,6 +24,23 @@ machine:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
+    # Node-protection: reserve memory for the OS + kubelet + control-plane
+    # static pods so the kubepods cgroup (capped at Allocatable via the
+    # default enforceNodeAllocatable: [pods]) can never consume the whole
+    # 7.6Gi node. Without this, Allocatable ~= Capacity and a workload spike
+    # OOMs the node itself, taking down etcd/apiserver (2026-06-14 incident).
+    # evictionHard makes the kubelet shed low-priority pods before that limit.
+    extraConfig:
+      systemReserved:
+        cpu: 150m
+        memory: 512Mi
+      kubeReserved:
+        cpu: 150m
+        memory: 512Mi
+      evictionHard:
+        memory.available: "500Mi"
+        nodefs.available: "10%"
+        imagefs.available: "10%"
     # Force kubelet to register with the LAN IP, not the Tailscale IP.
     # Otherwise pod-to-Service VIP traffic gets DNAT'd to the TS IP and
     # dropped by Tailscale's netfilter rules (pods aren't TS-authorized
