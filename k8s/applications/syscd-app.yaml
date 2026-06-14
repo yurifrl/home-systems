@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: syscd-app
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: syscd-app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    # Support chart renders the Deployment + Service + istio VirtualService.
+    # The app is the static web build of the syscd Expo app, served by busybox
+    # httpd on :8080 (ghcr.io/yurifrl/syscd-app, built by syscd-app CI).
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          deployments:
+            - name: syscd-app
+              image:
+                repository: ghcr.io/yurifrl/syscd-app
+                tag: latest
+                pullPolicy: Always
+              containerPort: 8080
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: http
+                initialDelaySeconds: 5
+                periodSeconds: 10
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+          services:
+            - name: syscd-app
+              port: 80
+              targetPort: http
+          virtualServices:
+            - name: syscd-app
+              hosts:
+                - app.syscd.live
+                - app.syscd.tech
+                - app.syscd.xyz
+                - app.syscd.dev
+              service:
+                name: syscd-app
+                namespace: syscd-app
+                port: 80

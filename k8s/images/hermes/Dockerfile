@@ -16,22 +16,29 @@
 # volumes (/opt/data PVC, /tmp emptyDir, HOME=/opt/data/home). kubectl is bundled
 # so the agent can use its (read-only + pod-delete) RBAC.
 
-# renovate: datasource=docker depName=python versioning=docker
 # Pinned to 3.13: hermes-agent (below) requires Python >=3.11,<3.14, so 3.14
 # breaks `pip install hermes-agent`. Do not bump past 3.13 until upstream
 # hermes-agent supports 3.14.
+# renovate: datasource=docker depName=python versioning=docker
 ARG PYTHON_VERSION=3.13-slim-trixie
 FROM python:${PYTHON_VERSION}
 
 # renovate: datasource=pypi depName=hermes-agent versioning=pep440
 ARG HERMES_VERSION=0.16.0
 
-# renovate: datasource=github-releases depName=kubernetes/kubectl
+# renovate: datasource=github-releases depName=kubernetes/kubectl versioning=semver
 ARG KUBECTL_VERSION=1.33.0
+
+# renovate: datasource=github-releases depName=astral-sh/uv versioning=semver
+ARG UV_VERSION=0.11.21
+
+# renovate: datasource=node-version depName=node versioning=node
+ARG NODE_VERSION=22
+
 ARG TARGETARCH
 
 ENV PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
+    UV_NO_CACHE=1 \
     HERMES_HOME=/opt/data
 
 # Runtime deps used by the agent's built-in tools (ripgrep, media, git, gh).
@@ -55,10 +62,10 @@ RUN apt-get update \
     && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
         > /etc/apt/sources.list.d/github-cli.list \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt-get install -y --no-install-recommends gh nodejs \
-    && pip install "hermes-agent[all,messaging]==${HERMES_VERSION}" \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh \
+    && uv pip install --system "hermes-agent[all,messaging]==${HERMES_VERSION}" \
     && apt-get purge -y gcc python3-dev libffi-dev \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*

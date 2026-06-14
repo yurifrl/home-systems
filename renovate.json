@@ -13,7 +13,16 @@
   "prHourlyLimit": 0,
   "packageRules": [
     {
-      "description": "Auto-merge Hermes image base (python) and app (hermes-agent) bumps",
+      "description": "Auto-merge all updates by default",
+      "automerge": true
+    },
+    {
+      "description": "Require manual approval for critical infrastructure",
+      "matchPackageNames": ["istio", "istiod", "istio-cni", "istio-ztunnel", "cilium", "zigbee2mqtt"],
+      "automerge": false
+    },
+    {
+      "description": "Auto-merge all Hermes Dockerfile dependency bumps (python, hermes-agent, kubectl, uv, node)",
       "matchManagers": ["custom.regex"],
       "matchFileNames": ["k8s/images/hermes/Dockerfile"],
       "automerge": true,

@@ -24,6 +24,7 @@ spec:
     - repoURL: git@github.com:yurifrl/home-systems-values.git
       targetRevision: HEAD
       ref: values
+   
     # App: the hermes chart. All container/init/sidecar wiring lives in the
     # chart itself (driven by structured values: auth.gitLogin, opFiles,
     # gitRepos). Inline shell blobs were replaced by the in-image `hctl` CLI.
@@ -67,6 +68,10 @@ spec:
             enabled: true
           gitRepos:
             enabled: true
+            repos:
+              - git@github.com:yurifrl/Obsidian.git
+              - git@github.com:yurifrl/home-systems.git
+              - git@github.com:yurifrl/home-systems-values.git
             # Persist /workdir so repos aren't re-cloned from scratch on every
             # pod roll (Obsidian alone is ~1GB; emptyDir made each deploy take
             # ~15min). longhorn-single: no HA replica needed, the repos are

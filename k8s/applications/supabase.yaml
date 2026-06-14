@@ -1,0 +1,106 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: supabase
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: supabase
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  sources:
+    # 1) support chart: ExternalSecrets (1Password -> k8s) + the istio
+    #    VirtualService. The ExternalSecrets pull from the `supabase` 1Password
+    #    item (onepassword ClusterSecretStore) and produce the k8s secrets the
+    #    supabase chart's secretRefs consume below.
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: supabase-jwt
+              namespace: supabase
+              data:
+                - secretKey: anonKey
+                  key: supabase
+                  property: anon-key
+                - secretKey: serviceKey
+                  key: supabase
+                  property: service-key
+                - secretKey: secret
+                  key: supabase
+                  property: jwt-secret
+            - name: supabase-db
+              namespace: supabase
+              data:
+                - secretKey: password
+                  key: supabase
+                  property: db-password
+                - secretKey: database
+                  key: supabase
+                  property: db-database
+            - name: supabase-dashboard
+              namespace: supabase
+              data:
+                - secretKey: username
+                  key: supabase
+                  property: dashboard-username
+                - secretKey: password
+                  key: supabase
+                  property: dashboard-password
+          # CNPG also needs the db password as a secret in the databases
+          # namespace (authenticator/supabase_admin passwordSecret). Mirror it.
+          virtualServices:
+            - name: supabase
+              namespace: supabase
+              host: supabase
+              service:
+                # kong is the single API gateway; service name = <release>-supabase-kong
+                name: supabase-supabase-kong
+                namespace: supabase
+                port: 8000
+
+    # 2) the forked Supabase chart (public OSS repo). DB is external -> CNPG.
+    - repoURL: https://github.com/yurifrl/supabase-deploy.git
+      targetRevision: HEAD
+      path: chart
+      helm:
+        valuesObject:
+          deployment:
+            db:
+              enabled: false   # external Postgres = the CNPG `pg` cluster
+          secret:
+            jwt:
+              secretRef: supabase-jwt
+              secretRefKey:
+                anonKey: anonKey
+                serviceKey: serviceKey
+                secret: secret
+            db:
+              # PostgREST/auth/etc connect here as the authenticator role.
+              host: pg-rw.databases.svc.cluster.local
+              port: 5432
+              database: supabase
+              secretRef: supabase-db
+              secretRefKey:
+                password: password
+                database: database
+            dashboard:
+              secretRef: supabase-dashboard
+              secretRefKey:
+                username: username
+                password: password
+          # istio VirtualService (above) fronts kong; disable the chart's own
+          # k8s Ingress.
+          ingress:
+            enabled: false
