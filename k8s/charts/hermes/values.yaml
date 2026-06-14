@@ -408,6 +408,7 @@ gitRepos:
   enabled: false
   user: ""
   repos: []
+  branch: main
   mountPath: /workdir
   syncInterval: 1h
   # Persist the cloned repos across pod restarts. When disabled (default) the

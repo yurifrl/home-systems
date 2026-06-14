@@ -224,6 +224,7 @@ spec:
             - clone
             - --user={{ .Values.gitRepos.user }}
             - --repos={{ join "," .Values.gitRepos.repos }}
+            - --branch={{ .Values.gitRepos.branch | default "main" }}
             - --dest={{ .Values.gitRepos.mountPath }}
           env:
             - name: HOME

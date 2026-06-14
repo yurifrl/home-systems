@@ -216,11 +216,41 @@ def _parse_repos(spec: str) -> list[str]:
     return [r.strip() for r in spec.split(",") if r.strip()]
 
 
+def _parse_repo_spec(spec: str) -> tuple[str, str]:
+    """Parse 'name' or 'name@branch' into (name, branch). Empty branch = default."""
+    if "@" in spec:
+        name, branch = spec.rsplit("@", 1)
+        return name.strip(), branch.strip()
+    return spec.strip(), ""
+
+
+def _reconcile_branch(repo_dir: str, branch: str) -> None:
+    """Ensure repo is on the expected branch. Fetches and switches if needed."""
+    if not branch:
+        return
+    current = _run(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+        cwd=repo_dir, capture=True, check=True,
+    ).stdout.strip()
+    if current == branch:
+        return
+    _log(f"repos clone: {os.path.basename(repo_dir)} on {current!r}, switching to {branch!r}")
+    _run(["git", "fetch", "origin"], cwd=repo_dir)
+    _run(["git", "checkout", branch], cwd=repo_dir, check=False)
+    _run(["git", "branch", f"--set-upstream-to=origin/{branch}", branch], cwd=repo_dir, check=False)
+
+
 def cmd_repos_clone(args) -> int:
-    """Clone <user>/<name> for each name in --repos into <dest>/<name>."""
+    """Clone <user>/<name> for each name in --repos into <dest>/<name>.
+
+    Repos can be specified as 'name' or 'name@branch'. Default branch is
+    controlled by --branch (defaults to 'main'). If the repo already exists,
+    reconciles: ensures it's on the expected branch.
+    """
     user = args.user.strip()
     repos = _parse_repos(args.repos)
     dest = args.dest
+    default_branch = args.branch
 
     if not user:
         _err("repos clone: --user is required")
@@ -230,14 +260,17 @@ def cmd_repos_clone(args) -> int:
         return 0
 
     os.makedirs(dest, exist_ok=True)
-    for name in repos:
+    for spec in repos:
+        name, branch = _parse_repo_spec(spec)
+        branch = branch or default_branch
         target = os.path.join(dest, name)
         url = f"https://github.com/{user}/{name}.git"
         if os.path.isdir(os.path.join(target, ".git")):
             _log(f"repos clone: {target} already present")
+            _reconcile_branch(target, branch)
             continue
-        _log(f"repos clone: cloning {url} -> {target}")
-        _run(["git", "clone", url, target])
+        _log(f"repos clone: cloning {url} -> {target} (branch: {branch})")
+        _run(["git", "clone", "--branch", branch, url, target])
     return 0
 
 
@@ -262,6 +295,21 @@ def _list_repos(root: str) -> list[str]:
 def _sync_one(repo_dir: str) -> None:
     """One pull/commit/push pass for a single repo. Raises on push failure."""
     name = os.path.basename(repo_dir)
+
+    # Ensure upstream tracking is set before pulling.
+    tracking = _run(
+        ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
+        cwd=repo_dir, capture=True, check=False,
+    )
+    if tracking.returncode != 0:
+        branch = _run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=repo_dir, capture=True, check=True,
+        ).stdout.strip()
+        _log(f"sync: {name} — no upstream, setting to origin/{branch}")
+        _run(["git", "branch", f"--set-upstream-to=origin/{branch}", branch],
+             cwd=repo_dir, check=False)
+
     _log(f"sync: {name} — pull")
     rc = subprocess.run(
         ["git", "pull", "--rebase", "--autostash"],
@@ -375,7 +423,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
     rc = repos.add_parser("clone", help="clone every <user>/<name> into <dest>/<name>")
     rc.add_argument("--user", required=True, help="github user/org")
-    rc.add_argument("--repos", required=True, help="comma-separated list of repo names")
+    rc.add_argument("--repos", required=True, help="comma-separated list of repo names or name@branch")
+    rc.add_argument("--branch", default="main", help="default branch (default: main); per-repo override via name@branch")
     rc.add_argument("--dest", default="/workdir", help="destination directory (default: /workdir)")
     rc.set_defaults(func=cmd_repos_clone)
 
