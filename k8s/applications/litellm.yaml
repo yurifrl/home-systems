@@ -36,10 +36,12 @@ spec:
                       litellm_params:
                         model: openai/gpt-4o
                         api_key: os.environ/OPENAI_API_KEY
+                    - model_name: claude-opus-4
+                      litellm_params:
+                        model: bedrock/anthropic.claude-opus-4-20250514-v1:0
+                        aws_bearer_token: os.environ/AWS_BEARER_TOKEN_BEDROCK
+                        aws_region_name: us-east-1
                   litellm_settings:
-                    # Hard spend cap. NOTE: without a DATABASE_URL the spend
-                    # counter is in-memory and resets when the pod restarts.
-                    # Add Postgres + DATABASE_URL for a persistent budget.
                     max_budget: 25
                     budget_duration: 30d
           deployments:
