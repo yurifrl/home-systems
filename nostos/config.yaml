@@ -101,6 +101,11 @@ nodes:
     install_disk: /dev/sda
     template: rpi01.yaml
     overlay: rpi_generic
+    # USB/SD offline-image install: `nostos flash rpi01 --device /dev/diskN`
+    # writes the image; `nostos node install rpi01` waits for maintenance mode
+    # then applies the machineconfig insecurely (see internal/provisioner/flash).
+    boot:
+      method: flash
     # arm64 (rpi_generic overlay): tailscale + iscsi-tools + util-linux-tools
     schematic_id: d0e797e79d4e8c53a843776a1a5b57a3429aaaf7e8e3246d35df5df9f915da86
   vm01:
