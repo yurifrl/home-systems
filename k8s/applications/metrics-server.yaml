@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metrics-server
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metrics-server
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  sources:
+    # Serves the metrics.k8s.io API (kubectl top + resource-metric HPAs).
+    # Independent of VictoriaMetrics, so HPAs keep working even while the
+    # vmsingle TSDB is unhealthy. https://github.com/kubernetes-sigs/metrics-server
+    - repoURL: https://kubernetes-sigs.github.io/metrics-server/
+      chart: metrics-server
+      targetRevision: "3.12.2"
+      helm:
+        releaseName: metrics-server
+        valuesObject:
+          args:
+            # Talos kubelet serving certs are not signed by the cluster CA,
+            # so metrics-server cannot verify them over TLS. Skip verification
+            # (standard for Talos unless kubelet server-cert rotation is on).
+            - --kubelet-insecure-tls
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+          # Allow scheduling onto the control plane if workers are unavailable.
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
