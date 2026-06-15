@@ -42,95 +42,12 @@ spec:
             # (CNPG manages streaming replication + failover automatically).
             instances: 1
 
-            # PostgreSQL container image: the Supabase-extensions build
-            # (home-systems-jfr.6) so this single cluster can also back Supabase.
-            # Carries wal2json, pgjwt, pgsodium, pg_net, supabase_vault.
-            imageName: ghcr.io/yurifrl/cnpg-postgres:16.10
-
-            # Supabase needs these loaded at server start.
-            postgresql:
-              shared_preload_libraries:
-                - pg_net
-                - pgsodium
-
-            # Declarative role management (reconciled by the operator, also on
-            # an existing cluster). These are the LOGIN roles Supabase services
-            # connect as; all share secret.db.password (the `supabase-db`
-            # secret, key `password`). The roles are first CREATEd (NOLOGIN) in
-            # initdb.postInitSQL below so grants resolve at bootstrap; this block
-            # then makes them LOGIN and sets the password from the secret.
-            roles:
-              - name: supabase_admin
-                ensure: present
-                login: true
-                superuser: true
-                passwordSecret:
-                  name: supabase-db
-              - name: authenticator
-                ensure: present
-                login: true
-                passwordSecret:
-                  name: supabase-db
-              - name: supabase_auth_admin
-                ensure: present
-                login: true
-                createrole: true
-                passwordSecret:
-                  name: supabase-db
-              - name: supabase_storage_admin
-                ensure: present
-                login: true
-                createrole: true
-                passwordSecret:
-                  name: supabase-db
-              - name: supabase_functions_admin
-                ensure: present
-                login: true
-                createrole: true
-                passwordSecret:
-                  name: supabase-db
-
-            # initdb bootstrap (runs ONCE at cluster creation as superuser).
-            # The existing `pg` cluster already bootstrapped, so applying this
-            # needs a ONE-TIME recreate of the (empty) cluster.
-            initdb:
-              database: supabase
-              owner: supabase_admin
-              # Global roles (postgres db). CREATE NOLOGIN first so the GRANTs
-              # resolve; the declarative `roles:` block above flips the admin
-              # ones to LOGIN + sets their password from the secret.
-              postInitSQL:
-                - CREATE ROLE anon NOLOGIN NOINHERIT;
-                - CREATE ROLE authenticated NOLOGIN NOINHERIT;
-                - CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
-                - CREATE ROLE supabase_auth_admin NOLOGIN NOINHERIT CREATEROLE;
-                - CREATE ROLE supabase_storage_admin NOLOGIN NOINHERIT CREATEROLE;
-                - CREATE ROLE supabase_functions_admin NOLOGIN NOINHERIT CREATEROLE;
-                - GRANT anon, authenticated, service_role TO authenticator;
-                - GRANT anon, authenticated, service_role TO supabase_admin WITH ADMIN OPTION;
-                - GRANT supabase_auth_admin, supabase_storage_admin, supabase_functions_admin TO supabase_admin WITH ADMIN OPTION;
-              # Application DB (supabase): extensions + schemas + grants. Runs
-              # as superuser on the supabase database. Service-specific tables
-              # (auth.*, storage.*) are created by each service's own migrations
-              # at startup; this just lays down the schemas they own + grants.
-              postInitApplicationSQL:
-                - CREATE SCHEMA IF NOT EXISTS extensions;
-                - CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
-                - CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
-                - CREATE EXTENSION IF NOT EXISTS pgjwt WITH SCHEMA extensions;
-                - CREATE EXTENSION IF NOT EXISTS pgsodium;
-                - CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
-                - CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION supabase_auth_admin;
-                - CREATE SCHEMA IF NOT EXISTS storage AUTHORIZATION supabase_storage_admin;
-                - CREATE SCHEMA IF NOT EXISTS realtime;
-                - CREATE SCHEMA IF NOT EXISTS graphql_public;
-                - GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-                - GRANT USAGE ON SCHEMA extensions TO anon, authenticated, service_role;
-                - ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
-                - ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO anon, authenticated, service_role;
-                - ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
-                - GRANT ALL ON SCHEMA auth TO supabase_auth_admin;
-                - GRANT ALL ON SCHEMA storage TO supabase_storage_admin;
+            # PostgreSQL container image.
+            # TODO(home-systems-jfr.6): switch to the Supabase-extensions image
+            # once built/published, e.g. ghcr.io/yurifrl/cnpg-postgres:16 .
+            # Default stays on the stock CNPG image so this Cluster is valid and
+            # syncs today.
+            imageName: ghcr.io/cloudnative-pg/postgresql:16
 
             storage:
               storageClass: longhorn-ha
@@ -159,9 +76,12 @@ spec:
                 enabled: false
 
           # ---------------------------------------------------------------------
-          # MANY DATABASES: additional logical DBs beyond `supabase` are each
-          # their own declarative CNPG `Database` CR (one per DB) against this
-          # single instance.
+          # MANY DATABASES: do NOT add extra bootstrap DBs. Each additional
+          # logical DB is its own declarative CNPG `Database` CR (one per DB).
+          # This chart can render them via the top-level `databases:` list, e.g.:
+          #   databases:
+          #     - name: foo
+          #       owner: foo
           # ---------------------------------------------------------------------
 
           # ---------------------------------------------------------------------
