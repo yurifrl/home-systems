@@ -75,7 +75,7 @@ isos:
   win11:
     # No stable upstream URL; provide a self-hosted copy then enable.
     enabled: false
-    fileName: Win11_24H2_English_x64.iso
+    fileName: Win11_24H2_combined.iso
     url: ""
 
 # ============================================================================

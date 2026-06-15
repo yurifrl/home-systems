@@ -22,7 +22,18 @@ spec:
       # ProviderConfig/MR CRDs are installed by the providers app; tolerate them
       # being briefly absent on first sync.
       - SkipDryRunOnMissingResource=true
-  source:
-    repoURL: https://github.com/yurifrl/home-systems.git
-    targetRevision: HEAD
-    path: k8s/charts/crossplane-proxmox
+  sources:
+    # PUBLIC: the chart (templates + non-secret defaults).
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/crossplane-proxmox
+      helm:
+        valueFiles:
+          # Secret-ish overrides (e.g. the Win11 ISO signed URL, windows enable)
+          # come from the PRIVATE values repo, merged at sync time.
+          - $values/proxmox/values.yaml
+    # PRIVATE: real values (signed URLs etc). Repo creds already registered in
+    # ArgoCD (shared with crossplane-gcp).
+    - repoURL: git@github.com:yurifrl/home-systems-values.git
+      targetRevision: HEAD
+      ref: values
