@@ -1,0 +1,13 @@
+#!/bin/sh
+# pgsodium server root-key provider (referenced by pgsodium.getkey_script).
+# Emits a 32-byte key as hex. Generates one on first boot and persists it on
+# the data volume so it is stable across restarts (the key encrypts data;
+# losing it loses pgsodium-encrypted columns / vault secrets).
+set -eu
+KEY_DIR="${PGSODIUM_KEY_DIR:-/var/lib/postgresql/data/pgsodium}"
+KEY_FILE="$KEY_DIR/root.key"
+if [ ! -s "$KEY_FILE" ]; then
+  mkdir -p "$KEY_DIR"
+  head -c 32 /dev/urandom | od -A n -t x1 | tr -d ' \n' > "$KEY_FILE"
+fi
+cat "$KEY_FILE"

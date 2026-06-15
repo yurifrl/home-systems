@@ -130,6 +130,15 @@ COPY --from=builder /usr/lib/postgresql/${PG_MAJOR}/lib/ \
 COPY --from=builder /usr/share/postgresql/${PG_MAJOR}/extension/ \
                     /usr/share/postgresql/${PG_MAJOR}/extension/
 
+# pgsodium server-key script. pgsodium in shared_preload_libraries PANICs at
+# startup unless `pgsodium.getkey_script` (default path below) exists and emits
+# the root key. supabase/postgres ships one; we provide an equivalent that
+# generates a random 32-byte key (hex) on first boot and persists it under the
+# data volume so it survives restarts (losing it = losing pgsodium-encrypted
+# data). Runs as uid 26, which owns PGDATA at runtime.
+COPY pgsodium_getkey /usr/share/postgresql/${PG_MAJOR}/extension/pgsodium_getkey
+RUN chmod 0755 /usr/share/postgresql/${PG_MAJOR}/extension/pgsodium_getkey
+
 # -----------------------------------------------------------------------------
 # TODO: pg_graphql (https://github.com/supabase/pg_graphql)
 #
