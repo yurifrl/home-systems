@@ -351,7 +351,7 @@ securityContext:
   seccompProfile:
     type: RuntimeDefault
 
-priorityClassName: ""
+priorityClassName: "platform-critical"
 runtimeClassName: ""
 nodeSelector: {}
 tolerations: []

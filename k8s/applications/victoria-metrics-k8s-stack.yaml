@@ -80,6 +80,7 @@ spec:
           vmsingle:
             enabled: true
             spec:
+              priorityClassName: platform-critical
               port: "8428"
               retentionPeriod: "30d"
               replicaCount: 1
@@ -110,6 +111,7 @@ spec:
           vmagent:
             enabled: true
             spec:
+              priorityClassName: platform-critical
               port: "8429"
               selectAllByDefault: true
               scrapeInterval: "30s"
@@ -163,6 +165,7 @@ spec:
           vmalert:
             enabled: true
             spec:
+              priorityClassName: platform-critical
               port: "8080"
               selectAllByDefault: true
               evaluationInterval: 20s

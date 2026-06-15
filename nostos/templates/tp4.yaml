@@ -21,6 +21,20 @@ machine:
     image: ghcr.io/siderolabs/kubelet:v1.32.1 # The `image` field is an optional reference to an alternative kubelet image.
     defaultRuntimeSeccompProfileEnabled: true # Enable container runtime default Seccomp profile.
     disableManifestsDirectory: true # The `disableManifestsDirectory` field configures the kubelet to get static pod manifests from the /etc/kubernetes/manifests directory.
+    # Node-protection (see dell01.yaml): reserve memory for OS/kubelet so the
+    # kubepods cgroup is capped below the ~8Gi capacity; evictionHard sheds
+    # low-priority pods before the node OOMs.
+    extraConfig:
+      systemReserved:
+        cpu: 150m
+        memory: 512Mi
+      kubeReserved:
+        cpu: 150m
+        memory: 512Mi
+      evictionHard:
+        memory.available: "500Mi"
+        nodefs.available: "10%"
+        imagefs.available: "10%"
 
     # # The `ClusterDNS` field is an optional reference to an alternative kubelet clusterDNS ip list.
     # clusterDNS:

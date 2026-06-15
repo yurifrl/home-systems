@@ -1,0 +1,16 @@
+{{- /*
+platform-critical: keeps the troubleshooting/control surface (ArgoCD, the
+VictoriaMetrics stack, hermes) alive under node memory pressure. Higher
+priority than default workloads (0) so the kubelet evicts everything else
+first — you keep metrics + GitOps + the dashboard to diagnose the incident.
+Below longhorn-critical (1e9) and system-*-critical so storage/CNI/etcd still
+win. preemptionPolicy=Never: it survives eviction but won't preempt others.
+*/ -}}
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: platform-critical
+value: 1000000
+globalDefault: false
+preemptionPolicy: Never
+description: "Troubleshooting/control plane workloads (argocd, victoria-metrics, hermes). Evicted after default workloads under node pressure."

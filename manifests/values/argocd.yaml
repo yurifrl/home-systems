@@ -12,6 +12,7 @@
 # helm upgrade -n argocd --install argocd argo-cd/argo-cd -f k8s/values/argo.yaml --wait
 global:
   addPrometheusAnnotations: true
+  priorityClassName: platform-critical
 
 controller:
   replicas: 1
