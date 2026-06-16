@@ -1,0 +1,218 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.21.0
+  name: agenttasks.agents.yurifrl.dev
+spec:
+  group: agents.yurifrl.dev
+  names:
+    kind: AgentTask
+    listKind: AgentTaskList
+    plural: agenttasks
+    shortNames:
+    - at
+    singular: agenttask
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.type
+      name: Type
+      type: string
+    - jsonPath: .spec.owner
+      name: Owner
+      type: string
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.podName
+      name: Pod
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: AgentTask is a single unit of remote agent work reconciled into
+          a Pod (+Service).
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: AgentTaskSpec defines the desired state of an AgentTask.
+            properties:
+              activeDeadlineSeconds:
+                description: |-
+                  ActiveDeadlineSeconds is the hard ceiling after which an ephemeral pod is
+                  killed regardless of progress. Ignored for persistent lifecycle.
+                format: int64
+                minimum: 30
+                type: integer
+              lifecycle:
+                default: ephemeral
+                description: |-
+                  Lifecycle selects ephemeral (per-task pod) vs persistent (warm deployment).
+                  Defaults to ephemeral.
+                enum:
+                - ephemeral
+                - persistent
+                type: string
+              output:
+                default: response
+                description: 'Output is the externalization contract: response (default),
+                  commit, or pr.'
+                enum:
+                - response
+                - commit
+                - pr
+                type: string
+              owner:
+                description: |-
+                  Owner is the durable identity that owns this task (e.g. "yuri").
+                  Reconciliation and listing are keyed by owner, not by pi session.
+                minLength: 1
+                type: string
+              prompt:
+                description: Prompt is the task instruction handed to the agent.
+                minLength: 1
+                type: string
+              repo:
+                description: |-
+                  Repo is the git repository the agent operates on (for pr/commit outputs).
+                  Accepts "owner/repo" or a full https URL. Optional for response-only agents.
+                type: string
+              runtime:
+                default: adk
+                description: Runtime selects the execution engine. Defaults to adk.
+                enum:
+                - adk
+                - pi
+                type: string
+              type:
+                description: |-
+                  Type is the agent profile/definition name to run (e.g. "researcher", "worker").
+                  It selects which Agent.md the entrypoint loads.
+                minLength: 1
+                type: string
+            required:
+            - owner
+            - prompt
+            - type
+            type: object
+          status:
+            description: AgentTaskStatus defines the observed state of an AgentTask.
+            properties:
+              artifacts:
+                description: Artifacts are the externalized results (PR URLs, pushed
+                  branches, text refs).
+                items:
+                  type: string
+                type: array
+              completedAt:
+                description: CompletedAt is when the task reached a terminal phase.
+                format: date-time
+                type: string
+              conditions:
+                description: Conditions represent the latest observations of the task
+                  state.
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              message:
+                description: Message is a human-readable detail about the current
+                  phase.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the spec generation last reconciled.
+                format: int64
+                type: integer
+              phase:
+                description: Phase is the current lifecycle phase.
+                type: string
+              podName:
+                description: PodName is the name of the pod backing this task.
+                type: string
+              restarts:
+                description: Restarts counts how many times a crashed pod has been
+                  recreated.
+                format: int32
+                type: integer
+              startedAt:
+                description: StartedAt is when the backing pod first started running.
+                format: date-time
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

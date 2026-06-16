@@ -32,7 +32,7 @@
 
 - [x] 3.1 `AgentTask` CRD types (spec: type, prompt, repo, owner, runtime, lifecycle; status: state, podName, artifacts, restarts)
 - [x] 3.2 Reconciler (ephemeral): AgentTask → Pod (+ Service) with `agent-entrypoint --profile`, env from `agents` secret, ssh volume, owner refs
-- [ ] 3.3 Lifecycle: restart budget, `activeDeadlineSeconds` hard deadline, max-concurrency guard (ephemeral only)
+- [x] 3.3 Lifecycle: restart budget, `activeDeadlineSeconds` hard deadline, max-concurrency guard (ephemeral only)
 - [x] 3.4 Status propagation: pod phase → AgentTask.status; completion/failure surfaced for the gateway to read
 - [ ] 3.5 Reconciler (persistent): persistent definition → Deployment (+ stable Service) addressable by agent name; recreate on death; no hard deadline
 - [ ] 3.6 Persistent agents keep their working copy fresh (periodic `git pull`) and externalize edits via their `output:` contract
@@ -44,7 +44,7 @@
 - [x] 4.3 A2A dispatch: route to a running persistent agent by name, or create an AgentTask and dispatch to the pod once ready; receive push/SSE
 - [ ] 4.4 SSE lifecycle (D6): foreground disconnect → cancel task (with grace/redial window); background → persist result
 - [x] 4.5 Kill chain (D7): `POST /tasks/{id}/cancel` → SIGTERM/delete pod → mark canceled → notify subscribers
-- [ ] 4.6 TTL/stale reaper: tasks past deadline with no subscribers → cancel; prune completed tasks after retention
+- [x] 4.6 TTL/stale reaper: tasks past deadline with no subscribers → cancel; prune completed tasks after retention
 - [x] 4.7 Reconnection API: `GET /tasks?owner=…&acknowledged=false` + `SSE /tasks/stream?owner=…`; `POST /tasks/{id}/ack`
 
 ## 5. pi-remote-agents (pi extension, TypeScript)
@@ -66,8 +66,8 @@
 
 ## 7. Deployment + integration (home-systems)
 
-- [ ] 7.1 `k8s/applications/agents.yaml`: gateway + controller + workstrator via the agents chart + support chart (ExternalSecret `agents`)
-- [ ] 7.2 ExternalSecret `agents` (from the single 1Password `agents` item) in the `agents` namespace; every agent pod mounts it wholesale
-- [ ] 7.3 RBAC: controller (AgentTask + Pods/Services), serviceaccounts; agent pods run with minimal RBAC
+- [x] 7.1 `k8s/applications/agents.yaml`: gateway + controller + workstrator via the agents chart + support chart (ExternalSecret `agents`)
+- [x] 7.2 ExternalSecret `agents` (from the single 1Password `agents` item) in the `agents` namespace; every agent pod mounts it wholesale
+- [x] 7.3 RBAC: controller (AgentTask + Pods/Services), serviceaccounts; agent pods run with minimal RBAC
 - [x] 7.4 (Optional) MCP facade exposing `beads_*` + `agents_*` for MCP clients (hermes); `hermes mcp add`
 - [ ] 7.5 End-to-end validation: (a) pi RemoteAgent research → stream; (b) close laptop / resume; (c) bead → worker → PR; (d) explicit kill; (e) stale TTL reap; (f) persistent Obsidian agent answers a query instantly and commits an edit

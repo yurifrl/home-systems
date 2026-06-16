@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agents-controller
+  namespace: {{ .Values.namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: agents-controller
+rules:
+  - apiGroups: [""]
+    resources: [pods, services]
+    verbs: [create, delete, get, list, patch, update, watch]
+  - apiGroups: ["apps"]
+    resources: [deployments]
+    verbs: [create, delete, get, list, patch, update, watch]
+  - apiGroups: [agents.yurifrl.dev]
+    resources: [agenttasks]
+    verbs: [create, delete, get, list, patch, update, watch]
+  - apiGroups: [agents.yurifrl.dev]
+    resources: [agenttasks/status]
+    verbs: [get, patch, update]
+  - apiGroups: [agents.yurifrl.dev]
+    resources: [agenttasks/finalizers]
+    verbs: [update]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: agents-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: agents-controller
+subjects:
+  - kind: ServiceAccount
+    name: agents-controller
+    namespace: {{ .Values.namespace }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agents-gateway
+  namespace: {{ .Values.namespace }}
+---
+# The gateway creates/deletes AgentTasks and reads their status; it does not
+# manage pods directly (the controller does).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agents-gateway
+  namespace: {{ .Values.namespace }}
+rules:
+  - apiGroups: [agents.yurifrl.dev]
+    resources: [agenttasks]
+    verbs: [create, delete, get, list, watch]
+  - apiGroups: [agents.yurifrl.dev]
+    resources: [agenttasks/status]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agents-gateway
+  namespace: {{ .Values.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agents-gateway
+subjects:
+  - kind: ServiceAccount
+    name: agents-gateway
+    namespace: {{ .Values.namespace }}

@@ -1,0 +1,31 @@
+# Remote agents control plane.
+image:
+  repository: ghcr.io/yurifrl/agents
+  tag: dev
+  pullPolicy: IfNotPresent
+
+# Pull secret for the private image (provisioned by the support-chart ExternalSecret).
+imagePullSecret: ghcr-image-pull-secret
+
+# Secret (the single "agents" 1Password item) mounted wholesale into agent pods
+# and consumed by the gateway/workstrator for tokens.
+secretName: agents
+
+# Namespace agent task pods are created in (defaults to the release namespace).
+namespace: agents
+
+controller:
+  enabled: true
+  # ghcr image; agent task pods use this same image.
+  resources: {}
+
+gateway:
+  enabled: true
+  port: 9090
+  resources: {}
+
+workstrator:
+  enabled: false
+  repo: ""
+  interval: 15s
+  resources: {}

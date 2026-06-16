@@ -1,0 +1,37 @@
+{{- if .Values.workstrator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agents-workstrator
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: agents-workstrator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: agents-workstrator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: agents-workstrator
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecret }}
+      containers:
+        - name: workstrator
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - workstrator
+            - --gateway
+            - "http://agents-gateway.{{ .Values.namespace }}.svc:{{ .Values.gateway.port }}"
+            - --repo
+            - {{ .Values.workstrator.repo | quote }}
+            - --interval
+            - {{ .Values.workstrator.interval | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.secretName }}
+          resources: {{- toYaml .Values.workstrator.resources | nindent 12 }}
+{{- end }}
