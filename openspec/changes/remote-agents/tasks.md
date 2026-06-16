@@ -11,9 +11,9 @@
 
 ## 1. agent-definition (`Agent.md` format)
 
-- [ ] 1.1 Define frontmatter schema: `name`, `runtime` (adk|pi), `model`, `tools` (allowlist), `output` (pr|commit|response), `lifecycle` (ephemeral|persistent); body = instruction
-- [ ] 1.2 `internal/agentmd` parser in `yurifrl/agents.git` (frontmatter + body), with validation + defaults (runtime: adk, output: response)
-- [ ] 1.3 Author initial definitions: `agents/researcher.md` (response/adk), `agents/worker.md` (pr/adk), `agents/obsidian.md` (persistent, keeps the vault warm)
+- [x] 1.1 Define frontmatter schema: `name`, `runtime` (adk|pi), `model`, `tools` (allowlist), `output` (pr|commit|response), `lifecycle` (ephemeral|persistent); body = instruction
+- [x] 1.2 `internal/agentmd` parser in `yurifrl/agents.git` (frontmatter + body), with validation + defaults (runtime: adk, output: response)
+- [x] 1.3 Author initial definitions: `agents/researcher.md` (response/adk), `agents/worker.md` (pr/adk), `agents/obsidian.md` (persistent, keeps the vault warm)
 - [ ] 1.4 Confirm the same `.md` shape loads as a pi-subagents custom agent locally (no remote fields required for local use)
 
 ## 2. remote-agent-runtime (`agent-entrypoint`)
