@@ -67,7 +67,7 @@ isos:
     fileName: talos-1.10.0-metal-amd64.iso
     url: https://github.com/siderolabs/talos/releases/download/v1.10.0/metal-amd64.iso
   virtioWin:
-    # Build INGREDIENT for the Win11 combined ISO (hack/build-win11-combined.sh),
+    # Build INGREDIENT for the Win11 combined ISO (hack/win11-iso/build.sh),
     # not a VM cdrom, so it is not reconciled as a Crossplane managed resource.
     enabled: false
     fileName: virtio-win.iso
@@ -117,7 +117,7 @@ vms:
   # blocks"). proxmox/101.conf used TWO (ide0 virtio-win + ide2 Win11) plus a
   # 3rd autounattend CD. We collapse all of that into ONE combined ISO
   # (Win11 media + virtio viostor driver + autounattend.xml at root), built by
-  # hack/build-win11-combined.sh and placed on the local datastore. This both
+  # hack/win11-iso/build.sh and placed on the local datastore. This both
   # satisfies the single-cdrom limit and makes the install hands-free.
   windows:
     enabled: false

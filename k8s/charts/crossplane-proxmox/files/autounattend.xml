@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Hands-free Win11 24H2 Pro install for Proxmox VM 101 (virtio0 boot disk).
-     Lives at the ROOT of the combined ISO built by hack/build-win11-combined.sh,
+     Lives at the ROOT of the combined ISO built by hack/win11-iso/build.sh,
      which also stages the virtio drivers under \virtio on the same media so the
      single-cdrom provider limit is respected. -->
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
