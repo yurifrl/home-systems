@@ -58,16 +58,16 @@
 
 ## 6. beads-workstrator
 
-- [ ] 6.1 `cmd/workstrator`: `bd init --server --external --readonly` against the Dolt server; poll `bd list --ready --json`
-- [ ] 6.2 Claim (`bd update --claim`), gather context (`bd show`/`comments`/`dep`), dispatch to gateway as a normal client
-- [ ] 6.3 On task completion: `bd comment` (PR URL) + `bd close`; on failure: comment + unclaim
-- [ ] 6.4 Repo mapping: Dolt database/prefix → repo URL (config), with a sane convention default
-- [ ] 6.5 Concurrency + dedup: do not dispatch two tasks for the same bead
+- [x] 6.1 `cmd/workstrator`: `bd init --server --external --readonly` against the Dolt server; poll `bd list --ready --json`
+- [x] 6.2 Claim (`bd update --claim`), gather context (`bd show`/`comments`/`dep`), dispatch to gateway as a normal client
+- [x] 6.3 On task completion: `bd comment` (PR URL) + `bd close`; on failure: comment + unclaim
+- [x] 6.4 Repo mapping: Dolt database/prefix → repo URL (config), with a sane convention default
+- [x] 6.5 Concurrency + dedup: do not dispatch two tasks for the same bead
 
 ## 7. Deployment + integration (home-systems)
 
 - [ ] 7.1 `k8s/applications/agents.yaml`: gateway + controller + workstrator via the agents chart + support chart (ExternalSecret `agents`)
 - [ ] 7.2 ExternalSecret `agents` (from the single 1Password `agents` item) in the `agents` namespace; every agent pod mounts it wholesale
 - [ ] 7.3 RBAC: controller (AgentTask + Pods/Services), serviceaccounts; agent pods run with minimal RBAC
-- [ ] 7.4 (Optional) MCP facade exposing `beads_*` + `agents_*` for MCP clients (hermes); `hermes mcp add`
+- [x] 7.4 (Optional) MCP facade exposing `beads_*` + `agents_*` for MCP clients (hermes); `hermes mcp add`
 - [ ] 7.5 End-to-end validation: (a) pi RemoteAgent research → stream; (b) close laptop / resume; (c) bead → worker → PR; (d) explicit kill; (e) stale TTL reap; (f) persistent Obsidian agent answers a query instantly and commits an edit
