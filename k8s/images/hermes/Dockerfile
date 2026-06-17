@@ -103,6 +103,9 @@ RUN curl -fsSLo /usr/local/bin/kubectl \
         "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${TARGETARCH:-amd64}/kubectl" \
     && chmod 0755 /usr/local/bin/kubectl
 
+# beads (bd) — AI-native issue tracker used by pi agents for task coordination.
+RUN curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
+
 # hctl — in-container helper CLI used by the Helm chart's init/sidecar
 # containers (auth login, op files sync, repos clone, repos sync). One Python
 # entrypoint, stdlib-only, replaces the legacy op-files-sync script and the

@@ -173,6 +173,11 @@ cluster:
         disabled: true
       service: {}
   etcd:
+    # Advertise the etcd peer URL on the Tailscale CGNAT range so offsite
+    # controlplanes (rpi01) can reach this peer cross-LAN without importing
+    # routes. Pairs with rpi01's etcd.advertisedSubnets.
+    advertisedSubnets:
+      - 100.64.0.0/10
     ca:
       crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
       key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"

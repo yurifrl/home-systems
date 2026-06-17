@@ -1,21 +1,24 @@
 # Talos machineconfig TEMPLATE for vm01 (VMware Fusion VM, arm64, Apple Silicon)
-# Role: worker. Boot the VM from the Talos arm64 ISO, then:
-#   talosctl apply-config --insecure -n <vm-ip> -f nostos/state/configs/vm01.yaml
+# Role: control plane. Boot the VM from the Talos arm64 ISO (currently DHCP at
+# 192.168.68.113), then:
+#   talosctl apply-config --insecure -n 192.168.68.113 -f <rendered>
+# After apply+reboot the node comes up static at 192.168.68.113.
 #
 # EDIT BEFORE RENDER:
-#   - every 192.168.68.120   -> the static IP you assign the VM
+#   - every 192.168.68.113   -> the static IP you assign the VM
 #   - install.disk           -> the VM's disk (Fusion virtio = /dev/vda, SATA = /dev/sda)
 version: v1alpha1
 debug: false
 persist: true
 
 machine:
-  type: worker
+  type: controlplane
   token: "op://kubernetes/talos/MACHINE_TOKEN"
   ca:
     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
-    key: ""
-  certSANs: []
+    key: "op://kubernetes/talos/MACHINE_CA_KEY"
+  certSANs:
+    - 192.168.68.113
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
@@ -23,10 +26,10 @@ machine:
   network:
     hostname: vm01
     interfaces:
-      - interface: eth0
+      - interface: ens160
         dhcp: false
         addresses:
-          - 192.168.68.120/24
+          - 192.168.68.113/24
         routes:
           - network: 0.0.0.0/0
             gateway: 192.168.68.1
@@ -34,11 +37,12 @@ machine:
       - 192.168.68.1
       - 8.8.8.8
   install:
-    disk: /dev/vda
+    disk: /dev/nvme0n1
     image: {{ .InstallImage }}
     wipe: true
     extraKernelArgs:
       - talos.dashboard.disabled=0
+      - random.trust_cpu=on
   features:
     rbac: true
     stableHostname: true
@@ -50,6 +54,8 @@ machine:
     hostDNS:
       enabled: true
       forwardKubeDNSToHost: true
+  nodeLabels:
+    node.kubernetes.io/exclude-from-external-load-balancers: ""
 
 cluster:
   id: "op://kubernetes/talos/CLUSTER_ID"
@@ -66,9 +72,60 @@ cluster:
     serviceSubnets:
       - 10.96.0.0/12
   token: "op://kubernetes/talos/CLUSTER_TOKEN"
+  secretboxEncryptionSecret: "op://kubernetes/talos/CLUSTER_SECRETBOXENCRYPTIONSECRET"
   ca:
     crt: "op://kubernetes/talos/CLUSTER_CA_CRT"
-    key: ""
+    key: "op://kubernetes/talos/CLUSTER_CA_KEY"
+  aggregatorCA:
+    crt: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_CRT"
+    key: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_KEY"
+  serviceAccount:
+    key: "op://kubernetes/talos/CLUSTER_SERVICEACCOUNT_KEY"
+  apiServer:
+    image: registry.k8s.io/kube-apiserver:v1.32.1
+    certSANs:
+      - 192.168.68.113
+    disablePodSecurityPolicy: true
+    admissionControl:
+      - name: PodSecurity
+        configuration:
+          apiVersion: pod-security.admission.config.k8s.io/v1alpha1
+          kind: PodSecurityConfiguration
+          defaults:
+            enforce: privileged
+            enforce-version: latest
+            audit: privileged
+            audit-version: latest
+            warn: privileged
+            warn-version: latest
+          exemptions:
+            namespaces:
+              - kube-system
+              - metallb-system
+              - istio-system
+            runtimeClasses: []
+            usernames: []
+    auditPolicy:
+      apiVersion: audit.k8s.io/v1
+      kind: Policy
+      rules:
+        - level: Metadata
+  controllerManager:
+    image: registry.k8s.io/kube-controller-manager:v1.32.1
+  proxy:
+    image: registry.k8s.io/kube-proxy:v1.32.1
+  scheduler:
+    image: registry.k8s.io/kube-scheduler:v1.32.1
+  discovery:
+    enabled: true
+    registries:
+      kubernetes:
+        disabled: true
+      service: {}
+  etcd:
+    ca:
+      crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
+      key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
 ---
 apiVersion: v1alpha1
 kind: ExtensionServiceConfig

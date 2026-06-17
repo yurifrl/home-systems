@@ -16,6 +16,12 @@ machine:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
+    # Register with the LAN IP, never the Tailscale IP — otherwise pod->Service
+    # VIP traffic gets DNAT'd to the TS IP and dropped by Tailscale netfilter
+    # (pods aren't TS-authorized sources). Mirrors dell01.
+    nodeIP:
+      validSubnets:
+        - 192.168.0.0/24
   network:
     hostname: rpi01
     interfaces:
@@ -118,6 +124,11 @@ cluster:
         disabled: true
       service: {}
   etcd:
+    # Advertise the etcd peer URL on the Tailscale CGNAT range so the offsite
+    # peer (dell01) is reachable cross-LAN without importing routes
+    # (--accept-routes is forbidden here; see the tailscale block below).
+    advertisedSubnets:
+      - 100.64.0.0/10
     ca:
       crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
       key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
@@ -127,5 +138,11 @@ kind: ExtensionServiceConfig
 name: tailscale
 environment:
   - TS_AUTHKEY=tailscale://authkey?description=rpi01
-  - TS_EXTRA_ARGS=--accept-routes
+  # NEVER --accept-routes here: rpi01 hosts cluster pods, and importing the
+  # advertised 10.244.0.0/16 route hijacks the pod CIDR (broke cluster-wide
+  # DNS once — see .agents/contexts/remote pi.md). Cross-LAN etcd reach uses
+  # Tailscale CGNAT (100.64.0.0/10) via etcd.advertisedSubnets instead.
+  # --reset clears any previously-persisted tailscale prefs (e.g. a stale
+  # --accept-routes) so `tailscale up` doesn't refuse the new flag set.
+  - TS_EXTRA_ARGS=--reset
   - TS_ROUTES=10.96.0.0/12,192.168.0.0/24
