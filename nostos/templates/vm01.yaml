@@ -1,11 +1,11 @@
 # Talos machineconfig TEMPLATE for vm01 (VMware Fusion VM, arm64, Apple Silicon)
 # Role: control plane. Boot the VM from the Talos arm64 ISO (currently DHCP at
-# 192.168.68.113), then:
-#   talosctl apply-config --insecure -n 192.168.68.113 -f <rendered>
-# After apply+reboot the node comes up static at 192.168.68.113.
+# 192.168.68.90), then:
+#   talosctl apply-config --insecure -n 192.168.68.90 -f <rendered>
+# After apply+reboot the node comes up static at 192.168.68.90.
 #
 # EDIT BEFORE RENDER:
-#   - every 192.168.68.113   -> the static IP you assign the VM
+#   - every 192.168.68.90   -> the static IP you assign the VM
 #   - install.disk           -> the VM's disk (Fusion virtio = /dev/vda, SATA = /dev/sda)
 version: v1alpha1
 debug: false
@@ -18,7 +18,7 @@ machine:
     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
     key: "op://kubernetes/talos/MACHINE_CA_KEY"
   certSANs:
-    - 192.168.68.113
+    - 192.168.68.90
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
@@ -29,7 +29,7 @@ machine:
       - interface: ens160
         dhcp: false
         addresses:
-          - 192.168.68.113/24
+          - 192.168.68.90/24
         routes:
           - network: 0.0.0.0/0
             gateway: 192.168.68.1
@@ -37,12 +37,9 @@ machine:
       - 192.168.68.1
       - 8.8.8.8
   install:
-    disk: /dev/nvme0n1
+    disk: /dev/sda
     image: {{ .InstallImage }}
     wipe: true
-    extraKernelArgs:
-      - talos.dashboard.disabled=0
-      - random.trust_cpu=on
   features:
     rbac: true
     stableHostname: true
@@ -84,7 +81,7 @@ cluster:
   apiServer:
     image: registry.k8s.io/kube-apiserver:v1.32.1
     certSANs:
-      - 192.168.68.113
+      - 192.168.68.90
     disablePodSecurityPolicy: true
     admissionControl:
       - name: PodSecurity

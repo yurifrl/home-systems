@@ -35,6 +35,18 @@ machine:
     nameservers:
       - 192.168.0.1
       - 8.8.8.8
+  time:
+    # Pi 4 has no battery-backed RTC: the clock starts at epoch (1970) on every
+    # boot and MUST NTP-sync before apid can issue valid certs and etcd can run
+    # (a stuck-at-1970 clock breaks the Talos API and etcd entirely). List the
+    # LAN gateway first — it's an IP, so sync doesn't depend on DNS resolving
+    # while the clock is still wrong — then public anycast NTP as fallback.
+    disabled: false
+    servers:
+      - 192.168.0.1
+      - time.cloudflare.com
+      - pool.ntp.org
+    bootTimeout: 3m0s
   install:
     disk: /dev/sda
     image: {{ .InstallImage }}

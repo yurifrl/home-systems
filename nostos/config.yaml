@@ -114,14 +114,15 @@ nodes:
     # mac is only needed to satisfy validation; set the VM's real MAC if you
     # ever wire up PXE. EDIT: set the real IP and install_disk.
     mac: "00:0c:29:b0:c0:b0"
-    ip: 192.168.68.113
+    ip: 192.168.68.90
     role: controlplane
     arch: arm64
-    install_disk: /dev/nvme0n1
+    install_disk: /dev/sda
     template: vm01.yaml
-    # arm64 generic VM: tailscale + iscsi-tools + util-linux-tools, NO overlay.
-    # Generate at https://factory.talos.dev (metal/arm64) and paste the id here.
-    schematic_id: 8f04ea6b6016f12a593fa8a87441270075c648cb75482c2d9d3db8cecda47da1
+    # arm64 VM: tailscale + iscsi-tools + util-linux-tools + entropy kernel args
+    # (random.trust_cpu/bootloader) baked in to fix the ISO crypto/rand stall.
+    # Source: nostos/manifests/schematics/vm01-arm64.yaml
+    schematic_id: 773f49ef0c412e83da0eb190d3b1915aba0c2baf358f4db7589fd843788751ab
     # boot.method is unused for a manually-ISO-booted VM (render ignores it),
     # but config validation only accepts pxe|tpi, so we set pxe.
     boot:
@@ -152,7 +153,7 @@ nodes:
     ip: 192.168.68.104
     role: worker
     arch: amd64
-    install_disk: /dev/sda
+    install_disk: /dev/nvme0n1
     template: talos-pc01.yaml
     schematic_id: 8f04ea6b6016f12a593fa8a87441270075c648cb75482c2d9d3db8cecda47da1
     boot:
