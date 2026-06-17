@@ -37,22 +37,33 @@ machine:
       - 8.8.8.8
   time:
     # Pi 4 has no battery-backed RTC: the clock starts at epoch (1970) on every
-    # boot and MUST NTP-sync before apid can issue valid certs and etcd can run
-    # (a stuck-at-1970 clock breaks the Talos API and etcd entirely). List the
-    # LAN gateway first — it's an IP, so sync doesn't depend on DNS resolving
-    # while the clock is still wrong — then public anycast NTP as fallback.
+    # boot and MUST NTP-sync, or apid mints its TLS cert at 1970 and the node
+    # is locked out of its API. Talos auto-rotates the apid cert once NTP syncs
+    # (docs: time-sync), so a successful sync self-heals the lockout.
+    #
+    # Use IP-LITERAL servers: at (warm) boot DNS may not be ready yet, and the
+    # closest-matching reported failure was public NTP-via-DNS giving up on
+    # reboot (r/TalosLinux). IP literals remove the DNS dependency. Cloudflare
+    # (162.159.200.123) + Google (216.239.35.0) are stable anycast NTP.
     disabled: false
     servers:
-      - 192.168.0.1
-      - time.cloudflare.com
-      - pool.ntp.org
-    bootTimeout: 3m0s
+      - 162.159.200.123
+      - 216.239.35.0
+      - 216.239.35.4
+    bootTimeout: 5m0s
   install:
     disk: /dev/sda
     image: {{ .InstallImage }}
     wipe: true
     extraKernelArgs:
       - talos.dashboard.disabled=0
+      # kexec is broken on Raspberry Pi (bootloader runs on the VideoCore GPU;
+      # kexec skips firmware re-init), so a kexec "warm" reboot leaves the
+      # no-RTC clock stuck at epoch (1970) -> apid cert is minted at 1970 ->
+      # node is locked out of its API until a real cold boot. Disabling the
+      # kexec syscall forces Talos to do a full reboot every time.
+      # Confirmed: Talos maintainer + siderolabs/talos#6046, r/TalosLinux.
+      - kexec_load_disabled=1
   features:
     rbac: true
     stableHostname: true
