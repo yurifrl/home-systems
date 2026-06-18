@@ -25,7 +25,13 @@ machine:
   network:
     hostname: rpi01
     interfaces:
-      - interface: eth0
+      # Match the NIC by its permanent MAC, NOT a kernel name. On this Pi 4 the
+      # onboard ethernet enumerates as `end0` (not `eth0`); a hardcoded `eth0`
+      # silently failed to apply the static address+default route, leaving the
+      # node with no internet -> Tailscale offline -> etcd quorum lost. A MAC
+      # deviceSelector is immune to eth0/end0 naming changes.
+      - deviceSelector:
+          hardwareAddr: e4:5f:01:3c:68:fa
         dhcp: false
         addresses:
           - 192.168.0.170/24

@@ -105,7 +105,7 @@ nodes:
     # image; once the Pi is booted, `nostos apply rpi01` pushes the
     # machineconfig (insecure first-apply auto-detected in maintenance mode).
     boot:
-      method: flash
+      method: pxe
     # arm64 (rpi_generic overlay): tailscale + iscsi-tools + util-linux-tools
     schematic_id: d0e797e79d4e8c53a843776a1a5b57a3429aaaf7e8e3246d35df5df9f915da86
   vm01:
