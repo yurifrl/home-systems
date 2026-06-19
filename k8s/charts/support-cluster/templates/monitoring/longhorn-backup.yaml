@@ -1,0 +1,68 @@
+# Longhorn backup alerts, evaluated by VMAlert (selectAllByDefault) and routed to
+# discord via the VMAlertmanagerConfig in this chart.
+#
+# Longhorn's chart-level monitoring is disabled (k8s/applications/longhorn.yaml
+# monitoring.enabled=false), so instead of relying on its ServiceMonitor we
+# point a VMServiceScrape straight at the longhorn-backend service. The manager
+# exposes /metrics on the "manager" port (9500) unconditionally.
+#
+# longhorn_backup_state enum: 0=New 1=Pending 2=InProgress 3=Completed 4=Error 5=Unknown
+# The recurring "backup-hermes" job has been silently failing (S3 object-lock /
+# retention policy blocks Longhorn's lock files) — these alerts surface that.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: longhorn-manager
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+spec:
+  namespaceSelector:
+    matchNames:
+      - longhorn-system
+  selector:
+    matchLabels:
+      app: longhorn-manager
+  endpoints:
+    - port: manager
+      path: /metrics
+      interval: 30s
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: longhorn-backup-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: longhorn-backup.rules
+      rules:
+        # A backup CR is sitting in Error state. max by(...) collapses the
+        # identical series reported by every longhorn-manager pod so the alert
+        # fires once per (volume, backup), not once per manager replica.
+        - alert: LonghornBackupFailed
+          expr: max by (volume, backup) (longhorn_backup_state) == 4
+          for: 10m
+          labels:
+            severity: warning
+            service: longhorn-backup
+          annotations:
+            summary: "Longhorn backup failed"
+            description: "Backup {{ `{{ $labels.backup }}` }} for volume {{ `{{ $labels.volume }}` }} is in Error state. Check the backup target (S3) and the Backup CR's status.error."
+
+        # No backup metric at all for a volume that has a backup target means the
+        # recurring job never produced a Backup CR (volume detached, job missed,
+        # or the manager can't reach the backupstore). Fires if a backup volume
+        # exists but has zero backups for over a day.
+        - alert: LonghornBackupVolumeEmpty
+          expr: max by (backup_volume) (longhorn_backup_volume_backups_count) == 0
+          for: 24h
+          labels:
+            severity: warning
+            service: longhorn-backup
+          annotations:
+            summary: "Longhorn backup volume has no backups"
+            description: "Backup volume {{ `{{ $labels.backup_volume }}` }} has had zero completed backups for over 24h."
