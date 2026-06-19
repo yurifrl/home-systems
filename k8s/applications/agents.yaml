@@ -42,10 +42,16 @@ spec:
               data:
                 - secretKey: ANTHROPIC_API_KEY
                   key: agents
-                  property: anthropic-api-key
+                  property: ANTHROPIC_API_KEY
+                - secretKey: OPENAI_API_KEY
+                  key: agents
+                  property: OPENAI_API_KEY
                 - secretKey: GITHUB_TOKEN
                   key: agents
-                  property: github-token
-                - secretKey: GIT_EMAIL
+                  property: GITHUB_TOKEN
+                - secretKey: GIT_AUTHOR_NAME
                   key: agents
-                  property: git-email
+                  property: GIT_AUTHOR_NAME
+                - secretKey: GIT_AUTHOR_EMAIL
+                  key: agents
+                  property: GIT_AUTHOR_EMAIL
