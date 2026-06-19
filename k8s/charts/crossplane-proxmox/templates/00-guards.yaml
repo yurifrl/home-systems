@@ -1,0 +1,10 @@
+{{- /*
+  Render-time guards (produce no objects; fail the render on an invalid config).
+  Enforces the shared-GPU invariant in the template, not in a script: you cannot
+  deploy a state where both VMs claim 0000:01:00.0 at once.
+*/ -}}
+{{- $t := .Values.vms.talosPc01 }}
+{{- $w := .Values.vms.windows }}
+{{- if and $t.enabled $w.enabled $t.started $w.started $w.passthrough }}
+{{- fail "GPU conflict: talos-pc01 (hostpci0) and windows (passthrough) are both started. Set one started:false, or windows.passthrough:false (install variant). The GPU 0000:01:00.0 can serve only one VM at a time." }}
+{{- end }}

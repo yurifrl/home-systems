@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "crossplane-proxmox values",
+  "type": "object",
+  "required": ["providerConfig", "credentials", "defaults", "isos", "vms", "preflight", "isoPipeline"],
+  "properties": {
+    "providerConfig": {
+      "type": "object",
+      "required": ["name", "endpoint"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "endpoint": {"type": "string", "pattern": "^https://.+:\\d+/$"},
+        "insecure": {"type": "boolean"},
+        "sshUsername": {"type": "string"}
+      }
+    },
+    "credentials": {
+      "type": "object",
+      "required": ["secretName", "secretNamespace", "secretKey"],
+      "properties": {
+        "secretName": {"type": "string"},
+        "secretNamespace": {"type": "string"},
+        "secretKey": {"type": "string"}
+      }
+    },
+    "deletionPolicy": {"enum": ["Orphan", "Delete"]},
+    "started": {"type": "boolean"},
+    "defaults": {
+      "type": "object",
+      "required": ["nodeName", "datastoreId", "bridge"],
+      "properties": {
+        "nodeName": {"type": "string"},
+        "datastoreId": {"type": "string"},
+        "bridge": {"type": "string"}
+      }
+    },
+    "isos": {
+      "type": "object",
+      "required": ["datastoreId"],
+      "additionalProperties": true
+    },
+    "vms": {
+      "type": "object",
+      "required": ["talosPc01", "windows"],
+      "properties": {
+        "talosPc01": {"$ref": "#/$defs/vm"},
+        "windows": {"$ref": "#/$defs/vm"}
+      }
+    },
+    "preflight": {
+      "type": "object",
+      "required": ["enabled"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "image": {"type": "string"}
+      }
+    },
+    "isoPipeline": {
+      "type": "object",
+      "required": ["enabled", "schedule", "builderImage", "objectName", "win11DownloadName", "signTTLDays"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "schedule": {"type": "string"},
+        "builderImage": {"type": "string", "minLength": 1},
+        "uupId": {"type": "string"},
+        "virtioWinUrl": {"type": "string"},
+        "objectName": {"type": "string"},
+        "win11DownloadName": {"type": "string"},
+        "signTTLDays": {"type": "integer", "minimum": 1, "maximum": 7},
+        "bucket": {"type": "string"},
+        "gcpProject": {"type": "string"},
+        "externalSecret": {"type": "boolean"},
+        "gcsKeySecret": {"type": "string"},
+        "winAdminSecret": {"type": "string"}
+      }
+    }
+  },
+  "$defs": {
+    "vm": {
+      "type": "object",
+      "required": ["enabled", "name", "vmId"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "name": {"type": "string"},
+        "vmId": {"type": "integer", "minimum": 100},
+        "started": {"type": "boolean"},
+        "passthrough": {"type": "boolean"}
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+{{- /*
+  ISO pipeline — fully in-cluster, native CronJob (no Argo, no Dockerfile).
+  Self-heals the Win11 combined ISO:
+    1. if the bucket object is missing -> build it (nixery toolchain, no privileged:
+       7z extracts ISOs, xorriso repacks) and upload
+    2. mint a fresh V4 signed URL (<= signTTLDays)
+    3. patch the win11 EnvironmentDownloadFile .spec.forProvider.url
+  ArgoCD ignores that url field (see applications/crossplane-proxmox.yaml) so the
+  CronJob owns URL rotation while git owns everything else.
+*/ -}}
+{{- if .Values.isoPipeline.enabled }}
+{{- $p := .Values.isoPipeline }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-iso-pipeline
+  namespace: {{ .Release.Namespace }}
+data:
+  autounattend.xml: |
+{{ .Files.Get "files/autounattend.xml" | indent 4 }}
+  run.sh: |
+    #!/usr/bin/env bash
+    # in-cluster Win11 combined-ISO build/upload/sign/patch. fail-fast on deps.
+    set -euo pipefail
+    BUCKET="{{ $p.bucket }}"; OBJECT="{{ $p.objectName }}"; PROJECT="{{ $p.gcpProject }}"
+    MR="{{ $p.win11DownloadName }}"; TTL="{{ $p.signTTLDays }}"
+    : "${WIN_ADMIN_PASSWORD:?missing WIN_ADMIN_PASSWORD secret}"
+    [ -s /creds/key.json ] || { echo "FATAL: GCS key secret not mounted"; exit 1; }
+    gcloud auth activate-service-account --key-file=/creds/key.json --quiet
+    command -v gsutil >/dev/null && command -v xorriso >/dev/null && command -v 7z >/dev/null \
+      || { echo "FATAL: toolchain missing (gsutil/xorriso/7z)"; exit 1; }
+
+    if gsutil -q stat "gs://$BUCKET/$OBJECT" && [ "${FORCE_REBUILD:-0}" != "1" ]; then
+      echo "ISO present in bucket; skipping build."
+    else
+      echo "Building combined ISO..."
+      cd /work
+      UUID="{{ $p.uupId }}"
+      mkdir -p uup && cd uup
+      curl -sL -o pkg.zip "https://uupdump.net/get.php?id=$UUID&pack=en-us&edition=professional&autodl=2"
+      unzip -o pkg.zip >/dev/null && chmod +x uup_download_linux.sh
+      ok=0; for a in $(seq 1 8); do ./uup_download_linux.sh >/work/uup.log 2>&1 && { ok=1; break; }; echo "uup retry $a"; sleep 15; done
+      [ "$ok" = 1 ] || { echo "FATAL: UUP build failed"; tail -20 /work/uup.log; exit 1; }
+      BASE=$(ls /work/uup/*.ISO | head -1)
+      cd /work
+      curl -fL --retry 8 -o virtio.iso "{{ $p.virtioWinUrl }}"
+      rm -rf iso && mkdir -p iso
+      7z x -y -oiso "$BASE" >/dev/null
+      mkdir -p iso/virtio/viostor/w11/amd64 iso/virtio/NetKVM/w11/amd64 vtmp
+      7z x -y -ovtmp virtio.iso "viostor/w11/amd64/*" "NetKVM/w11/amd64/*" >/dev/null
+      cp -a vtmp/viostor/w11/amd64/. iso/virtio/viostor/w11/amd64/
+      cp -a vtmp/NetKVM/w11/amd64/.  iso/virtio/NetKVM/w11/amd64/
+      sed "s|__WIN_ADMIN_PASSWORD__|${WIN_ADMIN_PASSWORD}|g" /cfg/autounattend.xml > iso/autounattend.xml
+      EFI=efi/microsoft/boot/efisys.bin
+      [ -f iso/efi/microsoft/boot/efisys_noprompt.bin ] && EFI=efi/microsoft/boot/efisys_noprompt.bin
+      xorriso -as mkisofs -iso-level 3 -full-iso9660-filenames -volid WIN11_24H2 \
+        -b boot/etfsboot.com -no-emul-boot -boot-load-size 8 -boot-info-table \
+        -eltorito-alt-boot -e "$EFI" -no-emul-boot -o /work/out.iso iso
+      gsutil cp /work/out.iso "gs://$BUCKET/$OBJECT"
+      echo "Uploaded gs://$BUCKET/$OBJECT"
+    fi
+
+    echo "Signing URL (${TTL}d)..."
+    URL=$(gcloud storage sign-url "gs://$BUCKET/$OBJECT" --private-key-file=/creds/key.json \
+          --duration="${TTL}d" --format="value(signed_url)")
+    [ -n "$URL" ] || { echo "FATAL: signing produced empty URL"; exit 1; }
+    kubectl patch environmentdownloadfile.virtualenvironmentdownloadfile.proxmoxbpg.crossplane.io "$MR" \
+      --type=merge -p "{\"spec\":{\"forProvider\":{\"url\":\"$URL\"}}}"
+    echo "Patched $MR url; Proxmox will (re)download on next reconcile if absent."
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-iso-pipeline
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-iso-pipeline
+rules:
+  - apiGroups: ["virtualenvironmentdownloadfile.proxmoxbpg.crossplane.io"]
+    resources: ["environmentdownloadfiles"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-iso-pipeline
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: {{ .Release.Name }}-iso-pipeline}
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Release.Name }}-iso-pipeline
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-iso-pipeline
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: {{ $p.schedule | quote }}          # weekly: re-sign before the URL expires
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 3600
+      template:
+        spec:
+          restartPolicy: Never
+          serviceAccountName: {{ .Release.Name }}-iso-pipeline
+          containers:
+            - name: build
+              image: {{ $p.builderImage }}
+              command: ["bash", "/scripts/run.sh"]
+              env:
+                - name: WIN_ADMIN_PASSWORD
+                  valueFrom: {secretKeyRef: {name: {{ $p.winAdminSecret }}, key: password}}
+              volumeMounts:
+                - {name: scripts, mountPath: /scripts}
+                - {name: cfg, mountPath: /cfg}
+                - {name: creds, mountPath: /creds, readOnly: true}
+                - {name: work, mountPath: /work}
+              resources:
+                requests: {cpu: "1", memory: 2Gi, ephemeral-storage: 20Gi}
+                limits: {memory: 6Gi, ephemeral-storage: 30Gi}
+          volumes:
+            - name: scripts
+              configMap: {name: {{ .Release.Name }}-iso-pipeline, items: [{key: run.sh, path: run.sh}]}
+            - name: cfg
+              configMap: {name: {{ .Release.Name }}-iso-pipeline, items: [{key: autounattend.xml, path: autounattend.xml}]}
+            - name: creds
+              secret: {secretName: {{ $p.gcsKeySecret }}}
+            - name: work
+              emptyDir: {sizeLimit: 25Gi}
+{{- end }}

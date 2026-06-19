@@ -13,6 +13,14 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: crossplane-system
+  # The ISO pipeline CronJob rotates the win11 download URL in-cluster; let it
+  # own that one field so selfHeal doesn't revert the fresh signed URL.
+  ignoreDifferences:
+    - group: virtualenvironmentdownloadfile.proxmoxbpg.crossplane.io
+      kind: EnvironmentDownloadFile
+      name: iso-win11-24h2-combined-iso
+      jsonPointers:
+        - /spec/forProvider/url
   syncPolicy:
     automated:
       prune: true

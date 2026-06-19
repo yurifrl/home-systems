@@ -1,0 +1,68 @@
+{{- /*
+  Preflight — an ArgoCD PreSync hook Job that fails LOUDLY (and blocks the sync)
+  if a hard dependency is missing, instead of letting MRs sit broken:
+    - the bpg provider CRDs are installed
+    - the Proxmox credentials Secret exists
+  Deleted after a successful run.
+*/ -}}
+{{- if .Values.preflight.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-preflight
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-preflight
+  annotations: {argocd.argoproj.io/hook: PreSync, argocd.argoproj.io/hook-delete-policy: HookSucceeded}
+rules:
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-preflight
+  annotations: {argocd.argoproj.io/hook: PreSync, argocd.argoproj.io/hook-delete-policy: HookSucceeded}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: {{ .Release.Name }}-preflight}
+subjects:
+  - {kind: ServiceAccount, name: {{ .Release.Name }}-preflight, namespace: {{ .Release.Namespace }}}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-preflight
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 120
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ .Release.Name }}-preflight
+      containers:
+        - name: check
+          image: {{ .Values.preflight.image }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              fail(){ echo "PREFLIGHT FAIL: $1" >&2; exit 1; }
+              kubectl get crd environmentvms.virtualenvironmentvm.proxmoxbpg.crossplane.io >/dev/null 2>&1 \
+                || fail "provider-proxmox-bpg CRDs not installed (deploy crossplane-providers first)"
+              kubectl -n {{ .Values.credentials.secretNamespace }} get secret {{ .Values.credentials.secretName }} >/dev/null 2>&1 \
+                || fail "Proxmox creds Secret {{ .Values.credentials.secretName }} missing (ExternalSecret/1Password not synced)"
+              echo "preflight OK"
+{{- end }}

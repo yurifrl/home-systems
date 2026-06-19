@@ -165,3 +165,31 @@ vms:
         xvga: true
       - device: hostpci1               # hostpci1: 01:00.1
         id: "0000:01:00.1"
+
+# --- Preflight (ArgoCD PreSync hook): fail the sync if a hard dep is missing ---
+preflight:
+  enabled: true
+  image: nixery.dev/shell/kubectl
+
+# --- ISO pipeline (native CronJob; no Argo, no Dockerfile) -------------------
+# Builds/uploads the Win11 combined ISO if missing, re-signs the GCS URL before
+# it expires, and patches the win11 EnvironmentDownloadFile. Bucket/project are
+# GCP-specific and come from the PRIVATE values overlay; enabled there too.
+isoPipeline:
+  enabled: false
+  schedule: "0 4 * * 1"                 # weekly (URL TTL is 7d) -> always fresh
+  builderImage: nixery.dev/shell/aria2/cabextract/wimlib/p7zip/xorriso/cdrkit/chntpw/google-cloud-sdk/kubectl/curl/unzip/gnused/gnutar/coreutils
+  uupId: f7e8991e-4fd8-4bfd-a404-0de6dccd4191        # Win11 24H2 retail amd64
+  virtioWinUrl: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+  objectName: Win11_24H2_combined.iso
+  win11DownloadName: iso-win11-24h2-combined-iso     # matches downloads.yaml MR name
+  signTTLDays: 7
+  bucket: ""                            # PRIVATE overlay (e.g. syscd-iso-images-...)
+  gcpProject: ""                        # PRIVATE overlay
+  # Secrets materialised from 1Password via ESO:
+  externalSecret: true
+  gcsKeySecret: proxmox-iso-gcs-key
+  gcsOnepasswordItem: crossplane-gcp
+  gcsOnepasswordProperty: creds
+  winAdminSecret: proxmox-win-admin
+  winAdminOnepasswordItem: windows-pc01-admin
