@@ -98,3 +98,9 @@ spec:
           services:
             - name: camofox
               port: 9377
+          virtualServices:
+            - name: camofox
+              service:
+                name: camofox
+                namespace: camofox
+                port: 9377
