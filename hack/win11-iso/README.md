@@ -41,22 +41,28 @@ any machine with Docker/OrbStack. `~20 min`, ~4 GB download.
 REPO=$(git rev-parse --show-toplevel)
 mkdir -p /tmp/iso-build/out
 docker run --rm --privileged \
+  -e WIN_ADMIN_PASSWORD="$(op item get windows-pc01-admin --vault kubernetes --fields password --reveal)" \
   -v "$REPO/k8s/charts/crossplane-proxmox/files:/ctx:ro" \
   -v "$REPO/hack/win11-iso/build.sh:/build.sh:ro" \
   -v /tmp/iso-build/out:/out \
   debian:13 bash /build.sh
 # -> /tmp/iso-build/out/Win11_24H2_combined.iso
+# (autounattend.xml's __WIN_ADMIN_PASSWORD__ is replaced at build time from the
+#  1Password item windows-pc01-admin; the repo never holds the real password.)
 ```
 
 ## 2. Upload to the private bucket (only after a rebuild)
 
 ```bash
-# auth with the GCS SA key from 1Password (item: crossplane-gcp)
+# auth with the GCS SA key from 1Password (item: crossplane-gcp), via a
+# temp keyfile that's removed on exit (never a fixed/world-readable path).
+KEY=$(mktemp); trap 'rm -f "$KEY"' EXIT
 op item get crossplane-gcp --vault kubernetes --fields creds --reveal \
-  | python3 -c "import sys;s=sys.stdin.read().strip();s=s[1:-1] if s.startswith('\"') else s;open('/tmp/gcp-sa.json','w').write(s.replace('\"\"','\"'))"
-gcloud auth activate-service-account --key-file=/tmp/gcp-sa.json
+  | python3 -c "import sys;s=sys.stdin.read().strip();s=s[1:-1] if s.startswith('\"') else s;open('$KEY','w').write(s.replace('\"\"','\"'))"
+gcloud auth activate-service-account --key-file="$KEY"
 gsutil cp /tmp/iso-build/out/Win11_24H2_combined.iso \
   gs://syscd-iso-images-4c4398cd-1a7/Win11_24H2_combined.iso
+gcloud auth revoke --all 2>/dev/null || true
 ```
 
 ## 3. Generate the signed URL and wire it in (the recurring step)

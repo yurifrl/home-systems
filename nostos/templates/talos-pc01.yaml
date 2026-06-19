@@ -19,6 +19,12 @@ machine:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
+    # Pin InternalIP to the LAN subnet. Without this, kubelet picks the
+    # Tailscale 100.x address as InternalIP -> VIP/DNS traffic gets DNAT'd to
+    # the TS IP and dropped (cf. dell01.yaml/rpi01.yaml; DNS-break 2026-06-05).
+    nodeIP:
+      validSubnets:
+        - 192.168.68.0/24
   network:
     hostname: pc01
     interfaces:

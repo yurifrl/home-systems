@@ -22,7 +22,7 @@ spec:
     datastoreId: {{ $iso.datastoreId }}
     fileName: {{ $img.fileName }}
     url: {{ $img.url | quote }}
-    overwrite: true
+    overwrite: false
     verify: false
 ---
 {{- end }}

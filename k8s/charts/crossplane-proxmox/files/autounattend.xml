@@ -77,7 +77,7 @@
           <LocalAccount wcm:action="add">
             <Name>admin</Name>
             <Group>Administrators</Group>
-            <Password><Value>admin</Value><PlainText>true</PlainText></Password>
+            <Password><Value>__WIN_ADMIN_PASSWORD__</Value><PlainText>true</PlainText></Password>
           </LocalAccount>
         </LocalAccounts>
       </UserAccounts>
@@ -85,7 +85,7 @@
         <Username>admin</Username>
         <Enabled>true</Enabled>
         <LogonCount>1</LogonCount>
-        <Password><Value>admin</Value><PlainText>true</PlainText></Password>
+        <Password><Value>__WIN_ADMIN_PASSWORD__</Value><PlainText>true</PlainText></Password>
       </AutoLogon>
       <TimeZone>UTC</TimeZone>
     </component>

@@ -45,6 +45,10 @@ cp -a mnt/viostor/w11/amd64/. iso/virtio/viostor/w11/amd64/
 cp -a mnt/NetKVM/w11/amd64/. iso/virtio/NetKVM/w11/amd64/
 umount mnt
 cp /ctx/autounattend.xml iso/autounattend.xml
+# Inject the Windows admin password at build time (never stored in the repo).
+# Pass it in: docker run -e WIN_ADMIN_PASSWORD="$(op item get windows-pc01-admin --fields password --reveal)" ...
+: "${WIN_ADMIN_PASSWORD:?set WIN_ADMIN_PASSWORD (source from 1Password item windows-pc01-admin)}"
+sed -i "s|__WIN_ADMIN_PASSWORD__|${WIN_ADMIN_PASSWORD}|g" iso/autounattend.xml
 EFISYS=efi/microsoft/boot/efisys.bin
 [ -f iso/efi/microsoft/boot/efisys_noprompt.bin ] && EFISYS=efi/microsoft/boot/efisys_noprompt.bin
 echo "[4/5] UEFI boot image: $EFISYS"

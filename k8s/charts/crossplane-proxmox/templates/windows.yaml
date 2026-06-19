@@ -20,7 +20,7 @@ spec:
     machine: {{ $v.machine }}
     scsiHardware: {{ $v.scsiHardware }}
     onBoot: {{ $v.onBoot }}
-    started: {{ $v.started | default .Values.started }}
+    started: {{ if hasKey $v "started" }}{{ $v.started }}{{ else }}{{ .Values.started }}{{ end }}
     bootOrder:
       {{- range $v.bootOrder }}
       - {{ . }}
