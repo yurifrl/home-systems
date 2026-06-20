@@ -1,12 +1,11 @@
-# Talos machineconfig TEMPLATE for vm01 (VMware Fusion VM, arm64, Apple Silicon)
-# Role: control plane. Boot the VM from the Talos arm64 ISO (currently DHCP at
-# 192.168.68.90), then:
-#   talosctl apply-config --insecure -n 192.168.68.90 -f <rendered>
-# After apply+reboot the node comes up static at 192.168.68.90.
+# Talos machineconfig TEMPLATE for macintel01 (2020 Core i7 / 32GB Intel Mac, amd64)
+# Role: control plane, running as a UTM VM on macOS (x86_64 guest, HVF).
+# Boot the metal-amd64 ISO into maintenance, then `nostos apply macintel01`.
 #
-# EDIT BEFORE RENDER:
-#   - every 192.168.68.90   -> the static IP you assign the VM
-#   - install.disk           -> the VM's disk (Fusion virtio = /dev/vda, SATA = /dev/sda)
+# VERIFY AT MAINTENANCE (UTM names differ; see vm01 lessons):
+#   - network interface name  (vm01 was enp0s1; confirm with `get links`)
+#   - install.disk            (UTM virtio: ISO=vda, hard disk=vdb; confirm with `get disks`)
+#   - enable virtio-rng + a real hard disk in UTM before applying
 version: v1alpha1
 debug: false
 persist: true
@@ -18,18 +17,34 @@ machine:
     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
     key: "op://kubernetes/talos/MACHINE_CA_KEY"
   certSANs:
-    - 192.168.68.90
+    - 192.168.68.91
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
+    extraConfig:
+      systemReserved:
+        cpu: 150m
+        memory: 512Mi
+      kubeReserved:
+        cpu: 150m
+        memory: 512Mi
+      evictionHard:
+        memory.available: "500Mi"
+        nodefs.available: "10%"
+        imagefs.available: "10%"
+    # Register with the LAN IP, not the Tailscale IP (else Service-VIP traffic
+    # gets DNAT'd to the TS IP and dropped — the 2026-06-05 DNS break).
+    nodeIP:
+      validSubnets:
+        - 192.168.68.0/24
   network:
-    hostname: vm01
+    hostname: macintel01
     interfaces:
-      - interface: ens160
+      - interface: enp0s1
         dhcp: false
         addresses:
-          - 192.168.68.90/24
+          - 192.168.68.91/24
         routes:
           - network: 0.0.0.0/0
             gateway: 192.168.68.1
@@ -40,6 +55,8 @@ machine:
     disk: /dev/sda
     image: {{ .InstallImage }}
     wipe: true
+    extraKernelArgs:
+      - talos.dashboard.disabled=0
   features:
     rbac: true
     stableHostname: true
@@ -57,6 +74,8 @@ machine:
 cluster:
   id: "op://kubernetes/talos/CLUSTER_ID"
   secret: "op://kubernetes/talos/CLUSTER_SECRET"
+  # Home lab: control planes also run workloads.
+  allowSchedulingOnControlPlanes: true
   controlPlane:
     endpoint: https://192.168.68.100:6443
   clusterName: talos-default
@@ -81,7 +100,7 @@ cluster:
   apiServer:
     image: registry.k8s.io/kube-apiserver:v1.32.1
     certSANs:
-      - 192.168.68.90
+      - 192.168.68.91
     disablePodSecurityPolicy: true
     admissionControl:
       - name: PodSecurity
@@ -120,6 +139,10 @@ cluster:
         disabled: true
       service: {}
   etcd:
+    # Advertise the etcd peer URL on the Tailscale CGNAT range so all CPs
+    # (incl. offsite rpi01) share one etcd mesh. Pairs with dell01/rpi01/vm01.
+    advertisedSubnets:
+      - 100.64.0.0/10
     ca:
       crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
       key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
@@ -128,6 +151,6 @@ apiVersion: v1alpha1
 kind: ExtensionServiceConfig
 name: tailscale
 environment:
-  - TS_AUTHKEY=tailscale://authkey?description=vm01
-  - TS_EXTRA_ARGS=--accept-routes
-  - TS_ROUTES=10.96.0.0/12,192.168.68.0/24
+  - TS_AUTHKEY=tailscale://authkey?description=macintel01
+  - TS_ROUTES=192.168.68.0/24
+  - TS_EXTRA_ARGS=--reset
