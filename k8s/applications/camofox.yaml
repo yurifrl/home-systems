@@ -69,6 +69,11 @@ spec:
                       value: "9377"
                     - name: MAX_OLD_SPACE_SIZE
                       value: "384"
+                    - name: CAMOFOX_API_KEY
+                      valueFrom:
+                        secretKeyRef:
+                          name: camofox
+                          key: CAMOFOX_API_KEY
                   volumeMounts:
                     - name: dshm
                       mountPath: /dev/shm
@@ -91,10 +96,21 @@ spec:
                   resources:
                     requests:
                       cpu: 50m
-                      memory: 256Mi
-                    limits:
-                      cpu: "500m"
                       memory: 512Mi
+                    limits:
+                      cpu: "1"
+                      # 512Mi OOM-killed headless Firefox on heavy sites
+                      # (Mercado Livre etc); 2Gi gives the renderer room.
+                      memory: 2Gi
+          # Pulls CAMOFOX_API_KEY from the 1Password "camofox" item into a
+          # k8s Secret named "camofox" in this namespace. Assumes the item
+          # has a field labelled CAMOFOX_API_KEY.
+          externalSecrets:
+            - name: camofox
+              data:
+                - secretKey: CAMOFOX_API_KEY
+                  key: camofox
+                  property: CAMOFOX_API_KEY
           services:
             - name: camofox
               port: 9377
