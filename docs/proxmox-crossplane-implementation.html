@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proxmox + Crossplane + Talos/Windows — Implementation Report</title>
+<style>
+  :root{--bg:#0d1117;--panel:#161b22;--border:#30363d;--fg:#e6edf3;--mut:#8b949e;--acc:#58a6ff;--grn:#3fb950;--yel:#d29922;--red:#f85149;--mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+  h1{font-size:30px;margin:0 0 4px}
+  h2{font-size:22px;margin:42px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+  h3{font-size:17px;margin:26px 0 8px;color:var(--acc)}
+  .sub{color:var(--mut);margin:0 0 24px}
+  code,kbd{font-family:var(--mono);font-size:.86em;background:#1f2630;padding:1px 5px;border-radius:4px;color:#d2a8ff}
+  pre{background:#010409;border:1px solid var(--border);border-radius:8px;padding:14px 16px;overflow:auto;font-family:var(--mono);font-size:13px;line-height:1.5}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:14px 0}
+  .path{font-family:var(--mono);font-size:14px;color:var(--grn);font-weight:600}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px;vertical-align:middle}
+  .new{background:rgba(63,185,80,.15);color:var(--grn);border:1px solid rgba(63,185,80,.4)}
+  .mod{background:rgba(210,153,34,.15);color:var(--yel);border:1px solid rgba(210,153,34,.4)}
+  .ext{background:rgba(88,166,255,.12);color:var(--acc);border:1px solid rgba(88,166,255,.35)}
+  .gi{background:rgba(139,148,158,.15);color:var(--mut);border:1px solid rgba(139,148,158,.4)}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#1f2630;color:var(--fg)}
+  td code{white-space:nowrap}
+  .mut{color:var(--mut)}
+  .role{margin:4px 0 10px;color:var(--mut)}
+  ul{margin:6px 0 6px 0;padding-left:22px}
+  li{margin:3px 0}
+  .commit{font-family:var(--mono);color:var(--yel)}
+  .flow{font-family:var(--mono);font-size:12.5px;white-space:pre;background:#010409;border:1px solid var(--border);border-radius:8px;padding:16px;overflow:auto;color:var(--mut)}
+  .done{color:var(--grn)} .pend{color:var(--yel)} .gone{color:var(--mut)}
+  .legend span{margin-right:14px;font-size:12px}
+  a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Proxmox VMs via Crossplane — Implementation</h1>
+<p class="sub">Talos worker + Windows 11 VMs on the <code>pc01</code> Proxmox host, declared as Crossplane managed resources, Talos installed via <code>nostos</code>. Generated file-by-file and change-by-change.</p>
+<p class="legend"><span><span class="tag new">NEW</span> created this work</span><span><span class="tag mod">MODIFIED</span> edited existing</span><span><span class="tag ext">PRE-EXISTING</span> scaffolding I built on</span><span><span class="tag gi">GITIGNORED</span> local-only</span></p>
+
+<h2>1 · Architecture at a glance</h2>
+<div class="flow">  git (PUBLIC: home-systems)            git (PRIVATE: home-systems-values)
+        │  chart + app                        │  signed URL, bucket name, windows-enable
+        ▼                                     ▼
+   ArgoCD  ──────────  merges $values  ──────────►  Crossplane (in talos-default cluster)
+                                                          │  provider-proxmox-bpg (Upjet → bpg TF provider)
+                                                          ▼  Proxmox REST API :8006  +  SSH
+                                              ┌─────────── pc01 Proxmox host ───────────┐
+   GCS (PRIVATE bucket iso-images) ──signed──►│  EnvironmentDownloadFile → local:iso     │
+   GitHub (talos ISO, public URL)  ──URL─────►│  VM 100 talos-pc01   VM 101 windows      │
+                                              └──────────────────────────────────────────┘
+        ▲                                                  ▲
+   1Password (creds: proxmox, gcp, win-admin)        nostos render + talosctl apply --insecure
+                                                       → installs Talos onto VM 100</div>
+
+<h2>2 · File-by-file</h2>
+
+<div class="card">
+  <span class="path">k8s/applications/crossplane-proxmox.yaml</span><span class="tag mod">MODIFIED</span>
+  <p class="role">ArgoCD <code>Application</code> that deploys the chart. Made <b>multi-source</b>: public chart + private <code>$values/proxmox/values.yaml</code> (mirrors <code>crossplane-gcp</code>) so secret-ish overrides stay out of the public repo.</p>
+  <ul><li>Changed <code>source:</code> → <code>sources:</code> (public chart with <code>valueFiles: [$values/proxmox/values.yaml]</code> + private repo ref <code>values</code>).</li>
+  <li>Commit <span class="commit">cc57953c</span>.</li></ul>
+</div>
+
+<div class="card">
+  <span class="path">k8s/charts/crossplane-proxmox/values.yaml</span><span class="tag mod">MODIFIED</span>
+  <p class="role">Source of truth mapping <code>proxmox/100.conf</code> &amp; <code>101.conf</code> to Crossplane resources. The most-edited file.</p>
+  <ul>
+    <li><b>providerConfig</b> (endpoint <code>https://192.168.68.112:8006/</code>, <code>insecure:true</code>, ssh root).</li>
+    <li><b>isos</b> block: talos (public GitHub URL), virtio-win (build ingredient, disabled), win11 (combined ISO; URL from private overlay). <span class="commit">ca323452</span>, <span class="commit">ca1e3b3e</span>.</li>
+    <li><b>vms.talosPc01</b> &amp; <b>vms.windows</b>: 1:1 with the <code>.conf</code> files; windows has install (std-VGA) vs production (GPU passthrough) variant + per-VM <code>started</code>. <span class="commit">34e946a0</span>, <span class="commit">560fdaae</span>, <span class="commit">a73a731b</span>.</li>
+    <li>Single combined cdrom (<code>Win11_24H2_combined.iso</code>) to respect the provider's 1-cdrom cap. <span class="commit">34e946a0</span>, <span class="commit">cc57953c</span>.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <span class="path">k8s/charts/crossplane-proxmox/templates/downloads.yaml</span><span class="tag new">NEW</span>
+  <p class="role">Renders <code>EnvironmentDownloadFile</code> managed resources — tells Proxmox to pull ISOs onto <code>local:iso</code> (declarative wrapper around Proxmox's <code>download-url</code> API).</p>
+  <ul><li>Loops <code>isos.{talos,virtioWin,win11}</code>; <code>overwrite:false</code> so a recreate never re-hits an expired signed URL. <span class="commit">ca323452</span>, fixed in <span class="commit">7624a93a</span>.</li></ul>
+</div>
+
+<div class="card">
+  <span class="path">k8s/charts/crossplane-proxmox/templates/talos-pc01.yaml</span><span class="tag ext">PRE-EXISTING</span><span class="tag mod">MODIFIED</span>
+  <p class="role"><code>EnvironmentVM</code> for VM 100 (q35, virtio-scsi 30G, talos ISO, hostpci0 GPU, MAC/smbios from <code>100.conf</code>).</p>
+  <ul><li>Per-VM <code>started</code> toggle; fixed Helm <code>hasKey</code> trap (so <code>false</code> is honored). <span class="commit">a73a731b</span>, <span class="commit">7624a93a</span>.</li></ul>
+</div>
+
+<div class="card">
+  <span class="path">k8s/charts/crossplane-proxmox/templates/windows.yaml</span><span class="tag ext">PRE-EXISTING</span><span class="tag mod">MODIFIED</span>
+  <p class="role"><code>EnvironmentVM</code> for VM 101 (OVMF, q35, virtio-scsi, efidisk+TPM, virtio0 64G).</p>
+  <ul>
+    <li>Single combined cdrom; external-name → bare VMID; conditional <code>vga</code>/<code>hostpci</code> (install vs production variant). <span class="commit">34e946a0</span>, <span class="commit">560fdaae</span>.</li>
+    <li>Per-VM <code>started</code> + Helm <code>hasKey</code> fix. <span class="commit">a73a731b</span>, <span class="commit">7624a93a</span>.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <span class="path">k8s/charts/crossplane-proxmox/files/autounattend.xml</span><span class="tag new">NEW</span>
+  <p class="role">Hands-free Windows 11 24H2 answer file, baked into the combined ISO.</p>
+  <ul>
+    <li>windowsPE: injects virtio <code>viostor</code> driver (so Setup sees <code>virtio0</code>), partitions EFI/MSR/NTFS, generic Pro key.</li>
+    <li>oobeSystem: skips OOBE, creates local <code>admin</code> + autologon.</li>
+    <li>Created at <code>proxmox/</code> (<span class="commit">34e946a0</span>), moved into the chart (<span class="commit">fd2e68f4</span>), and the password replaced with build-time placeholder <code>__WIN_ADMIN_PASSWORD__</code> (<span class="commit">7624a93a</span>).</li>
+  </ul>
+</div>
+
+<div class="card">
+  <span class="path">k8s/charts/crossplane-proxmox/templates/providerconfig.yaml</span><span class="tag ext">PRE-EXISTING</span>
+  <p class="role"><code>ProviderConfig</code> + <code>ExternalSecret</code> (Proxmox creds from 1Password via ESO). Scaffolding I built on; not changed by me.</p>
+</div>
+
+<div class="card">
+  <span class="path">nostos/templates/talos-pc01.yaml</span><span class="tag new">NEW</span>
+  <p class="role">Talos <b>worker machineconfig</b> for VM 100 (the OS layer, not the VM). <code>op://</code> secret refs resolved at render; <code>{{ .InstallImage }}</code> filled by nostos.</p>
+  <ul>
+    <li>type worker, install disk <code>/dev/sda</code>, static <code>192.168.68.104</code>, CNI none (Cilium), endpoint <code>https://192.168.68.100:6443</code>. <span class="commit">0b856f98</span>.</li>
+    <li>Tailscale <code>ExtensionServiceConfig</code> with <code>--accept-routes</code> (route <b>advertisement removed</b> after review).</li>
+    <li>Added <code>kubelet.nodeIP.validSubnets: [192.168.68.0/24]</code> so InternalIP is the LAN IP, not Tailscale 100.x. <span class="commit">7624a93a</span>.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <span class="path">nostos/config.yaml</span><span class="tag mod">MODIFIED</span>
+  <p class="role">Added the <code>talos-pc01</code> node entry (worker, amd64, <code>/dev/sda</code>, template <code>talos-pc01.yaml</code>, schematic id, boot pxe-placeholder).</p>
+  <ul><li><code>install_disk</code> corrected <code>/dev/nvme0n1</code> → <code>/dev/sda</code> (dell01 + pc01-host left untouched). <span class="commit">7624a93a</span>.</li></ul>
+</div>
+
+<div class="card">
+  <span class="path">hack/win11-iso/build.sh</span><span class="tag new">NEW</span>
+  <p class="role">Reproducible combined-ISO builder — runs in a privileged <code>debian:13</code> container: UUP-dump Win11 base + virtio drivers + autounattend + no-keypress <code>efisys_noprompt.bin</code>, repacked with xorriso.</p>
+  <ul><li>Replaces the older loop-mount <code>hack/build-win11-combined.sh</code>. <span class="commit">8e724550</span>.</li>
+  <li>Injects <code>WIN_ADMIN_PASSWORD</code> (from 1Password) into the answer file at build time. <span class="commit">7624a93a</span>.</li></ul>
+</div>
+
+<div class="card">
+  <span class="path">hack/win11-iso/sign-url.sh</span><span class="tag new">NEW</span>
+  <p class="role">Mints a V4 signed URL (≤7d) for the Win11 ISO in the private bucket and prints a ready-to-paste <code>isos.win11.url</code> snippet for the private values repo. <code>mktemp</code>+trap for the SA key. <span class="commit">8e724550</span>.</p>
+</div>
+
+<div class="card">
+  <span class="path">hack/win11-iso/README.md</span><span class="tag new">NEW</span>
+  <p class="role">Full ISO lifecycle: build → upload → sign → wire; table of what's automated (download) vs manual (build/upload, URL refresh). Hardened SA-key handling. <span class="commit">8e724550</span>, <span class="commit">7624a93a</span>.</p>
+</div>
+
+<div class="card">
+  <span class="path">.bin/gpu-switch.sh</span><span class="tag new">NEW</span><span class="tag gi">GITIGNORED</span>
+  <p class="role">Switches the shared GPU (<code>0000:01:00.0</code>) between the two VMs by flipping per-VM <code>started</code> and re-applying via Crossplane. Aliases <code>t|tl|talos</code> / <code>w|win|windows</code>. Sequences stop → settle → start to avoid a busy-GPU race. Local-only (not committed).</p>
+</div>
+
+<h2>3 · Change-by-change (commit timeline)</h2>
+<table>
+<tr><th>#</th><th>Commit</th><th>What changed</th><th>Files</th></tr>
+<tr><td>1</td><td class="commit">ca323452</td><td>Declarative ISO downloads (<code>EnvironmentDownloadFile</code>)</td><td>downloads.yaml <span class="tag new">+</span>, values.yaml</td></tr>
+<tr><td>2</td><td class="commit">0b856f98</td><td>Talos worker machineconfig template for VM 100</td><td>nostos/templates/talos-pc01.yaml <span class="tag new">+</span></td></tr>
+<tr><td>3</td><td class="commit">34e946a0</td><td>Windows via single combined ISO (1-cdrom limit); answer file; first build script</td><td>build-win11-combined.sh <span class="tag new">+</span>, windows.yaml, values.yaml, autounattend.xml <span class="tag new">+</span></td></tr>
+<tr><td>4</td><td class="commit">ca1e3b3e</td><td>virtio-win demoted to build-ingredient (not a VM cdrom)</td><td>values.yaml</td></tr>
+<tr><td>5</td><td class="commit">560fdaae</td><td>Windows install/production variant toggle; xorriso flags fixed (verified build)</td><td>build script, windows.yaml, values.yaml</td></tr>
+<tr><td>6</td><td class="commit">fd2e68f4</td><td>Move <code>autounattend.xml</code> into the chart (<code>files/</code>)</td><td>files/autounattend.xml, build script</td></tr>
+<tr><td>7</td><td class="commit">a73a731b</td><td>Per-VM <code>started</code> toggle for GPU ownership switch</td><td>talos-pc01.yaml, windows.yaml, values.yaml</td></tr>
+<tr><td>8</td><td class="commit">cc57953c</td><td>Enable Windows via private values overlay + signed-URL ISO (multi-source app)</td><td>applications/crossplane-proxmox.yaml, values.yaml</td></tr>
+<tr><td>9</td><td class="commit">8e724550</td><td>Documented ISO build + signed-URL generation under <code>hack/win11-iso/</code></td><td>win11-iso/{README,build.sh,sign-url.sh} <span class="tag new">+</span>, retired old build script</td></tr>
+<tr><td>10</td><td class="commit">7624a93a</td><td>Address review panel P0/P1: nodeIP, install_disk, started Helm trap, overwrite:false, admin-pw placeholder, SA-key hardening</td><td>nostos template+config, downloads/windows/talos templates, autounattend, build.sh, README</td></tr>
+</table>
+<p class="mut">(Commits 94f43033 / longhorn-monitoring etc. between these are not part of this implementation.)</p>
+
+<h2>4 · Components outside git</h2>
+<table>
+<tr><th>Component</th><th>What / where</th><th>Status</th></tr>
+<tr><td><b>1Password</b></td><td><code>crossplane-proxmox</code> (Proxmox API creds JSON), <code>windows-pc01-admin</code> (Win admin pw), reuse <code>crossplane-gcp</code> (GCS SA key)</td><td class="done">created</td></tr>
+<tr><td><b>GCS bucket</b></td><td><code>syscd-iso-images-4c4398cd-1a7</code> — PRIVATE (UBLA + public-access-prevention enforced); Crossplane-managed via <code>home-systems-values/gcp/values.yaml</code></td><td class="done">live</td></tr>
+<tr><td><b>Private repo</b></td><td><code>home-systems-values</code>: <code>gcp/values.yaml</code> (bucket import), <code>proxmox/values.yaml</code> (windows enable + signed URL)</td><td class="done">pushed</td></tr>
+<tr><td><b>Proxmox VM 100</b></td><td><code>talos-pc01</code> — created by Crossplane; Talos v1.13.3 installed via nostos; joined as worker <code>pc01</code></td><td class="done">Ready</td></tr>
+<tr><td><b>Proxmox VM 101</b></td><td><code>windows</code> — created by Crossplane; Win11 installing from combined ISO</td><td class="done">created</td></tr>
+<tr><td><b>kind cluster</b></td><td><code>xp-proxmox</code> — temporary local Crossplane (stopgap before using the in-cluster one)</td><td class="gone">deleted</td></tr>
+</table>
+
+<h2>5 · Status &amp; known gaps</h2>
+<ul>
+  <li class="done"><b>Done:</b> both VMs declared in Crossplane; Talos installed via nostos; combined-ISO pipeline + docs; review-panel P0/P1 fixes committed.</li>
+  <li class="pend"><b>Pending (needs .68 LAN):</b> live re-apply of <code>nodeIP</code> to pc01 (still InternalIP=Tailscale) + delete stale node object; rebuild the Windows ISO so the deployed image carries the new admin password instead of the old <code>admin/admin</code>.</li>
+  <li class="pend"><b>Hardening backlog:</b> Proxmox API token instead of <code>insecure:true</code> + root password; stray Tailscale keys to revoke; out-of-scope <code>k8s/charts/firecrawl/values.yaml</code> weak default cred.</li>
+</ul>
+
+<p class="mut" style="margin-top:40px">Generated for the home-systems Proxmox/Crossplane work. Public repo: github.com/yurifrl/home-systems · Private values: home-systems-values.</p>
+
+</div>
+</body>
+</html>

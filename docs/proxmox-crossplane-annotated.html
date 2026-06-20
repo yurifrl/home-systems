@@ -1,0 +1,799 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Annotated source — Proxmox/Crossplane/Talos</title><style>
+:root{--bg:#0d1117;--panel:#161b22;--border:#30363d;--fg:#e6edf3;--mut:#8b949e;--acc:#58a6ff;--grn:#3fb950;--mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:27px;margin:0 0 4px}.sub{color:var(--mut);margin:0 0 18px}
+.toc{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 18px;margin:14px 0;columns:2;font-size:13px}
+.toc a{color:var(--acc);text-decoration:none;display:block;margin:2px 0}
+.file{margin:34px 0}
+.fname{font-family:var(--mono);font-size:15px;color:var(--grn);font-weight:700;border-bottom:1px solid var(--border);padding-bottom:7px}
+.ctx{color:var(--fg);background:rgba(88,166,255,.07);border-left:3px solid var(--acc);padding:10px 14px;margin:10px 0;font-size:13.5px}
+.ctx code{font-family:var(--mono);background:#1f2630;padding:1px 5px;border-radius:4px;color:#d2a8ff;font-size:12px}
+pre{background:#010409;border:1px solid var(--border);border-radius:8px;padding:14px 16px;overflow:auto;font-family:var(--mono);font-size:12.5px;line-height:1.5;margin:8px 0 0;counter-reset:ln}
+pre code{display:block}
+.ln{display:inline-block;width:30px;color:#484f58;text-align:right;margin-right:14px;user-select:none}
+</style></head><body><div class="wrap"><h1>Annotated source</h1><p class="sub">Each file shown on screen in full, with a context note grouping what it does.</p><div class="toc"><a href="#nostos-templates-talos-pc01-yaml">nostos/templates/talos-pc01.yaml</a><a href="#nostos-config-yaml-talos-pc01">nostos/config.yaml#talos-pc01</a><a href="#k8s-charts-crossplane-proxmox-values-yaml">k8s/charts/crossplane-proxmox/values.yaml</a><a href="#k8s-charts-crossplane-proxmox-templates-downloads-yaml">k8s/charts/crossplane-proxmox/templates/downloads.yaml</a><a href="#k8s-charts-crossplane-proxmox-templates-talos-pc01-yaml">k8s/charts/crossplane-proxmox/templates/talos-pc01.yaml</a><a href="#k8s-charts-crossplane-proxmox-templates-windows-yaml">k8s/charts/crossplane-proxmox/templates/windows.yaml</a><a href="#k8s-charts-crossplane-proxmox-files-autounattend-xml">k8s/charts/crossplane-proxmox/files/autounattend.xml</a><a href="#k8s-applications-crossplane-proxmox-yaml">k8s/applications/crossplane-proxmox.yaml</a><a href="#hack-win11-iso-build-sh">hack/win11-iso/build.sh</a><a href="#hack-win11-iso-sign-url-sh">hack/win11-iso/sign-url.sh</a><a href="#-bin-gpu-switch-sh">.bin/gpu-switch.sh</a></div><div class="file" id="nostos-templates-talos-pc01-yaml"><div class="fname">nostos/templates/talos-pc01.yaml</div><div class="ctx">Talos worker machineconfig — the OS install for VM 100. <b>Identity &amp; trust</b> (type/token/CA/certSANs) · <b>kubelet</b> (incl. the <code>nodeIP.validSubnets</code> fix that keeps InternalIP on the LAN, not Tailscale) · <b>network</b> (static .104, gateway, DNS) · <b>install</b> (disk /dev/sda, factory image, wipe) · <b>features</b> · <b>cluster</b> (join endpoint, CNI none for Cilium, CIDRs) · <b>tailscale extension</b> (accept-routes only, no advertise). <code>op://</code> refs resolve at render.</div><pre><code><span class="ln">1</span># Talos machineconfig for talos-pc01 (Proxmox VM 100, provisioned by Crossplane
+<span class="ln">2</span># via k8s/charts/crossplane-proxmox). Role: worker, amd64, virtio-scsi disk
+<span class="ln">3</span># (/dev/sda). Crossplane creates/boots the VM; this applies the OS install:
+<span class="ln">4</span>#   op inject -i nostos/templates/talos-pc01.yaml -o /tmp/talos-pc01.final.yaml
+<span class="ln">5</span>#   talosctl apply-config --insecure -n &lt;vm-ip&gt; -f /tmp/talos-pc01.final.yaml
+<span class="ln">6</span>version: v1alpha1
+<span class="ln">7</span>debug: false
+<span class="ln">8</span>persist: true
+<span class="ln">9</span>
+<span class="ln">10</span>machine:
+<span class="ln">11</span>  type: worker
+<span class="ln">12</span>  token: &quot;op://kubernetes/talos/MACHINE_TOKEN&quot;
+<span class="ln">13</span>  ca:
+<span class="ln">14</span>    crt: &quot;op://kubernetes/talos/MACHINE_CA_CRT&quot;
+<span class="ln">15</span>    key: &quot;&quot;
+<span class="ln">16</span>  certSANs:
+<span class="ln">17</span>    - 192.168.68.104
+<span class="ln">18</span>  kubelet:
+<span class="ln">19</span>    image: ghcr.io/siderolabs/kubelet:v1.32.1
+<span class="ln">20</span>    defaultRuntimeSeccompProfileEnabled: true
+<span class="ln">21</span>    disableManifestsDirectory: true
+<span class="ln">22</span>    # Pin InternalIP to the LAN subnet. Without this, kubelet picks the
+<span class="ln">23</span>    # Tailscale 100.x address as InternalIP -&gt; VIP/DNS traffic gets DNAT&#x27;d to
+<span class="ln">24</span>    # the TS IP and dropped (cf. dell01.yaml/rpi01.yaml; DNS-break 2026-06-05).
+<span class="ln">25</span>    nodeIP:
+<span class="ln">26</span>      validSubnets:
+<span class="ln">27</span>        - 192.168.68.0/24
+<span class="ln">28</span>  network:
+<span class="ln">29</span>    hostname: pc01
+<span class="ln">30</span>    interfaces:
+<span class="ln">31</span>      - interface: eth0
+<span class="ln">32</span>        dhcp: false
+<span class="ln">33</span>        addresses:
+<span class="ln">34</span>          - 192.168.68.104/24
+<span class="ln">35</span>        routes:
+<span class="ln">36</span>          - network: 0.0.0.0/0
+<span class="ln">37</span>            gateway: 192.168.68.1
+<span class="ln">38</span>    nameservers:
+<span class="ln">39</span>      - 192.168.68.1
+<span class="ln">40</span>      - 8.8.8.8
+<span class="ln">41</span>  install:
+<span class="ln">42</span>    disk: /dev/sda
+<span class="ln">43</span>    image: {{ .InstallImage }}
+<span class="ln">44</span>    wipe: true
+<span class="ln">45</span>    extraKernelArgs:
+<span class="ln">46</span>      - talos.dashboard.disabled=0
+<span class="ln">47</span>  features:
+<span class="ln">48</span>    rbac: true
+<span class="ln">49</span>    stableHostname: true
+<span class="ln">50</span>    apidCheckExtKeyUsage: true
+<span class="ln">51</span>    diskQuotaSupport: true
+<span class="ln">52</span>    kubePrism:
+<span class="ln">53</span>      enabled: true
+<span class="ln">54</span>      port: 7445
+<span class="ln">55</span>    hostDNS:
+<span class="ln">56</span>      enabled: true
+<span class="ln">57</span>      forwardKubeDNSToHost: true
+<span class="ln">58</span>
+<span class="ln">59</span>cluster:
+<span class="ln">60</span>  id: &quot;op://kubernetes/talos/CLUSTER_ID&quot;
+<span class="ln">61</span>  secret: &quot;op://kubernetes/talos/CLUSTER_SECRET&quot;
+<span class="ln">62</span>  controlPlane:
+<span class="ln">63</span>    endpoint: https://192.168.68.100:6443
+<span class="ln">64</span>  clusterName: talos-default
+<span class="ln">65</span>  network:
+<span class="ln">66</span>    cni:
+<span class="ln">67</span>      name: none
+<span class="ln">68</span>    dnsDomain: cluster.local
+<span class="ln">69</span>    podSubnets:
+<span class="ln">70</span>      - 10.244.0.0/16
+<span class="ln">71</span>    serviceSubnets:
+<span class="ln">72</span>      - 10.96.0.0/12
+<span class="ln">73</span>  token: &quot;op://kubernetes/talos/CLUSTER_TOKEN&quot;
+<span class="ln">74</span>  ca:
+<span class="ln">75</span>    crt: &quot;op://kubernetes/talos/CLUSTER_CA_CRT&quot;
+<span class="ln">76</span>    key: &quot;&quot;
+<span class="ln">77</span>---
+<span class="ln">78</span>apiVersion: v1alpha1
+<span class="ln">79</span>kind: ExtensionServiceConfig
+<span class="ln">80</span>name: tailscale
+<span class="ln">81</span>environment:
+<span class="ln">82</span>  - TS_AUTHKEY=tailscale://authkey?description=pc01
+<span class="ln">83</span>  - TS_EXTRA_ARGS=--accept-routes
+<span class="ln">84</span></code></pre></div><div class="file" id="nostos-config-yaml-talos-pc01"><div class="fname">nostos/config.yaml → talos-pc01 entry</div><div class="ctx">The nostos node registration for the VM. <b>mac/ip</b> locate &amp; reach it · <b>role/arch</b> pick template+image · <b>install_disk /dev/sda</b> (fixed from the host's nvme) · <b>schematic_id</b> → InstallImage · <b>boot.method pxe</b> is a validation placeholder (the VM is ISO-booted by Crossplane).</div><pre><code><span class="ln">1</span>  talos-pc01:
+<span class="ln">2</span>    # Talos worker running AS a Proxmox VM (VM 100) on the pc01 host, created by
+<span class="ln">3</span>    # Crossplane (k8s/charts/crossplane-proxmox). Not PXE/TPI-bootable: Crossplane
+<span class="ln">4</span>    # boots it from the Talos ISO into maintenance, then:
+<span class="ln">5</span>    #   nostos apply talos-pc01 --insecure
+<span class="ln">6</span>    # mac/boot.method only satisfy validation; render ignores boot.method.
+<span class="ln">7</span>    mac: &quot;bc:24:11:45:72:b6&quot;
+<span class="ln">8</span>    ip: 192.168.68.104
+<span class="ln">9</span>    role: worker
+<span class="ln">10</span>    arch: amd64
+<span class="ln">11</span>    install_disk: /dev/sda
+<span class="ln">12</span>    template: talos-pc01.yaml
+<span class="ln">13</span>    schematic_id: 8f04ea6b6016f12a593fa8a87441270075c648cb75482c2d9d3db8cecda47da1
+<span class="ln">14</span>    boot:
+<span class="ln">15</span>      method: pxe
+<span class="ln">16</span>
+<span class="ln">17</span># Guest-VM install ISOs (built/published/signed by `nostos iso`). Machine-
+<span class="ln">18</span># specific identity stays out of this (public) file: the bucket is an op:// ref
+<span class="ln">19</span># resolved at runtime; nothing sensitive is a literal here.
+<span class="ln">20</span>images:
+<span class="ln">21</span>  windows:
+<span class="ln">22</span>    build:
+<span class="ln">23</span>      uup_id: f7e8991e-4fd8-4bfd-a404-0de6dccd4191
+<span class="ln">24</span>      edition: professional
+<span class="ln">25</span>      driver_source: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+<span class="ln">26</span>      # autounattend.xml lives with the crossplane chart that consumes the ISO.
+<span class="ln">27</span>      answer_file: ../k8s/charts/crossplane-proxmox/files/autounattend.xml
+<span class="ln">28</span>    store:
+<span class="ln">29</span>      bucket: op://kubernetes/crossplane-proxmox/bucket
+<span class="ln">30</span>      object: Win11_24H2_combined.iso
+<span class="ln">31</span>    credentials_ref: op://kubernetes/crossplane-gcp/creds</code></pre></div><div class="file" id="k8s-charts-crossplane-proxmox-values-yaml"><div class="fname">k8s/charts/crossplane-proxmox/values.yaml</div><div class="ctx">Source of truth, mirrors proxmox/100.conf &amp; 101.conf 1:1. <b>providerConfig/credentials</b> (Proxmox API + ESO secret) · <b>deletionPolicy/started</b> (safety + GPU mutual-exclusion) · <b>isos</b> (talos public URL, virtio-win as build-ingredient, win11 combined via private signed URL) · <b>vms.talosPc01</b> &amp; <b>vms.windows</b> (every line annotated with its .conf origin; windows has install vs production variant).</div><pre><code><span class="ln">1</span># ============================================================================
+<span class="ln">2</span># crossplane-proxmox: replicate the proxmox/ VM configs as Crossplane managed
+<span class="ln">3</span># resources via provider-proxmox-bpg (group virtualenvironmentvm.proxmoxbpg.crossplane.io).
+<span class="ln">4</span>#
+<span class="ln">5</span># Source of truth for the VM specs is proxmox/100.conf (talos-pc01) and
+<span class="ln">6</span># proxmox/101.conf (windows). The two VMs are templated explicitly (not a
+<span class="ln">7</span># generic loop) so the mapping to each .conf line stays auditable.
+<span class="ln">8</span># ============================================================================
+<span class="ln">9</span>
+<span class="ln">10</span># --- ProviderConfig + connection to the Proxmox API ------------------------
+<span class="ln">11</span>providerConfig:
+<span class="ln">12</span>  name: proxmox
+<span class="ln">13</span>  # Proxmox VE API endpoint (trailing slash required by the bpg provider).
+<span class="ln">14</span>  endpoint: https://192.168.68.112:8006/
+<span class="ln">15</span>  # Self-signed cluster cert -&gt; skip TLS verification.
+<span class="ln">16</span>  insecure: true
+<span class="ln">17</span>  # SSH user the provider uses for disk-import / file ops that the API can&#x27;t do.
+<span class="ln">18</span>  sshUsername: root
+<span class="ln">19</span>
+<span class="ln">20</span># --- Credentials Secret ----------------------------------------------------
+<span class="ln">21</span># The provider reads a single Secret key holding a JSON blob with the bpg
+<span class="ln">22</span># client config (endpoint/username/password/insecure/ssh_username...).
+<span class="ln">23</span># Prefer an API token over the root password in real use.
+<span class="ln">24</span>credentials:
+<span class="ln">25</span>  secretName: proxmox-creds
+<span class="ln">26</span>  secretNamespace: crossplane-system
+<span class="ln">27</span>  secretKey: credentials
+<span class="ln">28</span>  # When true, an ExternalSecret materialises the JSON blob from 1Password
+<span class="ln">29</span>  # (ClusterSecretStore &quot;onepassword&quot;). The 1Password item must expose a field
+<span class="ln">30</span>  # named like `credentials` whose value is the JSON blob the bpg provider
+<span class="ln">31</span>  # expects. When false, the Secret must be created out-of-band.
+<span class="ln">32</span>  externalSecret:
+<span class="ln">33</span>    enabled: true
+<span class="ln">34</span>    onepasswordKey: crossplane-proxmox
+<span class="ln">35</span>    property: credentials
+<span class="ln">36</span>
+<span class="ln">37</span># Orphan keeps the live VMs if the MR is deleted while importing existing infra;
+<span class="ln">38</span># flip to Delete once reconciliation is trusted.
+<span class="ln">39</span>deletionPolicy: Orphan
+<span class="ln">40</span>
+<span class="ln">41</span># Default power state. Per-VM `started:` (vms.talosPc01.started /
+<span class="ln">42</span># vms.windows.started) overrides this. Because both VMs passthrough the SAME
+<span class="ln">43</span># GPU (0000:01:00.0), AT MOST ONE may be `started: true` with passthrough at a
+<span class="ln">44</span># time. To switch GPU ownership, flip the two `started:` values in one commit
+<span class="ln">45</span># and let Crossplane stop one and start the other (do NOT `qm stop` by hand --
+<span class="ln">46</span># Crossplane would just restart it to match desired state).
+<span class="ln">47</span>started: false
+<span class="ln">48</span>
+<span class="ln">49</span># Common Proxmox placement defaults (overridable per VM below).
+<span class="ln">50</span>defaults:
+<span class="ln">51</span>  nodeName: pc01
+<span class="ln">52</span>  datastoreId: local-lvm
+<span class="ln">53</span>  bridge: vmbr0
+<span class="ln">54</span>
+<span class="ln">55</span># --- ISO images (EnvironmentDownloadFile managed resources) ----------------
+<span class="ln">56</span># Known limitation #1: the bpg provider validates ISO volumes at VM-create
+<span class="ln">57</span># time, so the install media must exist on the `local` datastore first. These
+<span class="ln">58</span># are reconciled by Crossplane (provider tells Proxmox to fetch the URL), so
+<span class="ln">59</span># the prerequisite is itself declarative instead of a manual upload.
+<span class="ln">60</span>#   - Talos + virtio-win have stable direct URLs.
+<span class="ln">61</span>#   - Win11 has NO stable Microsoft URL; set isos.win11.url to a self-hosted
+<span class="ln">62</span>#     copy (or build via UUP dump and host it) and flip enabled: true.
+<span class="ln">63</span>isos:
+<span class="ln">64</span>  datastoreId: local
+<span class="ln">65</span>  talos:
+<span class="ln">66</span>    enabled: true
+<span class="ln">67</span>    fileName: talos-1.10.0-metal-amd64.iso
+<span class="ln">68</span>    url: https://github.com/siderolabs/talos/releases/download/v1.10.0/metal-amd64.iso
+<span class="ln">69</span>  virtioWin:
+<span class="ln">70</span>    # Build INGREDIENT for the Win11 combined ISO (hack/win11-iso/build.sh),
+<span class="ln">71</span>    # not a VM cdrom, so it is not reconciled as a Crossplane managed resource.
+<span class="ln">72</span>    enabled: false
+<span class="ln">73</span>    fileName: virtio-win.iso
+<span class="ln">74</span>    url: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+<span class="ln">75</span>  win11:
+<span class="ln">76</span>    # No stable upstream URL; provide a self-hosted copy then enable.
+<span class="ln">77</span>    enabled: false
+<span class="ln">78</span>    fileName: Win11_24H2_combined.iso
+<span class="ln">79</span>    url: &quot;&quot;
+<span class="ln">80</span>
+<span class="ln">81</span># ============================================================================
+<span class="ln">82</span># VM definitions (mirror proxmox/100.conf and proxmox/101.conf 1:1).
+<span class="ln">83</span># ============================================================================
+<span class="ln">84</span>vms:
+<span class="ln">85</span>  # --- proxmox/100.conf : talos-pc01 (VM 100) ------------------------------
+<span class="ln">86</span>  talosPc01:
+<span class="ln">87</span>    enabled: true
+<span class="ln">88</span>    name: talos-pc01
+<span class="ln">89</span>    vmId: 100
+<span class="ln">90</span>    onBoot: true                       # onboot: 1
+<span class="ln">91</span>    started: true                      # GPU owner by default (cluster worker)
+<span class="ln">92</span>    machine: q35                       # machine: q35
+<span class="ln">93</span>    scsiHardware: virtio-scsi-single   # scsihw: virtio-scsi-single
+<span class="ln">94</span>    osType: l26                        # ostype: l26
+<span class="ln">95</span>    smbiosUuid: ce1486a7-768b-4012-bfb9-debba1aac475
+<span class="ln">96</span>    bootOrder: [scsi0, ide2, net0]     # boot: order=scsi0;ide2;net0
+<span class="ln">97</span>    cpu:
+<span class="ln">98</span>      cores: 4                         # cores: 4
+<span class="ln">99</span>      sockets: 1                       # sockets: 1
+<span class="ln">100</span>      type: x86-64-v2-AES              # cpu: x86-64-v2-AES
+<span class="ln">101</span>    memoryMiB: 12288                   # memory: 12288
+<span class="ln">102</span>    netMac: BC:24:11:45:72:B6          # net0 virtio mac
+<span class="ln">103</span>    disk:
+<span class="ln">104</span>      interface: scsi0                 # scsi0: local-lvm:...,size=30G
+<span class="ln">105</span>      sizeGiB: 30
+<span class="ln">106</span>    cdrom:
+<span class="ln">107</span>      interface: ide2                  # ide2: local:iso/...,media=cdrom
+<span class="ln">108</span>      fileId: local:iso/talos-1.10.0-metal-amd64.iso
+<span class="ln">109</span>    vga: std                           # vga: std
+<span class="ln">110</span>    hostpci:
+<span class="ln">111</span>      - device: hostpci0               # hostpci0: 0000:01:00.0,pcie=1
+<span class="ln">112</span>        id: &quot;0000:01:00.0&quot;
+<span class="ln">113</span>        pcie: true
+<span class="ln">114</span>
+<span class="ln">115</span>  # --- proxmox/101.conf : windows (VM 101) ---------------------------------
+<span class="ln">116</span>  # provider-proxmox-bpg allows only ONE cdrom block (verified: &quot;Too many cdrom
+<span class="ln">117</span>  # blocks&quot;). proxmox/101.conf used TWO (ide0 virtio-win + ide2 Win11) plus a
+<span class="ln">118</span>  # 3rd autounattend CD. We collapse all of that into ONE combined ISO
+<span class="ln">119</span>  # (Win11 media + virtio viostor driver + autounattend.xml at root), built by
+<span class="ln">120</span>  # hack/win11-iso/build.sh and placed on the local datastore. This both
+<span class="ln">121</span>  # satisfies the single-cdrom limit and makes the install hands-free.
+<span class="ln">122</span>  windows:
+<span class="ln">123</span>    enabled: false
+<span class="ln">124</span>    name: windows
+<span class="ln">125</span>    vmId: 101
+<span class="ln">126</span>    # proxmox/101.conf documents TWO variants: an install-time &quot;# vnc&quot; (std VGA)
+<span class="ln">127</span>    # variant and a production &quot;# no vnc&quot; GPU-passthrough variant. They cannot
+<span class="ln">128</span>    # both apply at once, and the GPU (0000:01:00.0) is also used by talos-pc01,
+<span class="ln">129</span>    # so only one VM can own it at a time.
+<span class="ln">130</span>    #   install:    vga=std,  passthrough=false  (observable, no GPU conflict)
+<span class="ln">131</span>    #   production: vga=&quot;&quot;,    passthrough=true   (requires talos-pc01 stopped)
+<span class="ln">132</span>    vga: std
+<span class="ln">133</span>    passthrough: false
+<span class="ln">134</span>    onBoot: false                      # (no onboot line -&gt; default off)
+<span class="ln">135</span>    started: false                     # off by default; flip on to take the GPU
+<span class="ln">136</span>    bios: ovmf                         # bios: ovmf
+<span class="ln">137</span>    machine: pc-q35-9.2+pve1           # machine: pc-q35-9.2+pve1
+<span class="ln">138</span>    scsiHardware: virtio-scsi-pci      # scsihw: virtio-scsi-pci
+<span class="ln">139</span>    osType: win11                      # ostype: win11
+<span class="ln">140</span>    smbiosUuid: 4623676c-033a-4880-9727-675adef0023b
+<span class="ln">141</span>    bootOrder: [virtio0, ide2, ide0, net0]   # boot: order=virtio0;ide2;ide0;net0
+<span class="ln">142</span>    cpu:
+<span class="ln">143</span>      cores: 4                         # cores: 4
+<span class="ln">144</span>      sockets: 1                       # sockets: 1
+<span class="ln">145</span>      type: host                       # cpu: host,hidden=1,flags=+pcid
+<span class="ln">146</span>      flags: [&quot;+pcid&quot;]
+<span class="ln">147</span>    memoryMiB: 12288                   # memory: 12288
+<span class="ln">148</span>    netMac: BC:24:11:AE:67:41          # net0 virtio mac
+<span class="ln">149</span>    disk:
+<span class="ln">150</span>      interface: virtio0               # virtio0: local-lvm:...,iothread=1,size=64G
+<span class="ln">151</span>      sizeGiB: 64
+<span class="ln">152</span>      iothread: true
+<span class="ln">153</span>    efiDisk:
+<span class="ln">154</span>      type: &quot;4m&quot;                       # efidisk0: ...,efitype=4m,pre-enrolled-keys=1
+<span class="ln">155</span>      preEnrolledKeys: true
+<span class="ln">156</span>    tpmState:
+<span class="ln">157</span>      version: v2.0                    # tpmstate0: ...,version=v2.0
+<span class="ln">158</span>    cdrom:                             # single combined ISO (one-cdrom limit)
+<span class="ln">159</span>      interface: ide2
+<span class="ln">160</span>      fileId: local:iso/Win11_24H2_combined.iso
+<span class="ln">161</span>    hostpci:
+<span class="ln">162</span>      - device: hostpci0               # hostpci0: 01:00.0,pcie=1,x-vga=1
+<span class="ln">163</span>        id: &quot;0000:01:00.0&quot;
+<span class="ln">164</span>        pcie: true
+<span class="ln">165</span>        xvga: true
+<span class="ln">166</span>      - device: hostpci1               # hostpci1: 01:00.1
+<span class="ln">167</span>        id: &quot;0000:01:00.1&quot;
+<span class="ln">168</span></code></pre></div><div class="file" id="k8s-charts-crossplane-proxmox-templates-downloads-yaml"><div class="fname">k8s/charts/crossplane-proxmox/templates/downloads.yaml</div><div class="ctx">Renders one EnvironmentDownloadFile per enabled ISO — Proxmox pulls the file itself (declarative wrapper around its download-url API). <code>overwrite:false</code> so a reconcile never re-hits an expired signed URL.</div><pre><code><span class="ln">1</span>{{- /*
+<span class="ln">2</span>ISO install media as Crossplane managed resources (EnvironmentDownloadFile).
+<span class="ln">3</span>Satisfies the bpg provider&#x27;s create-time ISO-existence check declaratively.
+<span class="ln">4</span>*/ -}}
+<span class="ln">5</span>{{- $iso := .Values.isos }}
+<span class="ln">6</span>{{- $d := .Values.defaults }}
+<span class="ln">7</span>{{- range $key, $img := (dict &quot;talos&quot; $iso.talos &quot;virtioWin&quot; $iso.virtioWin &quot;win11&quot; $iso.win11) }}
+<span class="ln">8</span>{{- if $img.enabled }}
+<span class="ln">9</span>apiVersion: virtualenvironmentdownloadfile.proxmoxbpg.crossplane.io/v1alpha1
+<span class="ln">10</span>kind: EnvironmentDownloadFile
+<span class="ln">11</span>metadata:
+<span class="ln">12</span>  name: iso-{{ $img.fileName | lower | replace &quot;_&quot; &quot;-&quot; | replace &quot;.&quot; &quot;-&quot; }}
+<span class="ln">13</span>  annotations:
+<span class="ln">14</span>    crossplane.io/external-name: {{ $iso.datastoreId }}:iso/{{ $img.fileName }}
+<span class="ln">15</span>spec:
+<span class="ln">16</span>  deletionPolicy: {{ $.Values.deletionPolicy }}
+<span class="ln">17</span>  providerConfigRef:
+<span class="ln">18</span>    name: {{ $.Values.providerConfig.name }}
+<span class="ln">19</span>  forProvider:
+<span class="ln">20</span>    nodeName: {{ $d.nodeName }}
+<span class="ln">21</span>    contentType: iso
+<span class="ln">22</span>    datastoreId: {{ $iso.datastoreId }}
+<span class="ln">23</span>    fileName: {{ $img.fileName }}
+<span class="ln">24</span>    url: {{ $img.url | quote }}
+<span class="ln">25</span>    overwrite: false
+<span class="ln">26</span>    verify: false
+<span class="ln">27</span>---
+<span class="ln">28</span>{{- end }}
+<span class="ln">29</span>{{- end }}
+<span class="ln">30</span></code></pre></div><div class="file" id="k8s-charts-crossplane-proxmox-templates-talos-pc01-yaml"><div class="fname">k8s/charts/crossplane-proxmox/templates/talos-pc01.yaml</div><div class="ctx">The EnvironmentVM for VM 100 — every Proxmox field fed from values. Note <code>external-name</code> = bare VMID (provider import), the <code>started</code> hasKey fix, and the hostpci GPU block.</div><pre><code><span class="ln">1</span>{{- $v := .Values.vms.talosPc01 }}
+<span class="ln">2</span>{{- if $v.enabled }}
+<span class="ln">3</span>{{- $d := .Values.defaults }}
+<span class="ln">4</span>apiVersion: virtualenvironmentvm.proxmoxbpg.crossplane.io/v1alpha1
+<span class="ln">5</span>kind: EnvironmentVM
+<span class="ln">6</span>metadata:
+<span class="ln">7</span>  name: {{ $v.name }}
+<span class="ln">8</span>  annotations:
+<span class="ln">9</span>    # bpg provider imports/owns a VM by its bare numeric id (it Atoi&#x27;s this).
+<span class="ln">10</span>    crossplane.io/external-name: {{ $v.vmId | quote }}
+<span class="ln">11</span>spec:
+<span class="ln">12</span>  deletionPolicy: {{ .Values.deletionPolicy }}
+<span class="ln">13</span>  providerConfigRef:
+<span class="ln">14</span>    name: {{ .Values.providerConfig.name }}
+<span class="ln">15</span>  forProvider:
+<span class="ln">16</span>    nodeName: {{ $d.nodeName }}
+<span class="ln">17</span>    vmId: {{ $v.vmId }}
+<span class="ln">18</span>    name: {{ $v.name }}
+<span class="ln">19</span>    machine: {{ $v.machine }}
+<span class="ln">20</span>    scsiHardware: {{ $v.scsiHardware }}
+<span class="ln">21</span>    onBoot: {{ $v.onBoot }}
+<span class="ln">22</span>    started: {{ if hasKey $v &quot;started&quot; }}{{ $v.started }}{{ else }}{{ .Values.started }}{{ end }}
+<span class="ln">23</span>    bootOrder:
+<span class="ln">24</span>      {{- range $v.bootOrder }}
+<span class="ln">25</span>      - {{ . }}
+<span class="ln">26</span>      {{- end }}
+<span class="ln">27</span>    agent:
+<span class="ln">28</span>      - enabled: true
+<span class="ln">29</span>    operatingSystem:
+<span class="ln">30</span>      - type: {{ $v.osType }}
+<span class="ln">31</span>    cpu:
+<span class="ln">32</span>      - cores: {{ $v.cpu.cores }}
+<span class="ln">33</span>        sockets: {{ $v.cpu.sockets }}
+<span class="ln">34</span>        type: {{ $v.cpu.type | quote }}
+<span class="ln">35</span>    memory:
+<span class="ln">36</span>      - dedicated: {{ $v.memoryMiB }}
+<span class="ln">37</span>    smbios:
+<span class="ln">38</span>      - uuid: {{ $v.smbiosUuid }}
+<span class="ln">39</span>    vga:
+<span class="ln">40</span>      - type: {{ $v.vga }}
+<span class="ln">41</span>    networkDevice:
+<span class="ln">42</span>      - bridge: {{ $d.bridge }}
+<span class="ln">43</span>        model: virtio
+<span class="ln">44</span>        macAddress: {{ $v.netMac }}
+<span class="ln">45</span>        firewall: true
+<span class="ln">46</span>    disk:
+<span class="ln">47</span>      - datastoreId: {{ $d.datastoreId }}
+<span class="ln">48</span>        interface: {{ $v.disk.interface }}
+<span class="ln">49</span>        size: {{ $v.disk.sizeGiB }}
+<span class="ln">50</span>    cdrom:
+<span class="ln">51</span>      - enabled: true
+<span class="ln">52</span>        interface: {{ $v.cdrom.interface }}
+<span class="ln">53</span>        fileId: {{ $v.cdrom.fileId }}
+<span class="ln">54</span>    hostpci:
+<span class="ln">55</span>      {{- range $v.hostpci }}
+<span class="ln">56</span>      - device: {{ .device }}
+<span class="ln">57</span>        id: {{ .id | quote }}
+<span class="ln">58</span>        pcie: {{ .pcie | default false }}
+<span class="ln">59</span>      {{- end }}
+<span class="ln">60</span>{{- end }}
+<span class="ln">61</span></code></pre></div><div class="file" id="k8s-charts-crossplane-proxmox-templates-windows-yaml"><div class="fname">k8s/charts/crossplane-proxmox/templates/windows.yaml</div><div class="ctx">EnvironmentVM for VM 101. Same shape as talos plus UEFI/efidisk/TPM (Win11 reqs), the single combined cdrom, and the two variant toggles: <code>if $v.vga</code> (std VGA only at install) and <code>if $v.passthrough</code> (GPU only in production).</div><pre><code><span class="ln">1</span>{{- $v := .Values.vms.windows }}
+<span class="ln">2</span>{{- if $v.enabled }}
+<span class="ln">3</span>{{- $d := .Values.defaults }}
+<span class="ln">4</span>apiVersion: virtualenvironmentvm.proxmoxbpg.crossplane.io/v1alpha1
+<span class="ln">5</span>kind: EnvironmentVM
+<span class="ln">6</span>metadata:
+<span class="ln">7</span>  name: {{ $v.name }}
+<span class="ln">8</span>  annotations:
+<span class="ln">9</span>    # Import/own VM by its bare numeric id (the bpg provider Atoi&#x27;s external-name).
+<span class="ln">10</span>    crossplane.io/external-name: {{ $v.vmId | quote }}
+<span class="ln">11</span>spec:
+<span class="ln">12</span>  deletionPolicy: {{ .Values.deletionPolicy }}
+<span class="ln">13</span>  providerConfigRef:
+<span class="ln">14</span>    name: {{ .Values.providerConfig.name }}
+<span class="ln">15</span>  forProvider:
+<span class="ln">16</span>    nodeName: {{ $d.nodeName }}
+<span class="ln">17</span>    vmId: {{ $v.vmId }}
+<span class="ln">18</span>    name: {{ $v.name }}
+<span class="ln">19</span>    bios: {{ $v.bios }}
+<span class="ln">20</span>    machine: {{ $v.machine }}
+<span class="ln">21</span>    scsiHardware: {{ $v.scsiHardware }}
+<span class="ln">22</span>    onBoot: {{ $v.onBoot }}
+<span class="ln">23</span>    started: {{ if hasKey $v &quot;started&quot; }}{{ $v.started }}{{ else }}{{ .Values.started }}{{ end }}
+<span class="ln">24</span>    bootOrder:
+<span class="ln">25</span>      {{- range $v.bootOrder }}
+<span class="ln">26</span>      - {{ . }}
+<span class="ln">27</span>      {{- end }}
+<span class="ln">28</span>    agent:
+<span class="ln">29</span>      - enabled: true
+<span class="ln">30</span>    operatingSystem:
+<span class="ln">31</span>      - type: {{ $v.osType }}
+<span class="ln">32</span>    cpu:
+<span class="ln">33</span>      - cores: {{ $v.cpu.cores }}
+<span class="ln">34</span>        sockets: {{ $v.cpu.sockets }}
+<span class="ln">35</span>        type: {{ $v.cpu.type | quote }}
+<span class="ln">36</span>        flags:
+<span class="ln">37</span>          {{- range $v.cpu.flags }}
+<span class="ln">38</span>          - {{ . | quote }}
+<span class="ln">39</span>          {{- end }}
+<span class="ln">40</span>    memory:
+<span class="ln">41</span>      - dedicated: {{ $v.memoryMiB }}
+<span class="ln">42</span>    smbios:
+<span class="ln">43</span>      - uuid: {{ $v.smbiosUuid }}
+<span class="ln">44</span>    networkDevice:
+<span class="ln">45</span>      - bridge: {{ $d.bridge }}
+<span class="ln">46</span>        model: virtio
+<span class="ln">47</span>        macAddress: {{ $v.netMac }}
+<span class="ln">48</span>        firewall: true
+<span class="ln">49</span>    {{- if $v.vga }}
+<span class="ln">50</span>    vga:
+<span class="ln">51</span>      - type: {{ $v.vga }}
+<span class="ln">52</span>    {{- end }}
+<span class="ln">53</span>    disk:
+<span class="ln">54</span>      - datastoreId: {{ $d.datastoreId }}
+<span class="ln">55</span>        interface: {{ $v.disk.interface }}
+<span class="ln">56</span>        size: {{ $v.disk.sizeGiB }}
+<span class="ln">57</span>        iothread: {{ $v.disk.iothread | default false }}
+<span class="ln">58</span>    efiDisk:
+<span class="ln">59</span>      - datastoreId: {{ $d.datastoreId }}
+<span class="ln">60</span>        type: {{ $v.efiDisk.type | quote }}
+<span class="ln">61</span>        preEnrolledKeys: {{ $v.efiDisk.preEnrolledKeys }}
+<span class="ln">62</span>    tpmState:
+<span class="ln">63</span>      - datastoreId: {{ $d.datastoreId }}
+<span class="ln">64</span>        version: {{ $v.tpmState.version | quote }}
+<span class="ln">65</span>    cdrom:
+<span class="ln">66</span>      - enabled: true
+<span class="ln">67</span>        interface: {{ $v.cdrom.interface }}
+<span class="ln">68</span>        fileId: {{ $v.cdrom.fileId }}
+<span class="ln">69</span>    {{- if $v.passthrough }}
+<span class="ln">70</span>    hostpci:
+<span class="ln">71</span>      {{- range $v.hostpci }}
+<span class="ln">72</span>      - device: {{ .device }}
+<span class="ln">73</span>        id: {{ .id | quote }}
+<span class="ln">74</span>        pcie: {{ .pcie | default false }}
+<span class="ln">75</span>        {{- if .xvga }}
+<span class="ln">76</span>        xvga: {{ .xvga }}
+<span class="ln">77</span>        {{- end }}
+<span class="ln">78</span>      {{- end }}
+<span class="ln">79</span>    {{- end }}
+<span class="ln">80</span>{{- end }}
+<span class="ln">81</span></code></pre></div><div class="file" id="k8s-charts-crossplane-proxmox-files-autounattend-xml"><div class="fname">k8s/charts/crossplane-proxmox/files/autounattend.xml</div><div class="ctx">Baked into the combined ISO for a zero-touch install. <b>windowsPE</b>: locales + the load-bearing virtio <code>viostor</code> driver inject (so Setup sees virtio0) + disk partitioning + edition/key. <b>oobeSystem</b>: skip all prompts, create admin (password is a <code>__WIN_ADMIN_PASSWORD__</code> placeholder injected at build time), one autologon.</div><pre><code><span class="ln">1</span>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+<span class="ln">2</span>&lt;!-- Hands-free Win11 24H2 Pro install for Proxmox VM 101 (virtio0 boot disk).
+<span class="ln">3</span>     Lives at the ROOT of the combined ISO built by hack/win11-iso/build.sh,
+<span class="ln">4</span>     which also stages the virtio drivers under \virtio on the same media so the
+<span class="ln">5</span>     single-cdrom provider limit is respected. --&gt;
+<span class="ln">6</span>&lt;unattend xmlns=&quot;urn:schemas-microsoft-com:unattend&quot;&gt;
+<span class="ln">7</span>  &lt;settings pass=&quot;windowsPE&quot;&gt;
+<span class="ln">8</span>    &lt;component name=&quot;Microsoft-Windows-International-Core-WinPE&quot; processorArchitecture=&quot;amd64&quot; publicKeyToken=&quot;31bf3856ad364e35&quot; language=&quot;neutral&quot; versionScope=&quot;nonSxS&quot; xmlns:wcm=&quot;http://schemas.microsoft.com/WMIConfig/2002/State&quot;&gt;
+<span class="ln">9</span>      &lt;SetupUILanguage&gt;&lt;UILanguage&gt;en-US&lt;/UILanguage&gt;&lt;/SetupUILanguage&gt;
+<span class="ln">10</span>      &lt;InputLocale&gt;en-US&lt;/InputLocale&gt;
+<span class="ln">11</span>      &lt;SystemLocale&gt;en-US&lt;/SystemLocale&gt;
+<span class="ln">12</span>      &lt;UILanguage&gt;en-US&lt;/UILanguage&gt;
+<span class="ln">13</span>      &lt;UserLocale&gt;en-US&lt;/UserLocale&gt;
+<span class="ln">14</span>    &lt;/component&gt;
+<span class="ln">15</span>    &lt;!-- viostor = virtio-blk driver, required so Setup sees the virtio0 disk.
+<span class="ln">16</span>         The combined ISO&#x27;s drive letter is unknown in WinPE -&gt; list candidates. --&gt;
+<span class="ln">17</span>    &lt;component name=&quot;Microsoft-Windows-PnpCustomizationsWinPE&quot; processorArchitecture=&quot;amd64&quot; publicKeyToken=&quot;31bf3856ad364e35&quot; language=&quot;neutral&quot; versionScope=&quot;nonSxS&quot; xmlns:wcm=&quot;http://schemas.microsoft.com/WMIConfig/2002/State&quot;&gt;
+<span class="ln">18</span>      &lt;DriverPaths&gt;
+<span class="ln">19</span>        &lt;PathAndCredentials wcm:keyValue=&quot;1&quot; wcm:action=&quot;add&quot;&gt;&lt;Path&gt;C:\virtio\viostor\w11\amd64&lt;/Path&gt;&lt;/PathAndCredentials&gt;
+<span class="ln">20</span>        &lt;PathAndCredentials wcm:keyValue=&quot;2&quot; wcm:action=&quot;add&quot;&gt;&lt;Path&gt;D:\virtio\viostor\w11\amd64&lt;/Path&gt;&lt;/PathAndCredentials&gt;
+<span class="ln">21</span>        &lt;PathAndCredentials wcm:keyValue=&quot;3&quot; wcm:action=&quot;add&quot;&gt;&lt;Path&gt;E:\virtio\viostor\w11\amd64&lt;/Path&gt;&lt;/PathAndCredentials&gt;
+<span class="ln">22</span>        &lt;PathAndCredentials wcm:keyValue=&quot;4&quot; wcm:action=&quot;add&quot;&gt;&lt;Path&gt;F:\virtio\viostor\w11\amd64&lt;/Path&gt;&lt;/PathAndCredentials&gt;
+<span class="ln">23</span>        &lt;PathAndCredentials wcm:keyValue=&quot;5&quot; wcm:action=&quot;add&quot;&gt;&lt;Path&gt;D:\virtio\NetKVM\w11\amd64&lt;/Path&gt;&lt;/PathAndCredentials&gt;
+<span class="ln">24</span>        &lt;PathAndCredentials wcm:keyValue=&quot;6&quot; wcm:action=&quot;add&quot;&gt;&lt;Path&gt;E:\virtio\NetKVM\w11\amd64&lt;/Path&gt;&lt;/PathAndCredentials&gt;
+<span class="ln">25</span>        &lt;PathAndCredentials wcm:keyValue=&quot;7&quot; wcm:action=&quot;add&quot;&gt;&lt;Path&gt;F:\virtio\NetKVM\w11\amd64&lt;/Path&gt;&lt;/PathAndCredentials&gt;
+<span class="ln">26</span>      &lt;/DriverPaths&gt;
+<span class="ln">27</span>    &lt;/component&gt;
+<span class="ln">28</span>    &lt;component name=&quot;Microsoft-Windows-Setup&quot; processorArchitecture=&quot;amd64&quot; publicKeyToken=&quot;31bf3856ad364e35&quot; language=&quot;neutral&quot; versionScope=&quot;nonSxS&quot; xmlns:wcm=&quot;http://schemas.microsoft.com/WMIConfig/2002/State&quot;&gt;
+<span class="ln">29</span>      &lt;DiskConfiguration&gt;
+<span class="ln">30</span>        &lt;Disk wcm:action=&quot;add&quot;&gt;
+<span class="ln">31</span>          &lt;DiskID&gt;0&lt;/DiskID&gt;
+<span class="ln">32</span>          &lt;WillWipeDisk&gt;true&lt;/WillWipeDisk&gt;
+<span class="ln">33</span>          &lt;CreatePartitions&gt;
+<span class="ln">34</span>            &lt;CreatePartition wcm:action=&quot;add&quot;&gt;&lt;Order&gt;1&lt;/Order&gt;&lt;Type&gt;EFI&lt;/Type&gt;&lt;Size&gt;260&lt;/Size&gt;&lt;/CreatePartition&gt;
+<span class="ln">35</span>            &lt;CreatePartition wcm:action=&quot;add&quot;&gt;&lt;Order&gt;2&lt;/Order&gt;&lt;Type&gt;MSR&lt;/Type&gt;&lt;Size&gt;16&lt;/Size&gt;&lt;/CreatePartition&gt;
+<span class="ln">36</span>            &lt;CreatePartition wcm:action=&quot;add&quot;&gt;&lt;Order&gt;3&lt;/Order&gt;&lt;Type&gt;Primary&lt;/Type&gt;&lt;Extend&gt;true&lt;/Extend&gt;&lt;/CreatePartition&gt;
+<span class="ln">37</span>          &lt;/CreatePartitions&gt;
+<span class="ln">38</span>          &lt;ModifyPartitions&gt;
+<span class="ln">39</span>            &lt;ModifyPartition wcm:action=&quot;add&quot;&gt;&lt;Order&gt;1&lt;/Order&gt;&lt;PartitionID&gt;1&lt;/PartitionID&gt;&lt;Label&gt;System&lt;/Label&gt;&lt;Format&gt;FAT32&lt;/Format&gt;&lt;/ModifyPartition&gt;
+<span class="ln">40</span>            &lt;ModifyPartition wcm:action=&quot;add&quot;&gt;&lt;Order&gt;2&lt;/Order&gt;&lt;PartitionID&gt;2&lt;/PartitionID&gt;&lt;/ModifyPartition&gt;
+<span class="ln">41</span>            &lt;ModifyPartition wcm:action=&quot;add&quot;&gt;&lt;Order&gt;3&lt;/Order&gt;&lt;PartitionID&gt;3&lt;/PartitionID&gt;&lt;Label&gt;Windows&lt;/Label&gt;&lt;Format&gt;NTFS&lt;/Format&gt;&lt;Letter&gt;C&lt;/Letter&gt;&lt;/ModifyPartition&gt;
+<span class="ln">42</span>          &lt;/ModifyPartitions&gt;
+<span class="ln">43</span>        &lt;/Disk&gt;
+<span class="ln">44</span>      &lt;/DiskConfiguration&gt;
+<span class="ln">45</span>      &lt;ImageInstall&gt;
+<span class="ln">46</span>        &lt;OSImage&gt;
+<span class="ln">47</span>          &lt;InstallFrom&gt;
+<span class="ln">48</span>            &lt;MetaData wcm:action=&quot;add&quot;&gt;&lt;Key&gt;/IMAGE/NAME&lt;/Key&gt;&lt;Value&gt;Windows 11 Pro&lt;/Value&gt;&lt;/MetaData&gt;
+<span class="ln">49</span>          &lt;/InstallFrom&gt;
+<span class="ln">50</span>          &lt;InstallTo&gt;&lt;DiskID&gt;0&lt;/DiskID&gt;&lt;PartitionID&gt;3&lt;/PartitionID&gt;&lt;/InstallTo&gt;
+<span class="ln">51</span>        &lt;/OSImage&gt;
+<span class="ln">52</span>      &lt;/ImageInstall&gt;
+<span class="ln">53</span>      &lt;UserData&gt;
+<span class="ln">54</span>        &lt;ProductKey&gt;&lt;Key&gt;VK7JG-NPHTM-C97JM-9MPGT-3V66T&lt;/Key&gt;&lt;WillShowUI&gt;OnError&lt;/WillShowUI&gt;&lt;/ProductKey&gt;
+<span class="ln">55</span>        &lt;AcceptEula&gt;true&lt;/AcceptEula&gt;
+<span class="ln">56</span>      &lt;/UserData&gt;
+<span class="ln">57</span>    &lt;/component&gt;
+<span class="ln">58</span>  &lt;/settings&gt;
+<span class="ln">59</span>  &lt;settings pass=&quot;specialize&quot;&gt;
+<span class="ln">60</span>    &lt;component name=&quot;Microsoft-Windows-Shell-Setup&quot; processorArchitecture=&quot;amd64&quot; publicKeyToken=&quot;31bf3856ad364e35&quot; language=&quot;neutral&quot; versionScope=&quot;nonSxS&quot; xmlns:wcm=&quot;http://schemas.microsoft.com/WMIConfig/2002/State&quot;&gt;
+<span class="ln">61</span>      &lt;ComputerName&gt;WINDOWS-PC01&lt;/ComputerName&gt;
+<span class="ln">62</span>    &lt;/component&gt;
+<span class="ln">63</span>  &lt;/settings&gt;
+<span class="ln">64</span>  &lt;settings pass=&quot;oobeSystem&quot;&gt;
+<span class="ln">65</span>    &lt;component name=&quot;Microsoft-Windows-Shell-Setup&quot; processorArchitecture=&quot;amd64&quot; publicKeyToken=&quot;31bf3856ad364e35&quot; language=&quot;neutral&quot; versionScope=&quot;nonSxS&quot; xmlns:wcm=&quot;http://schemas.microsoft.com/WMIConfig/2002/State&quot;&gt;
+<span class="ln">66</span>      &lt;OOBE&gt;
+<span class="ln">67</span>        &lt;HideEULAPage&gt;true&lt;/HideEULAPage&gt;
+<span class="ln">68</span>        &lt;HideOEMRegistrationScreen&gt;true&lt;/HideOEMRegistrationScreen&gt;
+<span class="ln">69</span>        &lt;HideOnlineAccountScreens&gt;true&lt;/HideOnlineAccountScreens&gt;
+<span class="ln">70</span>        &lt;HideWirelessSetupInOOBE&gt;true&lt;/HideWirelessSetupInOOBE&gt;
+<span class="ln">71</span>        &lt;ProtectYourPC&gt;3&lt;/ProtectYourPC&gt;
+<span class="ln">72</span>        &lt;SkipMachineOOBE&gt;true&lt;/SkipMachineOOBE&gt;
+<span class="ln">73</span>        &lt;SkipUserOOBE&gt;true&lt;/SkipUserOOBE&gt;
+<span class="ln">74</span>      &lt;/OOBE&gt;
+<span class="ln">75</span>      &lt;UserAccounts&gt;
+<span class="ln">76</span>        &lt;LocalAccounts&gt;
+<span class="ln">77</span>          &lt;LocalAccount wcm:action=&quot;add&quot;&gt;
+<span class="ln">78</span>            &lt;Name&gt;admin&lt;/Name&gt;
+<span class="ln">79</span>            &lt;Group&gt;Administrators&lt;/Group&gt;
+<span class="ln">80</span>            &lt;Password&gt;&lt;Value&gt;__WIN_ADMIN_PASSWORD__&lt;/Value&gt;&lt;PlainText&gt;true&lt;/PlainText&gt;&lt;/Password&gt;
+<span class="ln">81</span>          &lt;/LocalAccount&gt;
+<span class="ln">82</span>        &lt;/LocalAccounts&gt;
+<span class="ln">83</span>      &lt;/UserAccounts&gt;
+<span class="ln">84</span>      &lt;AutoLogon&gt;
+<span class="ln">85</span>        &lt;Username&gt;admin&lt;/Username&gt;
+<span class="ln">86</span>        &lt;Enabled&gt;true&lt;/Enabled&gt;
+<span class="ln">87</span>        &lt;LogonCount&gt;1&lt;/LogonCount&gt;
+<span class="ln">88</span>        &lt;Password&gt;&lt;Value&gt;__WIN_ADMIN_PASSWORD__&lt;/Value&gt;&lt;PlainText&gt;true&lt;/PlainText&gt;&lt;/Password&gt;
+<span class="ln">89</span>      &lt;/AutoLogon&gt;
+<span class="ln">90</span>      &lt;TimeZone&gt;UTC&lt;/TimeZone&gt;
+<span class="ln">91</span>    &lt;/component&gt;
+<span class="ln">92</span>  &lt;/settings&gt;
+<span class="ln">93</span>&lt;/unattend&gt;
+<span class="ln">94</span></code></pre></div><div class="file" id="k8s-applications-crossplane-proxmox-yaml"><div class="fname">k8s/applications/crossplane-proxmox.yaml</div><div class="ctx">The ArgoCD Application. Multi-source: PUBLIC chart + PRIVATE <code>$values/proxmox/values.yaml</code> (signed URL + windows-enable) merged at sync, so nothing secret lands in the public repo.</div><pre><code><span class="ln">1</span>apiVersion: argoproj.io/v1alpha1
+<span class="ln">2</span>kind: Application
+<span class="ln">3</span>metadata:
+<span class="ln">4</span>  name: crossplane-proxmox
+<span class="ln">5</span>  namespace: argocd
+<span class="ln">6</span>  finalizers:
+<span class="ln">7</span>  - resources-finalizer.argocd.argoproj.io
+<span class="ln">8</span>  annotations:
+<span class="ln">9</span>    # After the providers are installed and healthy (providers app is -1).
+<span class="ln">10</span>    argocd.argoproj.io/sync-wave: &quot;0&quot;
+<span class="ln">11</span>spec:
+<span class="ln">12</span>  project: default
+<span class="ln">13</span>  destination:
+<span class="ln">14</span>    server: https://kubernetes.default.svc
+<span class="ln">15</span>    namespace: crossplane-system
+<span class="ln">16</span>  syncPolicy:
+<span class="ln">17</span>    automated:
+<span class="ln">18</span>      prune: true
+<span class="ln">19</span>      selfHeal: true
+<span class="ln">20</span>    syncOptions:
+<span class="ln">21</span>      - ServerSideApply=true
+<span class="ln">22</span>      # ProviderConfig/MR CRDs are installed by the providers app; tolerate them
+<span class="ln">23</span>      # being briefly absent on first sync.
+<span class="ln">24</span>      - SkipDryRunOnMissingResource=true
+<span class="ln">25</span>  sources:
+<span class="ln">26</span>    # PUBLIC: the chart (templates + non-secret defaults).
+<span class="ln">27</span>    - repoURL: https://github.com/yurifrl/home-systems.git
+<span class="ln">28</span>      targetRevision: HEAD
+<span class="ln">29</span>      path: k8s/charts/crossplane-proxmox
+<span class="ln">30</span>      helm:
+<span class="ln">31</span>        valueFiles:
+<span class="ln">32</span>          # Secret-ish overrides (e.g. the Win11 ISO signed URL, windows enable)
+<span class="ln">33</span>          # come from the PRIVATE values repo, merged at sync time.
+<span class="ln">34</span>          - $values/proxmox/values.yaml
+<span class="ln">35</span>    # PRIVATE: real values (signed URLs etc). Repo creds already registered in
+<span class="ln">36</span>    # ArgoCD (shared with crossplane-gcp).
+<span class="ln">37</span>    - repoURL: git@github.com:yurifrl/home-systems-values.git
+<span class="ln">38</span>      targetRevision: HEAD
+<span class="ln">39</span>      ref: values
+<span class="ln">40</span></code></pre></div><div class="file" id="hack-win11-iso-build-sh"><div class="fname">hack/win11-iso/build.sh</div><div class="ctx">Reproducible combined-ISO build in a privileged debian container: toolchain → UUP base (retry the flaky 522) → virtio-win → assemble (\virtio + autounattend, inject admin pw) → no-keypress efisys → xorriso repack.</div><pre><code><span class="ln">1</span>#!/usr/bin/env bash
+<span class="ln">2</span># build.sh — runs INSIDE a privileged debian:13 container. Builds the combined
+<span class="ln">3</span># Win11 24H2 install ISO and writes it to /out/Win11_24H2_combined.iso.
+<span class="ln">4</span>#
+<span class="ln">5</span># Combines, into one ISO (the bpg provider allows only ONE cdrom):
+<span class="ln">6</span>#   - Win11 24H2 retail amd64 base (built via UUP dump)
+<span class="ln">7</span>#   - virtio viostor + NetKVM drivers under \virtio  (so Setup sees virtio0)
+<span class="ln">8</span>#   - autounattend.xml at the ISO root (hands-free install)
+<span class="ln">9</span>#   - no-keypress UEFI boot (efisys_noprompt.bin) so no &quot;press any key&quot;
+<span class="ln">10</span>#
+<span class="ln">11</span># Inputs (mounted): /ctx/autounattend.xml
+<span class="ln">12</span># Output (mounted): /out/Win11_24H2_combined.iso
+<span class="ln">13</span># See README.md for the `docker run` invocation.
+<span class="ln">14</span>set -euo pipefail
+<span class="ln">15</span>export DEBIAN_FRONTEND=noninteractive
+<span class="ln">16</span>apt-get update -qq
+<span class="ln">17</span>apt-get install -y -qq aria2 cabextract wimtools chntpw genisoimage xorriso unzip curl ca-certificates &gt;/dev/null
+<span class="ln">18</span>echo &quot;[1/5] tools installed&quot;
+<span class="ln">19</span>
+<span class="ln">20</span>cd /work 2&gt;/dev/null || { mkdir -p /work; cd /work; }
+<span class="ln">21</span>UUID=f7e8991e-4fd8-4bfd-a404-0de6dccd4191   # Win11 24H2 retail amd64 (uupdump)
+<span class="ln">22</span>mkdir -p uup &amp;&amp; cd uup
+<span class="ln">23</span>curl -sL -o pkg.zip &quot;https://uupdump.net/get.php?id=$UUID&amp;pack=en-us&amp;edition=professional&amp;autodl=2&quot;
+<span class="ln">24</span>unzip -o pkg.zip &gt;/dev/null
+<span class="ln">25</span>chmod +x uup_download_linux.sh
+<span class="ln">26</span>echo &quot;[2/5] UUP build (downloads ~4GB; git.uupdump.net 522s are transient -&gt; retried)&quot;
+<span class="ln">27</span>ok=0
+<span class="ln">28</span>for attempt in $(seq 1 8); do
+<span class="ln">29</span>  if ./uup_download_linux.sh &gt;/work/uup.log 2&gt;&amp;1; then ok=1; break; fi
+<span class="ln">30</span>  echo &quot;  attempt $attempt failed (likely transient); retrying...&quot;; sleep 15
+<span class="ln">31</span>done
+<span class="ln">32</span>[ &quot;$ok&quot; = 1 ] || { echo &quot;UUP build failed after retries&quot;; tail -20 /work/uup.log; exit 1; }
+<span class="ln">33</span>BASE=$(ls /work/uup/*.ISO | head -1)
+<span class="ln">34</span>
+<span class="ln">35</span>cd /work
+<span class="ln">36</span>echo &quot;[3/5] virtio-win...&quot;
+<span class="ln">37</span>curl -fL --retry 8 -o virtio-win.iso https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+<span class="ln">38</span>
+<span class="ln">39</span>echo &quot;[4/5] combine...&quot;
+<span class="ln">40</span>mkdir -p iso mnt
+<span class="ln">41</span>mount -o loop,ro &quot;$BASE&quot; mnt; cp -aT mnt iso; umount mnt; chmod -R u+w iso
+<span class="ln">42</span>mount -o loop,ro virtio-win.iso mnt
+<span class="ln">43</span>mkdir -p iso/virtio/viostor/w11/amd64 iso/virtio/NetKVM/w11/amd64
+<span class="ln">44</span>cp -a mnt/viostor/w11/amd64/. iso/virtio/viostor/w11/amd64/
+<span class="ln">45</span>cp -a mnt/NetKVM/w11/amd64/. iso/virtio/NetKVM/w11/amd64/
+<span class="ln">46</span>umount mnt
+<span class="ln">47</span>cp /ctx/autounattend.xml iso/autounattend.xml
+<span class="ln">48</span># Inject the Windows admin password at build time (never stored in the repo).
+<span class="ln">49</span># Pass it in: docker run -e WIN_ADMIN_PASSWORD=&quot;$(op item get windows-pc01-admin --fields password --reveal)&quot; ...
+<span class="ln">50</span>: &quot;${WIN_ADMIN_PASSWORD:?set WIN_ADMIN_PASSWORD (source from 1Password item windows-pc01-admin)}&quot;
+<span class="ln">51</span>sed -i &quot;s|__WIN_ADMIN_PASSWORD__|${WIN_ADMIN_PASSWORD}|g&quot; iso/autounattend.xml
+<span class="ln">52</span>EFISYS=efi/microsoft/boot/efisys.bin
+<span class="ln">53</span>[ -f iso/efi/microsoft/boot/efisys_noprompt.bin ] &amp;&amp; EFISYS=efi/microsoft/boot/efisys_noprompt.bin
+<span class="ln">54</span>echo &quot;[4/5] UEFI boot image: $EFISYS&quot;
+<span class="ln">55</span>
+<span class="ln">56</span>echo &quot;[5/5] repack...&quot;
+<span class="ln">57</span>xorriso -as mkisofs -iso-level 3 -full-iso9660-filenames -volid &quot;WIN11_24H2&quot; \
+<span class="ln">58</span>  -b boot/etfsboot.com -no-emul-boot -boot-load-size 8 -boot-info-table \
+<span class="ln">59</span>  -eltorito-alt-boot -e &quot;$EFISYS&quot; -no-emul-boot \
+<span class="ln">60</span>  -o /out/Win11_24H2_combined.iso iso
+<span class="ln">61</span>echo &quot;DONE:&quot;; ls -la /out/Win11_24H2_combined.iso
+<span class="ln">62</span></code></pre></div><div class="file" id="hack-win11-iso-sign-url-sh"><div class="fname">hack/win11-iso/sign-url.sh</div><div class="ctx">Mints a ≤7-day V4 signed URL for the private bucket object and prints a paste-ready values snippet. SA key via mktemp+trap (never left on disk).</div><pre><code><span class="ln">1</span>#!/usr/bin/env bash
+<span class="ln">2</span># win11-iso-sign-url.sh — generate a V4 signed GET URL for the Win11 combined
+<span class="ln">3</span># ISO in the PRIVATE iso-images GCS bucket, for Proxmox to download via the
+<span class="ln">4</span># crossplane-proxmox `EnvironmentDownloadFile`.
+<span class="ln">5</span>#
+<span class="ln">6</span># WHY THIS EXISTS
+<span class="ln">7</span>#   The iso-images bucket is private (public-access-prevention ENFORCED), so
+<span class="ln">8</span>#   Proxmox can&#x27;t pull a plain URL. Crossplane&#x27;s download resource only uses the
+<span class="ln">9</span>#   URL for the ONE-TIME download — once the ISO is resident on Proxmox the MR
+<span class="ln">10</span>#   stays Ready even after the URL expires (verified empirically). So you only
+<span class="ln">11</span>#   need a fresh URL when the ISO must be (re)downloaded:
+<span class="ln">12</span>#     - first deploy of the Windows VM, or
+<span class="ln">13</span>#     - a Proxmox host wipe/reinstall, or
+<span class="ln">14</span>#     - the previous signed URL is older than its TTL (max 7 days).
+<span class="ln">15</span>#
+<span class="ln">16</span># WHAT IT DOES
+<span class="ln">17</span>#   - pulls the GCS service-account key from 1Password (item: crossplane-gcp)
+<span class="ln">18</span>#   - mints a V4 signed URL (default 7 days) for the ISO object
+<span class="ln">19</span>#   - prints the URL and a ready-to-paste snippet for the PRIVATE values repo
+<span class="ln">20</span>#
+<span class="ln">21</span># USAGE
+<span class="ln">22</span>#   .bin/.. or: bash hack/win11-iso/sign-url.sh [days]
+<span class="ln">23</span>#
+<span class="ln">24</span># AFTER RUNNING
+<span class="ln">25</span>#   Paste the URL into the PRIVATE values repo (home-systems-values):
+<span class="ln">26</span>#     proxmox/values.yaml -&gt; isos.win11.url
+<span class="ln">27</span>#   commit + push; ArgoCD/Crossplane re-pulls the ISO to Proxmox.
+<span class="ln">28</span>#
+<span class="ln">29</span># REQUIREMENTS: op (1Password CLI, signed in), python3 with google-cloud-storage
+<span class="ln">30</span>#   (pip install google-cloud-storage), network to GCS.
+<span class="ln">31</span>set -euo pipefail
+<span class="ln">32</span>
+<span class="ln">33</span>DAYS=&quot;${1:-7}&quot;
+<span class="ln">34</span>PROJECT=&quot;syscd-443112&quot;
+<span class="ln">35</span>BUCKET=&quot;syscd-iso-images-4c4398cd-1a7&quot;      # iso-images (private) — see home-systems-values/gcp/values.yaml
+<span class="ln">36</span>OBJECT=&quot;Win11_24H2_combined.iso&quot;
+<span class="ln">37</span>KEYFILE=&quot;$(mktemp)&quot;
+<span class="ln">38</span>trap &#x27;rm -f &quot;$KEYFILE&quot;&#x27; EXIT
+<span class="ln">39</span>
+<span class="ln">40</span>echo &quot;# fetching GCS SA key from 1Password (crossplane-gcp)...&quot; &gt;&amp;2
+<span class="ln">41</span>op item get crossplane-gcp --vault kubernetes --fields creds --reveal \
+<span class="ln">42</span>  | python3 -c &quot;import sys;s=sys.stdin.read().strip();s=s[1:-1] if s.startswith(&#x27;\&quot;&#x27;) else s;open(&#x27;$KEYFILE&#x27;,&#x27;w&#x27;).write(s.replace(&#x27;\&quot;\&quot;&#x27;,&#x27;\&quot;&#x27;))&quot;
+<span class="ln">43</span>
+<span class="ln">44</span>URL=$(python3 - &quot;$BUCKET&quot; &quot;$OBJECT&quot; &quot;$DAYS&quot; &quot;$KEYFILE&quot; &quot;$PROJECT&quot; &lt;&lt;&#x27;PY&#x27;
+<span class="ln">45</span>import sys, datetime
+<span class="ln">46</span>from google.cloud import storage
+<span class="ln">47</span>from google.oauth2 import service_account
+<span class="ln">48</span>bkt, obj, days, keyfile, project = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], sys.argv[5]
+<span class="ln">49</span>creds = service_account.Credentials.from_service_account_file(keyfile)
+<span class="ln">50</span>client = storage.Client(credentials=creds, project=project)
+<span class="ln">51</span>blob = client.bucket(bkt).blob(obj)
+<span class="ln">52</span>print(blob.generate_signed_url(version=&quot;v4&quot;, expiration=datetime.timedelta(days=days), method=&quot;GET&quot;))
+<span class="ln">53</span>PY
+<span class="ln">54</span>)
+<span class="ln">55</span>
+<span class="ln">56</span>echo &quot;# signed URL for gs://$BUCKET/$OBJECT (valid ${DAYS}d):&quot; &gt;&amp;2
+<span class="ln">57</span>echo
+<span class="ln">58</span>echo &quot;# --- paste into home-systems-values/proxmox/values.yaml ---&quot;
+<span class="ln">59</span>echo &quot;isos:&quot;
+<span class="ln">60</span>echo &quot;  win11:&quot;
+<span class="ln">61</span>echo &quot;    enabled: true&quot;
+<span class="ln">62</span>echo &quot;    url: \&quot;$URL\&quot;&quot;
+<span class="ln">63</span></code></pre></div><div class="file" id="-bin-gpu-switch-sh"><div class="fname">.bin/gpu-switch.sh</div><div class="ctx">Flips the shared GPU between the two VMs by setting per-VM started/passthrough and applying via Crossplane — stop one, settle, start the other (sequenced to avoid a busy-GPU race).</div><pre><code><span class="ln">1</span>#!/usr/bin/env bash
+<span class="ln">2</span># gpu-switch.sh - switch ownership of the shared GPU (0000:01:00.0) between the
+<span class="ln">3</span># two Proxmox VMs managed by the crossplane-proxmox chart.
+<span class="ln">4</span>#
+<span class="ln">5</span>#   talos   -&gt; VM 100 started (GPU passthrough), VM 101 stopped
+<span class="ln">6</span>#   windows -&gt; VM 101 started + GPU passthrough variant, VM 100 stopped
+<span class="ln">7</span>#
+<span class="ln">8</span># The switch changes DESIRED state in Crossplane (renders the chart and applies
+<span class="ln">9</span># the two EnvironmentVMs); Crossplane then stops one VM and starts the other.
+<span class="ln">10</span># A hand `qm stop` would be undone by reconcile, so always use this.
+<span class="ln">11</span>#
+<span class="ln">12</span># Usage:
+<span class="ln">13</span>#   .bin/gpu-switch.sh talos|tl|t | windows|win|w [--apply]
+<span class="ln">14</span>#
+<span class="ln">15</span># Without --apply it prints the rendered EnvironmentVMs (dry run). With --apply
+<span class="ln">16</span># it pipes them to `kubectl apply` against $KUBECONTEXT.
+<span class="ln">17</span>#
+<span class="ln">18</span># Env:
+<span class="ln">19</span>#   KUBECONTEXT   kubectl context where Crossplane runs (default: current)
+<span class="ln">20</span>#   CHART         chart path (default: k8s/charts/crossplane-proxmox)
+<span class="ln">21</span>#   EXTERNAL_SECRET  &quot;true&quot; to keep the chart&#x27;s ExternalSecret (1Password/ESO),
+<span class="ln">22</span>#                    &quot;false&quot; (default) when the proxmox-creds Secret is supplied
+<span class="ln">23</span>#                    out-of-band (e.g. a local kind control plane).
+<span class="ln">24</span>set -euo pipefail
+<span class="ln">25</span>
+<span class="ln">26</span>REPO_ROOT=&quot;$(cd &quot;$(dirname &quot;${BASH_SOURCE[0]}&quot;)/..&quot; &amp;&amp; pwd)&quot;
+<span class="ln">27</span>CHART=&quot;${CHART:-$REPO_ROOT/k8s/charts/crossplane-proxmox}&quot;
+<span class="ln">28</span>EXTERNAL_SECRET=&quot;${EXTERNAL_SECRET:-false}&quot;
+<span class="ln">29</span>
+<span class="ln">30</span>target=&quot;${1:-}&quot;
+<span class="ln">31</span>apply=&quot;${2:-}&quot;
+<span class="ln">32</span>case &quot;$target&quot; in
+<span class="ln">33</span>  talos|tl|t)
+<span class="ln">34</span>    sets=(
+<span class="ln">35</span>      --set vms.talosPc01.enabled=true  --set vms.talosPc01.started=true
+<span class="ln">36</span>      --set vms.windows.enabled=true    --set vms.windows.started=false
+<span class="ln">37</span>    ) ;;
+<span class="ln">38</span>  windows|win|w)
+<span class="ln">39</span>    sets=(
+<span class="ln">40</span>      --set vms.talosPc01.enabled=true  --set vms.talosPc01.started=false
+<span class="ln">41</span>      --set vms.windows.enabled=true    --set vms.windows.started=true
+<span class="ln">42</span>      --set vms.windows.passthrough=true --set vms.windows.vga=null
+<span class="ln">43</span>    ) ;;
+<span class="ln">44</span>  *)
+<span class="ln">45</span>    echo &quot;usage: $(basename &quot;$0&quot;) talos|tl|t | windows|win|w [--apply]&quot; &gt;&amp;2
+<span class="ln">46</span>    exit 2 ;;
+<span class="ln">47</span>esac
+<span class="ln">48</span>
+<span class="ln">49</span>render() {
+<span class="ln">50</span>  helm template crossplane-proxmox &quot;$CHART&quot; \
+<span class="ln">51</span>    --set credentials.externalSecret.enabled=&quot;$EXTERNAL_SECRET&quot; \
+<span class="ln">52</span>    &quot;${sets[@]}&quot; \
+<span class="ln">53</span>    --show-only templates/talos-pc01.yaml \
+<span class="ln">54</span>    --show-only templates/windows.yaml
+<span class="ln">55</span>}
+<span class="ln">56</span>
+<span class="ln">57</span>echo &quot;# gpu-switch -&gt; $target  (chart: $CHART)&quot; &gt;&amp;2
+<span class="ln">58</span>if [ &quot;$apply&quot; = &quot;--apply&quot; ]; then
+<span class="ln">59</span>  ctx_args=()
+<span class="ln">60</span>  [ -n &quot;${KUBECONTEXT:-}&quot; ] &amp;&amp; ctx_args=(--context &quot;$KUBECONTEXT&quot;)
+<span class="ln">61</span>  K(){ kubectl ${ctx_args[@]+&quot;${ctx_args[@]}&quot;} &quot;$@&quot;; }
+<span class="ln">62</span>  one(){ helm template crossplane-proxmox &quot;$CHART&quot; --set credentials.externalSecret.enabled=&quot;$EXTERNAL_SECRET&quot; &quot;${sets[@]}&quot; --show-only &quot;templates/$1&quot;; }
+<span class="ln">63</span>  # Sequence the switch: the shared GPU (0000:01:00.0) must be released by the
+<span class="ln">64</span>  # VM being stopped BEFORE the other starts, or the passthrough start fails on
+<span class="ln">65</span>  # a busy device. Apply the stop first, let it settle, then the start.
+<span class="ln">66</span>  case &quot;$target&quot; in
+<span class="ln">67</span>    talos|tl|t)    stop_tpl=windows.yaml;    start_tpl=talos-pc01.yaml ;;
+<span class="ln">68</span>    windows|win|w) stop_tpl=talos-pc01.yaml; start_tpl=windows.yaml ;;
+<span class="ln">69</span>  esac
+<span class="ln">70</span>  echo &quot;# applying to context: ${KUBECONTEXT:-&lt;current&gt;}&quot; &gt;&amp;2
+<span class="ln">71</span>  echo &quot;# 1/3 stop GPU holder ($stop_tpl)&quot; &gt;&amp;2; one &quot;$stop_tpl&quot; | K apply -f -
+<span class="ln">72</span>  echo &quot;# 2/3 settle ~60s so the GPU is released (provider exposes no power-state field to poll)&quot; &gt;&amp;2; sleep 60
+<span class="ln">73</span>  echo &quot;# 3/3 start GPU owner ($start_tpl)&quot; &gt;&amp;2; one &quot;$start_tpl&quot; | K apply -f -
+<span class="ln">74</span>  echo &quot;# done. VERIFY: K get environmentvm &lt;start-vm&gt; -o jsonpath Synced should be True;&quot; &gt;&amp;2
+<span class="ln">75</span>  echo &quot;#   if it errored on a busy GPU, the stop hadn&#x27;t finished — re-run or wait + reapply.&quot; &gt;&amp;2
+<span class="ln">76</span>else
+<span class="ln">77</span>  render
+<span class="ln">78</span>  echo &quot;# dry run only. re-run with --apply to switch.&quot; &gt;&amp;2
+<span class="ln">79</span>fi
+<span class="ln">80</span></code></pre></div></div></body></html>
