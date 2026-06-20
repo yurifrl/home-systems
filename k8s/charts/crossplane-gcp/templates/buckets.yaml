@@ -11,6 +11,13 @@ metadata:
     crossplane.io/external-name: {{ required "bucket.externalName required" .externalName | quote }}
 spec:
   deletionPolicy: {{ .deletionPolicy | default $dp }}
+  {{- with .managementPolicies }}
+  # Drop "LateInitialize" to stop Crossplane importing live-bucket fields (e.g.
+  # a retention policy set out-of-band) back into the spec, so forProvider is
+  # authoritative and the provider clears anything not declared here.
+  managementPolicies:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   providerConfigRef:
     name: {{ $pc }}
   forProvider:
