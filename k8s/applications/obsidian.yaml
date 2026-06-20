@@ -1,0 +1,118 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: obsidian
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: obsidian
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    # linuxserver Obsidian (desktop-in-browser via KasmVNC). An init container
+    # clones the private vault repo (git@github.com:yurifrl/Obsidian.git) into
+    # /config/vaults/Obsidian using the GITHUB_TOKEN synced from 1Password.
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          persistentVolumeClaims:
+            - name: obsidian-config
+              storage: 10Gi
+              storageClassName: longhorn-single
+          # Pulls GITHUB_TOKEN from the 1Password "obsidian" item (Kubernetes
+          # vault) into a k8s Secret named "obsidian".
+          externalSecrets:
+            - name: obsidian
+              data:
+                - secretKey: GITHUB_TOKEN
+                  key: obsidian
+                  property: GITHUB_TOKEN
+          deployments:
+            - name: obsidian
+              # Pin to pc01 (amd64, headroom); Obsidian's Electron/Chromium is
+              # too heavy for the arm SBC workers.
+              nodeSelector:
+                kubernetes.io/hostname: pc01
+              # Electron's Chromium sandbox needs an unconfined seccomp profile.
+              securityContext:
+                seccompProfile:
+                  type: Unconfined
+              volumes:
+                - name: config
+                  persistentVolumeClaim:
+                    claimName: obsidian-config
+                - name: dshm
+                  emptyDir:
+                    medium: Memory
+                    sizeLimit: 1Gi
+              initContainers:
+                - name: clone-vault
+                  image: alpine/git:latest
+                  command:
+                    - sh
+                    - -c
+                    - |
+                      set -e
+                      if [ -d /config/vaults/Obsidian/.git ]; then
+                        git -C /config/vaults/Obsidian pull --ff-only || true
+                      else
+                        mkdir -p /config/vaults
+                        git clone "https://oauth2:${GITHUB_TOKEN}@github.com/yurifrl/Obsidian.git" /config/vaults/Obsidian
+                      fi
+                  env:
+                    - name: GITHUB_TOKEN
+                      valueFrom:
+                        secretKeyRef:
+                          name: obsidian
+                          key: GITHUB_TOKEN
+                  volumeMounts:
+                    - name: config
+                      mountPath: /config
+              containers:
+                - name: obsidian
+                  image: lscr.io/linuxserver/obsidian:latest
+                  imagePullPolicy: Always
+                  ports:
+                    - name: http
+                      containerPort: 3000
+                      protocol: TCP
+                  env:
+                    - name: PUID
+                      value: "1000"
+                    - name: PGID
+                      value: "1000"
+                    - name: TZ
+                      value: America/Sao_Paulo
+                  volumeMounts:
+                    - name: config
+                      mountPath: /config
+                    - name: dshm
+                      mountPath: /dev/shm
+                  resources:
+                    requests:
+                      cpu: 100m
+                      memory: 512Mi
+                    limits:
+                      memory: 2Gi
+          services:
+            - name: obsidian
+              port: 3000
+          virtualServices:
+            - name: obsidian
+              service:
+                name: obsidian
+                namespace: obsidian
+                port: 3000

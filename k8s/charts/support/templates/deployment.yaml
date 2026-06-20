@@ -22,6 +22,14 @@ spec:
       {{- end }}
       volumes: {{ toYaml .volumes | nindent 8 }}
       hostAliases: {{ toYaml .hostAliases | nindent 8 }}
+      {{- with .securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
       {{- if .containers }}
         {{- toYaml .containers | nindent 8 }}
