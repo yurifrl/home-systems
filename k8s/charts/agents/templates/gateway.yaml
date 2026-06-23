@@ -17,8 +17,10 @@ spec:
         app.kubernetes.io/name: agents-gateway
     spec:
       serviceAccountName: agents-gateway
+      {{- if .Values.imagePullSecret }}
       imagePullSecrets:
         - name: {{ .Values.imagePullSecret }}
+      {{- end }}
       containers:
         - name: gateway
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

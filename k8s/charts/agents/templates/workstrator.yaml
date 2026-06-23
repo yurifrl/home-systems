@@ -16,8 +16,10 @@ spec:
       labels:
         app.kubernetes.io/name: agents-workstrator
     spec:
+      {{- if .Values.imagePullSecret }}
       imagePullSecrets:
         - name: {{ .Values.imagePullSecret }}
+      {{- end }}
       containers:
         - name: workstrator
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

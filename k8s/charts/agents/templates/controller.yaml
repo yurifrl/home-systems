@@ -17,8 +17,10 @@ spec:
         app.kubernetes.io/name: agents-controller
     spec:
       serviceAccountName: agents-controller
+      {{- if .Values.imagePullSecret }}
       imagePullSecrets:
         - name: {{ .Values.imagePullSecret }}
+      {{- end }}
       containers:
         - name: controller
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
