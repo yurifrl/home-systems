@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: private-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  # App-of-apps over the PRIVATE values repo. Manifests that must not appear in
+  # this public repo (e.g. partner-specific Applications + repo credentials)
+  # live there and are applied from here. Repo creds: argocd-home-systems-values.
+  source:
+    repoURL: git@github.com:yurifrl/home-systems-values.git
+    targetRevision: HEAD
+    path: applications
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
