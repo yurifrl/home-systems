@@ -68,6 +68,12 @@ machine:
     hostDNS:
       enabled: true
       forwardKubeDNSToHost: true
+  registries:
+    config:
+      ghcr.io:
+        auth:
+          username: "op://kubernetes/ghcr-image-pull-secret/username"
+          password: "op://kubernetes/ghcr-image-pull-secret/password"
   nodeLabels:
     node.kubernetes.io/exclude-from-external-load-balancers: ""
 
