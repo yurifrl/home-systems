@@ -5,7 +5,7 @@ image:
   pullPolicy: IfNotPresent
 
 # Pull secret for the private image (provisioned by the support-chart ExternalSecret).
-imagePullSecret: ""
+imagePullSecret: ghcr-image-pull-secret
 
 # Secret (the single "agents" 1Password item) mounted wholesale into agent pods
 # and consumed by the gateway/workstrator for tokens.
