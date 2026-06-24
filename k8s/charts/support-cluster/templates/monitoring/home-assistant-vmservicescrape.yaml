@@ -1,0 +1,26 @@
+{{- if eq .Values.monitoringProvider "victoriametrics" }}
+# VMServiceScrape for Home Assistant
+# Replaces the upstream chart's Prometheus Operator ServiceMonitor
+# (serviceMonitor.enabled is off — no monitoring.coreos.com CRD on this cluster).
+# HA exposes Prometheus metrics at /api/prometheus with requires_auth: false.
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: home-assistant
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+spec:
+  endpoints:
+  - port: http
+    path: /api/prometheus
+    interval: 30s
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: home-assistant
+      app.kubernetes.io/instance: home-assistant
+  namespaceSelector:
+    matchNames:
+    - home-assistant
+{{- end }}

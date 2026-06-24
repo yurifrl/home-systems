@@ -229,7 +229,12 @@ machine:
     # extensions:
     #     - image: ghcr.io/siderolabs/gvisor:20220117.0-v1.0.0 # System extension image.
   # Used to configure the machine's container image registry mirrors.
-  registries: {}
+  registries:
+    config:
+      ghcr.io:
+        auth:
+          username: "op://kubernetes/ghcr-image-pull-secret/username"
+          password: "op://kubernetes/ghcr-image-pull-secret/password"
   # # Specifies mirror configuration for each registry host namespace.
   # mirrors:
   #     ghcr.io:

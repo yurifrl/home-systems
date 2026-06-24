@@ -7,21 +7,6 @@ image already ships `bd`. Local subagents exist via `@tintinweb/pi-subagents`
 (child processes, shared fs, die with the session, rich widget UI, `Agent` /
 `steer_subagent` / `get_subagent_result`).
 
-The reference architecture we studied is NSX **Argus** (`/Users/yuri/Workdir/Nsx/argus`):
-a Go platform that runs agents as K8s-native resources. Key transferable
-patterns:
-- `argus-adk-go` builds agents from config via **Google ADK**
-  (`google.golang.org/adk`): `llmagent.New({Model, Tools, Instruction})` — the
-  runner is generic, personality comes from config. (`internal/agent/factory.go`,
-  `internal/agent/model.go`)
-- A2A via `github.com/a2aproject/a2a-go`: `a2asrv.NewHandler`, `/invoke`,
-  `/.well-known/agent-card.json`, SSE streaming, **push notifications** to a
-  caller webhook. (`argus-adk-go/internal/server/server.go`)
-- A CRD controller reconciles `SandboxSession` → ephemeral Pod with TTL, restart
-  budget, owner refs, max-concurrency. (`argus-core/internal/controller/sandbox/`)
-- `spawn_tools.go` shows agent→agent delegation with per-session locks, dead
-  worker recovery, and status push — the exact lifecycle hardening we need.
-
 The decisive constraint is **reconciliation**: ownership must outlive a pi
 session so the user can disconnect and resume. That rules out session-scoped
 state and forces an owner-scoped, durable task store in the gateway.
@@ -45,8 +30,7 @@ state and forces an owner-scoped, durable task store in the gateway.
 **Non-Goals**
 - Replacing or modifying local subagents.
 - A bespoke hermes integration (hermes is just an A2A/MCP client).
-- Budgets, multi-tenant governance, web UI, org charts (Argus has these; we do
-  not need them).
+- Budgets, multi-tenant governance, web UI, org charts
 - Stateful resumable *execution* (we resume *results*, not mid-run agent state).
 
 ## Decisions
@@ -107,7 +91,7 @@ network can fail; the TTL guarantees no immortal pods.
 ### D8 — CRD controller, not direct pod creation
 The gateway creates an `AgentTask` CRD; a controller reconciles it into Pod +
 Service with owner refs (GC), restart budget, and the deadline. Rationale:
-self-healing + declarative + free GC, exactly as Argus does with
+self-healing + declarative + free GC, exactly as does with
 `SandboxSession`; avoids the gateway hand-managing pod lifecycles.
 
 ### D9 — Runtime is selectable per definition (`adk` | `pi`)
@@ -131,7 +115,7 @@ gateway routes to a persistent agent by name (it is already running) and spawns
 an ephemeral pod otherwise. Persistent agents keep their working copy fresh
 (periodic `git pull`) and still externalize edits via their `output:` contract.
 Rationale: the user wants an always-available, fast-to-query agent alongside the
-fire-and-forget workers; mirrors Argus's Agent-Deployment vs SandboxSession-Pod
+fire-and-forget workers; mirrors  Agent-Deployment vs SandboxSession-Pod
 split.
 
 ### D12 — One secret for all agents (v1)

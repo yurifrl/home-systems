@@ -45,7 +45,10 @@ spec:
                 - mountPath: /config
                   name: home-assistant
           serviceMonitor:
-            enabled: true
+            # No Prometheus operator / monitoring.coreos.com CRD on this cluster.
+            # Scraping is done via a VMServiceScrape instead — see
+            # k8s/charts/support-cluster/templates/monitoring/home-assistant-vmservicescrape.yaml
+            enabled: false
           configuration:
             enabled: true
             forceInit: true

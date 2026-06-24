@@ -6,6 +6,8 @@ metadata:
   name: {{ .name }}
 spec:
   package: {{ .package }}
+  runtimeConfigRef:
+    name: {{ $.Values.runtimeConfigName }}
 {{- end }}
 {{- if .Values.gcpCredentials.enabled }}
 ---

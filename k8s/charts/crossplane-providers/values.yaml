@@ -1,3 +1,9 @@
+# Pin provider runtime pods to a CPU arch via a shared DeploymentRuntimeConfig.
+# Several community images (e.g. wildbitca cloudflare) are amd64-only and
+# ImagePullBackOff on the lone arm64 node; every Provider below references this.
+runtimeConfigName: amd64-only
+runtimeArch: amd64
+
 # Crossplane provider packages to install (Crossplane v2.3.2; cluster-scoped MRs).
 providers:
   - name: provider-gcp-storage

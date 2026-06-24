@@ -108,10 +108,10 @@ nodes:
       method: pxe
     # arm64 (rpi_generic overlay): tailscale + iscsi-tools + util-linux-tools
     schematic_id: d0e797e79d4e8c53a843776a1a5b57a3429aaaf7e8e3246d35df5df9f915da86
-  macarmflutter01:
+  macarm01:
     # UTM/QEMU VM on Apple Silicon (arm64). Worker. Not PXE/TPI-bootable: boot
     # the Talos arm64 ISO in UTM (virtio-scsi disk, RNG device, bridged net),
-    # then `nostos apply macarmflutter01` (insecure first-apply).
+    # then `nostos apply macarm01` (insecure first-apply).
     # mac is only needed to satisfy validation (render embeds it in the output
     # filename); the node is reached by IP, not PXE.
     mac: "00:0c:29:b0:c0:b0"
@@ -119,7 +119,7 @@ nodes:
     role: worker
     arch: arm64
     install_disk: /dev/vdb
-    template: macarmflutter01.yaml
+    template: macarm01.yaml
     # arm64 VM: tailscale + iscsi-tools + util-linux-tools + entropy kernel args
     # baked in. Source: nostos/manifests/schematics/vm01-arm64.yaml
     schematic_id: 773f49ef0c412e83da0eb190d3b1915aba0c2baf358f4db7589fd843788751ab

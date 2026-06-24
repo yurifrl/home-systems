@@ -1,6 +1,6 @@
-# Talos machineconfig TEMPLATE for macarmflutter01 (UTM/QEMU VM, arm64, Apple Silicon)
+# Talos machineconfig TEMPLATE for macarm01 (UTM/QEMU VM, arm64, Apple Silicon)
 # Role: worker. Boot the Talos arm64 ISO in UTM (virtio-scsi disk, RNG device,
-# bridged network), then: nostos apply macarmflutter01 (insecure first-apply).
+# bridged network), then: nostos apply macarm01 (insecure first-apply).
 version: v1alpha1
 debug: false
 persist: true
@@ -17,7 +17,7 @@ machine:
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
   network:
-    hostname: macarmflutter01
+    hostname: macarm01
     interfaces:
       - interface: enp0s1
         dhcp: false
@@ -68,7 +68,7 @@ apiVersion: v1alpha1
 kind: ExtensionServiceConfig
 name: tailscale
 environment:
-  - TS_AUTHKEY=tailscale://authkey?description=macarmflutter01
+  - TS_AUTHKEY=tailscale://authkey?description=macarm01
   # On-LAN node (like dell01): NEVER --accept-routes (it hijacks the pod CIDR
   # and kills cluster DNS). --reset so `tailscale up` accepts the flag set.
   - TS_ROUTES=192.168.68.0/24

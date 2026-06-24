@@ -32,15 +32,6 @@ spec:
       helm:
         valuesObject:
           externalSecrets:
-            # Pull secret for the private ghcr.io/yurifrl/agents image, scoped to
-            # this app's namespace (not the shared support-cluster chart).
-            # template.type is required so kubelet honors it as a pull secret
-            # (ESO defaults to Opaque, which kubelet ignores for image pulls).
-            - name: ghcr-image-pull-secret
-              template:
-                type: kubernetes.io/dockerconfigjson
-                data:
-                  .dockerconfigjson: '{{ index . ".dockerconfigjson" }}'
             # The single "agents" item: every agent pod mounts this wholesale.
             # Requires a 1Password "agents" item (the one documented manual
             # prerequisite) with the fields referenced below.

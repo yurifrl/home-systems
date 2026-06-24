@@ -110,6 +110,8 @@ spec:
       template:
         spec:
           restartPolicy: Never
+          nodeSelector:
+            kubernetes.io/arch: amd64
           serviceAccountName: {{ .Release.Name }}-iso-pipeline
           containers:
             - name: build

@@ -1,0 +1,17 @@
+{{- /*
+  Pin Crossplane provider RUNTIME pods to a CPU arch. Several community provider
+  images (e.g. wildbitca cloudflare) are amd64-only and ImagePullBackOff if they
+  land on the lone arm64 node. Each Provider references this via runtimeConfigRef.
+*/ -}}
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: {{ .Values.runtimeConfigName }}
+spec:
+  deploymentTemplate:
+    spec:
+      selector: {}
+      template:
+        spec:
+          nodeSelector:
+            kubernetes.io/arch: {{ .Values.runtimeArch }}

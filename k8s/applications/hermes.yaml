@@ -69,9 +69,9 @@ spec:
           gitRepos:
             enabled: true
             repos:
-              - git@github.com:yurifrl/Obsidian.git
-              - git@github.com:yurifrl/home-systems.git
-              - git@github.com:yurifrl/home-systems-values.git
+              - Obsidian
+              - home-systems
+              - home-systems-values
             # Persist /workdir so repos aren't re-cloned from scratch on every
             # pod roll (Obsidian alone is ~1GB; emptyDir made each deploy take
             # ~15min). longhorn-single: no HA replica needed, the repos are
