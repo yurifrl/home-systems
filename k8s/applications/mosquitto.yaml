@@ -1,5 +1,9 @@
-# https://github.com/truecharts/public/blob/master/charts/stable/mosquitto/values.yaml
-# https://truecharts.org/general/
+# Minimal MQTT broker for zigbee2mqtt (and Home Assistant), via the support chart.
+# The former TrueCharts chart (tccr.io/truecharts/mosquitto) was removed upstream
+# when TrueCharts shut down its public registry, so this deploys the official
+# eclipse-mosquitto image. Its entrypoint already runs `mosquitto -c
+# /mosquitto/config/mosquitto.conf`, so mounting our ConfigMap there is enough.
+# Dropped vs the old chart: websockets VirtualService + mqtt-exporter. Re-add if needed.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -18,60 +22,34 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-  ignoreDifferences:
-    - group: apps
-      kind: Deployment
-      name: mosquitto
-      jsonPointers:
-        - /spec/template/spec/hostUsers
   sources:
-    - chart: mosquitto
-      targetRevision: "17.11.3"
-      repoURL: tccr.io/truecharts
-      helm:
-        valuesObject:
-          websockets:
-            enabled: true
-          persistence:
-            data:
-              enabled: false
-            configinc:
-              enabled: false
-            mosquitto-config:
-              enabled: true
-              mountPath: "/mosquitto/config/mosquitto.conf"
-              subPath: "mosquitto.conf"
-              type: configmap
-              objectName: config
-              size: 2Gi
-          podOptions:
-            nodeSelector:
-              kubernetes.io/arch: arm64
-          resources:
-            limits:
-              cpu: 500m
-              memory: 512Mi
-            requests:
-              cpu: 100m
-              memory: 128Mi
-
-    - repoURL: https://github.com/yurifrl/home-systems.git
-      targetRevision: HEAD
-      path: k8s/charts/mqtt-exporter # https://github.com/kpetremann/mqtt-exporter
-      helm:
-        valuesObject:
-          mqttBroker:
-            address: "mosquitto.mosquitto.svc.cluster.local"
-            port: 1883
-
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/support
       helm:
         valuesObject:
-          virtualServices:
-            - name: mosquitto-websockets
-              service:
-                name: mosquitto-websockets
-                namespace: mosquitto
-                port: 9001
+          configMaps:
+            - name: mosquitto-config
+              data:
+                mosquitto.conf: |
+                  listener 1883
+                  allow_anonymous true
+                  persistence false
+          deployments:
+            - name: mosquitto
+              image:
+                repository: eclipse-mosquitto
+                tag: "2"
+                pullPolicy: IfNotPresent
+              containerPort: 1883
+              volumes:
+                - name: config
+                  configMap:
+                    name: mosquitto-config
+              volumeMounts:
+                - name: config
+                  mountPath: /mosquitto/config
+          services:
+            - name: mosquitto
+              port: 1883
+              targetPort: http
