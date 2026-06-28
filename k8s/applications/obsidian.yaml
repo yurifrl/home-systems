@@ -107,6 +107,47 @@ spec:
                       memory: 512Mi
                     limits:
                       memory: 2Gi
+                # Self-sync sidecar: commits + pushes vault edits back to git
+                # and pulls remote changes, so the config volume stays in sync
+                # with github.com/yurifrl/Obsidian. Tolerant of transient
+                # failures (|| true) so a flaky network can't crash the pod.
+                - name: vault-sync
+                  image: alpine/git:latest
+                  env:
+                    - name: GITHUB_TOKEN
+                      valueFrom:
+                        secretKeyRef:
+                          name: obsidian
+                          key: GITHUB_TOKEN
+                  command:
+                    - sh
+                    - -c
+                    - |
+                      VAULT=/config/vaults/Obsidian
+                      git config --global --add safe.directory "$VAULT"
+                      while true; do
+                        if [ -d "$VAULT/.git" ]; then
+                          git -C "$VAULT" pull --rebase --autostash || true
+                          git -C "$VAULT" add -A || true
+                          if ! git -C "$VAULT" diff --cached --quiet; then
+                            git -C "$VAULT" \
+                              -c user.name=obsidian-sync \
+                              -c user.email=obsidian-sync@local \
+                              commit -m "auto: $(date -Iseconds)" || true
+                            git -C "$VAULT" push || true
+                          fi
+                        fi
+                        sleep 300
+                      done
+                  volumeMounts:
+                    - name: config
+                      mountPath: /config
+                  resources:
+                    requests:
+                      cpu: 10m
+                      memory: 32Mi
+                    limits:
+                      memory: 64Mi
           services:
             - name: obsidian
               port: 3000
