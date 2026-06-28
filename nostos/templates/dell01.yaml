@@ -48,14 +48,17 @@ machine:
     nodeIP:
       validSubnets:
         - 192.168.68.0/24
-    extraMounts:
-      - destination: /var/mnt/storage
-        type: bind
-        source: /var/mnt/storage
-        options:
-          - bind
-          - rshared
-          - rw
+    # PROVISIONAL (2026-06-27): disabled with the /dev/sda Longhorn volume
+    # below (failing WALRAM SSD). Binding a non-existent source would fail
+    # the kubelet. Re-enable together with the disks block.
+    # extraMounts:
+    #   - destination: /var/mnt/storage
+    #     type: bind
+    #     source: /var/mnt/storage
+    #     options:
+    #       - bind
+    #       - rshared
+    #       - rw
   network:
     hostname: dell01
     interfaces:
@@ -86,17 +89,20 @@ machine:
     hostDNS:
       enabled: true
       forwardKubeDNSToHost: true
-  # /dev/sda is a 256GB SATA SSD (wiped of its old Windows install) used as
-  # Longhorn storage, mounted at /var/mnt/storage like the tp* workers.
-  disks:
-    - device: /dev/sda
-      partitions:
-        - mountpoint: /var/mnt/storage
-          size: 0
+  # PROVISIONAL (2026-06-27): /dev/sda (WALRAM-256GB SATA SSD) failed after a
+  # power-cut - READ FPDMA QUEUED timeouts + XFS corruption. Talos looped
+  # retrying its mount, stalling the volume phase and blocking kubelet/etcd,
+  # so dell01 went NotReady. Disabled until the SSD is wiped-and-proven or
+  # replaced. Re-enable the disks block + create-default-disk to restore
+  # Longhorn storage on this node.
+  # disks:
+  #   - device: /dev/sda
+  #     partitions:
+  #       - mountpoint: /var/mnt/storage
+  #         size: 0
   nodeLabels:
     node.kubernetes.io/exclude-from-external-load-balancers: ""
-    syscd.dev/storage: dell01
-    node.longhorn.io/create-default-disk: "true"
+    node.longhorn.io/create-default-disk: "false"
   # Node-level auth for the private ghcr.io registry: every pod on this node can
   # pull ghcr.io/yurifrl/* with no imagePullSecret (global, no per-namespace).
   registries:
@@ -114,8 +120,8 @@ cluster:
   # scheduling whenever the worker nodes are unhealthy (as we hit during
   # the 2026-06-05 DNS outage with tp1/tp4 NotReady).
   allowSchedulingOnControlPlanes: true
-  controlPlane:
-    endpoint: https://192.168.68.100:6443
+  # controlPlane.endpoint + extraHostEntries are injected by nostos from
+  # cluster.endpoint and the controlplane node set. Do not hardcode here.
   clusterName: talos-default
   network:
     cni:

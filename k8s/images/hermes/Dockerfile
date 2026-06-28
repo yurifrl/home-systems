@@ -51,7 +51,7 @@ ENV PYTHONUNBUFFERED=1 \
 # then purged in the same layer to keep the image lean.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        ca-certificates curl git ripgrep ffmpeg wget gnupg \
+        ca-certificates curl git git-lfs ripgrep ffmpeg wget gnupg \
         gcc python3-dev libffi-dev \
         fish less vim htop jq tree tmux procps iproute2 fzf bat fd-find \
     && ln -sf /usr/bin/batcat /usr/local/bin/bat \

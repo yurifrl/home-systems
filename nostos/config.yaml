@@ -1,6 +1,6 @@
 cluster:
   name: talos-default
-  endpoint: https://192.168.68.100:6443
+  endpoint: https://api.k8s.lan:6443
   talos_version: v1.13.3
   # Tailscale operator hostname running the API server proxy. When set,
   # `nostos kubeconfig` also adds a remote context reaching the cluster over
@@ -59,6 +59,7 @@ nodes:
   dell01:
     mac: "d0:94:66:d9:eb:a5"
     ip: 192.168.68.100
+    tailscale_ip: 100.82.148.37
     role: controlplane
     arch: amd64
     install_disk: /dev/nvme0n1
@@ -96,6 +97,7 @@ nodes:
   rpi01:
     mac: "e4:5f:01:3c:68:fa"
     ip: 192.168.0.170
+    tailscale_ip: 100.83.143.13
     role: controlplane
     arch: arm64
     install_disk: /dev/sda
@@ -135,6 +137,7 @@ nodes:
     # Static IP .91 is BELOW the DHCP pool (.100-.250) so it can't be leased away.
     mac: "00:0c:29:ac:01:01"
     ip: 192.168.68.91
+    tailscale_ip: 100.98.116.94
     role: controlplane
     arch: amd64
     install_disk: /dev/sda

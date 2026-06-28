@@ -72,6 +72,7 @@ spec:
               - Obsidian
               - home-systems
               - home-systems-values
+              - hermes-pages
             # Persist /workdir so repos aren't re-cloned from scratch on every
             # pod roll (Obsidian alone is ~1GB; emptyDir made each deploy take
             # ~15min). longhorn-single: no HA replica needed, the repos are

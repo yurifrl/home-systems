@@ -82,8 +82,8 @@ cluster:
   secret: "op://kubernetes/talos/CLUSTER_SECRET"
   # Home lab: control planes also run workloads.
   allowSchedulingOnControlPlanes: true
-  controlPlane:
-    endpoint: https://192.168.68.100:6443
+  # controlPlane.endpoint + extraHostEntries are injected by nostos from
+  # cluster.endpoint and the controlplane node set. Do not hardcode here.
   clusterName: talos-default
   network:
     cni:

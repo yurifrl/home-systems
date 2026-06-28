@@ -451,8 +451,8 @@ cluster:
   id: op://kubernetes/talos/CLUSTER_ID
   secret: op://kubernetes/talos/CLUSTER_SECRET
   # Provides control plane specific configuration options.
-  controlPlane:
-    endpoint: https://192.168.68.100:6443 # Endpoint is the canonical controlplane endpoint, which can be an IP address or a DNS hostname.
+  # controlPlane.endpoint + extraHostEntries are injected by nostos from
+  # cluster.endpoint and the controlplane node set. Do not hardcode here.
   clusterName: talos-default # Configures the cluster's name.
   
   # # Kube-proxy server-specific configuration options
