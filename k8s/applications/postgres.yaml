@@ -103,6 +103,11 @@ spec:
                 - CREATE ROLE anon NOLOGIN NOINHERIT;
                 - CREATE ROLE authenticated NOLOGIN NOINHERIT;
                 - CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
+                # authenticator + supabase_admin must exist before the GRANTs
+                # below. supabase_admin is the initdb owner (CNPG creates it);
+                # authenticator is created here (NOLOGIN now; the declarative
+                # `roles:` block flips it to LOGIN + sets its password).
+                - CREATE ROLE authenticator NOLOGIN NOINHERIT;
                 - CREATE ROLE supabase_auth_admin NOLOGIN NOINHERIT CREATEROLE;
                 - CREATE ROLE supabase_storage_admin NOLOGIN NOINHERIT CREATEROLE;
                 - CREATE ROLE supabase_functions_admin NOLOGIN NOINHERIT CREATEROLE;
