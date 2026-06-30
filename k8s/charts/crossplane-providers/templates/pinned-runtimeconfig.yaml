@@ -1,0 +1,32 @@
+{{- /*
+  provider-gcp-storage's startup is fragile in this stretched (two-LAN) cluster:
+  its SafeStart RBAC precheck and CRD-gate watch go through the kube-proxy Service
+  VIP (10.96.0.1), which load-balances across control-plane backends on both LANs.
+  A worker can only reach the same-LAN apiserver, so ~2/3 of VIP connections time
+  out and the provider crashloops -> its conversion webhook has no endpoint ->
+  every ArgoCD app gets stuck sync=Unknown (cluster cache can't list the CRDs).
+
+  Pin the provider to a control-plane node and point it at that node's LOCAL
+  apiserver so it always has a stable connection (no VIP, no cross-node hop).
+*/ -}}
+{{- with .Values.pinnedRuntimeConfig }}
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: {{ .name }}
+spec:
+  deploymentTemplate:
+    spec:
+      selector: {}
+      template:
+        spec:
+          nodeSelector:
+            kubernetes.io/hostname: {{ .nodeHostname }}
+          containers:
+            - name: package-runtime
+              env:
+                - name: KUBERNETES_SERVICE_HOST
+                  value: {{ .apiserverHost | quote }}
+                - name: KUBERNETES_SERVICE_PORT
+                  value: {{ .apiserverPort | quote }}
+{{- end }}

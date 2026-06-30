@@ -4,10 +4,24 @@
 runtimeConfigName: amd64-only
 runtimeArch: amd64
 
+# Dedicated runtime config for provider-gcp-storage (referenced above). Pins the
+# provider to a control-plane node and points it at that node's LOCAL apiserver,
+# bypassing the flaky kube-proxy Service VIP that load-balances to cross-LAN
+# apiservers this stretched cluster's workers can't reach.
+pinnedRuntimeConfig:
+  name: gcp-storage-pinned
+  nodeHostname: dell01
+  apiserverHost: "192.168.68.100"
+  apiserverPort: "6443"
+
 # Crossplane provider packages to install (Crossplane v2.3.2; cluster-scoped MRs).
 providers:
   - name: provider-gcp-storage
     package: xpkg.upbound.io/upbound/provider-gcp-storage:v2.5.4
+    # Pinned runtime: this provider crashloops on the Service-VIP apiserver path
+    # in the stretched cluster (see pinned-runtimeconfig.yaml), which breaks the
+    # conversion webhook and stalls ALL ArgoCD apps. Give it a stable local one.
+    runtimeConfig: gcp-storage-pinned
   - name: provider-gcp-cloudplatform
     package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v2.5.4
   - name: provider-gcp-iam

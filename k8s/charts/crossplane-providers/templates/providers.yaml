@@ -7,7 +7,7 @@ metadata:
 spec:
   package: {{ .package }}
   runtimeConfigRef:
-    name: {{ $.Values.runtimeConfigName }}
+    name: {{ .runtimeConfig | default $.Values.runtimeConfigName }}
 {{- end }}
 {{- if .Values.gcpCredentials.enabled }}
 ---
