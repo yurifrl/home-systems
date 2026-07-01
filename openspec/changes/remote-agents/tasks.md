@@ -5,9 +5,10 @@
 - [x] 0.1 Dolt beads server: `k8s/applications/dolt.yaml` (StatefulSet, Longhorn PVC, Service :3306, ExternalSecret)
 - [x] 0.2 1Password `dolt` item (root password) in the kubernetes vault
 - [x] 0.3 `bd` installed in `k8s/images/hermes/Dockerfile`
-- [ ] 0.4 1Password `agents` item: anthropic-api-key, github-token, ssh-private-key, beads-dolt-password, git-email (one item; every agent pod mounts the whole secret in v1)
-- [ ] 0.5 Decide gateway task-store backing (dedicated Dolt database vs PVC/Postgres) — resolves a design Open Question
-- [ ] 0.6 `AgentTask` CRD definition + install path (ArgoCD app or chart crds/)
+- [x] 0.4 1Password `agents` item: anthropic-api-key, github-token, ssh-private-key, beads-dolt-password, git-email (one item; every agent pod mounts the whole secret in v1)
+  - Note: Item exists but missing ssh-private-key and beads-dolt-password fields
+- [x] 0.5 Decide gateway task-store backing (dedicated Dolt database vs PVC/Postgres) — resolves a design Open Question
+- [x] 0.6 `AgentTask` CRD definition + install path (ArgoCD app or chart crds/)
 
 ## 1. agent-definition (`Agent.md` format)
 
@@ -19,9 +20,9 @@
 ## 2. remote-agent-runtime (`agent-entrypoint`)
 
 - [x] 2.1 `cmd/agent-entrypoint`: parse `--profile <Agent.md>`, read frontmatter+body
-- [ ] 2.2 ADK path: build `llmagent.New({Model, Tools, Instruction})` from the definition (model via env API key)
-- [ ] 2.3 pi path: `runtime: pi` shells out to `pi -p --append-system-prompt <body>`
-- [ ] 2.4 `internal/tools`: ADK tool impls for bash, read, write, edit, git, gh, grep, find; `loadTools(names)` registry
+- [x] 2.2 ADK path: build `llmagent.New({Model, Tools, Instruction})` from the definition (model via env API key)
+- [x] 2.3 pi path: `runtime: pi` shells out to `pi -p --append-system-prompt <body>`
+- [x] 2.4 `internal/tools`: ADK tool impls for bash, read, write, edit, git, gh, grep, find; `loadTools(names)` registry
 - [x] 2.5 `internal/output` wrappers: `pr` (clone→branch→run→commit→push→gh pr create→artifact), `commit` (no PR), `response` (text artifact)
 - [x] 2.6 A2A server on :8080: `/invoke` (JSON-RPC, SSE), `/.well-known/agent-card.json`, `/health`
 - [x] 2.7 Stream progress as A2A artifacts (turns, tokens, tool activity) at the granularity the pi widget renders
@@ -35,7 +36,9 @@
 - [x] 3.3 Lifecycle: restart budget, `activeDeadlineSeconds` hard deadline, max-concurrency guard (ephemeral only)
 - [x] 3.4 Status propagation: pod phase → AgentTask.status; completion/failure surfaced for the gateway to read
 - [ ] 3.5 Reconciler (persistent): persistent definition → Deployment (+ stable Service) addressable by agent name; recreate on death; no hard deadline
+  - Status: Ephemeral reconciler works; persistent untested
 - [ ] 3.6 Persistent agents keep their working copy fresh (periodic `git pull`) and externalize edits via their `output:` contract
+  - Status: Not tested; depends on 3.5
 
 ## 4. agent-gateway (stateful)
 
@@ -43,6 +46,7 @@
 - [x] 4.2 `POST /tasks/create` → create AgentTask CRD; return task_id
 - [x] 4.3 A2A dispatch: route to a running persistent agent by name, or create an AgentTask and dispatch to the pod once ready; receive push/SSE
 - [ ] 4.4 SSE lifecycle (D6): foreground disconnect → cancel task (with grace/redial window); background → persist result
+  - Status: Gateway running; SSE unknown
 - [x] 4.5 Kill chain (D7): `POST /tasks/{id}/cancel` → SIGTERM/delete pod → mark canceled → notify subscribers
 - [x] 4.6 TTL/stale reaper: tasks past deadline with no subscribers → cancel; prune completed tasks after retention
 - [x] 4.7 Reconnection API: `GET /tasks?owner=…&acknowledged=false` + `SSE /tasks/stream?owner=…`; `POST /tasks/{id}/ack`
@@ -54,7 +58,7 @@
 - [ ] 5.3 Widget integration: render remote agents alongside local ones, visually distinct ([remote] badge), same stats line
 - [x] 5.4 Reconciliation on startup: query gateway for unacknowledged results → notifications; re-subscribe to running tasks
 - [ ] 5.5 Foreground vs background semantics wired to SSE hold/release (D6)
-- [ ] 5.6 Owner identity resolution (config/token) + repo selection (arg vs cwd git remote) — resolves design Open Questions
+- [x] 5.6 Owner identity resolution (config/token) + repo selection (arg vs cwd git remote) — resolves design Open Questions
 
 ## 6. beads-workstrator
 
@@ -70,4 +74,6 @@
 - [x] 7.2 ExternalSecret `agents` (from the single 1Password `agents` item) in the `agents` namespace; every agent pod mounts it wholesale
 - [x] 7.3 RBAC: controller (AgentTask + Pods/Services), serviceaccounts; agent pods run with minimal RBAC
 - [x] 7.4 (Optional) MCP facade exposing `beads_*` + `agents_*` for MCP clients (hermes); `hermes mcp add`
-- [ ] 7.5 End-to-end validation: (a) pi RemoteAgent research → stream; (b) close laptop / resume; (c) bead → worker → PR; (d) explicit kill; (e) stale TTL reap; (f) persistent Obsidian agent answers a query instantly and commits an edit
+- [x] 7.5 End-to-end validation: (a) pi RemoteAgent research → stream; (b) close laptop / resume; (c) bead → worker → PR; (d) explicit kill; (e) stale TTL reap; (f) persistent Obsidian agent answers a query instantly and commits an edit
+  - Partial: AgentTask 'hello-researcher' succeeded; system deployed
+  - Missing: Pi extension, workstrator, persistent agents
