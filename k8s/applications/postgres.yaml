@@ -38,9 +38,21 @@ spec:
             postgresql: "16"
 
           cluster:
-            # Single instance for now. Bumpable later: raise to 3 for HA
-            # (CNPG manages streaming replication + failover automatically).
-            instances: 1
+            # 3 instances for HA: 1 primary + 2 streaming replicas across nodes
+            # (CNPG manages replication + automatic failover). Requires >=3
+            # schedulable nodes with healthy Longhorn so replicas land on
+            # distinct healthy nodes (keep them off the flaky roaming VMs).
+            instances: 3
+
+            # Spread the 3 instances across distinct hosts. The CNPG default
+            # uses topology.kubernetes.io/zone, but these bare-metal nodes have
+            # no zone labels, so it can't spread (all replicas could pile on one
+            # host = no HA). Use hostname; preferred so failover degrades
+            # gracefully instead of wedging pods Pending.
+            affinity:
+              enablePodAntiAffinity: true
+              podAntiAffinityType: preferred
+              topologyKey: kubernetes.io/hostname
 
             # PostgreSQL container image: the Supabase-extensions build
             # (home-systems-jfr.6) so this single cluster can also back Supabase.
