@@ -17,7 +17,9 @@ machine:
     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
     key: "op://kubernetes/talos/MACHINE_CA_KEY"
   certSANs:
+    - 192.168.0.91
     - 192.168.68.91
+    - 100.118.143.56
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
@@ -33,24 +35,22 @@ machine:
         memory.available: "500Mi"
         nodefs.available: "10%"
         imagefs.available: "10%"
-    # Register with the LAN IP, not the Tailscale IP (else Service-VIP traffic
-    # gets DNAT'd to the TS IP and dropped — the 2026-06-05 DNS break).
+    # Static IP on the 192.168.0.0/24 LAN (.91 is below the DHCP pool so it can't
+    # be leased away). Register the kubelet on that address — NEVER the Tailscale
+    # IP (TS-IP-as-nodeIP DNAT'd Service-VIP traffic to the TS IP and dropped it:
+    # the 2026-06-05 DNS break). etcd + Service subnet still ride Tailscale (below).
     nodeIP:
       validSubnets:
-        - 192.168.68.0/24
+        - 192.168.0.0/24
   network:
     hostname: macintel01
     interfaces:
       - interface: enp0s1
-        dhcp: false
         addresses:
-          - 192.168.68.91/24
+          - 192.168.0.91/24
         routes:
           - network: 0.0.0.0/0
-            gateway: 192.168.68.1
-    nameservers:
-      - 192.168.68.1
-      - 8.8.8.8
+            gateway: 192.168.0.1
   install:
     disk: /dev/sda
     image: {{ .InstallImage }}
@@ -106,7 +106,9 @@ cluster:
   apiServer:
     image: registry.k8s.io/kube-apiserver:v1.32.1
     certSANs:
+      - 192.168.0.91
       - 192.168.68.91
+      - 100.118.143.56
     disablePodSecurityPolicy: true
     admissionControl:
       - name: PodSecurity
@@ -158,5 +160,7 @@ kind: ExtensionServiceConfig
 name: tailscale
 environment:
   - TS_AUTHKEY=tailscale://authkey?description=macintel01
-  - TS_ROUTES=192.168.68.0/24
+  # Advertise the Service subnet over Tailscale so Service-VIP traffic reaches
+  # this node from any site (rpi01 model). No fixed LAN route — it roams.
+  - TS_ROUTES=10.96.0.0/12
   - TS_EXTRA_ARGS=--reset

@@ -134,10 +134,11 @@ nodes:
     # Not PXE/TPI-bootable: boot the metal-amd64 ISO into maintenance, then
     # `nostos apply macintel01`. mac/boot.method only satisfy validation.
     # VERIFY at maintenance: NIC name (enp0s1?) + install_disk (vdb?).
-    # Static IP .91 is BELOW the DHCP pool (.100-.250) so it can't be leased away.
+    # Static IP .91 on the 192.168.0.0/24 LAN, below the DHCP pool so it can't be
+    # leased away (no longer roams; set in network.interfaces of the template).
     mac: "00:0c:29:ac:01:01"
-    ip: 192.168.68.91
-    tailscale_ip: 100.98.116.94
+    ip: 192.168.0.91
+    tailscale_ip: 100.118.143.56
     role: controlplane
     arch: amd64
     install_disk: /dev/sda
