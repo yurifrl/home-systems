@@ -22,6 +22,16 @@ machine:
     nodeIP:
       validSubnets:
         - 192.168.0.0/24
+    # Bind-mount the Longhorn data dir into the kubelet container so Longhorn
+    # pods can access the USB data disk mounted at /var/mnt/storage. Mirrors tp1.
+    extraMounts:
+      - destination: /var/mnt/storage
+        type: bind
+        source: /var/mnt/storage
+        options:
+          - bind
+          - rshared
+          - rw
   network:
     hostname: rpi01
     interfaces:
@@ -58,7 +68,10 @@ machine:
       - 216.239.35.4
     bootTimeout: 5m0s
   install:
-    disk: /dev/sda
+    # OS lives on the SD card (mmcblk0); /dev/sda is the 248GB USB flash drive
+    # used as the Longhorn data disk (see machine.disks below). Install must NOT
+    # target sda or an upgrade/reinstall would wipe the data disk.
+    disk: /dev/mmcblk0
     image: {{ .InstallImage }}
     wipe: true
     extraKernelArgs:
@@ -81,6 +94,13 @@ machine:
     hostDNS:
       enabled: true
       forwardKubeDNSToHost: true
+  # Partition/format/mount the 248GB USB flash drive (/dev/sda) as the Longhorn
+  # data disk at /var/mnt/storage (Longhorn defaultDataPath). Mirrors tp1.
+  disks:
+    - device: /dev/sda
+      partitions:
+        - mountpoint: /var/mnt/storage
+          size: 0  # use all available space
   nodeLabels:
     node.kubernetes.io/exclude-from-external-load-balancers: ""
 
