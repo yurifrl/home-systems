@@ -21,7 +21,11 @@ machine:
     # (pods aren't TS-authorized sources). Mirrors dell01.
     nodeIP:
       validSubnets:
-        - 192.168.9.0/24
+        # Tailscale IP (100.64.0.0/10), NOT the remote-LAN address: this node is
+        # off the control-plane LAN, so its LAN IP is unroutable from other
+        # sites. Registering on the tailnet IP makes cilium's VXLAN mesh work in
+        # both directions (matches macarm01). Pairs with --accept-routes below.
+        - 100.64.0.0/10
     # Bind-mount the Longhorn data dir into the kubelet container so Longhorn
     # pods can access the USB data disk mounted at /var/mnt/storage. Mirrors tp1.
     extraMounts:

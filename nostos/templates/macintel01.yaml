@@ -35,13 +35,18 @@ machine:
         memory.available: "500Mi"
         nodefs.available: "10%"
         imagefs.available: "10%"
-    # Static IP on the 192.168.0.0/24 LAN (.91 is below the DHCP pool so it can't
-    # be leased away). Register the kubelet on that address — NEVER the Tailscale
-    # IP (TS-IP-as-nodeIP DNAT'd Service-VIP traffic to the TS IP and dropped it:
-    # the 2026-06-05 DNS break). etcd + Service subnet still ride Tailscale (below).
+    # Register the kubelet on the Tailscale IP (100.64.0.0/10), NOT the roaming
+    # LAN address. This node moves between networks (DHCP), so its LAN IP is
+    # unstable and unreachable from other sites; the Tailscale IP is stable and
+    # every node routes the tailnet CGNAT directly, so cilium's VXLAN mesh works
+    # in BOTH directions (the LAN-IP nodeIP left return traffic unroutable ->
+    # broke pod DNS/service on this node). Matches the working macarm01 pattern.
+    # Pairs with --accept-routes below (to reach the CP LAN apiserver). The old
+    # 2026-06-05 TS-IP DNS break predates the cilium KubePrism fix and no longer
+    # applies.
     nodeIP:
       validSubnets:
-        - 192.168.0.0/24
+        - 100.64.0.0/10
   network:
     hostname: macintel01
     interfaces:
