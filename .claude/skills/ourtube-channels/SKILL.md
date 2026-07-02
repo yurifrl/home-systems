@@ -1,6 +1,6 @@
 ---
 name: ourtube-channels
-description: Use when adding, removing, or editing YouTube channels for the ourtube app. Triggers on requests like "add youtube channel <url/handle>", "subscribe ourtube to X", or editing the channel list in k8s/applications/ourtube.yaml.
+description: Use when the user says "add youtube", "add youtube channel", "add channel", or mentions a YouTube URL/@handle to subscribe. Covers adding, removing, or editing YouTube channels for the ourtube app (the channel list in k8s/applications/ourtube.yaml).
 ---
 
 # Ourtube Channels

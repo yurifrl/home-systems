@@ -97,6 +97,16 @@ spec:
               channelId: UCCXR2kCo7Lcw_BKwWxo09kw
             - name: Alex Hillman
               channelId: UCFfH-JnmTDr5izA35fHQe5g
+            - name: Tonbis AI Garage
+              channelId: UCqB1bhMwGsW-yefBxYwFCCg
+            - name: Cameron Gray
+              channelId: UCNSfV3L4jv7Kx22lxo0Sv-g
+            - name: Theo - t3.gg
+              channelId: UCbRP3c757lWg9M-U7TyEkXA
+            - name: Everything Smart Home
+              channelId: UCrVLgIniVg6jW38uVqDRIiQ
+            - name: jakkuh
+              channelId: UCJa14zeVf8p6clixTOIOVyQ
 
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
