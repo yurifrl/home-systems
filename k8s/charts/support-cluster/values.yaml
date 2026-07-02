@@ -9,11 +9,46 @@ features:
   alertmanager: true
   tailscale: true
   defaultServiceAccountWithImagePullSecret: true
+  defaultLimitRange: true
 
 # Namespaces to create default ServiceAccount with image pull secret
 # Requires features.defaultServiceAccountWithImagePullSecret: true
 serviceAccountsWithImagePullSecret: []
   # - namespace: my-namespace
+
+# Default requests/limits for containers that don't set their own (one
+# LimitRange per listed namespace). Requests stop the scheduler from
+# overcommitting nodes; the limit caps runaway pods. Heavy apps should still
+# set their own resources — LimitRange only fills the gaps, it never overrides.
+# Requires features.defaultLimitRange: true
+limitRanges:
+  default:            # ceiling if a container sets no limit (generous, to avoid OOMing heavy apps)
+    memory: 1Gi
+  defaultRequest:     # reserved for scheduling if a container sets no request
+    cpu: 25m
+    memory: 64Mi
+  # App namespaces only. Infra/system namespaces (kube-system, longhorn-system,
+  # monitoring, cnpg-system, databases, supabase, istio-system, crossplane-system,
+  # etc.) are omitted — their pods need bespoke sizing.
+  namespaces:
+    - agents
+    - bind9
+    - board-games
+    - camofox
+    - cloudflare-tunnel
+    - dolt
+    - edge
+    - external-dns
+    - gha-runner
+    - hermes
+    - home-assistant
+    - litellm
+    - mosquitto
+    - obs
+    - obsidian
+    - ourtube
+    - syscd-app
+    - zigbee2mqtt
 
 
 # Tailscale
