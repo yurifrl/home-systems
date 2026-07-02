@@ -32,6 +32,18 @@ spec:
     helm:
       valuesObject:
         profile: ambient
+        # Reach the apiserver via Talos KubePrism (node-local LB at 127.0.0.1:7445)
+        # instead of the kubernetes Service VIP 10.96.0.1. The VIP load-balances
+        # across ALL control-plane backends, including ones a cross-site node
+        # can't route to -> istio-cni cmdAdd's ambient check times out -> pod
+        # sandbox creation fails on those nodes. KubePrism only forwards to
+        # reachable backends. shareHostNetworkNamespace puts the CNI agent in the
+        # host netns so localhost:7445 resolves to KubePrism (same fix as cilium).
+        ambient:
+          shareHostNetworkNamespace: true
+        env:
+          KUBERNETES_SERVICE_HOST: localhost
+          KUBERNETES_SERVICE_PORT: "7445"
         # cni:
         #   cniBinDir: "/var/lib/rancher/k3s/data/current/bin"
         #   cniConfDir: "/var/lib/rancher/k3s/agent/etc/cni/net.d"
