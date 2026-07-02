@@ -53,6 +53,18 @@ spec:
               enablePodAntiAffinity: true
               podAntiAffinityType: preferred
               topologyKey: kubernetes.io/hostname
+              # Keep replicas off macintel01/rpi01: those off-LAN nodes use their
+              # remote-LAN IP as the node InternalIP, which the CP/LAN nodes
+              # can't route back to (they must never --accept-routes), so pod
+              # traffic to a replica there can't complete and Longhorn's CSI
+              # never registers. The 5 reachable Longhorn nodes host replicas.
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: kubernetes.io/hostname
+                          operator: NotIn
+                          values: [macintel01, rpi01]
 
             # PostgreSQL container image: the Supabase-extensions build
             # (home-systems-jfr.6) so this single cluster can also back Supabase.
