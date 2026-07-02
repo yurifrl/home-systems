@@ -27,6 +27,21 @@ spec:
           #   LITELLM_MASTER_KEY  -> proxy auth key (clients -> LiteLLM hop)
           externalSecrets:
             - name: litellm
+            # CNPG declarative role password must live in the `databases` ns
+            # (the pg cluster's ns) as a basic-auth secret. postgres.yaml points
+            # the `litellm` role's passwordSecret at this `litellm-db` secret.
+            - name: litellm-db-roles
+              namespace: databases
+              targetName: litellm-db
+              template:
+                type: kubernetes.io/basic-auth
+                data:
+                  username: litellm
+                  password: "{{ .password }}"
+              data:
+                - secretKey: password
+                  key: litellm
+                  property: POSTGRES_PASSWORD
           configMaps:
             - name: litellm-config
               data:

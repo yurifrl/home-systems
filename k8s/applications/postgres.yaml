@@ -101,6 +101,14 @@ spec:
                 createrole: true
                 passwordSecret:
                   name: supabase-db
+              # LiteLLM proxy's own login role. Password lives in the `litellm`
+              # 1Password item; mirrored into the databases ns as `litellm-db`
+              # (basic-auth) by an ExternalSecret in k8s/applications/litellm.yaml.
+              - name: litellm
+                ensure: present
+                login: true
+                passwordSecret:
+                  name: litellm-db
 
             # initdb bootstrap (runs ONCE at cluster creation as superuser).
             # The existing `pg` cluster already bootstrapped, so applying this
@@ -180,6 +188,11 @@ spec:
           # their own declarative CNPG `Database` CR (one per DB) against this
           # single instance.
           # ---------------------------------------------------------------------
+          databases:
+            - name: litellm
+              ensure: present
+              owner: litellm
+              databaseReclaimPolicy: retain
 
           # ---------------------------------------------------------------------
           # BACKUPS — OPEN DECISION (CNPG-native, self-contained, NO external GCS).
