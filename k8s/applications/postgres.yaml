@@ -69,7 +69,10 @@ spec:
             # PostgreSQL container image: the Supabase-extensions build
             # (home-systems-jfr.6) so this single cluster can also back Supabase.
             # Carries wal2json, pgjwt, pgsodium, pg_net, supabase_vault.
-            imageName: ghcr.io/yurifrl/cnpg-postgres:16.10
+            # Pinned by digest: the mutable :16.10 tag drifted (older cached copies
+            # on some nodes lack the pgsodium_getkey script -> replica PANICs on
+            # startup). This digest is the build that carries the script.
+            imageName: ghcr.io/yurifrl/cnpg-postgres:16.10@sha256:df1933c85538c2410a5aa30a635976d89a2bce2d2caa378226fcf805f63ab344
 
             # Supabase needs these loaded at server start.
             postgresql:
