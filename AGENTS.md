@@ -181,7 +181,6 @@ kubectl get virtualservices -A
 ### Testing
 
 **Argo Workflows**: The `support-argo-workflows` chart includes workflow templates in `files/` directory:
-- `miniflux-youtube-subscribe`: Subscribes Miniflux to YouTube channels
 - Workflows are deployed as ConfigMaps and can be submitted via Argo UI
 
 **DNS Testing**: `hack/bind9-test/test-dns.sh` for testing BIND9 DNS

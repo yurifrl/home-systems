@@ -66,7 +66,7 @@ nodes:
     template: dell01.yaml
   tp1:
     ip: 192.168.68.107
-    role: worker
+    role: controlplane
     arch: arm64
     install_disk: /dev/mmcblk0
     template: tp1.yaml
@@ -81,7 +81,7 @@ nodes:
         password_ref: op://kubernetes/home-systems/TURING_BMC_PASSWORD
   tp4:
     ip: 192.168.68.114
-    role: worker
+    role: controlplane
     arch: arm64
     install_disk: /dev/mmcblk0
     template: tp4.yaml
@@ -96,9 +96,9 @@ nodes:
         password_ref: op://kubernetes/home-systems/TURING_BMC_PASSWORD
   rpi01:
     mac: "e4:5f:01:3c:68:fa"
-    ip: 192.168.0.170
-    tailscale_ip: 100.83.143.13
-    role: controlplane
+    ip: 192.168.9.170
+    tailscale_ip: 100.127.199.21
+    role: worker
     arch: arm64
     install_disk: /dev/sda
     template: rpi01.yaml
@@ -139,7 +139,7 @@ nodes:
     mac: "00:0c:29:ac:01:01"
     ip: 192.168.0.91
     tailscale_ip: 100.118.143.56
-    role: controlplane
+    role: worker
     arch: amd64
     install_disk: /dev/sda
     template: macintel01.yaml
