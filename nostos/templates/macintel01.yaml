@@ -11,11 +11,11 @@ debug: false
 persist: true
 
 machine:
-  type: controlplane
+  type: worker
   token: "op://kubernetes/talos/MACHINE_TOKEN"
   ca:
     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
-    key: "op://kubernetes/talos/MACHINE_CA_KEY"
+    key: ""
   certSANs:
     - 192.168.0.91
     - 192.168.68.91
@@ -80,87 +80,40 @@ machine:
 cluster:
   id: "op://kubernetes/talos/CLUSTER_ID"
   secret: "op://kubernetes/talos/CLUSTER_SECRET"
-  # Home lab: control planes also run workloads.
-  allowSchedulingOnControlPlanes: true
-  # controlPlane.endpoint + extraHostEntries are injected by nostos from
-  # cluster.endpoint and the controlplane node set. Do not hardcode here.
+  # DEMOTED to worker (was controlplane). CP = dell01+tp1+tp4 (home LAN).
+  # controlPlane.endpoint + extraHostEntries are injected by nostos.
   clusterName: talos-default
   network:
-    cni:
-      name: none
     dnsDomain: cluster.local
     podSubnets:
       - 10.244.0.0/16
     serviceSubnets:
       - 10.96.0.0/12
   token: "op://kubernetes/talos/CLUSTER_TOKEN"
-  secretboxEncryptionSecret: "op://kubernetes/talos/CLUSTER_SECRETBOXENCRYPTIONSECRET"
   ca:
     crt: "op://kubernetes/talos/CLUSTER_CA_CRT"
-    key: "op://kubernetes/talos/CLUSTER_CA_KEY"
-  aggregatorCA:
-    crt: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_CRT"
-    key: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_KEY"
-  serviceAccount:
-    key: "op://kubernetes/talos/CLUSTER_SERVICEACCOUNT_KEY"
-  apiServer:
-    image: registry.k8s.io/kube-apiserver:v1.32.1
-    certSANs:
-      - 192.168.0.91
-      - 192.168.68.91
-      - 100.118.143.56
-    disablePodSecurityPolicy: true
-    admissionControl:
-      - name: PodSecurity
-        configuration:
-          apiVersion: pod-security.admission.config.k8s.io/v1alpha1
-          kind: PodSecurityConfiguration
-          defaults:
-            enforce: privileged
-            enforce-version: latest
-            audit: privileged
-            audit-version: latest
-            warn: privileged
-            warn-version: latest
-          exemptions:
-            namespaces:
-              - kube-system
-              - metallb-system
-              - istio-system
-            runtimeClasses: []
-            usernames: []
-    auditPolicy:
-      apiVersion: audit.k8s.io/v1
-      kind: Policy
-      rules:
-        - level: Metadata
-  controllerManager:
-    image: registry.k8s.io/kube-controller-manager:v1.32.1
-  proxy:
-    image: registry.k8s.io/kube-proxy:v1.32.1
-  scheduler:
-    image: registry.k8s.io/kube-scheduler:v1.32.1
+    key: ""
   discovery:
     enabled: true
     registries:
       kubernetes:
         disabled: true
       service: {}
-  etcd:
-    # Advertise the etcd peer URL on the Tailscale CGNAT range so all CPs
-    # (incl. offsite rpi01) share one etcd mesh. Pairs with dell01/rpi01/vm01.
-    advertisedSubnets:
-      - 100.64.0.0/10
-    ca:
-      crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
-      key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
+
 ---
 apiVersion: v1alpha1
 kind: ExtensionServiceConfig
 name: tailscale
 environment:
   - TS_AUTHKEY=tailscale://authkey?description=macintel01
-  # Advertise the Service subnet over Tailscale so Service-VIP traffic reaches
-  # this node from any site (rpi01 model). No fixed LAN route — it roams.
-  - TS_ROUTES=10.96.0.0/12
-  - TS_EXTRA_ARGS=--reset
+  # Advertise ONLY the pinned LAN /24 over Tailscale so this node's apiserver
+  # endpoint (192.168.0.91) is routable from every site. .91 is a static,
+  # below-DHCP-pool address, so the /24 is a stable subnet route. Distinct from
+  # rpi01's 192.168.9.0/24 - no collision.
+  # Do NOT advertise 10.96.0.0/12 (Service CIDR): if any node accepts routes it
+  # would pull 10.96.0.1/DNS across the tailnet and break cluster networking.
+  # --accept-routes is SAFE here only because the tailnet approves just LAN /24s
+  # (incl. 192.168.68.0/24 for the control plane) - never the Service/pod CIDRs.
+  # Needed so cilium's VXLAN to the CP node IPs (192.168.68.x) is reachable.
+  - TS_ROUTES=192.168.0.0/24
+  - TS_EXTRA_ARGS=--reset --accept-routes

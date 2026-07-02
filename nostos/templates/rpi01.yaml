@@ -1,17 +1,17 @@
 # Talos machineconfig TEMPLATE for rpi01 (Raspberry Pi 4, arm64)
-# Role: control plane + worker at 192.168.0.170
+# Role: control plane + worker at 192.168.9.170
 version: v1alpha1
 debug: false
 persist: true
 
 machine:
-  type: controlplane
+  type: worker
   token: "op://kubernetes/talos/MACHINE_TOKEN"
   ca:
     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
-    key: "op://kubernetes/talos/MACHINE_CA_KEY"
+    key: ""
   certSANs:
-    - 192.168.0.170
+    - 192.168.9.170
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
@@ -21,7 +21,7 @@ machine:
     # (pods aren't TS-authorized sources). Mirrors dell01.
     nodeIP:
       validSubnets:
-        - 192.168.0.0/24
+        - 192.168.9.0/24
     # Bind-mount the Longhorn data dir into the kubelet container so Longhorn
     # pods can access the USB data disk mounted at /var/mnt/storage. Mirrors tp1.
     extraMounts:
@@ -44,12 +44,12 @@ machine:
           hardwareAddr: e4:5f:01:3c:68:fa
         dhcp: false
         addresses:
-          - 192.168.0.170/24
+          - 192.168.9.170/24
         routes:
           - network: 0.0.0.0/0
-            gateway: 192.168.0.1
+            gateway: 192.168.9.1
     nameservers:
-      - 192.168.0.1
+      - 192.168.9.1
       - 8.8.8.8
   time:
     # Pi 4 has no battery-backed RTC: the clock starts at epoch (1970) on every
@@ -107,91 +107,41 @@ machine:
 cluster:
   id: "op://kubernetes/talos/CLUSTER_ID"
   secret: "op://kubernetes/talos/CLUSTER_SECRET"
-  # controlPlane.endpoint + extraHostEntries are injected by nostos from
-  # cluster.endpoint and the controlplane node set. Do not hardcode here.
+  # DEMOTED to worker (was controlplane). CP = dell01+tp1+tp4 (home LAN).
+  # controlPlane.endpoint + extraHostEntries are injected by nostos.
   clusterName: talos-default
   network:
-    cni:
-      # Cilium is the CNI (see dell01.yaml / nostos/manifests/cilium/). cni:none
-      # so Talos does not bootstrap flannel. rpi01 is offsite over Tailscale:
-      # if cross-site pod traffic fragments, lower Cilium MTU toward 1230.
-      name: none
     dnsDomain: cluster.local
     podSubnets:
       - 10.244.0.0/16
     serviceSubnets:
       - 10.96.0.0/12
   token: "op://kubernetes/talos/CLUSTER_TOKEN"
-  secretboxEncryptionSecret: "op://kubernetes/talos/CLUSTER_SECRETBOXENCRYPTIONSECRET"
   ca:
     crt: "op://kubernetes/talos/CLUSTER_CA_CRT"
-    key: "op://kubernetes/talos/CLUSTER_CA_KEY"
-  aggregatorCA:
-    crt: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_CRT"
-    key: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_KEY"
-  serviceAccount:
-    key: "op://kubernetes/talos/CLUSTER_SERVICEACCOUNT_KEY"
-  apiServer:
-    image: registry.k8s.io/kube-apiserver:v1.32.1
-    certSANs:
-      - 192.168.0.170
-    disablePodSecurityPolicy: true
-    admissionControl:
-      - name: PodSecurity
-        configuration:
-          apiVersion: pod-security.admission.config.k8s.io/v1alpha1
-          kind: PodSecurityConfiguration
-          defaults:
-            enforce: privileged
-            enforce-version: latest
-            audit: privileged
-            audit-version: latest
-            warn: privileged
-            warn-version: latest
-          exemptions:
-            namespaces:
-              - kube-system
-              - metallb-system
-              - istio-system
-            runtimeClasses: []
-            usernames: []
-    auditPolicy:
-      apiVersion: audit.k8s.io/v1
-      kind: Policy
-      rules:
-        - level: Metadata
-  controllerManager:
-    image: registry.k8s.io/kube-controller-manager:v1.32.1
-  proxy:
-    image: registry.k8s.io/kube-proxy:v1.32.1
-  scheduler:
-    image: registry.k8s.io/kube-scheduler:v1.32.1
+    key: ""
   discovery:
     enabled: true
     registries:
       kubernetes:
         disabled: true
       service: {}
-  etcd:
-    # Advertise the etcd peer URL on the Tailscale CGNAT range so the offsite
-    # peer (dell01) is reachable cross-LAN without importing routes
-    # (--accept-routes is forbidden here; see the tailscale block below).
-    advertisedSubnets:
-      - 100.64.0.0/10
-    ca:
-      crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
-      key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
+
 ---
 apiVersion: v1alpha1
 kind: ExtensionServiceConfig
 name: tailscale
 environment:
   - TS_AUTHKEY=tailscale://authkey?description=rpi01
-  # NEVER --accept-routes here: rpi01 hosts cluster pods, and importing the
-  # advertised 10.244.0.0/16 route hijacks the pod CIDR (broke cluster-wide
-  # DNS once — see .agents/contexts/remote pi.md). Cross-LAN etcd reach uses
-  # Tailscale CGNAT (100.64.0.0/10) via etcd.advertisedSubnets instead.
-  # --reset clears any previously-persisted tailscale prefs (e.g. a stale
-  # --accept-routes) so `tailscale up` doesn't refuse the new flag set.
-  - TS_EXTRA_ARGS=--reset
-  - TS_ROUTES=10.96.0.0/12,192.168.0.0/24
+  # --accept-routes IS enabled here, but SAFELY: the tailnet must approve only
+  # LAN /24s (incl. 192.168.68.0/24 for the control plane) and NEVER the pod
+  # CIDR (10.244.0.0/16) or Service CIDR (10.96.0.0/12). Importing the pod CIDR
+  # once broke cluster-wide DNS (see .agents/contexts/remote pi.md); that only
+  # happens if a cluster-internal CIDR is advertised+approved in the tailnet.
+  # We stop advertising 10.96.0.0/12 from this node for the same reason.
+  # accept-routes is required so cilium's VXLAN to the CP node IPs
+  # (192.168.68.x) is reachable from this off-LAN node. Cross-LAN etcd reach
+  # still uses Tailscale CGNAT (100.64.0.0/10) via etcd.advertisedSubnets.
+  # --reset clears any previously-persisted tailscale prefs.
+  - TS_EXTRA_ARGS=--reset --accept-routes
+  - TS_ROUTES=192.168.9.0/24
