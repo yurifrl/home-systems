@@ -108,6 +108,12 @@ machine:
           size: 0  # use all available space
   nodeLabels:
     node.kubernetes.io/exclude-from-external-load-balancers: ""
+  registries:
+    config:
+      ghcr.io:
+        auth:
+          username: "op://kubernetes/ghcr-image-pull-secret/username"
+          password: "op://kubernetes/ghcr-image-pull-secret/password"
 
 cluster:
   id: "op://kubernetes/talos/CLUSTER_ID"
