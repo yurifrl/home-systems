@@ -84,11 +84,11 @@ spec:
                       mountPath: /app/config
                   resources:
                     requests:
-                      cpu: 100m
-                      memory: 512Mi
-                    limits:
                       cpu: "1"
                       memory: 2Gi
+                    limits:
+                      cpu: "2"
+                      memory: 3Gi
           services:
             - name: litellm
               port: 4000

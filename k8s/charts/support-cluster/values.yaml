@@ -25,8 +25,9 @@ limitRanges:
   default:            # ceiling if a container sets no limit (generous, to avoid OOMing heavy apps)
     memory: 1Gi
   defaultRequest:     # reserved for scheduling if a container sets no request
-    cpu: 25m
-    memory: 64Mi
+    # 50m/128Mi = the common VPA target across the app fleet (2026-07-02 metrics)
+    cpu: 50m
+    memory: 128Mi
   # App namespaces only. Infra/system namespaces (kube-system, longhorn-system,
   # monitoring, cnpg-system, databases, supabase, istio-system, crossplane-system,
   # etc.) are omitted — their pods need bespoke sizing.

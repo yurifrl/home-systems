@@ -525,6 +525,12 @@ cluster:
     # connections, so this is effectively LAN etcd with no internet dependency.
     advertisedSubnets:
       - 100.64.0.0/10
+    # Tolerate slow/overloaded etcd (eMMC on tp1/tp4; multi-second applies seen
+    # 2026-07-02) so a busy leader does not trigger election storms. election
+    # must exceed worst-case apply latency; heartbeat 1s, election 10s.
+    extraArgs:
+      heartbeat-interval: "1000"
+      election-timeout: "10000"
     ca:
       crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
       key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
