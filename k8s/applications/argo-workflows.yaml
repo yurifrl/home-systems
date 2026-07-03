@@ -43,7 +43,7 @@ spec:
                 port: 12000
     - chart: argo-events
       repoURL: https://argoproj.github.io/argo-helm
-      targetRevision: "2.4.21"
+      targetRevision: "2.4.22"
     - chart: argo-workflows
       repoURL: https://argoproj.github.io/argo-helm
       targetRevision: "1.0.14"
