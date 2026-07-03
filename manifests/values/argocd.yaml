@@ -124,6 +124,10 @@ notifications:
 
 configs:
   cm:
+    # Passwordless UI: --disable-auth only opens the API; the web UI still shows
+    # a login page without a session. Anonymous access gives the UI a session.
+    users.anonymous.enabled: "true"
+
     # -- Enable exec feature in Argo UI
     ## Ref: https://argo-cd.readthedocs.io/en/latest/operator-manual/rbac/#exec-resource
     exec.enabled: true
@@ -133,3 +137,7 @@ configs:
 
     # -- Timeout to refresh application data as well as target manifests cache
     timeout.hard.reconciliation: 0s
+
+  rbac:
+    # Anonymous user needs a role, otherwise the passwordless UI has no access.
+    policy.default: role:admin

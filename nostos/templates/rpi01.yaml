@@ -5,13 +5,14 @@ debug: false
 persist: true
 
 machine:
-  type: worker
+  type: controlplane
   token: "op://kubernetes/talos/MACHINE_TOKEN"
   ca:
     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
-    key: ""
+    key: "op://kubernetes/talos/MACHINE_CA_KEY"
   certSANs:
     - 192.168.9.170
+    - 100.102.238.43
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
@@ -111,25 +112,77 @@ machine:
 cluster:
   id: "op://kubernetes/talos/CLUSTER_ID"
   secret: "op://kubernetes/talos/CLUSTER_SECRET"
-  # DEMOTED to worker (was controlplane). CP = dell01+tp1+tp4 (home LAN).
+  # PROMOTED to controlplane. CP fault domains: dell01 (box) + tp4 (TPI board)
+  # + rpi01 (offsite RPi). tp1 shares tp4's board so it is NOT a CP.
+  allowSchedulingOnControlPlanes: true
   # controlPlane.endpoint + extraHostEntries are injected by nostos.
   clusterName: talos-default
   network:
+    cni:
+      name: none
     dnsDomain: cluster.local
     podSubnets:
       - 10.244.0.0/16
     serviceSubnets:
       - 10.96.0.0/12
   token: "op://kubernetes/talos/CLUSTER_TOKEN"
+  secretboxEncryptionSecret: "op://kubernetes/talos/CLUSTER_SECRETBOXENCRYPTIONSECRET"
   ca:
     crt: "op://kubernetes/talos/CLUSTER_CA_CRT"
-    key: ""
+    key: "op://kubernetes/talos/CLUSTER_CA_KEY"
+  aggregatorCA:
+    crt: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_CRT"
+    key: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_KEY"
+  serviceAccount:
+    key: "op://kubernetes/talos/CLUSTER_SERVICEACCOUNT_KEY"
+  apiServer:
+    image: registry.k8s.io/kube-apiserver:v1.32.1
+    certSANs:
+      - 192.168.9.170
+      - 100.102.238.43
+    disablePodSecurityPolicy: true
+    admissionControl:
+      - name: PodSecurity
+        configuration:
+          apiVersion: pod-security.admission.config.k8s.io/v1alpha1
+          kind: PodSecurityConfiguration
+          defaults:
+            enforce: privileged
+            enforce-version: latest
+            audit: privileged
+            audit-version: latest
+            warn: privileged
+            warn-version: latest
+          exemptions:
+            namespaces:
+              - kube-system
+              - metallb-system
+              - istio-system
+            runtimeClasses: []
+            usernames: []
+    auditPolicy:
+      apiVersion: audit.k8s.io/v1
+      kind: Policy
+      rules:
+        - level: Metadata
+  controllerManager:
+    image: registry.k8s.io/kube-controller-manager:v1.32.1
+  proxy:
+    image: registry.k8s.io/kube-proxy:v1.32.1
+  scheduler:
+    image: registry.k8s.io/kube-scheduler:v1.32.1
   discovery:
     enabled: true
     registries:
       kubernetes:
         disabled: true
       service: {}
+  etcd:
+    advertisedSubnets:
+      - 100.64.0.0/10
+    ca:
+      crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
+      key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
 
 ---
 apiVersion: v1alpha1
