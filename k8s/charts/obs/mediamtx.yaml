@@ -1,9 +1,4 @@
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: obs
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: mediamtx
@@ -39,7 +34,8 @@ spec:
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
-      # pinned to the only node on the OBS subnet (192.168.0.0/24)
+      # macintel01 is the only node on the OBS LAN (192.168.0.0/24), so it is
+      # the only node that can reach the SRT source at 192.168.0.25:1234.
       nodeSelector:
         kubernetes.io/hostname: macintel01
       tolerations:

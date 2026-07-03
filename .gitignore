@@ -32,3 +32,4 @@ nostos/state/
 __pycache__/
 *.pyc
 .submodules/nostos
+hack/obs-srt/

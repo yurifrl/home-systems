@@ -48,3 +48,8 @@ records:
     dnsName: rpg.syscd.live
     target: 8bc2858c-a6a4-474f-9287-5af2c1928578.cfargotunnel.com
     proxied: true
+
+  - name: obs-syscd-live
+    dnsName: obs.syscd.live
+    target: 248f4b51-d33d-4896-89c1-acb748c54330.cfargotunnel.com
+    proxied: true

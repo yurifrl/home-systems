@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: obs
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: obs
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  source:
+    # mediamtx pulls the OBS SRT stream (srt://192.168.0.25:1234) and republishes
+    # HLS on :8888; cloudflared (same node) tunnels obs.syscd.live -> localhost:8888.
+    # Both are pinned to macintel01 (only node on the OBS LAN). DNS record for
+    # obs.syscd.live lives in the dns-records chart.
+    repoURL: https://github.com/yurifrl/home-systems.git
+    targetRevision: HEAD
+    path: k8s/charts/obs
