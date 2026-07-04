@@ -28,6 +28,12 @@ spec:
     # App: the hermes chart. All container/init/sidecar wiring lives in the
     # chart itself (driven by structured values: auth.gitLogin, opFiles,
     # gitRepos). Inline shell blobs were replaced by the in-image `hctl` CLI.
+    #
+    # Topology: the StatefulSet runs ONLY the hermes agent so it starts
+    # independent of everything else. Repos machinery (clone/sync), the web
+    # dashboard, and the pages site live in the hermes-workers Deployment
+    # (extraObjects below). The two workloads share state via RWX PVCs:
+    #   hermes-state (/opt/data) and repos (/workdir).
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/hermes
@@ -52,11 +58,11 @@ spec:
               operator: Exists
               effect: NoSchedule
 
-          # Turn on the chart-managed plumbing for this lab.
-          # The chart renders the corresponding init/sidecar containers
-          # calling `hctl`. gitRepos.user + gitRepos.repos[] are merged
-          # in from $values/hermes/values.yaml (private).
+          # State lives on a shared RWX PVC (extraObjects) instead of a
+          # per-pod volumeClaimTemplate so hermes-workers (dashboard) can
+          # mount the same data.
           persistence:
+            existingClaim: hermes-state
             backup:
               enabled: true
               schedule: "0 2 * * 0"
@@ -66,28 +72,32 @@ spec:
               enabled: true
           opFiles:
             enabled: true
+
+          # Repos machinery (clone init + sync sidecar) moved to the
+          # hermes-workers Deployment so a slow clone or workdir volume
+          # hiccup can never block the agent's startup. gitRepos.user comes
+          # from $values/hermes/values.yaml (private); the repos list below
+          # is consumed by hermes-workers via tpl.
           gitRepos:
-            enabled: true
+            enabled: false
             repos:
               - Obsidian
               - home-systems
               - home-systems-values
               - hermes-pages
-            # Persist /workdir so repos aren't re-cloned from scratch on every
-            # pod roll (Obsidian alone is ~1GB; emptyDir made each deploy take
-            # ~15min). longhorn-single: no HA replica needed, the repos are
-            # re-clonable from GitHub. repos-sync keeps them fresh; repos-clone
-            # only fetches deltas after the first clone.
-            persistence:
-              enabled: true
-              storageClass: longhorn-single
-              size: 15Gi
 
-          # The chart's default NetworkPolicy only allows ingress to the
-          # api-server (:8642). The extra sidecars below (hermes-pages :8080,
-          # hermes-dashboard :9119) also receive traffic from the istio
-          # gateway, so open those ports too — otherwise the gateway->pod hop
-          # is dropped and the VirtualServices time out.
+          # The agent still reads/writes the cloned repos; mount the shared
+          # RWX workdir directly (populated by hermes-workers).
+          extraVolumes:
+            - name: workdir
+              persistentVolumeClaim:
+                claimName: repos
+          extraVolumeMounts:
+            - name: workdir
+              mountPath: /workdir
+
+          # Only the api-server (:8642) lives in this pod now; dashboard and
+          # pages moved to hermes-workers (not covered by this chart policy).
           networkPolicy:
             enabled: true
             ingress:
@@ -98,93 +108,212 @@ spec:
                 ports:
                   - protocol: TCP
                     port: 8642
-                  - protocol: TCP
-                    port: 8080
-                  - protocol: TCP
-                    port: 9119
-
-          # hermes-pages: serve the cloned hermes-pages repo
-          # (/workdir/hermes-pages, populated by repos-clone/repos-sync) as a
-          # static site. busybox httpd, no config file, shares the gitRepos
-          # workdir emptyDir. Exposed at hermes-pages.syscd.live (the
-          # *.syscd.live wildcard already covers DNS + tunnel + gateway).
-          extraContainers:
-            - name: hermes-pages
-              image: busybox:1.37
-              command: ["httpd", "-f", "-v", "-p", "8080", "-h", "/workdir/hermes-pages"]
-              ports:
-                - name: pages
-                  containerPort: 8080
-              volumeMounts:
-                - name: workdir
-                  mountPath: /workdir
-              securityContext:
-                allowPrivilegeEscalation: false
-                readOnlyRootFilesystem: true
-                capabilities:
-                  drop:
-                    - ALL
-                seccompProfile:
-                  type: RuntimeDefault
-              resources:
-                requests:
-                  cpu: 10m
-                  memory: 16Mi
-                limits:
-                  memory: 32Mi
-
-            # hermes-dashboard: the web dashboard (+ Kanban tab) as a sidecar.
-            # Separate process from the gateway; shares the /opt/data PVC so it
-            # reads the same config, sessions, and kanban.db. Bound to 0.0.0.0
-            # so the istio gateway can reach it; --insecure skips the dashboard's
-            # own auth gate because hermes.syscd.live sits behind Cloudflare
-            # Access (Google-capable SSO) at the edge. readOnlyRootFilesystem is
-            # relaxed because the dashboard may build/cache its frontend.
-            - name: hermes-dashboard
-              image: ghcr.io/yurifrl/hermes-agent:latest
-              imagePullPolicy: Always
-              command: ["hermes", "dashboard", "--host", "0.0.0.0", "--port", "9119", "--no-open"]
-              ports:
-                - name: dashboard
-                  containerPort: 9119
-              env:
-                - name: HERMES_HOME
-                  value: /opt/data
-                - name: HOME
-                  value: /opt/data/home
-              envFrom:
-                - secretRef:
-                    name: hermes-env
-              volumeMounts:
-                - name: state
-                  mountPath: /opt/data
-                - name: tmp
-                  mountPath: /tmp
-              securityContext:
-                allowPrivilegeEscalation: false
-                readOnlyRootFilesystem: false
-                capabilities:
-                  drop:
-                    - ALL
-                seccompProfile:
-                  type: RuntimeDefault
-              resources:
-                requests:
-                  cpu: 50m
-                  memory: 128Mi
-                limits:
-                  memory: 512Mi
 
           extraObjects:
-            # Expose the busybox sidecar (:8080) on a dedicated Service.
+            # Shared state (/opt/data): agent writes, dashboard reads.
+            # RWX via Longhorn share-manager (same mechanism as `repos`).
+            - apiVersion: v1
+              kind: PersistentVolumeClaim
+              metadata:
+                name: hermes-state
+              spec:
+                accessModes:
+                  - ReadWriteMany
+                storageClassName: longhorn
+                resources:
+                  requests:
+                    storage: 20Gi
+            # Shared workdir (/workdir): hermes-workers clones/syncs the
+            # repos, the agent and pages consume them.
+            - apiVersion: v1
+              kind: PersistentVolumeClaim
+              metadata:
+                name: repos
+              spec:
+                accessModes:
+                  - ReadWriteMany
+                storageClassName: longhorn
+                resources:
+                  requests:
+                    storage: 20Gi
+
+            # hermes-workers: everything that is not the agent. Crashes or
+            # slow starts here never block hermes-0.
+            - apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: hermes-workers
+              spec:
+                replicas: 1
+                strategy:
+                  type: Recreate
+                selector:
+                  matchLabels:
+                    app: hermes-workers
+                template:
+                  metadata:
+                    labels:
+                      app: hermes-workers
+                  spec:
+                    nodeSelector:
+                      kubernetes.io/hostname: dell01
+                    tolerations:
+                      - key: node-role.kubernetes.io/control-plane
+                        operator: Exists
+                        effect: NoSchedule
+                    volumes:
+                      - name: state
+                        persistentVolumeClaim:
+                          claimName: hermes-state
+                      - name: workdir
+                        persistentVolumeClaim:
+                          claimName: repos
+                      - name: tmp
+                        emptyDir: {}
+                    initContainers:
+                      # ponytail: depends on git-login (hermes-0 init) having
+                      # written credentials into hermes-state/home at least once.
+                      - name: repos-clone
+                        image: ghcr.io/yurifrl/hermes-agent:latest
+                        imagePullPolicy: Always
+                        command:
+                          - hctl
+                          - repos
+                          - clone
+                          - --user={{ .Values.gitRepos.user }}
+                          - '--repos={{ join "," .Values.gitRepos.repos }}'
+                          - --branch=main
+                          - --dest=/workdir
+                        env:
+                          - name: HOME
+                            value: /opt/data/home
+                        envFrom:
+                          - secretRef:
+                              name: hermes-env
+                        volumeMounts:
+                          - name: state
+                            mountPath: /opt/data
+                          - name: workdir
+                            mountPath: /workdir
+                          - name: tmp
+                            mountPath: /tmp
+                        securityContext:
+                          allowPrivilegeEscalation: false
+                          readOnlyRootFilesystem: true
+                          capabilities:
+                            drop:
+                              - ALL
+                          seccompProfile:
+                            type: RuntimeDefault
+                    containers:
+                      - name: repos-sync
+                        image: ghcr.io/yurifrl/hermes-agent:latest
+                        imagePullPolicy: Always
+                        command:
+                          - hctl
+                          - repos
+                          - sync
+                          - --dir=/workdir
+                          - --interval=1h
+                        env:
+                          - name: HOME
+                            value: /opt/data/home
+                        envFrom:
+                          - secretRef:
+                              name: hermes-env
+                        volumeMounts:
+                          - name: state
+                            mountPath: /opt/data
+                          - name: workdir
+                            mountPath: /workdir
+                          - name: tmp
+                            mountPath: /tmp
+                        securityContext:
+                          allowPrivilegeEscalation: false
+                          readOnlyRootFilesystem: true
+                          capabilities:
+                            drop:
+                              - ALL
+                          seccompProfile:
+                            type: RuntimeDefault
+                        resources:
+                          requests:
+                            cpu: 25m
+                            memory: 64Mi
+                          limits:
+                            memory: 256Mi
+                      # Serve the cloned hermes-pages repo as a static site at
+                      # hermes-pages.syscd.live.
+                      - name: hermes-pages
+                        image: busybox:1.37
+                        command: ["httpd", "-f", "-v", "-p", "8080", "-h", "/workdir/hermes-pages"]
+                        ports:
+                          - name: pages
+                            containerPort: 8080
+                        volumeMounts:
+                          - name: workdir
+                            mountPath: /workdir
+                        securityContext:
+                          allowPrivilegeEscalation: false
+                          readOnlyRootFilesystem: true
+                          capabilities:
+                            drop:
+                              - ALL
+                          seccompProfile:
+                            type: RuntimeDefault
+                        resources:
+                          requests:
+                            cpu: 10m
+                            memory: 16Mi
+                          limits:
+                            memory: 32Mi
+                      # Web dashboard (+ Kanban). Reads the agent's config,
+                      # sessions and kanban.db from the shared state PVC.
+                      # --insecure is fine: hermes.syscd.live sits behind
+                      # Cloudflare Access at the edge.
+                      - name: hermes-dashboard
+                        image: ghcr.io/yurifrl/hermes-agent:latest
+                        imagePullPolicy: Always
+                        command: ["hermes", "dashboard", "--host", "0.0.0.0", "--port", "9119", "--no-open"]
+                        ports:
+                          - name: dashboard
+                            containerPort: 9119
+                        env:
+                          - name: HERMES_HOME
+                            value: /opt/data
+                          - name: HOME
+                            value: /opt/data/home
+                        envFrom:
+                          - secretRef:
+                              name: hermes-env
+                        volumeMounts:
+                          - name: state
+                            mountPath: /opt/data
+                          - name: tmp
+                            mountPath: /tmp
+                        securityContext:
+                          allowPrivilegeEscalation: false
+                          readOnlyRootFilesystem: false
+                          capabilities:
+                            drop:
+                              - ALL
+                          seccompProfile:
+                            type: RuntimeDefault
+                        resources:
+                          requests:
+                            cpu: 50m
+                            memory: 128Mi
+                          limits:
+                            memory: 512Mi
+
+            # Expose the pages container (:8080) on a dedicated Service.
             - apiVersion: v1
               kind: Service
               metadata:
                 name: hermes-pages
               spec:
                 selector:
-                  app.kubernetes.io/name: hermes
-                  app.kubernetes.io/instance: hermes
+                  app: hermes-workers
                 ports:
                   - name: http
                     port: 80
@@ -213,15 +342,14 @@ spec:
                           host: hermes-pages
                           port:
                             number: 80
-            # Expose the dashboard sidecar (:9119) on a dedicated Service.
+            # Expose the dashboard (:9119) on a dedicated Service.
             - apiVersion: v1
               kind: Service
               metadata:
                 name: hermes-dashboard
               spec:
                 selector:
-                  app.kubernetes.io/name: hermes
-                  app.kubernetes.io/instance: hermes
+                  app: hermes-workers
                 ports:
                   - name: http
                     port: 80
