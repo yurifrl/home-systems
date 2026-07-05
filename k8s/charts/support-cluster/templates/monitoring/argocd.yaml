@@ -1,0 +1,32 @@
+# ArgoCD cluster-cache health alert.
+# Incident 2026-07-05 (.agents/postmortems/2026-07-05-argocd-crossplane-webhook-blocks-sync.md):
+# a single unreachable conversion webhook made one resource LIST fail, which
+# aborted ArgoCD's whole shared cluster cache -> NO app could reconcile.
+# argocd_cluster_connection_status goes 0 whenever the controller cannot sync
+# the cluster cache, whatever the cause (broken webhook, apiserver down, RBAC).
+# This is the symptom-level signal for "GitOps is silently dead".
+# Routed to Discord via the VMAlertmanagerConfig (severity=critical + environment=production).
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: argocd-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  groups:
+    - name: argocd.rules
+      rules:
+        - alert: ArgoCDClusterCacheDown
+          expr: min(argocd_cluster_connection_status) < 1
+          for: 10m
+          labels:
+            severity: critical
+            environment: production
+            service: argocd
+          annotations:
+            summary: "ArgoCD cannot sync its cluster cache"
+            description: "argocd_cluster_connection_status is 0 for {{ `{{ $labels.server }}` }} — ArgoCD's shared resource cache failed to sync, so NO Application can reconcile. Usually one resource LIST is failing (often an unreachable conversion webhook, e.g. a crossplane provider on a wedged node). Runbook: .agents/postmortems/2026-07-05-argocd-crossplane-webhook-blocks-sync.md"

@@ -153,6 +153,12 @@ configs:
         clusters:
           - "*"
       - apiGroups:
+          - metallb.io
+        kinds:
+          - "*"
+        clusters:
+          - "*"
+      - apiGroups:
           - ''
           - discovery.k8s.io
         kinds:

@@ -1,0 +1,27 @@
+{{- if eq .Values.monitoringProvider "victoriametrics" }}
+# VMServiceScrape for ArgoCD components.
+# The argo-cd helm chart's serviceMonitor.enabled produces a
+# monitoring.coreos.com/ServiceMonitor, which this cluster has no CRD for, so
+# ArgoCD exported ZERO metrics (dashboards were dataless, alerts impossible).
+# All argocd *-metrics Services share label app.kubernetes.io/part-of=argocd
+# and a port named http-metrics (no auth), so one scrape covers controller,
+# server, repo-server, applicationset, notifications, redis and dex.
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: argocd
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+spec:
+  endpoints:
+    - port: http-metrics
+      interval: 30s
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: argocd
+  namespaceSelector:
+    matchNames:
+      - argocd
+{{- end }}
