@@ -115,6 +115,18 @@ spec:
               port: "8429"
               selectAllByDefault: true
               scrapeInterval: "30s"
+              # Keep the scraper off the broken-datapath / off-LAN nodes
+              # (pc01 VXLAN TX-offload fault, macintel01 NotReady, rpi01
+              # off-LAN mesh) — a vmagent stranded there cannot remote-write to
+              # vmsingle, silently blacking out ALL metrics. 2026-07-05 incident.
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                      - matchExpressions:
+                          - key: kubernetes.io/hostname
+                            operator: NotIn
+                            values: ["pc01", "macintel01", "rpi01"]
               resources:
                 limits:
                   cpu: 500m
@@ -169,6 +181,14 @@ spec:
               port: "8080"
               selectAllByDefault: true
               evaluationInterval: 20s
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                      - matchExpressions:
+                          - key: kubernetes.io/hostname
+                            operator: NotIn
+                            values: ["pc01", "macintel01", "rpi01"]
               externalLabels:
                 cluster: talos-default
               resources:
@@ -190,6 +210,14 @@ spec:
               # which would drop alerts whose namespace label != the config's
               # namespace. Disable it so cluster-wide alerts reach discord.
               disableNamespaceMatcher: true
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                      - matchExpressions:
+                          - key: kubernetes.io/hostname
+                            operator: NotIn
+                            values: ["pc01", "macintel01", "rpi01"]
               resources:
                 limits:
                   cpu: 100m
