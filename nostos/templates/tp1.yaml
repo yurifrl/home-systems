@@ -15,15 +15,18 @@ machine:
     key: ""
   certSANs:
     - 192.168.68.107
+    - 100.90.9.55
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
-    # Register on the LAN IP, never the Tailscale IP (dell01 model): pod->Service
-    # VIP traffic DNAT'd to a TS IP is dropped by Tailscale netfilter.
+    # Register on the Tailscale IP so every cilium VXLAN endpoint is a 100.x
+    # address (homogeneous mesh, home-systems-h27). LAN nodes stay
+    # accept-routes-free and hostDNS answers ClusterDNS locally, so the old
+    # 2026-06-05 DNS break (accept-routes importing pod/Service CIDR) can't recur.
     nodeIP:
       validSubnets:
-        - 192.168.68.0/24
+        - 100.64.0.0/10
     # Node-protection: reserve memory for OS/kubelet so the kubepods cgroup is
     # capped below the ~8Gi capacity; evictionHard sheds low-priority pods
     # before the node OOMs.
