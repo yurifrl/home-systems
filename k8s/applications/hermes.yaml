@@ -50,15 +50,11 @@ spec:
           virtualService:
             enabled: false
 
-          # Pin to dell01 (amd64 control-plane, has room again). State is RWX
-          # so there is no volume-locality constraint; dell01 is the most
-          # stable amd64 node with CPU/memory headroom.
+          # Pin to tp1 (LAN worker, arm64, has CPU/mem room). dell01 is the
+          # sole control-plane and must stay clear of workload; pc01's CPU
+          # requests are saturated. State is RWX so no volume-locality tie.
           nodeSelector:
-            kubernetes.io/hostname: dell01
-          tolerations:
-            - key: node-role.kubernetes.io/control-plane
-              operator: Exists
-              effect: NoSchedule
+            kubernetes.io/hostname: tp1
 
           # State lives on a shared RWX PVC (extraObjects) instead of a
           # per-pod volumeClaimTemplate so hermes-workers (dashboard) can
@@ -158,11 +154,7 @@ spec:
                       app: hermes-workers
                   spec:
                     nodeSelector:
-                      kubernetes.io/hostname: dell01
-                    tolerations:
-                      - key: node-role.kubernetes.io/control-plane
-                        operator: Exists
-                        effect: NoSchedule
+                      kubernetes.io/hostname: tp1
                     volumes:
                       - name: state
                         persistentVolumeClaim:
