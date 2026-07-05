@@ -36,28 +36,47 @@ spec:
           image: datarhei/restreamer:latest
           env:
             # cloudflared terminates TLS; serve plain HTTP on :8080, no ACME.
-            - { name: CORE_TLS_ENABLE, value: "false" }
-            - { name: CORE_TLS_AUTO, value: "false" }
-            - { name: CORE_HOST_AUTO, value: "false" }
-            - { name: CORE_HOST_NAME, value: "obs.syscd.live" }
+            - name: CORE_TLS_ENABLE
+              value: "false"
+            - name: CORE_TLS_AUTO
+              value: "false"
+            - name: CORE_HOST_AUTO
+              value: "false"
+            - name: CORE_HOST_NAME
+              value: "obs.syscd.live"
             # Cloudflare Access already gates obs.syscd.live; skip Restreamer's
             # own login. (hostNetwork means :8080 is also open on macintel01's
             # LAN interface — acceptable for the home OBS LAN.)
-            - { name: CORE_API_AUTH_ENABLE, value: "false" }
+            - name: CORE_API_AUTH_ENABLE
+              value: "false"
           ports:
-            - { name: http, containerPort: 8080, protocol: TCP }
-            - { name: rtmp, containerPort: 1935, protocol: TCP }
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: rtmp
+              containerPort: 1935
+              protocol: TCP
           volumeMounts:
-            - { name: config, mountPath: /core/config }
-            - { name: data, mountPath: /core/data }
+            - name: config
+              mountPath: /core/config
+            - name: data
+              mountPath: /core/data
           resources:
-            requests: { cpu: 100m, memory: 256Mi }
-            limits:   { cpu: "1", memory: 512Mi }
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
       volumes:
         # Node-pinned single replica: hostPath keeps state local to macintel01
         # and avoids Longhorn RWX/cross-site share-manager problems on this node.
         # /var persists across Talos reboots (ephemeral data partition).
         - name: config
-          hostPath: { path: /var/restreamer/config, type: DirectoryOrCreate }
+          hostPath:
+            path: /var/restreamer/config
+            type: DirectoryOrCreate
         - name: data
-          hostPath: { path: /var/restreamer/data, type: DirectoryOrCreate }
+          hostPath:
+            path: /var/restreamer/data
+            type: DirectoryOrCreate
