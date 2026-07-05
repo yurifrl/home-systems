@@ -54,12 +54,13 @@ spec:
           autoMount:
             enabled: false
           hostRoot: /sys/fs/cgroup
-        # --- Stretched cluster over Tailscale (nodes ride 100.x); flannel ran
-        # VXLAN @ MTU 1450. Mirror it. Lower toward 1230 if offsite (rpi01,
-        # ~1280B WireGuard path) shows fragmentation/drops.
+        # --- Stretched cluster over Tailscale (nodes ride 100.x). VXLAN rides
+        # the tailscale0 underlay (MTU 1280 WireGuard). MTU must sit below
+        # 1280 - 50 (VXLAN overhead) so encapsulated pod frames don't fragment
+        # or drop once LAN nodes also use a Tailscale InternalIP (home-systems-h27).
         routingMode: tunnel
         tunnelProtocol: vxlan
-        MTU: 1450
+        MTU: 1230
         # --- hostDNS (forwardKubeDNSToHost:true) conflicts with BPF masquerade
         # (siderolabs/talos#9200). Keep BPF masq off. ---
         bpf:
