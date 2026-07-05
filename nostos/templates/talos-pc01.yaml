@@ -15,16 +15,21 @@ machine:
     key: ""
   certSANs:
     - 192.168.68.104
+    - 100.101.182.40
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
-    # Pin InternalIP to the LAN subnet. Without this, kubelet picks the
-    # Tailscale 100.x address as InternalIP -> VIP/DNS traffic gets DNAT'd to
-    # the TS IP and dropped (cf. dell01.yaml/rpi01.yaml; DNS-break 2026-06-05).
+    # Register on the Tailscale IP so every cilium VXLAN tunnel endpoint is a
+    # 100.x address (homogeneous mesh: send+receive on tailscale0, no LAN/TS
+    # cross-family pairs to drop at kernel decap - see home-systems-h27). The
+    # old DNS-break (2026-06-05) was --accept-routes importing the pod/Service
+    # CIDR, NOT TS-IP-as-nodeIP; hostDNS.forwardKubeDNSToHost answers ClusterDNS
+    # node-locally so pods never SNAT onto the tailnet. LAN nodes stay
+    # accept-routes-free.
     nodeIP:
       validSubnets:
-        - 192.168.68.0/24
+        - 100.64.0.0/10
   network:
     hostname: pc01
     interfaces:
