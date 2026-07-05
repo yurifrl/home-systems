@@ -115,11 +115,11 @@ machine:
 cluster:
   id: "op://kubernetes/talos/CLUSTER_ID"
   secret: "op://kubernetes/talos/CLUSTER_SECRET"
-  # Home lab: controlplane nodes also run workloads. Without this, the
-  # default node-role.kubernetes.io/control-plane:NoSchedule taint blocks
-  # scheduling whenever the worker nodes are unhealthy (as we hit during
-  # the 2026-06-05 DNS outage with tp1/tp4 NotReady).
-  allowSchedulingOnControlPlanes: true
+  # Control-plane-only: dell01 is the SOLE control plane (2026-07-04). Keep the
+  # node-role.kubernetes.io/control-plane:NoSchedule taint so general workloads
+  # land on the workers (pc01/tp1/tp4) instead of burying the apiserver/etcd
+  # under ~100 pods, which is what starved apid/etcd and caused the outage.
+  allowSchedulingOnControlPlanes: false
   # controlPlane.endpoint + extraHostEntries are injected by nostos from
   # cluster.endpoint and the controlplane node set. Do not hardcode here.
   clusterName: talos-default

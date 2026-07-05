@@ -86,4 +86,5 @@ kind: ExtensionServiceConfig
 name: tailscale
 environment:
   - TS_AUTHKEY=tailscale://authkey?description=pc01
-  - TS_EXTRA_ARGS=--accept-routes
+  # No --accept-routes: LAN nodes importing 192.168.68.0/24 via tailscale
+  # hijack their own LAN traffic (VXLAN/DNS break, 2026-07-03).
