@@ -18,7 +18,8 @@ beads: [home-systems-nxj]
 memories:
   - obs-cloudflared-1033-macintel01-2026-07-05
 supersedes: []
-related: []
+related:
+  - 2026-07-05-hermes-rwx-sharemanager-cross-site
 ---
 
 # Postmortem: obs.syscd.live Error 1033 during a cloudflared-obs restart on macintel01

@@ -23,6 +23,7 @@ memories:
 supersedes: []
 related:
   - 2026-07-05-argocd-crossplane-webhook-blocks-sync/PM.md
+  - 2026-07-05-hermes-rwx-sharemanager-cross-site/PM.md
 ---
 
 # Postmortem: pc01 cross-node pod networking silently broken by virtio VXLAN TX checksum offload

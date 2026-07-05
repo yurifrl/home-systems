@@ -1,0 +1,46 @@
+# Pod-readiness alert — a pod stuck non-Ready (Pending/Unknown) for too long is
+# the symptom that beat monitoring during the 2026-07-05 hermes RWX incident
+# (pods sat Init/Pending ~2h because their RWX volume could not mount). Catches
+# the whole class: unmountable volumes, unschedulable pods, image pull loops.
+# Job/CronJob pods are excluded (Pending is normal for them).
+#
+# DEPENDS ON kube-state-metrics. As of 2026-07-05 KSM was crashlooping on rpi01
+# (cross-site node, could not reach the apiserver VIP) so kube_* metrics were
+# absent and this rule is inert until KSM is healthy again — see the follow-up
+# bead in the postmortem epic (.agents/postmortems/2026-07-05-hermes-rwx-sharemanager-cross-site).
+#
+# Evaluated by VMAlert (selectAllByDefault); severity=critical + environment=production
+# routes to Discord via the VMAlertmanagerConfig in this chart.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: pod-readiness-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  groups:
+    - name: pod-readiness.rules
+      rules:
+        - alert: KubePodNotReady
+          expr: |
+            sum by (namespace, pod) (
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Unknown"}
+              )
+              * on (namespace, pod) group_left(owner_kind)
+              max by (namespace, pod, owner_kind) (
+                kube_pod_owner{owner_kind!="Job"}
+              )
+            ) > 0
+          for: 20m
+          labels:
+            severity: critical
+            environment: production
+            service: pod-readiness
+          annotations:
+            summary: "Pod stuck not ready"
+            description: "Pod {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.pod }}` }} has been Pending/Unknown for >20m (unschedulable, unmountable volume, or image pull failure). Runbook: .agents/postmortems/2026-07-05-hermes-rwx-sharemanager-cross-site/PM.md"
