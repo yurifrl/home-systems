@@ -138,6 +138,69 @@ configs:
     # -- Timeout to refresh application data as well as target manifests cache
     timeout.hard.reconciliation: 0s
 
+    # Crossplane upbound provider CRDs use webhook conversion. When a provider
+    # pod is unreachable (e.g. wedged node), the apiserver's conversion call
+    # times out, that single LIST fails, and ArgoCD's whole cluster cache sync
+    # aborts -> NO app can sync. Excluding these from the cache decouples
+    # ArgoCD from the provider webhooks; crossplane still reconciles the MRs.
+    # The blocks below the upbound one are the argo-cd chart defaults, kept
+    # because setting this key replaces the chart default wholesale.
+    resource.exclusions: |
+      - apiGroups:
+          - "*.upbound.io"
+        kinds:
+          - "*"
+        clusters:
+          - "*"
+      - apiGroups:
+          - ''
+          - discovery.k8s.io
+        kinds:
+          - Endpoints
+          - EndpointSlice
+      - apiGroups:
+          - coordination.k8s.io
+        kinds:
+          - Lease
+      - apiGroups:
+          - authentication.k8s.io
+          - authorization.k8s.io
+        kinds:
+          - SelfSubjectReview
+          - TokenReview
+          - LocalSubjectAccessReview
+          - SelfSubjectAccessReview
+          - SelfSubjectRulesReview
+          - SubjectAccessReview
+      - apiGroups:
+          - certificates.k8s.io
+        kinds:
+          - CertificateSigningRequest
+      - apiGroups:
+          - cert-manager.io
+        kinds:
+          - CertificateRequest
+      - apiGroups:
+          - cilium.io
+        kinds:
+          - CiliumIdentity
+          - CiliumEndpoint
+          - CiliumEndpointSlice
+      - apiGroups:
+          - kyverno.io
+          - reports.kyverno.io
+          - wgpolicyk8s.io
+        kinds:
+          - PolicyReport
+          - ClusterPolicyReport
+          - EphemeralReport
+          - ClusterEphemeralReport
+          - AdmissionReport
+          - ClusterAdmissionReport
+          - BackgroundScanReport
+          - ClusterBackgroundScanReport
+          - UpdateRequest
+
   rbac:
     # Anonymous user needs a role, otherwise the passwordless UI has no access.
     policy.default: role:admin
