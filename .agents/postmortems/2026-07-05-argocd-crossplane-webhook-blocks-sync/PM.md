@@ -116,6 +116,19 @@ dataless and the detection metric above didn't exist. Fixed first.
 - **Open verification:** `home-systems-meb` (metrics actually flow +
   dashboard lights up), `home-systems-gqy` (alert fires + routes to Discord).
 
+### Caveat: the alert cannot fire yet (monitoring is dark)
+
+While verifying, discovered the whole VictoriaMetrics stack (vmagent, vmalert,
+vmalertmanager) is scheduled on **pc01**, whose VXLAN TX-checksum-offload fault
+corrupts encapsulated TCP — so vmagent cannot remote-write to vmsingle and
+cluster-wide metrics have been **dark for ~19h** (`count(up) == 0`). The new
+`ArgoCDClusterCacheDown` VMRule is deployed and correct (the controller does
+expose `argocd_cluster_connection_status`, the scrape target is `up`) but
+**nothing can fire until metrics ingest again**. A `nodeAffinity` to pin the
+stack off the broken nodes was tried and **reverted** (`c1e6cf8d`) — it masks
+the node fault instead of fixing it. Tracked as **`home-systems-k5b`** (P1):
+fix the pc01 datapath, then metrics + alerting recover on their own.
+
 ## Dead Ends
 
 - Deleting the `provider-gcp-iam` pod to reschedule it — amd64 pin + no
