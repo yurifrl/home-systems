@@ -20,6 +20,7 @@ machine:
     key: "op://kubernetes/talos/MACHINE_CA_KEY"
   certSANs:
     - 192.168.68.100
+    - 100.82.148.37
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
@@ -41,13 +42,16 @@ machine:
         memory.available: "500Mi"
         nodefs.available: "10%"
         imagefs.available: "10%"
-    # Force kubelet to register with the LAN IP, not the Tailscale IP.
-    # Otherwise pod-to-Service VIP traffic gets DNAT'd to the TS IP and
-    # dropped by Tailscale's netfilter rules (pods aren't TS-authorized
-    # sources). This is what broke DNS on 2026-06-05.
+    # Register kubelet on the Tailscale IP so this control plane's cilium VXLAN
+    # endpoint is a 100.x address like every other node (homogeneous mesh,
+    # home-systems-h27). Agents reach the apiserver via KubePrism (localhost:7445),
+    # not this IP. LAN nodes stay accept-routes-free and hostDNS answers
+    # ClusterDNS node-locally, so the 2026-06-05 DNS break (accept-routes
+    # importing pod/Service CIDR) can't recur. dell01 keeps its 192.168.68.100
+    # interface address for LAN break-glass.
     nodeIP:
       validSubnets:
-        - 192.168.68.0/24
+        - 100.64.0.0/10
     # PROVISIONAL (2026-06-27): disabled with the /dev/sda Longhorn volume
     # below (failing WALRAM SSD). Binding a non-existent source would fail
     # the kubelet. Re-enable together with the disks block.
@@ -149,6 +153,7 @@ cluster:
     image: registry.k8s.io/kube-apiserver:v1.32.1
     certSANs:
       - 192.168.68.100
+      - 100.82.148.37
     disablePodSecurityPolicy: true
     admissionControl:
       - name: PodSecurity
