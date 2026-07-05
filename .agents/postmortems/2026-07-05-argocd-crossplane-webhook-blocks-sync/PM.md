@@ -19,7 +19,8 @@ beads: [home-systems-57s]
 memories:
   - argocd-crossplane-webhook-blocks-sync-2026-07-05
 supersedes: []
-related: []
+related:
+  - 2026-07-05-pc01-vxlan-tx-checksum-offload/PM.md
 ---
 
 # Postmortem: ArgoCD cluster sync fully blocked by an unreachable crossplane conversion webhook

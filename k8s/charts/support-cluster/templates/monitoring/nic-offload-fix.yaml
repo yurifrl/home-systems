@@ -1,0 +1,31 @@
+# Guards the durable fix for the pc01 virtio VXLAN TX checksum-offload incident.
+# If the nic-offload-fix DaemonSet stops running on a targeted node, that node
+# will corrupt cross-node pod traffic again on its next reboot (offloads default
+# back on). This is the residual detection gap — the raw datapath fault produced
+# ZERO Hubble/BPF drops (kernel-level), so it can't be paged on directly.
+# Runbook: .agents/postmortems/2026-07-05-pc01-vxlan-tx-checksum-offload/PM.md
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: nic-offload-fix-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  groups:
+    - name: nic-offload-fix.rules
+      rules:
+        - alert: NicOffloadFixNotRunning
+          expr: |
+            kube_daemonset_status_number_unavailable{daemonset="nic-offload-fix", namespace="support-cluster"} > 0
+          for: 15m
+          labels:
+            severity: critical
+            environment: production
+            service: nic-offload-fix
+          annotations:
+            summary: "nic-offload-fix DaemonSet not running on a targeted node"
+            description: "The nic-offload-fix DaemonSet is unavailable on {{ `{{ $value }}` }} node(s). Those Proxmox/virtio VM nodes will corrupt cross-node pod traffic (VXLAN TX checksum offload) on their next reboot. Check `ethtool -k <iface> | grep tx-checksum-ip-generic` on the node. Runbook: .agents/postmortems/2026-07-05-pc01-vxlan-tx-checksum-offload/PM.md"
