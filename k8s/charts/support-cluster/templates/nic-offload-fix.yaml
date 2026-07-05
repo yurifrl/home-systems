@@ -1,12 +1,31 @@
 {{- if .Values.nicOffloadFix.enabled }}
-# Proxmox/virtio VM NICs corrupt VXLAN-encapsulated TCP/UDP when TX checksum
-# offload is on: cross-node pod traffic INTO the node is silently dropped by
-# peers (the encapsulated reply carries a bad inner L4 checksum) while ICMP and
-# node-local traffic keep working, so the node looks healthy. Confirmed on pc01
-# 2026-07-05; `ethtool -K <iface> tx-checksum-ip-generic off` fixes it instantly.
-# The setting is not persistent (reverts on reboot / link reset), so this
-# DaemonSet re-applies it in a loop. Talos exposes no ethtool knob and Proxmox
-# VM config has no offload toggle, hence the in-cluster fix.
+# nic-offload-fix: disable NIC TX checksum offload on Proxmox/virtio VM nodes.
+#
+# WHY: a Proxmox virtio-net NIC corrupts the inner L4 checksum of
+# VXLAN-encapsulated packets when guest TX checksum offload is on. The node
+# RECEIVES cross-node traffic fine and SENDS its reply out cilium_vxlan, but the
+# encapsulated reply reaches peers with a bad checksum and is silently dropped.
+# ICMP survives (kernel software-checksums small replies) and node-local traffic
+# needs no encap, so the node stays "Ready" while all cross-node TCP/UDP into it
+# times out. Well-known virtio/VMware + VXLAN interaction, not a Cilium bug
+# (cf. cilium/cilium#26300, flannel-io/flannel#1279, projectcalico/calico#7807).
+#
+# FIX: `ethtool -K <iface> tx-checksum-ip-generic off` (verified on pc01
+# 2026-07-05: cross-node TCP went 0/3 -> 3/3 instantly). The setting is
+# kernel-netdev level and REVERTS on reboot / link reset, so this DaemonSet
+# re-applies it in a loop. Talos machineconfig exposes no ethtool/offload knob
+# and the Proxmox VM config (crossplane bpg EnvironmentVM networkDevice) has no
+# offload toggle either, so the durable fix has to live in-cluster.
+#
+# CONTEXT (beads):
+#   - Issue: home-systems-pzl
+#   - Root cause + full diagnosis: `bd show pc01-crossnode-tcp-ROOTCAUSE-vxlan-tx-offload-2026-07-05` (bd memories)
+#   - Earlier mis-diagnoses this corrects: `bd memories argocd-502-pc01-crossnode-tcp`
+#   - Downstream fallout it caused: `bd memories argocd-crossplane-webhook-blocks-sync`
+#
+# SCOPE: nodeSelector pins this to affected virtio VM nodes only (offload-off
+# costs some throughput). Add hostnames under .Values.nicOffloadFix.nodeSelector
+# as more Proxmox/UTM virtio nodes appear.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
