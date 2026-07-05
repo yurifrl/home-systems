@@ -11,7 +11,7 @@ data:
     protocol: http2
     ingress:
       - hostname: obs.syscd.live
-        service: http://localhost:8888
+        service: http://localhost:8080
       - service: http_status:404
 ---
 apiVersion: apps/v1
@@ -29,8 +29,8 @@ spec:
       labels:
         app: cloudflared-obs
     spec:
-      # MUST run on macintel01: only the node itself can reach mediamtx
-      # (localhost:8888). cloudflared only makes outbound conns to Cloudflare.
+      # MUST run on macintel01: only the node itself can reach restreamer
+      # (localhost:8080). cloudflared only makes outbound conns to Cloudflare.
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       nodeSelector:

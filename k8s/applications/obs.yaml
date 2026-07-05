@@ -17,10 +17,12 @@ spec:
     syncOptions:
       - CreateNamespace=true
   source:
-    # mediamtx pulls the OBS SRT stream (srt://192.168.0.25:1234) and republishes
-    # HLS on :8888; cloudflared (same node) tunnels obs.syscd.live -> localhost:8888.
+    # datarhei/restreamer pulls the OBS SRT stream (srt://192.168.0.25:1234)
+    # as a passthrough source and serves a web player + HLS on :8080;
+    # cloudflared (same node) tunnels obs.syscd.live -> localhost:8080.
     # Both are pinned to macintel01 (only node on the OBS LAN). DNS record for
-    # obs.syscd.live lives in the dns-records chart.
+    # obs.syscd.live lives in the dns-records chart. The SRT source is configured
+    # once in the Restreamer UI and persists in the /core/config hostPath.
     repoURL: https://github.com/yurifrl/home-systems.git
     targetRevision: HEAD
     path: k8s/charts/obs

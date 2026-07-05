@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: restreamer
+  namespace: obs
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # single node + hostPath + host ports: never run two at once
+  selector:
+    matchLabels:
+      app: restreamer
+  template:
+    metadata:
+      labels:
+        app: restreamer
+    spec:
+      # macintel01 is the only node on the OBS LAN (192.168.0.0/24), so it is
+      # the only node that can pull the SRT source at 192.168.0.25:1234.
+      # hostNetwork mirrors the old mediamtx/cloudflared pattern: cloudflared
+      # (same node) reaches Restreamer on localhost:8080, and Restreamer reaches
+      # the OBS SRT listener directly over the node's LAN interface — sidestepping
+      # macintel01's known cross-node cilium datapath issues.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: macintel01
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node.cilium.io/agent-not-ready
+          operator: Exists
+      containers:
+        - name: restreamer
+          image: datarhei/restreamer:latest
+          env:
+            # cloudflared terminates TLS; serve plain HTTP on :8080, no ACME.
+            - { name: CORE_TLS_ENABLE, value: "false" }
+            - { name: CORE_TLS_AUTO, value: "false" }
+            - { name: CORE_HOST_AUTO, value: "false" }
+            - { name: CORE_HOST_NAME, value: "obs.syscd.live" }
+            - name: CORE_API_AUTH_USERNAME
+              valueFrom:
+                secretKeyRef: { name: restreamer, key: username }
+            - name: CORE_API_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: restreamer, key: password }
+            - name: CORE_API_AUTH_JWT_SECRET
+              valueFrom:
+                secretKeyRef: { name: restreamer, key: jwt-secret }
+          ports:
+            - { name: http, containerPort: 8080, protocol: TCP }
+            - { name: rtmp, containerPort: 1935, protocol: TCP }
+          volumeMounts:
+            - { name: config, mountPath: /core/config }
+            - { name: data, mountPath: /core/data }
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits:   { cpu: "1", memory: 512Mi }
+      volumes:
+        # Node-pinned single replica: hostPath keeps state local to macintel01
+        # and avoids Longhorn RWX/cross-site share-manager problems on this node.
+        # /var persists across Talos reboots (ephemeral data partition).
+        - name: config
+          hostPath: { path: /var/restreamer/config, type: DirectoryOrCreate }
+        - name: data
+          hostPath: { path: /var/restreamer/data, type: DirectoryOrCreate }
