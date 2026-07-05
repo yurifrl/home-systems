@@ -52,6 +52,19 @@ limitRanges:
     - zigbee2mqtt
 
 
+# Disable NIC TX checksum offload on Proxmox/virtio VM nodes where it corrupts
+# VXLAN-encapsulated TCP/UDP (cross-node pod traffic silently dropped; ICMP
+# survives, node looks healthy). Confirmed root cause on pc01 2026-07-05. The
+# setting reverts on reboot/link-reset, so a DaemonSet re-applies it in a loop.
+# nodeSelector scopes it to affected nodes only (offload-off costs throughput on
+# nodes that don't need it). Add more Proxmox/UTM virtio nodes here as needed.
+nicOffloadFix:
+  enabled: true
+  image: nicolaka/netshoot:v0.13
+  reapplySeconds: 60
+  nodeSelector:
+    kubernetes.io/hostname: pc01
+
 # Tailscale
 tailscale:
   connectors:

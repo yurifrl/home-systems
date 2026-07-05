@@ -1,0 +1,58 @@
+{{- if .Values.nicOffloadFix.enabled }}
+# Proxmox/virtio VM NICs corrupt VXLAN-encapsulated TCP/UDP when TX checksum
+# offload is on: cross-node pod traffic INTO the node is silently dropped by
+# peers (the encapsulated reply carries a bad inner L4 checksum) while ICMP and
+# node-local traffic keep working, so the node looks healthy. Confirmed on pc01
+# 2026-07-05; `ethtool -K <iface> tx-checksum-ip-generic off` fixes it instantly.
+# The setting is not persistent (reverts on reboot / link reset), so this
+# DaemonSet re-applies it in a loop. Talos exposes no ethtool knob and Proxmox
+# VM config has no offload toggle, hence the in-cluster fix.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nic-offload-fix
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: nic-offload-fix
+spec:
+  selector:
+    matchLabels:
+      app: nic-offload-fix
+  template:
+    metadata:
+      labels:
+        app: nic-offload-fix
+    spec:
+      hostNetwork: true
+      hostPID: true
+      priorityClassName: system-node-critical
+      {{- with .Values.nicOffloadFix.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: ethtool
+          image: {{ .Values.nicOffloadFix.image }}
+          securityContext:
+            privileged: true
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -uo pipefail
+              while true; do
+                iface="$(ip -o route show default | awk '{print $5; exit}')"
+                if [ -n "$iface" ]; then
+                  ethtool -K "$iface" tx-checksum-ip-generic off || true
+                fi
+                sleep {{ .Values.nicOffloadFix.reapplySeconds }}
+              done
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              memory: 32Mi
+{{- end }}
