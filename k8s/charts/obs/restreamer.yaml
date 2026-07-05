@@ -40,15 +40,10 @@ spec:
             - { name: CORE_TLS_AUTO, value: "false" }
             - { name: CORE_HOST_AUTO, value: "false" }
             - { name: CORE_HOST_NAME, value: "obs.syscd.live" }
-            - name: CORE_API_AUTH_USERNAME
-              valueFrom:
-                secretKeyRef: { name: restreamer, key: username }
-            - name: CORE_API_AUTH_PASSWORD
-              valueFrom:
-                secretKeyRef: { name: restreamer, key: password }
-            - name: CORE_API_AUTH_JWT_SECRET
-              valueFrom:
-                secretKeyRef: { name: restreamer, key: jwt-secret }
+            # Cloudflare Access already gates obs.syscd.live; skip Restreamer's
+            # own login. (hostNetwork means :8080 is also open on macintel01's
+            # LAN interface — acceptable for the home OBS LAN.)
+            - { name: CORE_API_AUTH_ENABLE, value: "false" }
           ports:
             - { name: http, containerPort: 8080, protocol: TCP }
             - { name: rtmp, containerPort: 1935, protocol: TCP }
