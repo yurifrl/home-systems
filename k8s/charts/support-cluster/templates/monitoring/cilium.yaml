@@ -1,0 +1,44 @@
+{{- if eq .Values.monitoringProvider "victoriametrics" }}
+# Cilium agent + operator Prometheus metrics.
+# Cilium helm (k8s/applications/cilium.yaml) has prometheus.enabled +
+# operator.prometheus.enabled but serviceMonitor.enabled=false (no
+# monitoring.coreos.com CRDs on this cluster), so scraping is via these
+# native VMServiceScrapes instead. Powers CiliumNodeConnectivityDown
+# (postmortem 2026-07-05-cross-family-vxlan-endpoint-mesh).
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: cilium-agent
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+spec:
+  namespaceSelector:
+    matchNames:
+      - kube-system
+  selector:
+    matchLabels:
+      k8s-app: cilium
+  endpoints:
+    - port: metrics
+      interval: 30s
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: cilium-operator
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+spec:
+  namespaceSelector:
+    matchNames:
+      - kube-system
+  selector:
+    matchLabels:
+      io.cilium/app: operator
+  endpoints:
+    - port: metrics
+      interval: 30s
+{{- end }}

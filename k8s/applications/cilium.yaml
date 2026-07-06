@@ -104,3 +104,14 @@ spec:
               - http
         operator:
           replicas: 1               # single control-plane today; raise when rpi01 joins
+          prometheus:
+            enabled: true           # operator metrics :9963 (scraped by VMServiceScrape cilium-operator)
+        # Agent Prometheus metrics on :9962 (headless svc cilium-agent, port
+        # name "metrics"). Scraped by the VMServiceScrape in support-cluster;
+        # powers the CiliumNodeConnectivityDown alert (detection gap from the
+        # cross-family-vxlan-endpoint-mesh postmortem 2026-07-05). serviceMonitor
+        # stays OFF (no monitoring.coreos.com CRDs here).
+        prometheus:
+          enabled: true
+          serviceMonitor:
+            enabled: false
