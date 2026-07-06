@@ -26,7 +26,7 @@ spec:
     - repoURL: https://cloudnative-pg.github.io/charts
       chart: cloudnative-pg
       # Operator chart cloudnative-pg-v0.27.1 (ships operator v1.27.x + CRDs).
-      targetRevision: "0.28.3"
+      targetRevision: "0.29.0"
       helm:
         valuesObject:
           # Single small home-lab control loop; one replica is plenty.
