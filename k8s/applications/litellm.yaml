@@ -54,7 +54,7 @@ spec:
                     - model_name: claude-opus-4
                       litellm_params:
                         model: bedrock/us.anthropic.claude-opus-4-8
-                        aws_bearer_token: os.environ/AWS_BEARER_TOKEN_BEDROCK
+                        api_key: os.environ/AWS_BEARER_TOKEN_BEDROCK
                         aws_region_name: us-east-1
                   litellm_settings:
                     max_budget: 25
