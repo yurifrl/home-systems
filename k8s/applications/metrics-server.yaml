@@ -23,7 +23,7 @@ spec:
     # vmsingle TSDB is unhealthy. https://github.com/kubernetes-sigs/metrics-server
     - repoURL: https://kubernetes-sigs.github.io/metrics-server/
       chart: metrics-server
-      targetRevision: "3.12.2"
+      targetRevision: "3.13.1"
       helm:
         releaseName: metrics-server
         valuesObject:
