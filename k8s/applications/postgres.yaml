@@ -26,7 +26,7 @@ spec:
     # ScheduledBackup) from values. cluster-v0.6.1 is the current release.
     - repoURL: https://cloudnative-pg.github.io/charts
       chart: cluster
-      targetRevision: "0.6.1"
+      targetRevision: "0.7.0"
       helm:
         # Pin the resource name to `pg` (otherwise it derives from the release
         # name). This is the CNPG Cluster name other apps connect to.
