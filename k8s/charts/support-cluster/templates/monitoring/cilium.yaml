@@ -1,44 +1,64 @@
 {{- if eq .Values.monitoringProvider "victoriametrics" }}
-# Cilium agent + operator Prometheus metrics.
-# Cilium helm (k8s/applications/cilium.yaml) has prometheus.enabled +
-# operator.prometheus.enabled but serviceMonitor.enabled=false (no
-# monitoring.coreos.com CRDs on this cluster), so scraping is via these
-# native VMServiceScrapes instead. Powers CiliumNodeConnectivityDown
-# (postmortem 2026-07-05-cross-family-vxlan-endpoint-mesh).
+# Cilium agent Prometheus metrics + cross-node mesh connectivity alert.
+# Cilium helm (k8s/applications/cilium.yaml) has prometheus.enabled=true but
+# serviceMonitor.enabled=false (no monitoring.coreos.com CRDs here) and the
+# chart creates no cilium-agent Service, so we scrape the pods directly.
+# Agent pods (k8s-app=cilium) serve metrics on the named port "prometheus"
+# (9962). Detection gap from postmortem 2026-07-05-cross-family-vxlan-endpoint-mesh
+# (the tp1<->guest overlay blackhole was invisible: no cilium scrape existed).
 ---
 apiVersion: operator.victoriametrics.com/v1beta1
-kind: VMServiceScrape
+kind: VMPodScrape
 metadata:
   name: cilium-agent
   namespace: monitoring
   labels:
     prometheus: k8s
 spec:
-  namespaceSelector:
-    matchNames:
-      - kube-system
+  podMetricsEndpoints:
+    - port: prometheus
+      path: /metrics
+      interval: 30s
   selector:
     matchLabels:
       k8s-app: cilium
-  endpoints:
-    - port: metrics
-      interval: 30s
----
-apiVersion: operator.victoriametrics.com/v1beta1
-kind: VMServiceScrape
-metadata:
-  name: cilium-operator
-  namespace: monitoring
-  labels:
-    prometheus: k8s
-spec:
   namespaceSelector:
     matchNames:
       - kube-system
-  selector:
-    matchLabels:
-      io.cilium/app: operator
-  endpoints:
-    - port: metrics
-      interval: 30s
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: cilium-connectivity-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  groups:
+    - name: cilium-connectivity.rules
+      rules:
+        # cilium_node_health_connectivity_status is a per-agent COUNT of peer
+        # nodes in each status (no target-node label). Pod-overlay reachability
+        # is type="endpoint". A healthy agent sees every peer reachable except
+        # the one persistently-broken node (macarm01, cilium ImagePullBackOff —
+        # home-systems-9xk.4), so unreachable==1 is the tolerated baseline.
+        # >1 for 15m means an agent has lost the pod overlay to MORE than the
+        # known-broken node — the cross-family-vxlan-endpoint-mesh fault
+        # (tp1<->guest blackhole) would trip this. TIGHTEN to >0 once
+        # home-systems-9xk.4 fixes macarm01. 15m absorbs the ~3min health-probe
+        # lag + agent rolls. Runbook: .agents/postmortems/2026-07-05-cross-family-vxlan-endpoint-mesh/PM.md
+        - alert: CiliumNodeConnectivityDown
+          expr: |
+            cilium_node_health_connectivity_status{status="unreachable",type="endpoint"} > 1
+          for: 15m
+          labels:
+            severity: critical
+            environment: production
+            service: cilium-mesh
+          annotations:
+            summary: "Cilium pod-overlay connectivity degraded"
+            description: "Cilium agent {{ `{{ $labels.pod }}` }} reports {{ `{{ $value }}` }} peer nodes with unreachable pod overlay (type=endpoint). More than the known-broken macarm01 baseline => a cross-node VXLAN mesh fault. Runbook: postmortem 2026-07-05-cross-family-vxlan-endpoint-mesh (localize node vs peer, check `cilium node list` endpoints are all 100.x)."
 {{- end }}
