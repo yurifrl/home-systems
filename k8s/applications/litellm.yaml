@@ -56,6 +56,11 @@ spec:
                         model: bedrock/us.anthropic.claude-opus-4-8
                         api_key: os.environ/AWS_BEARER_TOKEN_BEDROCK
                         aws_region_name: us-east-1
+                    - model_name: gpt-5-mantle
+                      litellm_params:
+                        model: bedrock_mantle/openai.gpt-5.5
+                        api_key: os.environ/AWS_BEARER_TOKEN_BEDROCK
+                        api_base: https://bedrock-mantle.us-east-1.api.aws/v1
                   litellm_settings:
                     max_budget: 25
                     budget_duration: 30d
