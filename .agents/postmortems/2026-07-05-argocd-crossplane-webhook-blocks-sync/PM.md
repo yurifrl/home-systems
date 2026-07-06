@@ -20,7 +20,7 @@ memories:
   - argocd-crossplane-webhook-blocks-sync-2026-07-05
 supersedes: []
 related:
-  - 2026-07-05-pc01-vxlan-tx-checksum-offload/PM.md
+  - 2026-07-05-pc01-vxlan-tx-checksum-offload
 ---
 
 # Postmortem: ArgoCD cluster sync fully blocked by an unreachable crossplane conversion webhook

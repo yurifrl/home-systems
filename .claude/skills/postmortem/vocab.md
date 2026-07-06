@@ -10,6 +10,9 @@ dell01, tp1, tp4, pc01, rpi01, macarm01, macintel01
 
 ## failure_mode
 vxlan-tx-checksum-offload, cilium-stale-bpf-state, etcd-quorum-loss,
-tailscale-accept-routes-lan-hijack, conversion-webhook-blocks-argocd-sync,
+cross-family-vxlan-endpoint-mesh,
+tailscale-accept-routes-lan-hijack, tailscale-config-flag-drift-crashloop,
+conversion-webhook-blocks-argocd-sync,
+cloudflared-tunnel-connector-gap, cloudflared-quic-edge-unreachable,
 aggressive-liveness-probe, cross-node-tcp-broken, dns-timeout,
 longhorn-sharemanager-on-cross-site-node

@@ -25,6 +25,7 @@ supersedes: []
 related:
   - 2026-07-05-obs-cloudflared-1033
   - 2026-07-05-pc01-vxlan-tx-checksum-offload
+  - 2026-07-05-cross-family-vxlan-endpoint-mesh
 ---
 
 # Postmortem: hermes RWX mount blocked by Longhorn share-manager on a cross-site node

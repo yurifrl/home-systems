@@ -22,8 +22,10 @@ memories:
   - pc01-crossnode-tcp-ROOTCAUSE-vxlan-tx-offload-2026-07-05
 supersedes: []
 related:
-  - 2026-07-05-argocd-crossplane-webhook-blocks-sync/PM.md
-  - 2026-07-05-hermes-rwx-sharemanager-cross-site/PM.md
+  - 2026-07-05-argocd-crossplane-webhook-blocks-sync
+  - 2026-07-05-pc01-tailscale-flag-drift-crashloop
+  - 2026-07-05-hermes-rwx-sharemanager-cross-site
+  - 2026-07-05-cross-family-vxlan-endpoint-mesh
 ---
 
 # Postmortem: pc01 cross-node pod networking silently broken by virtio VXLAN TX checksum offload

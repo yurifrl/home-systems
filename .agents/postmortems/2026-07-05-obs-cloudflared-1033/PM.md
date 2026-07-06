@@ -20,6 +20,7 @@ memories:
 supersedes: []
 related:
   - 2026-07-05-hermes-rwx-sharemanager-cross-site
+  - 2026-07-05-cloudflare-tunnel-quic-edge-unreachable
 ---
 
 # Postmortem: obs.syscd.live Error 1033 during a cloudflared-obs restart on macintel01
