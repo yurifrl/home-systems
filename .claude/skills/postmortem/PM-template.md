@@ -13,8 +13,8 @@ affected_urls:
   - <https://argocd.syscd.live>
 beads: []              # epic id — filled at approval (individual bead ids live in FP.md)
 memories: []           # bd-remember keys — filled at approval
-supersedes: []         # prior postmortem files this one absorbs/extends
-related: []            # other postmortem files sharing components/territory (link BOTH ways)
+supersedes: []         # prior incidents this one absorbs/extends — bare dir slugs, e.g. 2026-07-05-obs-cloudflared-1033
+related: []            # incidents sharing components/territory — bare dir slugs (no /PM.md), link BOTH ways
 ---
 
 # Postmortem: <name>
