@@ -17,89 +17,17 @@ spec:
     syncOptions:
       - CreateNamespace=true
   sources:
+    # PUBLIC: the generic support chart (templates only). All litellm values —
+    # including the model list / endpoints — come from the PRIVATE repo below,
+    # merged at sync time, so they never appear in this public repo.
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/support
       helm:
-        valuesObject:
-          # Pulls 1Password item "litellm" (Kubernetes vault) into Secret "litellm":
-          #   OPENAI_API_KEY      -> real OpenAI key (LiteLLM -> OpenAI hop)
-          #   LITELLM_MASTER_KEY  -> proxy auth key (clients -> LiteLLM hop)
-          externalSecrets:
-            - name: litellm
-            # CNPG declarative role password must live in the `databases` ns
-            # (the pg cluster's ns) as a basic-auth secret. postgres.yaml points
-            # the `litellm` role's passwordSecret at this `litellm-db` secret.
-            - name: litellm-db-roles
-              namespace: databases
-              targetName: litellm-db
-              template:
-                type: kubernetes.io/basic-auth
-                data:
-                  username: litellm
-                  password: "{{ .password }}"
-              data:
-                - secretKey: password
-                  key: litellm
-                  property: POSTGRES_PASSWORD
-          configMaps:
-            - name: litellm-config
-              data:
-                config.yaml: |
-                  model_list:
-                    - model_name: gpt-5
-                      litellm_params:
-                        model: openai/gpt-5.5
-                        api_key: os.environ/OPENAI_API_KEY
-                    - model_name: claude-opus-4
-                      litellm_params:
-                        model: bedrock/us.anthropic.claude-opus-4-8
-                        api_key: os.environ/AWS_BEARER_TOKEN_BEDROCK
-                        aws_region_name: us-east-1
-                    - model_name: gpt-5-mantle
-                      litellm_params:
-                        model: bedrock_mantle/openai.gpt-5.5
-                        api_key: os.environ/AWS_BEARER_TOKEN_BEDROCK
-                        api_base: https://bedrock-mantle.us-east-1.api.aws/v1
-                  litellm_settings:
-                    max_budget: 25
-                    budget_duration: 30d
-          deployments:
-            - name: litellm
-              volumes:
-                - name: config
-                  configMap:
-                    name: litellm-config
-              containers:
-                - name: litellm
-                  image: ghcr.io/berriai/litellm:main-latest
-                  imagePullPolicy: Always
-                  args: ["--config", "/app/config/config.yaml", "--port", "4000"]
-                  ports:
-                    - name: http
-                      containerPort: 4000
-                      protocol: TCP
-                  # LITELLM_MASTER_KEY is auto-read from env; OPENAI_API_KEY
-                  # is referenced by config.yaml via os.environ/...
-                  envFrom:
-                    - secretRef:
-                        name: litellm
-                  volumeMounts:
-                    - name: config
-                      mountPath: /app/config
-                  resources:
-                    requests:
-                      cpu: "1"
-                      memory: 2Gi
-                    limits:
-                      cpu: "2"
-                      memory: 3Gi
-          services:
-            - name: litellm
-              port: 4000
-          virtualServices:
-            - name: litellm
-              service:
-                name: litellm
-                namespace: litellm
-                port: 4000
+        valueFiles:
+          - $values/litellm/values.yaml
+    # PRIVATE: real litellm values (model_list, endpoints). Repo creds already
+    # registered in ArgoCD (shared with crossplane-gcp).
+    - repoURL: git@github.com:yurifrl/home-systems-values.git
+      targetRevision: HEAD
+      ref: values
