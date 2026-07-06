@@ -53,7 +53,7 @@ spec:
                         api_key: os.environ/OPENAI_API_KEY
                     - model_name: claude-opus-4
                       litellm_params:
-                        model: bedrock/anthropic.claude-opus-4-20250514-v1:0
+                        model: bedrock/us.anthropic.claude-opus-4-8
                         aws_bearer_token: os.environ/AWS_BEARER_TOKEN_BEDROCK
                         aws_region_name: us-east-1
                   litellm_settings:
