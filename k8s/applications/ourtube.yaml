@@ -107,6 +107,8 @@ spec:
               channelId: UCrVLgIniVg6jW38uVqDRIiQ
             - name: jakkuh
               channelId: UCJa14zeVf8p6clixTOIOVyQ
+            - name: Ordinary Things
+              channelId: UCxLYtICsUCWdr1YPrj5DtwA
 
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
