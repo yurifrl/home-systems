@@ -49,7 +49,7 @@ spec:
             - name: blackbox-exporter
     - repoURL: https://victoriametrics.github.io/helm-charts/
       chart: victoria-metrics-k8s-stack
-      targetRevision: "0.83.0"
+      targetRevision: "0.85.10"
       helm:
         # Pin the Helm release name so resource names are short and
         # deterministic (vmks-*, vmsingle-vmks, vmalertmanager-vmks, ...),
