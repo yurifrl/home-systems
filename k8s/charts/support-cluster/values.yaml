@@ -60,7 +60,7 @@ limitRanges:
 # nodes that don't need it). Add more Proxmox/UTM virtio nodes here as needed.
 nicOffloadFix:
   enabled: true
-  image: nicolaka/netshoot:v0.13
+  image: nicolaka/netshoot:v0.16
   reapplySeconds: 60
   nodeSelector:
     kubernetes.io/hostname: pc01
