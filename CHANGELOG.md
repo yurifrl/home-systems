@@ -26,7 +26,7 @@
 - Session Name: 2026-06-06-1911-pxe-boot-fixes
 - Context Name: 2026-06-06-1911-pxe-boot-fixes
 
-Planned `.agents/drafts/nostos-pxe-reliable-ai-friendly.md` into beads epic `home-systems-3wt` (10 issues, all closed) and implemented every issue in the `nostos` Go CLI (`.submodules/nostos/`). Full suite: `go build`/`go vet` clean, `go test ./...` 279 pass / 27 packages. Nothing committed.
+Planned `nostos/docs/design/pxe-reliable-ai-friendly.md` (in the nostos submodule) into beads epic `home-systems-3wt` (10 issues, all closed) and implemented every issue in the `nostos` Go CLI (`.submodules/nostos/`). Full suite: `go build`/`go vet` clean, `go test ./...` 279 pass / 27 packages. Nothing committed.
 
 ### Added
 - `internal/pxe/setup.go` + `nostos pxe setup`: installs a scoped NOPASSWD sudoers drop-in at `/etc/sudoers.d/nostos-pxe` (validated via `visudo -cf`) so the PXE server runs `dnsmasq` password-less; exposes `SudoersInstalled()`, `dnsmasqBinary()`, dry-run preview. Schema `pxe.setup`.
@@ -207,7 +207,7 @@ Planned `.agents/drafts/nostos-pxe-reliable-ai-friendly.md` into beads epic `hom
 - `internal/upgrade/toolcache.go` (+ test): downloads and caches a `talosctl` binary matching each node's current version per hop, fixing the `too_many_pings` GoAway when a newer client talks to an older server.
 - nostos render now templates `install.image` from config (`{{ .InstallImage }}` = `factory.talos.dev/metal-installer/<schematic>:<version>`), so version/schematic live only in `config.yaml`.
 - `nostos/templates/dell01.yaml`: `machine.disks` partitioning `/dev/sda` (wiped 256GB SATA) mounted at `/var/mnt/storage`, plus kubelet `extraMount` for it.
-- `docs/mock-dashboard.html` — interactive HTML simulator of the proposed nostos dashboard: tabbed Charm-v2 shell (Overview/Nodes/Upgrade/Network/Playbooks), live upgrade state machine (nodes flip version with progress bars, cluster heals from degraded→healthy), command palette (`:` / ⌘K), per-disk usage breakdown, full node-detail view, and auto-detect provisioning (Dell PXE / new RK1). Notifies on completion only; demo/simulate controls live outside the TUI frame.
+- `nostos-sim.html` (in `.submodules/nostos/docs/`) — interactive HTML simulator of the proposed nostos dashboard: tabbed Charm-v2 shell (Overview/Nodes/Upgrade/Network/Playbooks), live upgrade state machine (nodes flip version with progress bars, cluster heals from degraded→healthy), command palette (`:` / ⌘K), per-disk usage breakdown, full node-detail view, and auto-detect provisioning (Dell PXE / new RK1). Notifies on completion only; demo/simulate controls live outside the TUI frame.
 
 ### Changed
 - `nostos/config.yaml`: `talos_version` v1.10.3 → v1.13.3; schematics bumped to add `iscsi-tools` + `util-linux-tools` (amd64 `8f04ea6b…`, arm64 `6f9371bc…`).

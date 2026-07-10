@@ -134,5 +134,5 @@
 - [ ] 12.1 `.submodules/nostos/README.md` with schema reference, supported secrets backends, BIOS checklist
 - [ ] 12.2 `.submodules/nostos/CHANGELOG.md` with v0.1.0 entry
 - [ ] 12.3 `.submodules/nostos/LICENSE` (MIT)
-- [ ] 12.4 Update `.agents/drafts/nostos-pitch.html` to reflect Go+Charm stack
+- [ ] 12.4 Update `.submodules/nostos/docs/nostos-pitch.html` to reflect Go+Charm stack
 - [ ] 12.5 Update `openspec/changes/adopt-nostos/` tasks/design to reference `go run ./.submodules/nostos/cmd/nostos ...` invocation (was `uv run --project`)
