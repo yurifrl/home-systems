@@ -109,6 +109,10 @@ spec:
               channelId: UCJa14zeVf8p6clixTOIOVyQ
             - name: Ordinary Things
               channelId: UCxLYtICsUCWdr1YPrj5DtwA
+            - name: James May’s Planet Gin
+              channelId: UCCJFWxm9fUtB4hPzNvmfcMA
+            - name: Mr Sunday Movies
+              channelId: UCkDSAQ_5-yx5hmuvUcsJL7A
 
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
