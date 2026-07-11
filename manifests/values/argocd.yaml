@@ -16,6 +16,12 @@ global:
 
 controller:
   replicas: 1
+  # Co-locate with repoServer on one node: this cluster has a flaky cross-node
+  # datapath (see pc01 VXLAN + 2026-07-05 postmortems), and controller<->repo
+  # gRPC over a bad cross-node hop drops mid-stream, aborting cluster sync for
+  # every app. Same node = loopback, no VXLAN.
+  nodeSelector:
+    kubernetes.io/hostname: macintel01
   metrics:
     enabled: true
     serviceMonitor:
@@ -89,6 +95,9 @@ server:
 
 repoServer:
   replicas: 1
+  # Pinned to the same node as the controller (see controller.nodeSelector).
+  nodeSelector:
+    kubernetes.io/hostname: macintel01
   autoscaling:
     enabled: true
     minReplicas: 1
