@@ -8,6 +8,9 @@
 
   Pin the provider to a control-plane node and point it at that node's LOCAL
   apiserver so it always has a stable connection (no VIP, no cross-node hop).
+  The control-plane toleration is required — the target node carries the
+  node-role.kubernetes.io/control-plane:NoSchedule taint, so without it the
+  provider pod stays Pending and its conversion webhook has no endpoint.
 */ -}}
 {{- with .Values.pinnedRuntimeConfig }}
 apiVersion: pkg.crossplane.io/v1beta1
@@ -22,6 +25,10 @@ spec:
         spec:
           nodeSelector:
             kubernetes.io/hostname: {{ .nodeHostname }}
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
           containers:
             - name: package-runtime
               env:
