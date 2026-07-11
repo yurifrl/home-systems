@@ -1,0 +1,66 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: presenter
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: presenter
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    # App: public presenter chart (Deployment/Service/PVC). Encrypted libSQL on
+    # a persistent volume; single replica (WS peers are tracked in-memory).
+    - repoURL: https://github.com/yurifrl/presenter.git
+      targetRevision: HEAD
+      path: chart
+      helm:
+        releaseName: presenter
+        valuesObject:
+          image:
+            tag: latest
+            pullPolicy: Always
+          persistence:
+            storageClass: longhorn-single
+          env:
+            ADMIN_EMAIL: yurifl03@gmail.com
+            GOOGLE_REDIRECT_URI: https://presenter.syscd.live/auth/google/callback
+          # Secrets from the 1Password "presenter" item (below). optional so the
+          # pod still starts (password login + SESSION_SECRET-derived key) before
+          # the item exists.
+          envFrom:
+            - secretRef:
+                name: presenter
+                optional: true
+    # Cluster glue: ExternalSecret (1Password) + istio VirtualService.
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          # Pulls every field of the 1Password "presenter" item into a Secret
+          # named "presenter": SESSION_SECRET, ENCRYPTION_KEY, and (optional)
+          # GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / ALLOWED_EMAILS.
+          externalSecrets:
+            - name: presenter
+              key: presenter
+          virtualServices:
+            - name: presenter
+              hosts:
+                - presenter.syscd.live
+                - presenter.syscd.tech
+              service:
+                name: presenter
+                namespace: presenter
+                port: 7737
