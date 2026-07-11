@@ -84,6 +84,24 @@ spec:
                       memory: 512Mi
                     limits:
                       memory: 2Gi
+                # Expose the Local REST API plugin (bound to 127.0.0.1:27124
+                # inside the pod) on the pod network so in-cluster clients can
+                # reach it. socat passes the plugin's TLS through untouched.
+                - name: rest-api-proxy
+                  image: alpine/socat:latest
+                  args:
+                    - TCP-LISTEN:27124,fork,reuseaddr
+                    - TCP:127.0.0.1:27124
+                  ports:
+                    - name: rest-api
+                      containerPort: 27124
+                      protocol: TCP
+                  resources:
+                    requests:
+                      cpu: 10m
+                      memory: 16Mi
+                    limits:
+                      memory: 32Mi
                 # Self-sync sidecar: commits + pushes vault edits back to git
                 # and pulls remote changes, so the config volume stays in sync
                 # with github.com/yurifrl/Obsidian. Tolerant of transient
@@ -131,6 +149,11 @@ spec:
           services:
             - name: obsidian
               port: 3000
+            # Local REST API, proxied by the socat sidecar to the plugin.
+            - name: obsidian-rest
+              selector: obsidian
+              port: 27124
+              targetPort: 27124
           virtualServices:
             - name: obsidian
               service:

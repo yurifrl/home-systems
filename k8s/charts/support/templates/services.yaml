@@ -12,5 +12,5 @@ spec:
       protocol: TCP
       targetPort: {{ .targetPort | default "http" }}
   selector:
-    app: {{ .name }}
+    app: {{ .selector | default .name }}
 {{- end }}
