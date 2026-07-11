@@ -15,3 +15,8 @@ spec:
         spec:
           nodeSelector:
             kubernetes.io/arch: {{ .Values.runtimeArch }}
+          # containers is a required field on the DeploymentRuntimeConfig pod
+          # template; the name is the strategic-merge key, so this only sets the
+          # nodeSelector without otherwise altering the package-runtime container.
+          containers:
+            - name: package-runtime
