@@ -76,9 +76,6 @@ spec:
                   volumeMounts:
                     - name: config
                       mountPath: /config
-                    - name: config
-                      mountPath: /Obsidian
-                      subPath: Obsidian
                     - name: dshm
                       mountPath: /dev/shm
                   resources:
@@ -103,10 +100,11 @@ spec:
                     - sh
                     - -c
                     - |
-                      VAULT=/Obsidian
+                      VAULT=/config/vaults/Obsidian
                       git config --global --add safe.directory "$VAULT"
                       while true; do
                         if [ ! -d "$VAULT/.git" ]; then
+                          mkdir -p "$VAULT"
                           git clone "https://oauth2:${GITHUB_TOKEN}@github.com/yurifrl/Obsidian.git" "$VAULT" || true
                         else
                           git -C "$VAULT" pull --rebase --autostash || true
@@ -124,9 +122,6 @@ spec:
                   volumeMounts:
                     - name: config
                       mountPath: /config
-                    - name: config
-                      mountPath: /Obsidian
-                      subPath: Obsidian
                   resources:
                     requests:
                       cpu: 10m
