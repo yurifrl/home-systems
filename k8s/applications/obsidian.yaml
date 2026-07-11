@@ -58,29 +58,6 @@ spec:
                   emptyDir:
                     medium: Memory
                     sizeLimit: 1Gi
-              initContainers:
-                - name: clone-vault
-                  image: alpine/git:latest
-                  command:
-                    - sh
-                    - -c
-                    - |
-                      set -e
-                      if [ -d /config/vaults/Obsidian/.git ]; then
-                        git -C /config/vaults/Obsidian pull --ff-only || true
-                      else
-                        mkdir -p /config/vaults
-                        git clone "https://oauth2:${GITHUB_TOKEN}@github.com/yurifrl/Obsidian.git" /config/vaults/Obsidian
-                      fi
-                  env:
-                    - name: GITHUB_TOKEN
-                      valueFrom:
-                        secretKeyRef:
-                          name: obsidian
-                          key: GITHUB_TOKEN
-                  volumeMounts:
-                    - name: config
-                      mountPath: /config
               containers:
                 - name: obsidian
                   image: lscr.io/linuxserver/obsidian:latest
@@ -99,6 +76,9 @@ spec:
                   volumeMounts:
                     - name: config
                       mountPath: /config
+                    - name: config
+                      mountPath: /Obsidian
+                      subPath: Obsidian
                     - name: dshm
                       mountPath: /dev/shm
                   resources:
@@ -123,10 +103,12 @@ spec:
                     - sh
                     - -c
                     - |
-                      VAULT=/config/vaults/Obsidian
+                      VAULT=/Obsidian
                       git config --global --add safe.directory "$VAULT"
                       while true; do
-                        if [ -d "$VAULT/.git" ]; then
+                        if [ ! -d "$VAULT/.git" ]; then
+                          git clone "https://oauth2:${GITHUB_TOKEN}@github.com/yurifrl/Obsidian.git" "$VAULT" || true
+                        else
                           git -C "$VAULT" pull --rebase --autostash || true
                           git -C "$VAULT" add -A || true
                           if ! git -C "$VAULT" diff --cached --quiet; then
@@ -142,6 +124,9 @@ spec:
                   volumeMounts:
                     - name: config
                       mountPath: /config
+                    - name: config
+                      mountPath: /Obsidian
+                      subPath: Obsidian
                   resources:
                     requests:
                       cpu: 10m
