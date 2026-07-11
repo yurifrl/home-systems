@@ -141,17 +141,14 @@ configs:
     # Crossplane upbound provider CRDs use webhook conversion. When a provider
     # pod is unreachable (e.g. wedged node), the apiserver's conversion call
     # times out, that single LIST fails, and ArgoCD's whole cluster cache sync
-    # aborts -> NO app can sync. Excluding these from the cache decouples
-    # ArgoCD from the provider webhooks; crossplane still reconciles the MRs.
-    # The blocks below the upbound one are the argo-cd chart defaults, kept
-    # because setting this key replaces the chart default wholesale.
+    # aborts -> NO app can sync (see 2026-07-05 postmortem). The upbound
+    # exclusion was removed once the gcp providers were pinned+tolerated onto a
+    # stable control-plane node so their webhooks always have an endpoint; if a
+    # provider pod goes Pending/crashloops again, re-add an `*.upbound.io`
+    # block here to decouple ArgoCD from the webhooks.
+    # The blocks below are the argo-cd chart defaults, kept because setting this
+    # key replaces the chart default wholesale.
     resource.exclusions: |
-      - apiGroups:
-          - "*.upbound.io"
-        kinds:
-          - "*"
-        clusters:
-          - "*"
       - apiGroups:
           - metallb.io
         kinds:
