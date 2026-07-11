@@ -92,11 +92,11 @@ spec:
                 - name: rest-api-proxy
                   image: alpine/socat:latest
                   args:
-                    - TCP-LISTEN:27124,fork,reuseaddr
+                    - TCP-LISTEN:27125,fork,reuseaddr
                     - OPENSSL:127.0.0.1:27124,verify=0
                   ports:
                     - name: rest-api
-                      containerPort: 27124
+                      containerPort: 27125
                       protocol: TCP
                   resources:
                     requests:
@@ -155,7 +155,7 @@ spec:
             - name: obsidian-rest
               selector: obsidian
               port: 27124
-              targetPort: 27124
+              targetPort: 27125
           virtualServices:
             - name: obsidian
               service:
