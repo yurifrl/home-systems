@@ -84,14 +84,16 @@ spec:
                       memory: 512Mi
                     limits:
                       memory: 2Gi
-                # Expose the Local REST API plugin (bound to 127.0.0.1:27124
-                # inside the pod) on the pod network so in-cluster clients can
-                # reach it. socat passes the plugin's TLS through untouched.
+                # Expose the Local REST API plugin (HTTPS bound to
+                # 127.0.0.1:27124 with a self-signed cert) on the pod network as
+                # plain TCP: socat originates the TLS upstream (verify=0), so
+                # in-cluster clients speak plain HTTP and avoid self-signed-cert
+                # handling. Transport is still encrypted by istio ambient mTLS.
                 - name: rest-api-proxy
                   image: alpine/socat:latest
                   args:
                     - TCP-LISTEN:27124,fork,reuseaddr
-                    - TCP:127.0.0.1:27124
+                    - OPENSSL:127.0.0.1:27124,verify=0
                   ports:
                     - name: rest-api
                       containerPort: 27124
