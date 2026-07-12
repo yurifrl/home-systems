@@ -3,8 +3,7 @@
 # The tunnel is a single point of failure fronting all *.syscd.live services;
 # cloudflared exposes Prometheus metrics on :2000 (metrics: 0.0.0.0:2000 in its
 # config). We scrape cloudflared_tunnel_ha_connections and page when it hits 0
-# (or the target disappears) — one SPOF symptom alert covering every tunnel-
-# fronted service. See:
+# — one SPOF symptom alert covering every tunnel-fronted service. See:
 # .agents/postmortems/2026-07-05-cloudflare-tunnel-quic-edge-unreachable/PM.md
 ---
 apiVersion: v1
@@ -59,10 +58,7 @@ spec:
     - name: cloudflare-tunnel.rules
       rules:
         - alert: CloudflareTunnelDown
-          expr: |
-            (sum(cloudflared_tunnel_ha_connections) == 0)
-            or
-            (absent(cloudflared_tunnel_ha_connections) == 1)
+          expr: sum(cloudflared_tunnel_ha_connections) == 0
           for: 3m
           labels:
             severity: critical
@@ -70,5 +66,5 @@ spec:
             service: cloudflare-tunnel
           annotations:
             summary: "Cloudflare tunnel has no active connections"
-            description: "cloudflared (nixos-1) has 0 registered edge connections (or its metrics target is gone) for 3m. ALL *.syscd.live services are returning Cloudflare Error 1033/524. Runbook: .agents/postmortems/2026-07-05-cloudflare-tunnel-quic-edge-unreachable/PM.md — usually QUIC-to-edge failure; force protocol http2."
+            description: "cloudflared (nixos-1) has 0 registered edge connections for 3m. ALL *.syscd.live services are returning Cloudflare Error 1033/524. Runbook: .agents/postmortems/2026-07-05-cloudflare-tunnel-quic-edge-unreachable/PM.md — usually QUIC-to-edge failure; force protocol http2."
 {{- end }}

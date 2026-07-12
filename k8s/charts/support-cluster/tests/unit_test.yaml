@@ -1,6 +1,8 @@
 suite: test support-cluster chart
 templates:
   - tailscale/connector.yaml
+  - monitoring/cloudflare-tunnel.yaml
+  - monitoring/victoriametrics-watchdog.yaml
 tests:
   - it: should render connector correctly
     template: tailscale/connector.yaml
@@ -17,4 +19,27 @@ tests:
           value: "10.244.0.0/16"
       - contains:
           path: spec.tags
-          content: tag:k8s 
+          content: tag:k8s
+
+  - it: should not treat missing Cloudflare metrics as a tunnel outage
+    template: monitoring/cloudflare-tunnel.yaml
+    documentIndex: 2
+    asserts:
+      - notMatchRegex:
+          path: spec.groups[0].rules[0].expr
+          pattern: "absent"
+
+  - it: should render the independent VictoriaMetrics watchdog
+    template: monitoring/victoriametrics-watchdog.yaml
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: spec.schedule
+          value: "* * * * *"
+      - equal:
+          path: spec.concurrencyPolicy
+          value: Forbid
+      - matchRegex:
+          path: spec.jobTemplate.spec.template.spec.containers[0].args[0]
+          pattern: "vmalertmanager-vmks:9093/api/v2/alerts"
