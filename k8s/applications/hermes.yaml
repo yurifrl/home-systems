@@ -40,8 +40,9 @@ spec:
             existingClaim: hermes-state
             backup:
               enabled: true
-              schedule: "0 2 * * 0"
-              retain: 14
+              # Daily at 02:00; retain 180 daily backups ≈ rolling 6-month window.
+              schedule: "0 2 * * *"
+              retain: 180
 
           auth:
             gitLogin:

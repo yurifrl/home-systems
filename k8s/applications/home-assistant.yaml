@@ -114,8 +114,9 @@ spec:
           # Backup the PVC created by the upstream chart's volumeClaimTemplate.
           longhornBackups:
             - pvc: home-assistant-home-assistant-0
-              schedule: "0 2 * * 0"
-              retain: 30
+              # Daily at 02:00; retain 180 daily backups ≈ rolling 6-month window.
+              schedule: "0 2 * * *"
+              retain: 180
 
              
 # Chart: https://github.com/pajikos/home-assistant-helm-chart
