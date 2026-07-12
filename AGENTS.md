@@ -330,7 +330,9 @@ Additional docs in `docs/`:
 - `home-assistant.md`: Home Assistant integration
 
 ## Kubernets
-- Don't kubectl apply directly to the cluster. Use ArgoCD to manage all resources.
+- Never run `kubectl apply`, including `kubectl apply --dry-run`. Validate manifests with Helm or other render-only tools.
+- Apply Kubernetes changes through GitOps: commit and push them, then let ArgoCD reconcile.
+- When the user authorizes a task with “go”, “proceed”, or “commit and push”, that approval covers retries, follow-up fixes, verification, and the final push for that task. Do not ask again unless a genuinely new destructive action falls outside the approved scope.
 
 ## Kubernetes Contexts
 
