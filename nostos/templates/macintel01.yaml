@@ -111,6 +111,7 @@ kind: ExtensionServiceConfig
 name: tailscale
 environment:
   - TS_AUTHKEY=tailscale://authkey?description=macintel01
+  - TS_DEBUG_OMIT_LOCAL_ADDRS=true
   # Advertise ONLY the pinned LAN /24 over Tailscale so this node's apiserver
   # endpoint (192.168.0.91) is routable from every site. .91 is a static,
   # below-DHCP-pool address, so the /24 is a stable subnet route. Distinct from

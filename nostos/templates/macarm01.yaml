@@ -75,6 +75,7 @@ kind: ExtensionServiceConfig
 name: tailscale
 environment:
   - TS_AUTHKEY=tailscale://authkey?description=macarm01
+  - TS_DEBUG_OMIT_LOCAL_ADDRS=true
   # On-LAN node (like dell01): NEVER --accept-routes (it hijacks the pod CIDR
   # and kills cluster DNS). --reset so `tailscale up` accepts the flag set.
   - TS_ROUTES=192.168.68.0/24
