@@ -92,12 +92,6 @@ spec:
               extraArgs:
                 # PromQL/MetricsQL exemplar-style features are on by default in VM.
                 search.maxUniqueTimeseries: "1000000"
-                # Size-based retention: drop oldest partitions to stay under this
-                # so the 10Gi PVC never fills into read-only mode (the failure in
-                # .agents/postmortems/2026-07-11-vmsingle-storage-readonly). ~2Gi
-                # headroom below the PVC for background merges. Whichever caps
-                # first wins vs retentionPeriod=30d.
-                retention.maxDiskSpaceUsageBytes: "8GB"
               storage:
                 accessModes:
                   - ReadWriteOnce
