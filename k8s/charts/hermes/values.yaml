@@ -411,7 +411,7 @@ repositorySync:
 pages:
   enabled: false
   replicas: 1
-  image: busybox:1.37
+  image: busybox:1.38
   root: /workdir/site
   port: 8080
   nodeSelector: {}
