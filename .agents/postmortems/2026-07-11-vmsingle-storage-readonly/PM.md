@@ -1,9 +1,10 @@
 ---
 date: 2026-07-11
-status: draft
+status: closed
 incident_status: resolved
 sessions:
   - 019f538f-6c29-7410-9dfb-b151ecb16eb1
+  - 019f573d-9209-70e1-b670-a8c7df841f14
 components:
   - victoria-metrics
   - vmsingle
@@ -17,9 +18,10 @@ failure_mode: storage-exhaustion-readonly-self-blinded-monitoring
 affected_urls:
   - https://prometheus.syscd.live (query API; historical data only, no fresh)
 beads: [home-systems-el5]
-memories: []
+memories: [vmsingle-storage-readonly-self-blinded-2026-07-11]
 supersedes: []
-related: []
+related:
+  - 2026-07-05-cloudflare-tunnel-quic-edge-unreachable
 ---
 
 # Postmortem: vmsingle storage exhausted → read-only, ingestion dead, and the disk alert was blind to it
@@ -67,17 +69,20 @@ history is still present.
   stack is its own alert data source; when its storage broke it went blind to
   the exact condition that broke it.** vmalert never told Alertmanager
   anything, so nothing routed.
-- **Second gap — nothing watches the watcher:** no Watchdog/dead-man's-switch
-  VMRule and (before this incident) no external gatus check on the monitoring
-  stack. A self-hosted stack cannot page on its own storage exhaustion from the
-  inside; the silence itself was undetectable.
-- **How we detect it before the user next time:** an **external** gatus check
-  (runs off-cluster on the tailnet) that queries the VictoriaMetrics API for
-  data freshness — `count(up)` returns a non-empty result only while fresh
-  samples land; a read-only / dead vmsingle returns `"result":[]`. This catches
-  both "stack totally down" (non-200) and "up but not ingesting" (empty result),
-  neither of which the internal alert or the existing `/-/healthy` check can
-  see. See Follow-ups.
+- **Second gap — nothing watched the watcher at incident time:** there was no
+  external gatus check and no alert path independent of vmalert querying
+  vmsingle. The external gatus freshness check now covers total monitoring-path
+  failure. A separate in-cluster CronJob was later added that reads vmsingle and
+  vmagent process metrics directly and posts to Alertmanager, bypassing the
+  failed TSDB query path; it is supplementary because it still depends on the
+  cluster and Alertmanager.
+- **How we detect it before the user next time:** the primary signal is an
+  **external** gatus check (runs off-cluster on the tailnet) that queries the
+  VictoriaMetrics API for data freshness — `count(up)` returns a non-empty
+  result only while fresh samples land; a read-only / dead vmsingle returns
+  `"result":[]`. The supplementary direct-to-Alertmanager CronJob checks
+  read-only state, free space, endpoint availability, and vmagent backlog
+  without querying stored metrics. See Follow-ups.
 - **Fix path once detected:** expand the vmsingle PVC (durable) or drop
   retention (frees space, loses history). See Mitigation runbook.
 
@@ -113,9 +118,9 @@ See `FP.md` for the live ledger.
   durable capacity fix, synced by ArgoCD.
 - **DONE — pin vmsingle to tp4** (commit `fd09602d`): keeps the RWO PVC off
   cross-site nodes.
-- **DONE (deploy held) — gatus dead-man's-switch** (`nixos` commit `a15f7cc`,
-  `home-systems-el5.3`): external `count(up)` freshness check. Deploy held until
-  ingestion is restored so it doesn't page for the in-progress outage.
+- **DONE — gatus dead-man's-switch** (`nixos` commit `a15f7cc`,
+  `home-systems-el5.3`): external `count(up)` freshness check deployed and
+  green after ingestion was restored.
 - **DONE — restore ingestion** (`home-systems-el5.1`): the stuck Longhorn
   expansion could not be unstuck in place, so the volume was recreated fresh at
   10Gi (single-replica metrics data is expendable). Ingestion resumed; vmagent
@@ -131,7 +136,16 @@ See `FP.md` for the live ledger.
 - **DONE — deploy gatus check** (`home-systems-el5.3`): pushed nixos `a15f7cc`
   + ran the `deploy.yml` GitHub Action (`workflow_dispatch target=gatus`) —
   deployed successfully; check is live and green.
-- **OPEN — verify it fires on a real ingestion loss** (`home-systems-el5.2`, P3).
+- **OPEN — verify gatus fires on a real ingestion loss** (`home-systems-el5.2`, P3).
+- **DONE — stop false Cloudflare outage pages on missing monitoring data:**
+  removed `absent(cloudflared_tunnel_ha_connections)` from
+  `CloudflareTunnelDown` (`fd79c7a6`). Missing telemetry no longer claims the
+  tunnel is down.
+- **IMPLEMENTED, NOT STABLE — direct-to-Alertmanager watchdog:** CronJob added
+  in `victoriametrics-watchdog.yaml` (`fd79c7a6`, parser fixes `901b8e5f` and
+  `c263b635`). It succeeded once, then later runs failed on another BusyBox awk
+  expression. Stabilization and routing verification are tracked by
+  `home-systems-el5.4`.
 
 ## Dead Ends
 
@@ -163,6 +177,19 @@ See `FP.md` for the live ledger.
   stopped pushing (2XX counter frozen, on-disk queue growing) even though
   vmsingle was healthy and its Service endpoint was correct. A vmagent pod
   restart cleared it and live ingestion resumed immediately (`count(up)` > 0).
+- **The repeating `CloudflareTunnelDown` notification was not tunnel flapping.**
+  cloudflared exposed 4 healthy connections and had only one 14-second
+  single-connection reconnect. The alert's `absent(...)` branch interpreted
+  missing TSDB data as tunnel failure, then Alertmanager resent one continuously
+  firing alert every 1h plus its 5m group interval.
+- **Investigation initially followed the Cloudflare/Longhorn symptoms instead
+  of the alert semantics.** The decisive trace was metric producer → vmagent
+  scrape → rejected vmsingle write → empty query → `absent()` true.
+- **The watchdog shell passed Helm rendering but failed in BusyBox awk.** The
+  first unparenthesized ternary was fixed in `c263b635`; a later run exposed a
+  second `awk: cmd. line:1: Unexpected token`. Render-only tests did not execute
+  the container's awk implementation, so `home-systems-el5.4` requires fixture
+  execution against BusyBox plus live repeated-job verification.
 
 ## Timeline
 
@@ -196,3 +223,18 @@ See `FP.md` for the live ledger.
   up clean. Pushed nixos `a15f7cc` + ran the deploy GitHub Action → gatus check
   deployed. Restarted a stuck vmagent → live ingestion confirmed
   (`count(up)=124`, read-only cleared, disk 10Gi). Incident resolved.
+
+### 2026-07-12 — alert-semantics follow-up (UTC)
+- `~16:45` User reports repeated `CloudflareTunnelDown` Discord notifications.
+- `~16:50` cloudflared confirmed healthy with 4 connections; pod stable. vmalert
+  showed one alert continuously firing since July 9 while vmsingle returned no
+  current `cloudflared_tunnel_ha_connections` series.
+- `~16:55` Root cause traced to the rule's `absent(...)` branch. Alertmanager's
+  1h repeat plus 5m group interval explained the roughly 65-minute cadence.
+- `19:35` ArgoCD synced the rule without `absent(...)` and created the approved
+  direct-to-Alertmanager watchdog CronJob.
+- `19:37` Initial watchdog jobs failed on BusyBox awk ternary parsing.
+- `19:56` One watchdog job completed after parser fixes; later jobs regressed
+  with another BusyBox awk `Unexpected token` error.
+- `20:16` Opened `home-systems-el5.4` to stabilize the watchdog and verify its
+  warning, critical, resolved, and Discord-routing behavior.
