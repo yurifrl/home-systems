@@ -120,12 +120,18 @@ See `FP.md` for the live ledger.
   expansion could not be unstuck in place, so the volume was recreated fresh at
   10Gi (single-replica metrics data is expendable). Ingestion resumed; vmagent
   drained its ~740MB outage backlog.
-- **DONE — size-based retention guard** (`5d1c15e2`): added
-  `-retention.maxDiskSpaceUsageBytes=8GB` so VM drops oldest partitions to stay
-  under 8GB on the 10Gi PVC and never fills into read-only again (caps alongside
-  `retentionPeriod=30d`, whichever hits first). This is the real recurrence fix.
-- **OPEN — deploy gatus check + verify it fires/routes** (`home-systems-el5.3`,
-  `home-systems-el5.2`).
+- **DONE — size-based retention guard** — REVERTED. `-retention.maxDiskSpaceUsageBytes`
+  does **not** exist in single-node VictoriaMetrics (v1.147); it is a
+  cluster-only `vmstorage` flag. Adding it crashlooped vmsingle
+  (`flag provided but not defined`); reverted in `e6a77375`. Single-node VM has
+  **no size-based retention** — only `-retentionPeriod` (time). Recurrence
+  protection is therefore: the 10Gi PVC (~3.3× the 30d footprint — the old 3Gi
+  held ~30d, so 30d now uses ~3Gi of 10Gi) **plus** the external gatus
+  dead-man's-switch, which catches read-only regardless.
+- **DONE — deploy gatus check** (`home-systems-el5.3`): pushed nixos `a15f7cc`
+  + ran the `deploy.yml` GitHub Action (`workflow_dispatch target=gatus`) —
+  deployed successfully; check is live and green.
+- **OPEN — verify it fires on a real ingestion loss** (`home-systems-el5.2`, P3).
 
 ## Dead Ends
 
@@ -146,10 +152,17 @@ See `FP.md` for the live ledger.
   attached to retry online expansion), so it never gets a clean offline cycle,
   and the leftover file blocks every retry. This is what keeps vmsingle
   read-only despite the config being correct.
-- **`prometheus.syscd.tech/-/healthy` is a false comfort.** It returns
-  `Prometheus Server is Healthy.` (200) even in read-only mode — it proves the
-  process is up, not that ingestion works. That's why the freshness check
-  (`count(up)`) is needed alongside it.
+- **`-retention.maxDiskSpaceUsageBytes` does not exist in single-node VM.** I
+  added it expecting size-based auto-rotation; vmsingle crashlooped with
+  `flag provided but not defined`. That flag is cluster-only (`vmstorage`).
+  Single-node VictoriaMetrics only has time-based retention. Lesson: there is no
+  in-VM "rotate before disk-full" knob for single-node — size headroom + an
+  external freshness alert is the protection.
+- **vmagent's remote-write worker got stuck across the vmsingle pod churn.**
+  After vmsingle cycled (volume recreate + the bad-flag crashloop), vmagent
+  stopped pushing (2XX counter frozen, on-disk queue growing) even though
+  vmsingle was healthy and its Service endpoint was correct. A vmagent pod
+  restart cleared it and live ingestion resumed immediately (`count(up)` > 0).
 
 ## Timeline
 
@@ -178,6 +191,8 @@ See `FP.md` for the live ledger.
   (reclaim=Delete → old Longhorn volume gone), operator provisioned a fresh 10Gi
   PVC, pod returned to tp4. Read-only cleared; `status/tsdb` climbed from 0 to
   232k+ series as vmagent replayed its ~740MB backlog.
-- `~18:20` Added `-retention.maxDiskSpaceUsageBytes=8GB` (`5d1c15e2`); vmsingle
-  restarted clean with the flag. Ingestion durable. Detection follow-up (gatus
-  deploy + verify) remains open.
+- `~18:20` Added `-retention.maxDiskSpaceUsageBytes=8GB` — WRONG: not a
+  single-node flag; vmsingle crashlooped. Reverted (`e6a77375`); vmsingle back
+  up clean. Pushed nixos `a15f7cc` + ran the deploy GitHub Action → gatus check
+  deployed. Restarted a stuck vmagent → live ingestion confirmed
+  (`count(up)=124`, read-only cleared, disk 10Gi). Incident resolved.
