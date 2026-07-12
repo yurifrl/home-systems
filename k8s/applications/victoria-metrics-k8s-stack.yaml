@@ -84,6 +84,11 @@ spec:
               port: "8428"
               retentionPeriod: "30d"
               replicaCount: 1
+              # Pin to a core LAN node: the RWO Longhorn PVC must not chase a
+              # cross-site node (macarm01/rpi01) whose data path is flaky and
+              # can't attach/resize the volume.
+              nodeSelector:
+                kubernetes.io/hostname: tp4
               extraArgs:
                 # PromQL/MetricsQL exemplar-style features are on by default in VM.
                 search.maxUniqueTimeseries: "1000000"
