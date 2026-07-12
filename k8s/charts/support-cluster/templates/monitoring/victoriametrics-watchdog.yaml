@@ -61,7 +61,7 @@ spec:
                     remote_write=$(awk '
                       /^vmagent_remotewrite_queue_blocked/ && $NF == 1 { failed=1 }
                       /^vmagent_remotewrite_pending_data_bytes/ { pending += $NF }
-                      END { print failed || pending >= 104857600 ? "true" : "false" }
+                      END { print (failed || pending >= 104857600) ? "true" : "false" }
                     ' /tmp/vmagent)
                   else
                     remote_write=true
