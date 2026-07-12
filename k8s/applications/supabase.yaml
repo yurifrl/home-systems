@@ -95,6 +95,25 @@ spec:
           deployment:
             db:
               enabled: false   # external Postgres = the CNPG `pg` cluster
+          # DB host per service. The chart's init-db (pg_isready) and every
+          # service read .Values.environment.<svc>.DB_HOST (default
+          # postgres.example.com); secret.db.host below is NOT used for this.
+          # Point them all at the CNPG primary service.
+          environment:
+            analytics:
+              DB_HOST: pg-rw.databases.svc.cluster.local
+            auth:
+              DB_HOST: pg-rw.databases.svc.cluster.local
+            functions:
+              DB_HOST: pg-rw.databases.svc.cluster.local
+            meta:
+              DB_HOST: pg-rw.databases.svc.cluster.local
+            realtime:
+              DB_HOST: pg-rw.databases.svc.cluster.local
+            rest:
+              DB_HOST: pg-rw.databases.svc.cluster.local
+            storage:
+              DB_HOST: pg-rw.databases.svc.cluster.local
           secret:
             jwt:
               secretRef: supabase-jwt
