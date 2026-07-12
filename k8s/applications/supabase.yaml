@@ -74,6 +74,58 @@ spec:
                 - secretKey: password
                   key: supabase
                   property: db-password
+            # CNPG validates passwordSecret.username == role name, so each
+            # managed role needs its OWN basic-auth secret (same shared
+            # password, different username). postgres.yaml points each role at
+            # the matching secret below.
+            - name: supabase-db-authenticator
+              namespace: databases
+              targetName: supabase-db-authenticator
+              template:
+                type: kubernetes.io/basic-auth
+                data:
+                  username: authenticator
+                  password: "{{ .password }}"
+              data:
+                - secretKey: password
+                  key: supabase
+                  property: db-password
+            - name: supabase-db-auth-admin
+              namespace: databases
+              targetName: supabase-db-auth-admin
+              template:
+                type: kubernetes.io/basic-auth
+                data:
+                  username: supabase_auth_admin
+                  password: "{{ .password }}"
+              data:
+                - secretKey: password
+                  key: supabase
+                  property: db-password
+            - name: supabase-db-storage-admin
+              namespace: databases
+              targetName: supabase-db-storage-admin
+              template:
+                type: kubernetes.io/basic-auth
+                data:
+                  username: supabase_storage_admin
+                  password: "{{ .password }}"
+              data:
+                - secretKey: password
+                  key: supabase
+                  property: db-password
+            - name: supabase-db-functions-admin
+              namespace: databases
+              targetName: supabase-db-functions-admin
+              template:
+                type: kubernetes.io/basic-auth
+                data:
+                  username: supabase_functions_admin
+                  password: "{{ .password }}"
+              data:
+                - secretKey: password
+                  key: supabase
+                  property: db-password
           # CNPG also needs the db password as a secret in the databases
           # namespace (authenticator/supabase_admin passwordSecret). Mirror it.
           virtualServices:

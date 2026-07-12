@@ -99,25 +99,25 @@ spec:
                 ensure: present
                 login: true
                 passwordSecret:
-                  name: supabase-db
+                  name: supabase-db-authenticator
               - name: supabase_auth_admin
                 ensure: present
                 login: true
                 createrole: true
                 passwordSecret:
-                  name: supabase-db
+                  name: supabase-db-auth-admin
               - name: supabase_storage_admin
                 ensure: present
                 login: true
                 createrole: true
                 passwordSecret:
-                  name: supabase-db
+                  name: supabase-db-storage-admin
               - name: supabase_functions_admin
                 ensure: present
                 login: true
                 createrole: true
                 passwordSecret:
-                  name: supabase-db
+                  name: supabase-db-functions-admin
               # LiteLLM proxy's own login role. Password lives in the `litellm`
               # 1Password item; mirrored into the databases ns as `litellm-db`
               # (basic-auth) by an ExternalSecret in k8s/applications/litellm.yaml.
