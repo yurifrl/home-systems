@@ -45,6 +45,8 @@ spec:
               value: {{ .Values.persistence.mountPath | quote }}
             - name: HOME
               value: {{ printf "%s/home" .Values.persistence.mountPath | quote }}
+            - name: HERMES_DASHBOARD_PUBLIC_URL
+              value: {{ printf "https://%s" (first .Values.dashboard.hosts) | quote }}
           envFrom:
             - secretRef:
                 name: {{ include "hermes-agent.secretName" . }}
