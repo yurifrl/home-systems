@@ -1,7 +1,7 @@
 ---
 date: 2026-07-11
 status: draft
-incident_status: active
+incident_status: resolved
 sessions:
   - 019f538f-6c29-7410-9dfb-b151ecb16eb1
 components:
@@ -116,10 +116,16 @@ See `FP.md` for the live ledger.
 - **DONE (deploy held) — gatus dead-man's-switch** (`nixos` commit `a15f7cc`,
   `home-systems-el5.3`): external `count(up)` freshness check. Deploy held until
   ingestion is restored so it doesn't page for the in-progress outage.
-- **BLOCKED — restore ingestion** (`home-systems-el5.1`, P1): the Longhorn
-  expansion is stuck on a stale replica artifact (see Dead Ends); needs a
-  user decision (recreate volume vs instance-manager restart).
-- **OPEN — verify the alert fires + routes** (`home-systems-el5.2`, P3).
+- **DONE — restore ingestion** (`home-systems-el5.1`): the stuck Longhorn
+  expansion could not be unstuck in place, so the volume was recreated fresh at
+  10Gi (single-replica metrics data is expendable). Ingestion resumed; vmagent
+  drained its ~740MB outage backlog.
+- **DONE — size-based retention guard** (`5d1c15e2`): added
+  `-retention.maxDiskSpaceUsageBytes=8GB` so VM drops oldest partitions to stay
+  under 8GB on the 10Gi PVC and never fills into read-only again (caps alongside
+  `retentionPeriod=30d`, whichever hits first). This is the real recurrence fix.
+- **OPEN — deploy gatus check + verify it fires/routes** (`home-systems-el5.3`,
+  `home-systems-el5.2`).
 
 ## Dead Ends
 
@@ -166,5 +172,12 @@ See `FP.md` for the live ledger.
   replica: `volume-head-001.img already exists`. Scale-to-0 does not detach;
   offline expansion never runs. Stuck.
 - `~17:40` gatus external freshness dead-man's-switch added
-  (`nixos` `a15f7cc`), deploy held. Postmortem written; ingestion still down
-  pending the Longhorn-recovery decision.
+  (`nixos` `a15f7cc`), deploy held.
+- `~18:05` Longhorn expansion confirmed unrecoverable in place (leftover
+  replica artifact). Chose to recreate: scaled vmsingle to 0, deleted the PVC
+  (reclaim=Delete → old Longhorn volume gone), operator provisioned a fresh 10Gi
+  PVC, pod returned to tp4. Read-only cleared; `status/tsdb` climbed from 0 to
+  232k+ series as vmagent replayed its ~740MB backlog.
+- `~18:20` Added `-retention.maxDiskSpaceUsageBytes=8GB` (`5d1c15e2`); vmsingle
+  restarted clean with the flag. Ingestion durable. Detection follow-up (gatus
+  deploy + verify) remains open.
