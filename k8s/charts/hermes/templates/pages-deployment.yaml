@@ -1,0 +1,59 @@
+{{- if .Values.pages.enabled }}
+{{- if not .Values.sharedStorage.workdir.enabled }}
+{{- fail "pages.enabled=true requires sharedStorage.workdir.enabled=true" }}
+{{- end }}
+{{- $name := include "hermes-agent.pagesName" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pages
+spec:
+  replicas: {{ .Values.pages.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with (.Values.pages.nodeSelector | default .Values.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: workdir
+          persistentVolumeClaim:
+            claimName: {{ include "hermes-agent.workdirClaimName" . }}
+      initContainers:
+        - name: wait-for-content
+          image: {{ .Values.pages.image }}
+          command: ["sh", "-c", "until [ -d \"$CONTENT_ROOT\" ]; do sleep 5; done"]
+          env:
+            - name: CONTENT_ROOT
+              value: {{ .Values.pages.root | quote }}
+          volumeMounts:
+            - name: workdir
+              mountPath: {{ .Values.gitRepos.mountPath }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+      containers:
+        - name: hermes-pages
+          image: {{ .Values.pages.image }}
+          command: ["httpd", "-f", "-v", "-p", {{ .Values.pages.port | quote }}, "-h", {{ .Values.pages.root | quote }}]
+          ports:
+            - name: pages
+              containerPort: {{ .Values.pages.port }}
+          volumeMounts:
+            - name: workdir
+              mountPath: {{ .Values.gitRepos.mountPath }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.pages.resources | nindent 12 }}
+{{- end }}

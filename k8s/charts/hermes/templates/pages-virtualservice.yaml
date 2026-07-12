@@ -1,0 +1,25 @@
+{{- if .Values.pages.enabled }}
+{{- if or (eq (len .Values.pages.gateways) 0) (eq (len .Values.pages.hosts) 0) }}
+{{- fail "pages.enabled=true requires gateways and hosts" }}
+{{- end }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "hermes-agent.pagesName" . }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+spec:
+  gateways:
+    {{- toYaml .Values.pages.gateways | nindent 4 }}
+  hosts:
+    {{- toYaml .Values.pages.hosts | nindent 4 }}
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: {{ include "hermes-agent.pagesName" . }}
+            port:
+              number: 80
+{{- end }}

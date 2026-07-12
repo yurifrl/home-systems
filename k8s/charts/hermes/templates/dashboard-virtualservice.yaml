@@ -1,0 +1,25 @@
+{{- if .Values.dashboard.enabled }}
+{{- if or (eq (len .Values.dashboard.gateways) 0) (eq (len .Values.dashboard.hosts) 0) }}
+{{- fail "dashboard.enabled=true requires gateways and hosts" }}
+{{- end }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "hermes-agent.dashboardName" . }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+spec:
+  gateways:
+    {{- toYaml .Values.dashboard.gateways | nindent 4 }}
+  hosts:
+    {{- toYaml .Values.dashboard.hosts | nindent 4 }}
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: {{ include "hermes-agent.dashboardName" . }}
+            port:
+              number: 80
+{{- end }}

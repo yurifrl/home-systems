@@ -1,0 +1,17 @@
+{{- if and .Values.sharedStorage.workdir.enabled .Values.sharedStorage.workdir.create }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "hermes-agent.workdirClaimName" . }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.sharedStorage.workdir.accessMode }}
+  {{- with .Values.sharedStorage.workdir.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.sharedStorage.workdir.size | quote }}
+{{- end }}

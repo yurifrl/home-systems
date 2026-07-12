@@ -170,7 +170,7 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- end }}
-        {{- if .Values.auth.gitLogin.enabled }}
+        {{- if and .Values.auth.gitLogin.enabled (not .Values.repositorySync.enabled) }}
         - name: git-login
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -357,7 +357,7 @@ spec:
             {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- if .Values.gitRepos.enabled }}
+            {{- if or .Values.gitRepos.enabled .Values.sharedStorage.workdir.enabled }}
             - name: {{ include "hermes-agent.workdirVolumeName" . }}
               mountPath: {{ .Values.gitRepos.mountPath }}
             {{- end }}
@@ -398,7 +398,11 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- end }}
       volumes:
-        {{- if .Values.persistence.existingClaim }}
+        {{- if .Values.sharedStorage.state.enabled }}
+        - name: {{ $dataVolumeName }}
+          persistentVolumeClaim:
+            claimName: {{ include "hermes-agent.stateClaimName" . }}
+        {{- else if .Values.persistence.existingClaim }}
         - name: {{ $dataVolumeName }}
           persistentVolumeClaim:
             claimName: {{ .Values.persistence.existingClaim }}
@@ -420,7 +424,11 @@ spec:
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if and .Values.gitRepos.enabled (not .Values.gitRepos.persistence.enabled) }}
+        {{- if .Values.sharedStorage.workdir.enabled }}
+        - name: {{ include "hermes-agent.workdirVolumeName" . }}
+          persistentVolumeClaim:
+            claimName: {{ include "hermes-agent.workdirClaimName" . }}
+        {{- else if and .Values.gitRepos.enabled (not .Values.gitRepos.persistence.enabled) }}
         - name: {{ include "hermes-agent.workdirVolumeName" . }}
           emptyDir: {}
         {{- end }}
@@ -452,8 +460,8 @@ spec:
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-  {{- $stateVct := and .Values.persistence.enabled (not .Values.persistence.existingClaim) }}
-  {{- $workdirVct := and .Values.gitRepos.enabled .Values.gitRepos.persistence.enabled }}
+  {{- $stateVct := and .Values.persistence.enabled (not .Values.persistence.existingClaim) (not .Values.sharedStorage.state.enabled) }}
+  {{- $workdirVct := and .Values.gitRepos.enabled .Values.gitRepos.persistence.enabled (not .Values.sharedStorage.workdir.enabled) }}
   {{- if or $stateVct $workdirVct }}
   volumeClaimTemplates:
     {{- if $stateVct }}

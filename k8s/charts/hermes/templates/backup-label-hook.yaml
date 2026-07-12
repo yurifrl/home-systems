@@ -1,5 +1,5 @@
 {{- if not .Values.operator.enabled }}
-{{- if and .Values.persistence.enabled .Values.persistence.backup.enabled }}
+{{- if and (or .Values.persistence.enabled .Values.sharedStorage.state.enabled) .Values.persistence.backup.enabled }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -23,7 +23,7 @@ spec:
             - -c
             - |
               set -e
-              PVC="{{ .Values.persistence.volumeName }}-{{ include "hermes-agent.fullname" . }}-0"
+              PVC="{{ ternary (include "hermes-agent.stateClaimName" .) (printf "%s-%s-0" .Values.persistence.volumeName (include "hermes-agent.fullname" .)) (or .Values.sharedStorage.state.enabled (ne .Values.persistence.existingClaim "")) }}"
               NS="{{ .Release.Namespace }}"
               JOB="backup-{{ include "hermes-agent.fullname" . }}"
               VOLUME=""

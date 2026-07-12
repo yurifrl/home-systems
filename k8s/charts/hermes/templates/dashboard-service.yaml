@@ -1,0 +1,15 @@
+{{- if .Values.dashboard.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hermes-agent.dashboardName" . }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: {{ include "hermes-agent.dashboardName" . }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ .Values.dashboard.port }}
+{{- end }}

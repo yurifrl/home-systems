@@ -69,6 +69,26 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 workdir
 {{- end -}}
 
+{{- define "hermes-agent.workdirClaimName" -}}
+{{- default (printf "%s-workdir" (include "hermes-agent.fullname" .)) .Values.sharedStorage.workdir.claimName | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "hermes-agent.stateClaimName" -}}
+{{- coalesce .Values.sharedStorage.state.claimName .Values.persistence.existingClaim (printf "%s-state" (include "hermes-agent.fullname" .)) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "hermes-agent.repositorySyncName" -}}
+{{- printf "%s-repository-sync" (include "hermes-agent.fullname" . | trunc 47 | trimSuffix "-") -}}
+{{- end -}}
+
+{{- define "hermes-agent.pagesName" -}}
+{{- printf "%s-pages" (include "hermes-agent.fullname" . | trunc 57 | trimSuffix "-") -}}
+{{- end -}}
+
+{{- define "hermes-agent.dashboardName" -}}
+{{- printf "%s-dashboard" (include "hermes-agent.fullname" . | trunc 53 | trimSuffix "-") -}}
+{{- end -}}
+
 {{- define "hermes-agent.generatedSecretName" -}}
 {{- printf "%s-secrets" (include "hermes-agent.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

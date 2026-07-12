@@ -1,0 +1,17 @@
+{{- if and .Values.sharedStorage.state.enabled .Values.sharedStorage.state.create }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "hermes-agent.stateClaimName" . }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.sharedStorage.state.accessMode }}
+  {{- with .Values.sharedStorage.state.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.sharedStorage.state.size | quote }}
+{{- end }}

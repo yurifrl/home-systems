@@ -1,0 +1,116 @@
+{{- if .Values.repositorySync.enabled }}
+{{- if not .Values.sharedStorage.state.enabled }}
+{{- fail "repositorySync.enabled=true requires sharedStorage.state.enabled=true" }}
+{{- end }}
+{{- if not .Values.sharedStorage.workdir.enabled }}
+{{- fail "repositorySync.enabled=true requires sharedStorage.workdir.enabled=true" }}
+{{- end }}
+{{- $name := include "hermes-agent.repositorySyncName" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+    app.kubernetes.io/component: repository-sync
+spec:
+  replicas: {{ .Values.repositorySync.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with (.Values.repositorySync.nodeSelector | default .Values.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: {{ include "hermes-agent.stateClaimName" . }}
+        - name: workdir
+          persistentVolumeClaim:
+            claimName: {{ include "hermes-agent.workdirClaimName" . }}
+        - name: tmp
+          emptyDir: {}
+      initContainers:
+        {{- if .Values.auth.gitLogin.enabled }}
+        - name: git-login
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["hctl", "auth", "login"]
+          env:
+            - name: HOME
+              value: {{ printf "%s/home" .Values.persistence.mountPath | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          volumeMounts:
+            - name: state
+              mountPath: {{ .Values.persistence.mountPath }}
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
+        - name: repos-clone
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - hctl
+            - repos
+            - clone
+            - --user={{ .Values.gitRepos.user }}
+            - --repos={{ join "," .Values.gitRepos.repos }}
+            - --branch={{ .Values.gitRepos.branch }}
+            - --dest={{ .Values.gitRepos.mountPath }}
+          env:
+            - name: HOME
+              value: {{ printf "%s/home" .Values.persistence.mountPath | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          volumeMounts:
+            - name: state
+              mountPath: {{ .Values.persistence.mountPath }}
+            - name: workdir
+              mountPath: {{ .Values.gitRepos.mountPath }}
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+      containers:
+        - name: repos-sync
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - hctl
+            - repos
+            - sync
+            - --dir={{ .Values.gitRepos.mountPath }}
+            - --interval={{ .Values.gitRepos.syncInterval }}
+          env:
+            - name: HOME
+              value: {{ printf "%s/home" .Values.persistence.mountPath | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          volumeMounts:
+            - name: state
+              mountPath: {{ .Values.persistence.mountPath }}
+            - name: workdir
+              mountPath: {{ .Values.gitRepos.mountPath }}
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.repositorySync.resources | nindent 12 }}
+{{- end }}

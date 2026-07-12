@@ -381,6 +381,63 @@ extraVolumes: []
 extraVolumeMounts: []
 extraInitContainers: []
 
+sharedStorage:
+  state:
+    enabled: false
+    create: false
+    claimName: ""
+    storageClass: ""
+    accessMode: ReadWriteMany
+    size: 20Gi
+  workdir:
+    enabled: false
+    create: false
+    claimName: ""
+    storageClass: ""
+    accessMode: ReadWriteMany
+    size: 20Gi
+
+repositorySync:
+  enabled: false
+  replicas: 1
+  nodeSelector: {}
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+pages:
+  enabled: false
+  replicas: 1
+  image: busybox:1.37
+  root: /workdir/site
+  port: 8080
+  nodeSelector: {}
+  gateways: []
+  hosts: []
+  resources:
+    requests:
+      cpu: 10m
+      memory: 16Mi
+    limits:
+      memory: 32Mi
+
+dashboard:
+  enabled: false
+  replicas: 1
+  port: 9119
+  nodeSelector: {}
+  gateways: []
+  hosts: []
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
 # ---------------------------------------------------------------------------
 # Built-in init containers + sync sidecar (hctl-driven). All disabled by
 # default so the chart stays portable; the home-systems Application turns
@@ -431,4 +488,3 @@ gitRepos:
     accessMode: ReadWriteOnce
     size: 10Gi
 
-extraObjects: []

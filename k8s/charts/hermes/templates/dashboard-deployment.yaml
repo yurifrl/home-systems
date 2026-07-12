@@ -1,0 +1,62 @@
+{{- if .Values.dashboard.enabled }}
+{{- if not .Values.sharedStorage.state.enabled }}
+{{- fail "dashboard.enabled=true requires sharedStorage.state.enabled=true" }}
+{{- end }}
+{{- $name := include "hermes-agent.dashboardName" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dashboard
+spec:
+  replicas: {{ .Values.dashboard.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with (.Values.dashboard.nodeSelector | default .Values.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: {{ include "hermes-agent.stateClaimName" . }}
+        - name: tmp
+          emptyDir: {}
+      containers:
+        - name: hermes-dashboard
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["hermes", "dashboard", "--host", "0.0.0.0", "--port", {{ .Values.dashboard.port | quote }}, "--no-open"]
+          ports:
+            - name: dashboard
+              containerPort: {{ .Values.dashboard.port }}
+          env:
+            - name: HERMES_HOME
+              value: {{ .Values.persistence.mountPath | quote }}
+            - name: HOME
+              value: {{ printf "%s/home" .Values.persistence.mountPath | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          volumeMounts:
+            - name: state
+              mountPath: {{ .Values.persistence.mountPath }}
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- $dashboardSecurityContext := deepCopy .Values.securityContext }}
+            {{- $_ := set $dashboardSecurityContext "readOnlyRootFilesystem" false }}
+            {{- toYaml $dashboardSecurityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.dashboard.resources | nindent 12 }}
+{{- end }}
