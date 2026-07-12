@@ -25,9 +25,9 @@ tests:
     template: monitoring/cloudflare-tunnel.yaml
     documentIndex: 2
     asserts:
-      - notMatchRegex:
+      - equal:
           path: spec.groups[0].rules[0].expr
-          pattern: "absent"
+          value: sum(cloudflared_tunnel_ha_connections) == 0
 
   - it: should render the independent VictoriaMetrics watchdog
     template: monitoring/victoriametrics-watchdog.yaml
@@ -43,3 +43,6 @@ tests:
       - matchRegex:
           path: spec.jobTemplate.spec.template.spec.containers[0].args[0]
           pattern: "vmalertmanager-vmks:9093/api/v2/alerts"
+      - matchRegex:
+          path: spec.jobTemplate.spec.template.spec.containers[0].args[0]
+          pattern: 'vm_free_disk_space_bytes/'

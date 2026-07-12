@@ -38,17 +38,20 @@ spec:
                   }
 
                   if curl -fsS --max-time 10 http://vmsingle-vmks:8428/metrics -o /tmp/vmsingle; then
-                    alert VictoriaMetricsUnavailable critical 'VictoriaMetrics is unavailable' false
-                    free=$(awk '$1 == "vm_free_disk_space_bytes" { print $2; exit }' /tmp/vmsingle)
-                    readonly=$(awk '$1 ~ /^vm_storage_is_read_only/ { print $2; exit }' /tmp/vmsingle)
-                    [ -n "$free" ] && [ -n "$readonly" ] || exit 1
-                    percent=$(awk -v free="$free" -v total="$STORAGE_CAPACITY_BYTES" 'BEGIN { print free * 100 / total }')
-                    low=$(awk -v value="$percent" 'BEGIN { print value < 15 && value >= 5 ? "true" : "false" }')
-                    critical=$(awk -v value="$percent" 'BEGIN { print value < 5 ? "true" : "false" }')
-                    read_only=$(awk -v value="$readonly" 'BEGIN { print value == 1 ? "true" : "false" }')
-                    alert VictoriaMetricsStorageLow warning 'VictoriaMetrics has less than 15% free storage' "$low"
-                    alert VictoriaMetricsStorageCritical critical 'VictoriaMetrics has less than 5% free storage' "$critical"
-                    alert VictoriaMetricsReadOnly critical 'VictoriaMetrics storage is read-only' "$read_only"
+                    free=$(awk '$1 ~ /^vm_free_disk_space_bytes/ { print $NF; exit }' /tmp/vmsingle)
+                    readonly=$(awk '$1 ~ /^vm_storage_is_read_only/ { print $NF; exit }' /tmp/vmsingle)
+                    if [ -n "$free" ] && [ -n "$readonly" ]; then
+                      alert VictoriaMetricsUnavailable critical 'VictoriaMetrics is unavailable' false
+                      percent=$(awk -v free="$free" -v total="$STORAGE_CAPACITY_BYTES" 'BEGIN { print free * 100 / total }')
+                      low=$(awk -v value="$percent" 'BEGIN { print value < 15 && value >= 5 ? "true" : "false" }')
+                      critical=$(awk -v value="$percent" 'BEGIN { print value < 5 ? "true" : "false" }')
+                      read_only=$(awk -v value="$readonly" 'BEGIN { print value == 1 ? "true" : "false" }')
+                      alert VictoriaMetricsStorageLow warning 'VictoriaMetrics has less than 15% free storage' "$low"
+                      alert VictoriaMetricsStorageCritical critical 'VictoriaMetrics has less than 5% free storage' "$critical"
+                      alert VictoriaMetricsReadOnly critical 'VictoriaMetrics storage is read-only' "$read_only"
+                    else
+                      alert VictoriaMetricsUnavailable critical 'VictoriaMetrics metrics are invalid' true
+                    fi
                   else
                     alert VictoriaMetricsUnavailable critical 'VictoriaMetrics is unavailable' true
                   fi
