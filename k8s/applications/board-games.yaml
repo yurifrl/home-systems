@@ -46,6 +46,7 @@ spec:
                 - bg.syscd.live
                 - bg.syscd.tech
                 - bg.monaddaydream.com
+                - jogosdetabuleirodoyuri.com.br
               service:
                 name: board-games
                 namespace: board-games

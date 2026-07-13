@@ -19,6 +19,7 @@ spec:
         - "*.syscd.live"
         - "*.syscd.xyz"
         - "*.monaddaydream.com"
+        - "jogosdetabuleirodoyuri.com.br"
     - port:
         number: 443
         name: https
