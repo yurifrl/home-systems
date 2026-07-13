@@ -22,12 +22,6 @@ providers:
     package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v2.5.4
   - name: provider-gcp-iam
     package: xpkg.upbound.io/upbound/provider-gcp-iam:v2.5.4
-  # Compute provider: external HTTPS load balancer + Cloud CDN backend bucket +
-  # Cloud Armor edge policy that front the private assets bucket (crossplane-gcp
-  # assetsCdn). It uses the same stable API path as storage.
-  - name: provider-gcp-compute
-    package: xpkg.upbound.io/upbound/provider-gcp-compute:v2.5.4
-    runtimeConfig: gcp-storage-pinned
   # Proxmox VE provider (Upjet-generated wrapper around bpg/terraform-provider-proxmox).
   # Community provider; manages QEMU VMs as cluster-scoped managed resources
   # (group virtualenvironmentvm.proxmoxbpg.crossplane.io). Used by the

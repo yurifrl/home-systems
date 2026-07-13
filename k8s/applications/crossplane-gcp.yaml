@@ -32,6 +32,11 @@ spec:
           # Real bucket names / projectID / WIF principals come from the PRIVATE
           # repo source below, merged at sync time. Nothing secret in this repo.
           - $values/gcp/values.yaml
+        valuesObject:
+          # Keep existing GCP resources via deletionPolicy: Orphan without
+          # loading provider-gcp-compute's 192 CRDs into kube-apiserver.
+          assetsCdn:
+            enabled: false
     # PRIVATE: holds the real values. Register repo creds in ArgoCD first
     # (see k8s/charts/crossplane-gcp/README.md).
     - repoURL: git@github.com:yurifrl/home-systems-values.git
