@@ -32252,10 +32252,6 @@ spec:
               topologyKey: kubernetes.io/hostname
       nodeSelector:
         kubernetes.io/os: linux
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
       volumes:
         - name: ssh-known-hosts
           configMap:
@@ -32409,10 +32405,6 @@ spec:
               topologyKey: kubernetes.io/hostname
       nodeSelector:
         kubernetes.io/os: linux
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
       volumes:
         - name: tls-certs
           configMap:
@@ -32824,10 +32816,6 @@ spec:
               topologyKey: kubernetes.io/hostname
       nodeSelector:
         kubernetes.io/os: linux
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
       volumes:
       - name: helm-working-dir
         emptyDir: {}
@@ -33282,10 +33270,6 @@ spec:
               topologyKey: kubernetes.io/hostname
       nodeSelector:
         kubernetes.io/os: linux
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
       volumes:
       - name: plugins-home
         emptyDir: {}
@@ -33467,10 +33451,6 @@ spec:
               topologyKey: kubernetes.io/hostname
       nodeSelector:
         kubernetes.io/os: linux
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
       volumes:
       - name: static-files
         emptyDir: {}
@@ -33562,10 +33542,6 @@ spec:
             name: health
       nodeSelector:
         kubernetes.io/os: linux
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -34029,10 +34005,6 @@ spec:
               topologyKey: kubernetes.io/hostname
       nodeSelector:
         kubernetes.io/os: linux
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
       volumes:
       - name: argocd-home
         emptyDir: {}

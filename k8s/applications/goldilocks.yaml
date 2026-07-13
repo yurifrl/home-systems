@@ -45,19 +45,11 @@ spec:
             enabled: true
             flags:
               on-by-default: true
-            tolerations:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-                effect: NoSchedule
           dashboard:
             enabled: true
             replicaCount: 1
             flags:
               on-by-default: true
-            tolerations:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-                effect: NoSchedule
 
     # Support chart: exposes the dashboard via Istio VirtualService
     # (goldilocks.syscd.*). Dashboard service is ClusterIP on port 80.

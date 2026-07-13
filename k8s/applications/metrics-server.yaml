@@ -38,8 +38,3 @@ spec:
               memory: 64Mi
             limits:
               memory: 128Mi
-          # Allow scheduling onto the control plane if workers are unavailable.
-          tolerations:
-            - key: node-role.kubernetes.io/control-plane
-              operator: Exists
-              effect: NoSchedule

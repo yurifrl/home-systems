@@ -49,22 +49,6 @@ spec:
             requests:
               cpu: 50m
               memory: 128Mi
-          tolerations:
-            - key: node-role.kubernetes.io/control-plane
-              operator: Exists
-              effect: NoSchedule
-        updater:
-          resources:
-            limits:
-              cpu: 100m
-              memory: 256Mi
-            requests:
-              cpu: 50m
-              memory: 128Mi
-          tolerations:
-            - key: node-role.kubernetes.io/control-plane
-              operator: Exists
-              effect: NoSchedule
         admissionController:
           resources:
             limits:
@@ -73,7 +57,3 @@ spec:
             requests:
               cpu: 50m
               memory: 128Mi
-          tolerations:
-            - key: node-role.kubernetes.io/control-plane
-              operator: Exists
-              effect: NoSchedule

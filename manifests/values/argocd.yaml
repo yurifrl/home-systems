@@ -26,10 +26,6 @@ controller:
     enabled: true
     serviceMonitor:
       enabled: true
-  tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      effect: NoSchedule
-      operator: Exists
   # Default readinessProbe (timeoutSeconds: 1) causes the application-controller
   # to be marked NotReady when reconciling many apps at once. Combined with
   # frequent SandboxChanged events, the pod CrashLoopBackOffs and silently
@@ -46,20 +42,12 @@ dex:
     enabled: true
     serviceMonitor:
       enabled: true
-  tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      effect: NoSchedule
-      operator: Exists
 
 redis:
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
-  tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      effect: NoSchedule
-      operator: Exists
 
 server:
   ingress:
@@ -87,11 +75,6 @@ server:
     enabled: true
     serviceMonitor:
       enabled: true
-  
-  tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      effect: NoSchedule
-      operator: Exists
 
 repoServer:
   replicas: 1
@@ -105,10 +88,6 @@ repoServer:
     enabled: true
     serviceMonitor:
       enabled: true
-  tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      effect: NoSchedule
-      operator: Exists
 
 applicationSet:
   replicas: 1
@@ -116,20 +95,12 @@ applicationSet:
     enabled: true
     serviceMonitor:
       enabled: true
-  tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      effect: NoSchedule
-      operator: Exists
 
 notifications:
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
-  tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      effect: NoSchedule
-      operator: Exists
 
 configs:
   cm:
@@ -151,8 +122,8 @@ configs:
     # pod is unreachable (e.g. wedged node), the apiserver's conversion call
     # times out, that single LIST fails, and ArgoCD's whole cluster cache sync
     # aborts -> NO app can sync (see 2026-07-05 postmortem). The upbound
-    # exclusion was removed once the gcp providers were pinned+tolerated onto a
-    # stable control-plane node so their webhooks always have an endpoint; if a
+    # exclusion was removed once the GCP providers were pinned to a stable
+    # worker with a direct API path; if a
     # provider pod goes Pending/crashloops again, re-add an `*.upbound.io`
     # block here to decouple ArgoCD from the webhooks.
     # The blocks below are the argo-cd chart defaults, kept because setting this

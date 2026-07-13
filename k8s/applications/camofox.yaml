@@ -41,12 +41,6 @@ spec:
               # reaches camofox in-cluster via CAMOFOX_URL (Service is global).
               nodeSelector:
                 kubernetes.io/hostname: pc01
-              # dell01 is the control-plane node and carries the standard
-              # NoSchedule taint; tolerate it (same pattern as hermes).
-              tolerations:
-                - key: node-role.kubernetes.io/control-plane
-                  operator: Exists
-                  effect: NoSchedule
               # /dev/shm needs to be tmpfs-backed memory; the default 64Mi
               # shm is too small for headless Firefox and causes random
               # renderer crashes. 1Gi memory-backed emptyDir matches what

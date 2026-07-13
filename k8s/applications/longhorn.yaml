@@ -95,10 +95,6 @@ spec:
             # Upgrade checking
             upgradeChecker: false
 
-            # Tolerate the control-plane taint so instance-manager/engine pods
-            # can run on dell01 (which holds a 256GB SATA disk).
-            taintToleration: "node-role.kubernetes.io/control-plane:NoSchedule"
-
             # Backup target: backupTarget (bucket URL) is set from the PRIVATE
             # values repo ($values/longhorn/values.yaml). Credentials come from
             # the longhorn-backup-credentials secret (built by the support chart
@@ -120,18 +116,6 @@ spec:
           # Longhorn manager settings
           longhornManager:
             logLevel: Info
-            # Run on control-plane nodes too (dell01 has the 256GB SATA)
-            tolerations:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-                effect: NoSchedule
-
-          # Longhorn driver settings
-          longhornDriver:
-            tolerations:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-                effect: NoSchedule
 
           # Longhorn UI settings
           longhornUI: {}

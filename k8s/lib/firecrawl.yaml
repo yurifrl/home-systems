@@ -51,10 +51,6 @@ spec:
           global:
             nodeSelector:
               kubernetes.io/hostname: pc01
-            tolerations:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-                effect: NoSchedule
 
           # Make service names readable: firecrawl-api / firecrawl-redis / etc
           # instead of firecrawl-firecrawl-api.
