@@ -64,6 +64,38 @@ bucketIAMMembers: []
 #    bucketRef: victoriametrics
 #    role: roles/storage.admin
 #    member: "serviceAccount:victoriametrics-gcs-sa@PROJECT_ID.iam.gserviceaccount.com"
+#  # Cloud CDN backend-bucket private access (the OAC-equivalent): grant the
+#  # global-LB service agent read on the bucket.
+#  - name: board-games-assets-cdn-reader
+#    bucketRef: board-games-assets
+#    role: roles/storage.objectViewer
+#    member: "serviceAccount:service-PROJECT_NUMBER@cloud-cdn-fill.iam.gserviceaccount.com"
+
+# --- Assets CDN (global external HTTPS LB + Cloud CDN over the PRIVATE bucket) --
+# GCP-native CloudFront+OAC equivalent. Cloud Armor edge policy allows only
+# Cloudflare IPs; geo (Brazil), rate limiting and image resizing live at
+# Cloudflare. Grant the LB service agent objectViewer via bucketIAMMembers above.
+assetsCdn:
+  enabled: false
+#  name: board-games-assets-cdn
+#  domain: assets.syscd.live
+#  bucketExternalName: REAL_BUCKET        # same as buckets[].externalName
+#  cloudflareIpRanges:                    # https://www.cloudflare.com/ips-v4
+#    - 173.245.48.0/20
+#    - 103.21.244.0/22
+#    - 103.22.200.0/22
+#    - 103.31.4.0/22
+#    - 141.101.64.0/18
+#    - 108.162.192.0/18
+#    - 190.93.240.0/20
+#    - 188.114.96.0/20
+#    - 197.234.240.0/22
+#    - 198.41.128.0/17
+#    - 162.158.0.0/15
+#    - 104.16.0.0/13
+#    - 104.24.0.0/14
+#    - 172.64.0.0/13
+#    - 131.0.72.0/22
 
 # --- Project services (API enablement) -------------------------------------
 projectServices: []

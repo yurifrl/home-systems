@@ -1,0 +1,118 @@
+{{- /*
+  Cloud CDN in front of the PRIVATE assets bucket — the GCP-native CloudFront+OAC
+  equivalent. Global external HTTPS LB + backend bucket reading the private bucket
+  via the LB service agent's IAM (grant lives in .Values.bucketIAMMembers). A
+  Cloud Armor EDGE policy allows only Cloudflare's IP ranges, so the bucket is
+  reachable strictly via Cloudflare -> this LB. Geo (Brazil-only), rate limiting,
+  and image resizing are done at Cloudflare (Cloud Armor sees Cloudflare's egress
+  IPs, not the end user's, so geo/rate-limit can't run here).
+
+  Disabled unless assetsCdn.enabled. Requires provider-gcp-compute.
+*/ -}}
+{{- with .Values.assetsCdn }}
+{{- if .enabled }}
+{{- $pc := $.Values.providerConfig.name }}
+{{- $dp := $.Values.deletionPolicy }}
+---
+apiVersion: compute.gcp.upbound.io/v1beta1
+kind: SecurityPolicy
+metadata:
+  name: {{ .name }}-edge
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: {{ $pc }} }
+  forProvider:
+    type: CLOUD_ARMOR_EDGE
+    description: "Allow only Cloudflare source IPs to the assets CDN"
+    rule:
+      - action: allow
+        priority: 1000
+        description: "Cloudflare IP ranges"
+        match:
+          versionedExpr: SRC_IPS_V1
+          config:
+            srcIpRanges:
+              {{- range .cloudflareIpRanges }}
+              - {{ . | quote }}
+              {{- end }}
+      - action: "deny(403)"
+        priority: 2147483647
+        description: default deny
+        match:
+          versionedExpr: SRC_IPS_V1
+          config:
+            srcIpRanges: ["*"]
+---
+apiVersion: compute.gcp.upbound.io/v1beta1
+kind: BackendBucket
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: {{ $pc }} }
+  forProvider:
+    bucketName: {{ required "assetsCdn.bucketExternalName required" .bucketExternalName | quote }}
+    enableCdn: true
+    edgeSecurityPolicyRef: { name: {{ .name }}-edge }
+    cdnPolicy:
+      - cacheMode: CACHE_ALL_STATIC
+        clientTtl: 86400
+        defaultTtl: 86400
+---
+apiVersion: compute.gcp.upbound.io/v1beta1
+kind: URLMap
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: {{ $pc }} }
+  forProvider:
+    defaultServiceRef: { name: {{ .name }} }
+---
+apiVersion: compute.gcp.upbound.io/v1beta1
+kind: ManagedSSLCertificate
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: {{ $pc }} }
+  forProvider:
+    managed:
+      - domains: [{{ required "assetsCdn.domain required" .domain | quote }}]
+---
+apiVersion: compute.gcp.upbound.io/v1beta1
+kind: TargetHTTPSProxy
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: {{ $pc }} }
+  forProvider:
+    urlMapRef: { name: {{ .name }} }
+    sslCertificatesRefs:
+      - name: {{ .name }}
+---
+apiVersion: compute.gcp.upbound.io/v1beta1
+kind: GlobalAddress
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: {{ $pc }} }
+  forProvider: {}
+---
+apiVersion: compute.gcp.upbound.io/v1beta1
+kind: GlobalForwardingRule
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: {{ $pc }} }
+  forProvider:
+    target: {{ .name }}
+    targetRef: { name: {{ .name }} }
+    ipAddressRef: { name: {{ .name }} }
+    portRange: "443"
+    loadBalancingScheme: EXTERNAL_MANAGED
+{{- end }}
+{{- end }}
