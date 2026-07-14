@@ -27,6 +27,7 @@ related:
   - 2026-07-05-pc01-vxlan-tx-checksum-offload
   - 2026-07-05-hermes-rwx-sharemanager-cross-site
   - 2026-07-05-pc01-tailscale-flag-drift-crashloop
+  - 2026-07-12-tailscale-cilium-endpoint-recursion
 ---
 
 # Postmortem: cross-family VXLAN endpoint mesh (tp1↔guest return-path blackhole)

@@ -21,6 +21,7 @@ memories:
 supersedes: []
 related:
   - 2026-07-05-pc01-vxlan-tx-checksum-offload
+  - 2026-07-13-apiserver-crd-cache-oom
 ---
 
 # Postmortem: ArgoCD cluster sync fully blocked by an unreachable crossplane conversion webhook
