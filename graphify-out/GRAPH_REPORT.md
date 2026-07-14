@@ -1,16 +1,16 @@
-# Graph Report - home-systems  (2026-07-12)
+# Graph Report - home-systems  (2026-07-13)
 
 ## Corpus Check
-- 158 files · ~263,775 words
+- 158 files · ~265,949 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1712 nodes · 1618 edges · 173 communities (155 shown, 18 thin omitted)
+- 1714 nodes · 1620 edges · 172 communities (154 shown, 18 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d3a775f9`
+- Built from commit: `edd88ddc`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -157,7 +157,6 @@
 - [[_COMMUNITY_Community 139|Community 139]]
 - [[_COMMUNITY_Community 140|Community 140]]
 - [[_COMMUNITY_Community 142|Community 142]]
-- [[_COMMUNITY_Community 143|Community 143]]
 - [[_COMMUNITY_Community 144|Community 144]]
 - [[_COMMUNITY_Community 145|Community 145]]
 - [[_COMMUNITY_Community 146|Community 146]]
@@ -196,7 +195,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (173 total, 18 thin omitted)
+## Communities (172 total, 18 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.04
@@ -235,8 +234,8 @@ Cohesion: 0.08
 Nodes (24): 1Password Secret Injection, Adding a New Service, Agent Instructions, AI-agent provisioning guardrails (HARD RULES), Architecture, Common Commands, Development Workflow, Documentation (+16 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.08
-Nodes (24): type, minLength, type, type, type, type, properties, type (+16 more)
+Cohesion: 0.07
+Nodes (28): type, minLength, type, type, type, type, properties, type (+20 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.08
@@ -271,8 +270,8 @@ Cohesion: 0.11
 Nodes (18): ADDED Requirements, Requirement: Canonical repo layout for nostos data, Requirement: CLAUDE.md reflects nostos workflow, Requirement: Cluster unaffected during migration, Requirement: Legacy pxe/ removal, Requirement: talos.yml pruned of pxe entries, Requirement: Taskfile wrappers for nostos commands, Requirement: Tool vendored under .submodules (+10 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.12
-Nodes (18): type, type, properties, $ref, enabled, gateways, port, servicePortNumber (+10 more)
+Cohesion: 0.22
+Nodes (10): type, $ref, enabled, port, url, webhook, properties, type (+2 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.11
@@ -319,8 +318,8 @@ Cohesion: 0.14
 Nodes (14): type, items, type, items, type, properties, type, annotations (+6 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.18
-Nodes (14): items, type, items, items, type, enum, minLength, type (+6 more)
+Cohesion: 0.15
+Nodes (17): items, type, items, type, items, type, enum, minLength (+9 more)
 
 ### Community 31 - "Community 31"
 Cohesion: 0.14
@@ -400,11 +399,11 @@ Nodes (11): minLength, type, type, name, passthrough, started, vmId, type (+3 mo
 
 ### Community 50 - "Community 50"
 Cohesion: 0.18
-Nodes (11): type, enum, type, properties, apiServer, podManagementPolicy, replicaCount, virtualService (+3 more)
+Nodes (11): enum, type, properties, podManagementPolicy, replicaCount, telegramWebhook, virtualService, minimum (+3 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.18
-Nodes (11): items, type, items, type, properties, type, type, egress (+3 more)
+Cohesion: 0.14
+Nodes (14): items, type, items, properties, type, properties, type, type (+6 more)
 
 ### Community 52 - "Community 52"
 Cohesion: 0.18
@@ -471,8 +470,8 @@ Cohesion: 0.22
 Nodes (8): 2026-07-05 (UTC), Dead Ends, Detection Gap (how we catch it next time), Follow-ups Implemented (epic home-systems-nxj), Mitigation (runbook — how to detect & fix this again), Postmortem: obs.syscd.live Error 1033 during a cloudflared-obs restart on macintel01, Timeline, What Happened
 
 ### Community 68 - "Community 68"
-Cohesion: 0.22
-Nodes (8): 2026-07-11 / 2026-07-12 (UTC), Dead Ends, Detection Gap (why the user saw it first), Follow-ups (epic home-systems-el5), Mitigation (runbook — how to detect & fix this again), Postmortem: vmsingle storage exhausted → read-only, ingestion dead, and the disk alert was blind to it, Timeline, What Happened
+Cohesion: 0.20
+Nodes (9): 2026-07-11 / 2026-07-12 (UTC), 2026-07-12 — alert-semantics follow-up (UTC), Dead Ends, Detection Gap (why the user saw it first), Follow-ups (epic home-systems-el5), Mitigation (runbook — how to detect & fix this again), Postmortem: vmsingle storage exhausted → read-only, ingestion dead, and the disk alert was blind to it, Timeline (+1 more)
 
 ### Community 69 - "Community 69"
 Cohesion: 0.22
@@ -503,8 +502,8 @@ Cohesion: 0.22
 Nodes (9): type, type, API_SERVER_KEY, existingSecret, secrets, TELEGRAM_BOT_TOKEN, properties, type (+1 more)
 
 ### Community 76 - "Community 76"
-Cohesion: 0.22
-Nodes (9): properties, type, minLength, type, minLength, type, corsOrigins, host (+1 more)
+Cohesion: 0.18
+Nodes (11): properties, type, type, minLength, type, minLength, type, apiServer (+3 more)
 
 ### Community 77 - "Community 77"
 Cohesion: 0.22
@@ -699,8 +698,8 @@ Cohesion: 0.29
 Nodes (6): Capabilities, Impact, Modified Capabilities, New Capabilities, What Changes, Why
 
 ### Community 125 - "Community 125"
-Cohesion: 0.29
-Nodes (6): Alerts, Architecture, Failure Behavior, Goal, Verification, VictoriaMetrics Watchdog Design
+Cohesion: 0.25
+Nodes (7): 2026-07-12 (UTC), Dead Ends, Detection Gap (how we catch it next time), Mitigation (runbook — how to detect & fix this again), Postmortem: Tailscale selected Cilium overlay endpoints and broke ArgoCD repo access, Timeline, What Happened
 
 ### Community 126 - "Community 126"
 Cohesion: 0.33
@@ -754,10 +753,6 @@ Nodes (3): Deploy, Follow-up Plan: obs.syscd.live Error 1033, Items
 Cohesion: 0.50
 Nodes (3): Bind9 external-dns issue, References, Secrets
 
-### Community 143 - "Community 143"
-Cohesion: 0.50
-Nodes (4): signTTLDays, maximum, minimum, type
-
 ### Community 144 - "Community 144"
 Cohesion: 0.50
 Nodes (3): Query parameters, Tailscale auth-key refresh in nostos, Why this exists
@@ -775,21 +770,21 @@ Cohesion: 0.50
 Nodes (3): Test Chart, Usage, Values
 
 ## Knowledge Gaps
-- **1105 isolated node(s):** `$schema`, `permissionGate`, `version`, `setu-git.sh script`, `test-dns.sh script` (+1100 more)
+- **1106 isolated node(s):** `$schema`, `permissionGate`, `version`, `setu-git.sh script`, `test-dns.sh script` (+1101 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `enabled` connect `Community 18` to `Community 33`, `Community 41`, `Community 43`, `Community 76`, `Community 51`, `Community 20`, `Community 61`, `Community 23`, `Community 29`?**
+- **Why does `enabled` connect `Community 18` to `Community 33`, `Community 41`, `Community 43`, `Community 76`, `Community 51`, `Community 20`, `Community 61`, `Community 23`, `Community 29`, `Community 30`?**
   _High betweenness centrality (0.009) - this node is a cross-community bridge._
-- **Why does `properties` connect `Community 50` to `Community 33`, `Community 5`, `Community 41`, `Community 75`, `Community 43`, `Community 18`, `Community 51`, `Community 20`, `Community 116`, `Community 61`, `Community 23`, `Community 29`?**
+- **Why does `properties` connect `Community 50` to `Community 33`, `Community 5`, `Community 41`, `Community 75`, `Community 76`, `Community 43`, `Community 18`, `Community 51`, `Community 20`, `Community 116`, `Community 61`, `Community 23`, `Community 29`?**
   _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **Why does `properties` connect `Community 29` to `Community 18`, `Community 116`, `Community 42`, `Community 78`?**
   _High betweenness centrality (0.005) - this node is a cross-community bridge._
 - **What connects `$schema`, `permissionGate`, `version` to the rest of the system?**
-  _1106 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1107 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.043478260869565216 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**

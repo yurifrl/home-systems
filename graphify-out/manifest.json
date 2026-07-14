@@ -5,8 +5,8 @@
     "semantic_hash": ""
   },
   ".beads/backup/backup_state.json": {
-    "mtime": 1783880666.545717,
-    "ast_hash": "cfb5d68146d9b0db6f6ad2736a47f902",
+    "mtime": 1783887451.573481,
+    "ast_hash": "38b4bcb5365b4d47a7fc9617240b4761",
     "semantic_hash": ""
   },
   ".beads/embeddeddolt/home_systems/.dolt/config.json": {
@@ -15,13 +15,13 @@
     "semantic_hash": ""
   },
   ".beads/embeddeddolt/home_systems/.dolt/repo_state.json": {
-    "mtime": 1783880666.4600818,
+    "mtime": 1783887451.4695718,
     "ast_hash": "10c700c441be5969c72c1595983b16c7",
     "semantic_hash": ""
   },
   ".beads/export-state.json": {
-    "mtime": 1783880666.967475,
-    "ast_hash": "2761ee3df5739a58511efe3ccbea93e2",
+    "mtime": 1783909928.0572803,
+    "ast_hash": "ccb52ad8db14ddc1a9b3ebc90d39e425",
     "semantic_hash": ""
   },
   ".beads/hooks/post-checkout": {
@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   ".agents/postmortems/2026-07-05-cloudflare-tunnel-quic-edge-unreachable/PM.md": {
-    "mtime": 1783303946.731145,
-    "ast_hash": "1be9b6b5a0e8f357bde86177e6ec7b5a",
+    "mtime": 1783887439.7072926,
+    "ast_hash": "074d20b5dddb3fc5af52be219dfe8de4",
     "semantic_hash": ""
   },
   ".agents/postmortems/2026-07-05-cross-family-vxlan-endpoint-mesh/FP.md": {
@@ -245,8 +245,8 @@
     "semantic_hash": ""
   },
   ".agents/postmortems/2026-07-05-cross-family-vxlan-endpoint-mesh/PM.md": {
-    "mtime": 1783304311.1449165,
-    "ast_hash": "fbc1f7bdf7bfc2ae29b537d60031c7df",
+    "mtime": 1783915323.4665587,
+    "ast_hash": "70fe15c4512eed1bd8109737dd8e4ae8",
     "semantic_hash": ""
   },
   ".agents/postmortems/2026-07-05-hermes-rwx-sharemanager-cross-site/PM.md": {
@@ -285,13 +285,13 @@
     "semantic_hash": ""
   },
   ".agents/postmortems/2026-07-11-vmsingle-storage-readonly/FP.md": {
-    "mtime": 1783880696.6017299,
-    "ast_hash": "fc0035776ce2303ccca168d15945ae68",
+    "mtime": 1783887480.6805406,
+    "ast_hash": "23569c54297bca84e683614981b54fe0",
     "semantic_hash": ""
   },
   ".agents/postmortems/2026-07-11-vmsingle-storage-readonly/PM.md": {
-    "mtime": 1783880684.609262,
-    "ast_hash": "9ac1da56098b142725777bda1ecc7065",
+    "mtime": 1783887480.6814058,
+    "ast_hash": "1f59451ff4e4c7217dfe9f3eba10a0e0",
     "semantic_hash": ""
   },
   ".agents/skills/oom-check/SKILL.md": {
@@ -390,8 +390,8 @@
     "semantic_hash": ""
   },
   ".claude/skills/postmortem/vocab.md": {
-    "mtime": 1783303632.5638227,
-    "ast_hash": "15ea6ff042caaacaece551e2a03bacdf",
+    "mtime": 1783915323.4667144,
+    "ast_hash": "0190dd954f7530a699f7d0300948c66d",
     "semantic_hash": ""
   },
   ".github/workflows/auto-merge.yaml": {
@@ -420,8 +420,8 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1782996264.342125,
-    "ast_hash": "ece1c94e23af5f815d356b3305ffed0f",
+    "mtime": 1783881683.2041323,
+    "ast_hash": "94c5d9fafb4b915178ef9fdd5f97c162",
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
@@ -492,11 +492,6 @@
   "docs/remote-node.md": {
     "mtime": 1780682570.9647477,
     "ast_hash": "58aceab2a2d5c2d2ed21b931944463b0",
-    "semantic_hash": ""
-  },
-  "docs/superpowers/specs/2026-07-12-victoriametrics-watchdog-design.md": {
-    "mtime": 1783880011.7088132,
-    "ast_hash": "d6d3f2ac8ee2672fca82edb55f8f2740",
     "semantic_hash": ""
   },
   "docs/tailscale-authkey-refresh.md": {
@@ -715,13 +710,13 @@
     "semantic_hash": ""
   },
   "k8s/applications/board-games.yaml": {
-    "mtime": 1780753788.540682,
-    "ast_hash": "088f873ffc46446b351e6eec1a8144c2",
+    "mtime": 1783910393.070071,
+    "ast_hash": "ff5efdcc432f7d925d819428ddd518b8",
     "semantic_hash": ""
   },
   "k8s/applications/camofox.yaml": {
-    "mtime": 1781968663.604231,
-    "ast_hash": "1c35a5690347a5bfac914be0fcc57996",
+    "mtime": 1783913762.5995262,
+    "ast_hash": "9178a922bf517067de886023400581a7",
     "semantic_hash": ""
   },
   "k8s/applications/cert-manager.yaml": {
@@ -735,8 +730,8 @@
     "semantic_hash": ""
   },
   "k8s/applications/cloudflare-tunnel.yaml": {
-    "mtime": 1766445067.0,
-    "ast_hash": "afe804b59d5d82c4fbee2caa89c9220a",
+    "mtime": 1783910395.7221096,
+    "ast_hash": "40a999d6ce5394e7ab1bd61d5eb77c07",
     "semantic_hash": ""
   },
   "k8s/applications/cnpg-operator.yaml": {
@@ -745,8 +740,8 @@
     "semantic_hash": ""
   },
   "k8s/applications/crossplane-gcp.yaml": {
-    "mtime": 1780192829.994764,
-    "ast_hash": "5953d23b0a72d36ad319d76a01707579",
+    "mtime": 1783980568.2092943,
+    "ast_hash": "aff462c3ea60faa7e31d0e9f57961142",
     "semantic_hash": ""
   },
   "k8s/applications/crossplane-providers.yaml": {
@@ -785,18 +780,18 @@
     "semantic_hash": ""
   },
   "k8s/applications/goldilocks.yaml": {
-    "mtime": 1783183710.276746,
-    "ast_hash": "ef50350e2a35f76fd158e9f744c76253",
+    "mtime": 1783913781.3982937,
+    "ast_hash": "14e6e437bbb5d5f02fdb88a877121bce",
     "semantic_hash": ""
   },
   "k8s/applications/hermes.yaml": {
-    "mtime": 1783880223.4610069,
-    "ast_hash": "c05b1bea578c6db19d3154e67a1e8af7",
+    "mtime": 1783887286.8967066,
+    "ast_hash": "012deb484da8d9b4f3fd0032bd5cf70b",
     "semantic_hash": ""
   },
   "k8s/applications/home-assistant.yaml": {
-    "mtime": 1782268027.8415713,
-    "ast_hash": "7d35706fb00b940b160b0604c5ec7230",
+    "mtime": 1783887281.4133444,
+    "ast_hash": "7fe29d690755af5622da40140bc69523",
     "semantic_hash": ""
   },
   "k8s/applications/istio-base.yaml": {
@@ -830,8 +825,8 @@
     "semantic_hash": ""
   },
   "k8s/applications/longhorn.yaml": {
-    "mtime": 1780812654.1758478,
-    "ast_hash": "bf624d8ba0c7ca1fc122a2cf5b760fc5",
+    "mtime": 1783950865.321297,
+    "ast_hash": "899dc5d3cbda9769aeaaae58d00d76c6",
     "semantic_hash": ""
   },
   "k8s/applications/metallb.yaml": {
@@ -840,8 +835,8 @@
     "semantic_hash": ""
   },
   "k8s/applications/metrics-server.yaml": {
-    "mtime": 1783428068.943395,
-    "ast_hash": "9571ddca7d28fd987bdb584015f8726f",
+    "mtime": 1783913770.0580506,
+    "ast_hash": "e4224d172437521cfb359bf4866ff30e",
     "semantic_hash": ""
   },
   "k8s/applications/mosquitto.yaml": {
@@ -870,8 +865,8 @@
     "semantic_hash": ""
   },
   "k8s/applications/postgres.yaml": {
-    "mtime": 1783353279.6093564,
-    "ast_hash": "0a60ba51eabdea1f7ebdb9ea225c22de",
+    "mtime": 1783892095.5574796,
+    "ast_hash": "d5681538aa55854c76be8b8580242086",
     "semantic_hash": ""
   },
   "k8s/applications/presenter.yaml": {
@@ -890,8 +885,8 @@
     "semantic_hash": ""
   },
   "k8s/applications/supabase.yaml": {
-    "mtime": 1782405078.8342125,
-    "ast_hash": "5023674fbc823c802389d7f8fed7444e",
+    "mtime": 1783892085.796004,
+    "ast_hash": "440070e9c634a29ae565c732a348aac0",
     "semantic_hash": ""
   },
   "k8s/applications/support-cluster.yaml": {
@@ -900,8 +895,8 @@
     "semantic_hash": ""
   },
   "k8s/applications/syscd-app.yaml": {
-    "mtime": 1781463469.5983822,
-    "ast_hash": "db7c7d7b2cbe8e6f46fcef3413749725",
+    "mtime": 1783913770.0580337,
+    "ast_hash": "f48e4e43af8ce51a6e46de7241df3f49",
     "semantic_hash": ""
   },
   "k8s/applications/tailscale.yaml": {
@@ -910,18 +905,18 @@
     "semantic_hash": ""
   },
   "k8s/applications/vertical-pod-autoscaler.yaml": {
-    "mtime": 1780970369.1349375,
-    "ast_hash": "964dbeb595ac535206af36ffe9549146",
+    "mtime": 1783913794.7409298,
+    "ast_hash": "07825608f6d0457206eec24409e8d83a",
     "semantic_hash": ""
   },
   "k8s/applications/victoria-metrics-k8s-stack.yaml": {
-    "mtime": 1783880110.110752,
-    "ast_hash": "530a34e6c126c9a0964b680d74a264d5",
+    "mtime": 1783882083.863366,
+    "ast_hash": "ed62c4c860c713db5cb0dcad533dc528",
     "semantic_hash": ""
   },
   "k8s/applications/zigbee2mqtt.yaml": {
-    "mtime": 1783049006.1069624,
-    "ast_hash": "4003a5ca66949c6cc7a2cf7b7eafeca0",
+    "mtime": 1783887275.7972229,
+    "ast_hash": "903cc343b1afc49202f93f08137cf260",
     "semantic_hash": ""
   },
   "k8s/charts/agents/Chart.yaml": {
@@ -1095,8 +1090,8 @@
     "semantic_hash": ""
   },
   "k8s/charts/crossplane-gcp/values.yaml": {
-    "mtime": 1783748348.637123,
-    "ast_hash": "5d33b8c6615c6c2d49152e0c623b6c86",
+    "mtime": 1783909790.8731802,
+    "ast_hash": "364893efdd4e49a963e3177353f9fdf7",
     "semantic_hash": ""
   },
   "k8s/charts/crossplane-providers/Chart.yaml": {
@@ -1105,8 +1100,8 @@
     "semantic_hash": ""
   },
   "k8s/charts/crossplane-providers/templates/pinned-runtimeconfig.yaml": {
-    "mtime": 1783749323.9289382,
-    "ast_hash": "5cb80f21619ffde514be221c8eb586b4",
+    "mtime": 1783913781.3992019,
+    "ast_hash": "e0461c555971e8a85a261684774303c4",
     "semantic_hash": ""
   },
   "k8s/charts/crossplane-providers/templates/providers.yaml": {
@@ -1120,8 +1115,8 @@
     "semantic_hash": ""
   },
   "k8s/charts/crossplane-providers/values.yaml": {
-    "mtime": 1782795633.9634125,
-    "ast_hash": "79337146e4539d668c218e9cd405670f",
+    "mtime": 1783980568.2092948,
+    "ast_hash": "c057f04971d2fdb1821fc018005ec744",
     "semantic_hash": ""
   },
   "k8s/charts/crossplane-proxmox/Chart.yaml": {
@@ -1330,8 +1325,8 @@
     "semantic_hash": ""
   },
   "k8s/charts/hermes/templates/dashboard-deployment.yaml": {
-    "mtime": 1783880595.7986364,
-    "ast_hash": "41d8ee38194622475a29fa793d583cb5",
+    "mtime": 1783886433.680748,
+    "ast_hash": "b036a81381d5d9e3502873a251086b4e",
     "semantic_hash": ""
   },
   "k8s/charts/hermes/templates/dashboard-networkpolicy.yaml": {
@@ -1435,8 +1430,8 @@
     "semantic_hash": ""
   },
   "k8s/charts/hermes/values.yaml": {
-    "mtime": 1783880155.8788521,
-    "ast_hash": "e237b0d5dfe24738826a89d4a3c0b4cd",
+    "mtime": 1783909790.5515695,
+    "ast_hash": "5039fa627a49ad5b02799ded707ccf97",
     "semantic_hash": ""
   },
   "k8s/charts/mqtt-exporter/Chart.yaml": {
@@ -1495,8 +1490,8 @@
     "semantic_hash": ""
   },
   "k8s/charts/obs/cloudflared.yaml": {
-    "mtime": 1783278944.15123,
-    "ast_hash": "0718a0966cb959582d28e419b4ec9c48",
+    "mtime": 1783913770.05805,
+    "ast_hash": "2b43d737013d885194c3865bd75519ab",
     "semantic_hash": ""
   },
   "k8s/charts/obs/externalsecret.yaml": {
@@ -1505,8 +1500,8 @@
     "semantic_hash": ""
   },
   "k8s/charts/obs/restreamer.yaml": {
-    "mtime": 1783279543.7259393,
-    "ast_hash": "b6bdc466c1daaab785daf146db7f700e",
+    "mtime": 1783913770.0581481,
+    "ast_hash": "9b475de4a1210d4e1c63137fb2976a41",
     "semantic_hash": ""
   },
   "k8s/charts/support-argo-workflows/Chart.yaml": {
@@ -1560,8 +1555,8 @@
     "semantic_hash": ""
   },
   "k8s/charts/support-cluster/templates/gateways.yaml": {
-    "mtime": 1780857444.321954,
-    "ast_hash": "1c2268af45ac0e14aaa42d6aa73db764",
+    "mtime": 1783910589.485552,
+    "ast_hash": "5c67f69254e5d4661b51094235950e71",
     "semantic_hash": ""
   },
   "k8s/charts/support-cluster/templates/limitranges.yaml": {
@@ -1595,8 +1590,8 @@
     "semantic_hash": ""
   },
   "k8s/charts/support-cluster/templates/monitoring/cloudflare-tunnel.yaml": {
-    "mtime": 1783303861.5410993,
-    "ast_hash": "8b9fb405aea37bce6584710c5ce326be",
+    "mtime": 1783881071.3525822,
+    "ast_hash": "922b2fff1738d766950a7b18119cc09c",
     "semantic_hash": ""
   },
   "k8s/charts/support-cluster/templates/monitoring/cnpg-vmpodscrape.yaml": {
@@ -1660,8 +1655,8 @@
     "semantic_hash": ""
   },
   "k8s/charts/support-cluster/templates/monitoring/victoriametrics-watchdog.yaml": {
-    "mtime": 1783880281.5638914,
-    "ast_hash": "00cad20e5d4a537369c5d524d5e58e4b",
+    "mtime": 1783885063.1559322,
+    "ast_hash": "0c1fcf98b97684e1b974ebcd1bc6ae21",
     "semantic_hash": ""
   },
   "k8s/charts/support-cluster/templates/monitoring/vpa-servicemonitor.yaml": {
@@ -1725,8 +1720,8 @@
     "semantic_hash": ""
   },
   "k8s/charts/support-cluster/tests/unit_test.yaml": {
-    "mtime": 1783880246.0272996,
-    "ast_hash": "8be729b76e9a4305b382ddcd0778a6c2",
+    "mtime": 1783881417.619642,
+    "ast_hash": "7d4e0cb92842ea274ba5512313d4eacc",
     "semantic_hash": ""
   },
   "k8s/charts/support-cluster/values.yaml": {
@@ -1935,8 +1930,8 @@
     "semantic_hash": ""
   },
   "k8s/lib/firecrawl.yaml": {
-    "mtime": 1781143223.711767,
-    "ast_hash": "0ee513544daf2c5b87346b2025f1e25f",
+    "mtime": 1783913770.0588858,
+    "ast_hash": "40ee2aea1701d52ffabe714c0df0f7df",
     "semantic_hash": ""
   },
   "k8s/lib/foundry.yaml": {
@@ -1967,11 +1962,6 @@
   "k8s/lib/homer.yaml": {
     "mtime": 1766445065.0,
     "ast_hash": "70858b64062129885a17cf3cff681df0",
-    "semantic_hash": ""
-  },
-  "k8s/lib/httpbin.yaml": {
-    "mtime": 1780753788.5411482,
-    "ast_hash": "5737e4a9dc4d9bf3c0d3dd5770aa3a10",
     "semantic_hash": ""
   },
   "k8s/lib/influxdb.yaml": {
@@ -2165,13 +2155,13 @@
     "semantic_hash": ""
   },
   "manifests/argocd.yaml": {
-    "mtime": 1780097595.2087092,
-    "ast_hash": "40a40ae0620fd3fe551b7bd1deaa50d3",
+    "mtime": 1783915002.0463884,
+    "ast_hash": "d9f48e741cd5ad5feb552127e15404da",
     "semantic_hash": ""
   },
   "manifests/values/argocd.yaml": {
-    "mtime": 1783751354.1993678,
-    "ast_hash": "7d3c1c9868860dfcb6496603e865b743",
+    "mtime": 1783914367.1952193,
+    "ast_hash": "3ae8fb2d07b55782401c4851832667b1",
     "semantic_hash": ""
   },
   "nostos/README.md": {
@@ -2195,13 +2185,13 @@
     "semantic_hash": ""
   },
   "nostos/templates/macarm01.yaml": {
-    "mtime": 1782617551.1291213,
-    "ast_hash": "930d0a6b79150aff89705b3ce6b741d8",
+    "mtime": 1783886387.9788048,
+    "ast_hash": "817824863395cded8f0b5ed43483a836",
     "semantic_hash": ""
   },
   "nostos/templates/macintel01.yaml": {
-    "mtime": 1782961014.0399168,
-    "ast_hash": "42fdd5566aa7447c5fcc490d68b312f7",
+    "mtime": 1783886391.8958251,
+    "ast_hash": "8319296f029977725cd5a34e3323957c",
     "semantic_hash": ""
   },
   "nostos/templates/rpi01.yaml": {
@@ -2577,6 +2567,21 @@
   "taskfiles/turing.yml": {
     "mtime": 1779683701.8387206,
     "ast_hash": "868f2611a43ea42e383936bf4ea6c609",
+    "semantic_hash": ""
+  },
+  ".agents/postmortems/2026-07-12-tailscale-cilium-endpoint-recursion/PM.md": {
+    "mtime": 1783915305.966236,
+    "ast_hash": "5e61ba8976427c7f6c06ebb6ea19c676",
+    "semantic_hash": ""
+  },
+  "k8s/applications/httpbin.yaml": {
+    "mtime": 1780753788.5411482,
+    "ast_hash": "5737e4a9dc4d9bf3c0d3dd5770aa3a10",
+    "semantic_hash": ""
+  },
+  "k8s/charts/crossplane-gcp/templates/cdn.yaml": {
+    "mtime": 1783909790.8725617,
+    "ast_hash": "53aa9dd8008ee5f563500ba60250f15f",
     "semantic_hash": ""
   }
 }
