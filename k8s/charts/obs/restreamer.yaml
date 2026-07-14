@@ -60,10 +60,10 @@ spec:
               mountPath: /core/data
           resources:
             requests:
-              cpu: 100m
+              cpu: "1"
               memory: 256Mi
             limits:
-              cpu: "1"
+              cpu: "4"
               memory: 512Mi
       volumes:
         # Node-pinned single replica: hostPath keeps state local to macintel01
