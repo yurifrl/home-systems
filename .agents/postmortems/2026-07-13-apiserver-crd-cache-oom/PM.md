@@ -1,6 +1,6 @@
 ---
 date: 2026-07-13
-status: draft
+status: closed
 incident_status: mitigated
 sessions:
   - 019f5987-1b4e-73c5-b00f-564ff2c98f03
@@ -17,8 +17,9 @@ symptoms:
 failure_mode: apiserver-crd-cache-oom
 affected_urls:
   - https://api.k8s.lan:6443
-beads: []
-memories: []
+beads: [home-systems-0r5]
+memories:
+  - apiserver-crd-cache-oom-dell01-2026-07-13
 supersedes: []
 related:
   - 2026-07-05-argocd-crossplane-webhook-blocks-sync
