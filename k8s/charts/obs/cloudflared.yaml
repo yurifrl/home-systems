@@ -8,7 +8,7 @@ data:
     tunnel: 248f4b51-d33d-4896-89c1-acb748c54330
     credentials-file: /creds/credentials.json
     no-autoupdate: true
-    protocol: http2
+    protocol: quic
     ingress:
       - hostname: obs.syscd.live
         service: http://localhost:8080
