@@ -40,9 +40,9 @@ spec:
             existingClaim: hermes-state
             backup:
               enabled: true
-              # Daily at 02:00; retain 180 daily backups ≈ rolling 6-month window.
+              # Longhorn accepts at most 100 retained backups.
               schedule: "0 2 * * *"
-              retain: 180
+              retain: 100
 
           auth:
             gitLogin:
@@ -61,18 +61,12 @@ spec:
           sharedStorage:
             state:
               enabled: true
-              create: true
-              claimName: hermes-state
-              storageClass: longhorn
-              accessMode: ReadWriteMany
-              size: 20Gi
+              create: false
+              claimName: state-hermes-0
             workdir:
               enabled: true
-              create: true
-              claimName: repos
-              storageClass: longhorn
-              accessMode: ReadWriteMany
-              size: 20Gi
+              create: false
+              claimName: workdir-hermes-0
 
           repositorySync:
             enabled: true
