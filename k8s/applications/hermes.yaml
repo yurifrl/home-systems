@@ -40,9 +40,9 @@ spec:
             existingClaim: hermes-state
             backup:
               enabled: true
-              # Longhorn accepts at most 100 retained backups.
+              # Keep the latest 30 successful backups.
               schedule: "0 2 * * *"
-              retain: 100
+              retain: 30
 
           auth:
             gitLogin:

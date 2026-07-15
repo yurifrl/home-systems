@@ -18,7 +18,7 @@ persistentVolumeClaims: []
 longhornBackups: []
   # - pvc: my-pvc-name           # name of an existing PVC (required)
   #   schedule: "0 2 * * 0"      # optional, default weekly Sunday 2 AM
-  #   retain: 7                  # optional, default 7
+  #   retain: 30                 # optional, default 30
   #   concurrency: 1             # optional, default 1
 
 # Persistent Volumes configuration

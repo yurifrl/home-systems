@@ -13,7 +13,7 @@ metadata:
 spec:
   cron: {{ .schedule | default "0 2 * * 0" | quote }}
   task: backup
-  retain: {{ .retain | default 7 }}
+  retain: {{ .retain | default 30 }}
   concurrency: {{ .concurrency | default 1 }}
   groups: []
 {{- end }}

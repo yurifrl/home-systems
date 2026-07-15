@@ -37,7 +37,7 @@ spec:
           longhornBackups:
             - pvc: foundry-talos-vca-xy1-data
               schedule: "0 2 * * 0"
-              retain: 14
+              retain: 30
           services:
             - name: foundry
               port: 30000

@@ -210,7 +210,7 @@ persistence:
   backup:
     enabled: false
     schedule: "0 2 * * 0"
-    retain: 7
+    retain: 30
     concurrency: 1
     restore: ""  # Set to backup name to restore
 
