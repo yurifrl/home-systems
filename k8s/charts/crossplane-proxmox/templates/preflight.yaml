@@ -44,7 +44,12 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    # BeforeHookCreation deletes a prior (esp. failed) hook Job before recreating
+    # it; without it a failed run lingers forever. Replace=true recreates instead
+    # of server-side-applying, which otherwise fails with "spec.template is
+    # immutable" and blocks every proxmox sync.
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-options: Replace=true
 spec:
   backoffLimit: 0
   activeDeadlineSeconds: 120
