@@ -84,7 +84,6 @@ spec:
           # Verify the PVC name after first deploy: kubectl -n zigbee2mqtt get pvc
           longhornBackups:
             - pvc: data-volume-zigbee2mqtt-0
-              # Daily at 02:00; retain 180 daily backups ≈ rolling 6-month window
-              # (Longhorn retain is count-based, not age-based).
+              # Longhorn accepts at most 100 retained backups.
               schedule: "0 2 * * *"
-              retain: 180
+              retain: 100
