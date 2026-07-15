@@ -63,7 +63,9 @@ spec:
               cpu: "1"
               memory: 256Mi
             limits:
-              cpu: "4"
+              # No CPU limit: the live ffmpeg transcode saturates the CFS quota
+              # and throttles the Go Core API, so every /api request took ~3-5s
+              # and the UI hung on its loading spinner. Let the pod burst.
               memory: 512Mi
       volumes:
         # Node-pinned single replica: hostPath keeps state local to macintel01
