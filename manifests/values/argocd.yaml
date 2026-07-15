@@ -81,6 +81,21 @@ repoServer:
   # Pinned to the same node as the controller (see controller.nodeSelector).
   nodeSelector:
     kubernetes.io/hostname: macintel01
+  # Default probes (timeoutSeconds: 1) trip while repo-server renders large Helm
+  # charts: crossplane provider CRDs balloon the --api-versions list and a single
+  # `helm template` can take ~60s, so /healthz can't answer in 1s -> liveness
+  # kills the pod -> CrashLoopBackOff blocks EVERY app sync (crossplane looked
+  # "down" 2026-07-15). Relaxed like the controller readinessProbe above.
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 30
+    failureThreshold: 5
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 30
+    failureThreshold: 5
   autoscaling:
     enabled: true
     minReplicas: 1
