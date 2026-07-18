@@ -52,6 +52,21 @@ gcpCredentials:
   # Key inside the synced Secret holding the SA key JSON.
   credentialsKey: creds
 
+# The `default` MRAP activate list. Replaces crossplane core's ["*"] so heavy
+# providers install their MRDs Inactive (no CRD, no apiserver load). One glob per
+# active provider family (both legacy .upbound.io and modern .m.upbound.io).
+defaultActivations:
+  - "*.storage.gcp.upbound.io"
+  - "*.storage.gcp.m.upbound.io"
+  - "*.iam.gcp.upbound.io"
+  - "*.iam.gcp.m.upbound.io"
+  - "*.cloudplatform.gcp.upbound.io"
+  - "*.cloudplatform.gcp.m.upbound.io"
+  - "*.proxmoxbpg.crossplane.io"
+  - "*.proxmoxbpg.m.crossplane.io"
+  - "*.zero.upjet-cloudflare.upbound.io"
+  - "*.zero.upjet-cloudflare.m.upbound.io"
+
 # MRAP that activates ONLY the compute CRDs the assets CDN needs (both the
 # legacy .upbound.io and modern .m.upbound.io variants). Everything else in
 # provider-gcp-compute stays an Inactive MRD -> no CRD, no apiserver load.

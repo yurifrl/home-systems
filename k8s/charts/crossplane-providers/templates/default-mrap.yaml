@@ -1,0 +1,23 @@
+{{- /*
+  The `default` ManagedResourceActivationPolicy. Crossplane core bootstraps this
+  object with activate: ["*"] (activate every provider MRD as a live CRD). That
+  default floods the apiserver when a heavy provider (provider-gcp-compute, ~192
+  MRDs) installs. The crossplane chart's Helm value for this does NOT wire into
+  the running deployment (args are just ["core","start"]), so the narrowing must
+  be owned here as an explicit manifest. Argo (ServerSideApply + selfHeal) takes
+  field ownership of .spec.activate and heals any drift back to git.
+
+  These globs cover every currently-active provider family (MRAP '*' spans dots).
+  Adding a new provider whose CRDs must be live? Add its family glob here.
+*/ -}}
+{{- with .Values.defaultActivations }}
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: default
+spec:
+  activate:
+    {{- range . }}
+    - {{ . | quote }}
+    {{- end }}
+{{- end }}
