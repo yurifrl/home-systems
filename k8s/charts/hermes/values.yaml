@@ -457,6 +457,11 @@ dashboard:
   nodeSelector: {}
   gateways: []
   hosts: []
+  # Cross-container gateway liveness probe. Empty = derive from the gateway
+  # Service (http://<fullname>:<apiServer.port>). The dashboard runs in its
+  # own pod, so the local PID check can't see the gateway; it needs this HTTP
+  # health probe to report the gateway as up.
+  healthUrl: ""
   resources:
     requests:
       cpu: 50m
