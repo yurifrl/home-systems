@@ -100,8 +100,33 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or .Values.bootstrap.enabled $npmEnabled .Values.extraInitContainers .Values.auth.gitLogin.enabled .Values.opFiles.enabled .Values.gitRepos.enabled }}
+      {{- if or .Values.bootstrap.enabled $npmEnabled .Values.extraInitContainers .Values.auth.gitLogin.enabled .Values.opFiles.enabled .Values.gitRepos.enabled .Values.memoryBackup.restore.enabled }}
       initContainers:
+        {{- if .Values.memoryBackup.restore.enabled }}
+        - name: memory-restore
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              hctl auth login
+              hctl restore --user={{ .Values.memoryBackup.user }} --repo={{ .Values.memoryBackup.repo }} --branch={{ .Values.memoryBackup.branch }} --home={{ $mountPath }} --dest=/tmp
+          env:
+            - name: HOME
+              value: {{ printf "%s/home" $mountPath | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          volumeMounts:
+            - name: {{ $dataVolumeName }}
+              mountPath: {{ $mountPath }}
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
         {{- if .Values.bootstrap.enabled }}
         - name: bootstrap-config
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -393,6 +394,175 @@ def cmd_repos_sync(args) -> int:
     return 0
 
 
+# ─────────────────────────────────────── backup ──
+#
+# Curated, secret-free git backup of HERMES_HOME. Only an allowlist of durable
+# paths is mirrored into a private repo; everything else (secrets, live SQLite
+# DBs, caches, sessions) stays out of git and is covered by the volume snapshot.
+# The .gitignore is fail-closed (`*` + `!<allowlist>`) so a stray copy can never
+# commit an unexpected file.
+
+_BACKUP_FILES = ["SOUL.md", "config.yaml"]
+_BACKUP_DIRS = ["memories", "skills", "cron"]
+
+
+def _write_backup_gitignore(repo_dir: str) -> None:
+    lines = ["# managed by `hctl backup` — fail-closed allowlist", "*", "!.gitignore"]
+    for f in _BACKUP_FILES:
+        lines.append(f"!{f}")
+    for d in _BACKUP_DIRS:
+        lines.append(f"!{d}/")
+        lines.append(f"!{d}/**")
+    Path(repo_dir, ".gitignore").write_text("\n".join(lines) + "\n")
+
+
+def _mirror_allowlist(home: str, repo_dir: str) -> None:
+    """Copy the allowlisted paths from HERMES_HOME into the repo, mirroring deletes."""
+    for f in _BACKUP_FILES:
+        src, dst = Path(home, f), Path(repo_dir, f)
+        if src.is_file():
+            shutil.copy2(src, dst)
+        elif dst.exists():
+            dst.unlink()
+    for d in _BACKUP_DIRS:
+        src, dst = Path(home, d), Path(repo_dir, d)
+        if dst.exists():
+            shutil.rmtree(dst)
+        if src.is_dir():
+            shutil.copytree(src, dst)
+
+
+def _backup_pass(home: str, repo_dir: str, branch: str) -> None:
+    """One mirror/commit/push pass. Raises on push failure."""
+    _write_backup_gitignore(repo_dir)
+    _mirror_allowlist(home, repo_dir)
+
+    # On a freshly cloned empty repo HEAD is unborn — create the branch.
+    unborn = _run(["git", "rev-parse", "--verify", "HEAD"],
+                  cwd=repo_dir, check=False, capture=True).returncode != 0
+    if unborn:
+        _run(["git", "checkout", "-b", branch], cwd=repo_dir, check=False)
+
+    _run(["git", "add", "-A"], cwd=repo_dir)
+    dirty = _run(["git", "diff", "--cached", "--quiet"],
+                 cwd=repo_dir, check=False).returncode != 0
+    if not dirty:
+        return
+
+    author = _env("GIT_AUTHOR_NAME") or "hermes"
+    email = _env("GIT_AUTHOR_EMAIL") or "hermes@local"
+    ts = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+    _log("backup: commit")
+    _run(["git", "-c", f"user.name={author}", "-c", f"user.email={email}",
+          "commit", "-m", f"backup: {ts}"], cwd=repo_dir)
+
+    _log("backup: push")
+    rc = _run(["git", "push", "-u", "origin", branch], cwd=repo_dir, check=False).returncode
+    if rc != 0:
+        # Remote moved (shouldn't happen with one writer) — rebase and retry once.
+        _run(["git", "pull", "--rebase", "--autostash", "origin", branch],
+             cwd=repo_dir, check=False)
+        rc = _run(["git", "push", "-u", "origin", branch], cwd=repo_dir, check=False).returncode
+        if rc != 0:
+            raise RuntimeError("backup push failed")
+
+
+def cmd_backup(args) -> int:
+    """Periodic + on-exit git backup of the HERMES_HOME allowlist. SIGTERM = final pass."""
+    home = args.home or _env("HERMES_HOME") or "/opt/data"
+    user = args.user.strip()
+    repo = args.repo.strip()
+    branch = args.branch or "main"
+    dest = args.dest
+    interval_s = _parse_duration(args.interval)
+
+    if not user:
+        _err("backup: --user is required")
+        return 10
+    if not repo:
+        _err("backup: --repo is required")
+        return 10
+
+    repo_dir = os.path.join(dest, repo)
+    url = f"https://github.com/{user}/{repo}.git"
+    os.makedirs(dest, exist_ok=True)
+    if not os.path.isdir(os.path.join(repo_dir, ".git")):
+        _log(f"backup: cloning {url} -> {repo_dir}")
+        _run(["git", "clone", url, repo_dir], check=False)
+    else:
+        _reconcile_branch(repo_dir, branch)
+
+    _log(f"backup: home={home} repo={user}/{repo} branch={branch} interval={interval_s}s")
+
+    stop = {"flag": False}
+
+    def _handler(signum, _frame):
+        _log(f"backup: caught signal {signum}; will run final pass and exit")
+        stop["flag"] = True
+
+    signal.signal(signal.SIGTERM, _handler)
+    signal.signal(signal.SIGINT, _handler)
+
+    while not stop["flag"]:
+        try:
+            _backup_pass(home, repo_dir, branch)
+        except RuntimeError as e:
+            _err(f"backup: {e}")
+            return 1
+        for _ in range(interval_s):
+            if stop["flag"]:
+                break
+            time.sleep(1)
+
+    _log("backup: final pass before exit")
+    try:
+        _backup_pass(home, repo_dir, branch)
+    except RuntimeError as e:
+        _err(f"backup: final pass failed: {e}")
+        return 1
+    return 0
+
+
+def cmd_restore(args) -> int:
+    """Seed a fresh HERMES_HOME from the backup repo, but only if it's empty.
+
+    Guard: restore only when the allowlisted `memories/` dir is absent. Never
+    overwrites a populated live volume.
+    """
+    home = args.home or _env("HERMES_HOME") or "/opt/data"
+    user = args.user.strip()
+    repo = args.repo.strip()
+    branch = args.branch or "main"
+    dest = args.dest
+
+    if Path(home, "memories").exists():
+        _log("restore: memories/ already present; skipping")
+        return 0
+
+    repo_dir = os.path.join(dest, repo)
+    url = f"https://github.com/{user}/{repo}.git"
+    os.makedirs(dest, exist_ok=True)
+    if not os.path.isdir(os.path.join(repo_dir, ".git")):
+        _log(f"restore: cloning {url} -> {repo_dir}")
+        _run(["git", "clone", "--branch", branch, url, repo_dir], check=False)
+
+    if not os.path.isdir(os.path.join(repo_dir, ".git")):
+        _err("restore: clone failed; skipping")
+        return 0
+
+    for f in _BACKUP_FILES:
+        src = Path(repo_dir, f)
+        if src.is_file():
+            _log(f"restore: {f}")
+            shutil.copy2(src, Path(home, f))
+    for d in _BACKUP_DIRS:
+        src = Path(repo_dir, d)
+        if src.is_dir():
+            _log(f"restore: {d}/")
+            shutil.copytree(src, Path(home, d), dirs_exist_ok=True)
+    return 0
+
+
 # ─────────────────────────────────────── argparse wiring ──
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -432,6 +602,24 @@ def _build_parser() -> argparse.ArgumentParser:
     rs.add_argument("--dir", default="/workdir", help="root containing one repo per child dir")
     rs.add_argument("--interval", default="1h", help="duration between cycles (e.g. 30s, 5m, 1h)")
     rs.set_defaults(func=cmd_repos_sync)
+
+    # backup / restore
+    bk = sub.add_parser("backup", help="periodic git backup of the HERMES_HOME allowlist")
+    bk.add_argument("--user", required=True, help="github user/org owning the backup repo")
+    bk.add_argument("--repo", required=True, help="backup repo name (private)")
+    bk.add_argument("--branch", default="main", help="branch (default: main)")
+    bk.add_argument("--home", default="", help="HERMES_HOME (default: $HERMES_HOME or /opt/data)")
+    bk.add_argument("--dest", default="/backup", help="where to check out the backup repo")
+    bk.add_argument("--interval", default="1h", help="duration between cycles (e.g. 30s, 5m, 1h)")
+    bk.set_defaults(func=cmd_backup)
+
+    rst = sub.add_parser("restore", help="seed an empty HERMES_HOME from the backup repo")
+    rst.add_argument("--user", required=True, help="github user/org owning the backup repo")
+    rst.add_argument("--repo", required=True, help="backup repo name (private)")
+    rst.add_argument("--branch", default="main", help="branch (default: main)")
+    rst.add_argument("--home", default="", help="HERMES_HOME (default: $HERMES_HOME or /opt/data)")
+    rst.add_argument("--dest", default="/backup", help="where to check out the backup repo")
+    rst.set_defaults(func=cmd_restore)
 
     return p
 

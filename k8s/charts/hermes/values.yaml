@@ -408,6 +408,32 @@ repositorySync:
     limits:
       memory: 256Mi
 
+# memory-backup: curated, secret-free git backup of the HERMES_HOME allowlist
+# (SOUL.md, config.yaml, memories/, skills/, cron/) to a private repo. A
+# sidecar deployment runs `hctl backup` on `interval` with a SIGTERM final
+# pass; the repo checkout lives in an emptyDir and is re-clonable. Full-state
+# DR (secrets, DBs, caches) stays with the Longhorn volume snapshot.
+# `restore.enabled` adds a StatefulSet init container that seeds a FRESH volume
+# from the repo, guarded on `memories/` being absent (never clobbers live
+# state). Requires auth.gitLogin.enabled. Private user/repo live in
+# home-systems-values.
+memoryBackup:
+  enabled: false
+  user: ""
+  repo: hermes-memory
+  branch: main
+  interval: 1h
+  dest: /backup
+  restore:
+    enabled: false
+  nodeSelector: {}
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
 pages:
   enabled: false
   replicas: 1

@@ -1,0 +1,88 @@
+{{- if .Values.memoryBackup.enabled }}
+{{- if not .Values.auth.gitLogin.enabled }}
+{{- fail "memoryBackup.enabled=true requires auth.gitLogin.enabled=true (git credentials)" }}
+{{- end }}
+{{- $name := printf "%s-memory-backup" (include "hermes-agent.fullname" . | trunc 49 | trimSuffix "-") -}}
+{{- $mountPath := .Values.persistence.mountPath -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+    app.kubernetes.io/component: memory-backup
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with (.Values.memoryBackup.nodeSelector | default .Values.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: {{ include "hermes-agent.stateClaimName" . }}
+        - name: backup
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+      initContainers:
+        - name: git-login
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["hctl", "auth", "login"]
+          env:
+            - name: HOME
+              value: {{ printf "%s/home" $mountPath | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          volumeMounts:
+            - name: state
+              mountPath: {{ $mountPath }}
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+      containers:
+        - name: memory-backup
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - hctl
+            - backup
+            - --user={{ .Values.memoryBackup.user }}
+            - --repo={{ .Values.memoryBackup.repo }}
+            - --branch={{ .Values.memoryBackup.branch }}
+            - --home={{ $mountPath }}
+            - --dest={{ .Values.memoryBackup.dest }}
+            - --interval={{ .Values.memoryBackup.interval }}
+          env:
+            - name: HOME
+              value: {{ printf "%s/home" $mountPath | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          volumeMounts:
+            - name: state
+              mountPath: {{ $mountPath }}
+            - name: backup
+              mountPath: {{ .Values.memoryBackup.dest }}
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.memoryBackup.resources | nindent 12 }}
+{{- end }}
