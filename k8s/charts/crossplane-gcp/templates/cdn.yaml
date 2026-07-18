@@ -109,7 +109,6 @@ spec:
   deletionPolicy: {{ $dp }}
   providerConfigRef: { name: {{ $pc }} }
   forProvider:
-    target: {{ .name }}
     targetRef: { name: {{ .name }} }
     ipAddressRef: { name: {{ .name }} }
     portRange: "443"
