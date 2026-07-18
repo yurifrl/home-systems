@@ -123,7 +123,7 @@ spec:
   deletionPolicy: {{ $dp }}
   providerConfigRef: { name: {{ $pc }} }
   forProvider:
-    targetRef: { name: {{ .name }} }
+    target: "https://www.googleapis.com/compute/v1/projects/{{ required "assetsCdn.project required" .project }}/global/targetHttpsProxies/{{ .name }}"
     ipAddressRef: { name: {{ .name }} }
     portRange: "443"
     loadBalancingScheme: EXTERNAL_MANAGED
