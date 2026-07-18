@@ -29,6 +29,14 @@ providers:
   # healthy worker.
   - name: provider-gcp-compute
     package: xpkg.upbound.io/upbound/provider-gcp-compute:v2.5.4
+  # Cloudflare DNS + Rulesets (WAF/rate-limit/geo) for the assets CDN, so the
+  # DNS record + rate-limit/geo rules reconcile from git once the API token is
+  # present. Same wildbitca family as provider-cloudflare-zero. MRD-scoped by
+  # the cloudflare-cdn MRAP so only Record + Ruleset CRDs activate.
+  - name: provider-cloudflare-dns
+    package: xpkg.upbound.io/wildbitca/provider-cloudflare-dns:v0.2.13
+  - name: provider-cloudflare-cloudflare
+    package: xpkg.upbound.io/wildbitca/provider-cloudflare-cloudflare:v0.2.13
   # Proxmox VE provider (Upjet-generated wrapper around bpg/terraform-provider-proxmox).
   # Community provider; manages QEMU VMs as cluster-scoped managed resources
   # (group virtualenvironmentvm.proxmoxbpg.crossplane.io). Used by the
@@ -88,3 +96,18 @@ computeCdnActivations:
   - sslcertificates.compute.gcp.m.upbound.io
   - securitypolicies.compute.gcp.upbound.io
   - securitypolicies.compute.gcp.m.upbound.io
+
+# Cloudflare CRDs to activate (DNS Record + WAF Ruleset). Everything else in the
+# cloudflare families stays an Inactive MRD. Verify plurals after install.
+cloudflareCdnActivations:
+  - records.dns.upjet-cloudflare.upbound.io
+  - records.dns.upjet-cloudflare.m.upbound.io
+  - rulesets.cloudflare.upjet-cloudflare.upbound.io
+  - rulesets.cloudflare.upjet-cloudflare.m.upbound.io
+
+# Cloudflare ProviderConfig: reuses the existing cloudflare-creds secret (the
+# API token JSON lives in the 1Password item that feeds it).
+cloudflareCredentials:
+  enabled: true
+  secretName: cloudflare-creds
+  credentialsKey: credentials

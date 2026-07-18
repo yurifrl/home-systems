@@ -33,3 +33,19 @@ spec:
         key: {{ .Values.gcpCredentials.onepasswordKey }}
         property: {{ .Values.gcpCredentials.credentialsKey }}
 {{- end }}
+{{- if .Values.cloudflareCredentials.enabled }}
+---
+# Cloudflare API-token ProviderConfig for the DNS + Ruleset providers. The token
+# JSON ({"api_token":"..."}) lives in the existing cloudflare-creds secret.
+apiVersion: upjet-cloudflare.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: default
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: {{ .Release.Namespace }}
+      name: {{ .Values.cloudflareCredentials.secretName }}
+      key: {{ .Values.cloudflareCredentials.credentialsKey }}
+{{- end }}

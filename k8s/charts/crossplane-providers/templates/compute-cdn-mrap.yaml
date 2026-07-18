@@ -15,3 +15,15 @@ spec:
     - {{ . | quote }}
     {{- end }}
 {{- end }}
+{{- with .Values.cloudflareCdnActivations }}
+---
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: cloudflare-cdn
+spec:
+  activate:
+    {{- range . }}
+    - {{ . | quote }}
+    {{- end }}
+{{- end }}

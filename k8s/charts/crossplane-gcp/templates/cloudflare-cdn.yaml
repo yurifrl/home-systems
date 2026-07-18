@@ -1,0 +1,25 @@
+{{- /*
+  Cloudflare records/rules for the assets CDN, reconciled once the API token is
+  in the cloudflare-creds secret (ProviderConfig in crossplane-providers).
+  Gated on assetsCdn.enabled + a cloudflareZoneId. The DNS record points the
+  proxied hostname at the LB's global IP.
+*/ -}}
+{{- with .Values.assetsCdn }}
+{{- if and .enabled .cloudflareZoneId .lbIp }}
+{{- $dp := $.Values.deletionPolicy }}
+apiVersion: dns.upjet-cloudflare.upbound.io/v1alpha1
+kind: Record
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: default }
+  forProvider:
+    zoneId: {{ .cloudflareZoneId | quote }}
+    name: {{ .domain | quote }}
+    type: A
+    content: {{ .lbIp | quote }}
+    proxied: true
+    ttl: 1
+{{- end }}
+{{- end }}
