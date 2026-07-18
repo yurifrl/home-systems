@@ -147,6 +147,27 @@ spec:
           deployment:
             db:
               enabled: false   # external Postgres = the CNPG `pg` cluster
+            # Home lab: single replica per service is plenty. Upstream defaults
+            # to 2 for kong/realtime/rest, which just reserves idle capacity.
+            kong:
+              replicaCount: 1
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+            realtime:
+              replicaCount: 1
+            rest:
+              replicaCount: 1
+          # studio mounts the functions PVC when persistence.functions.enabled
+          # (default true), but that PVC is only created when the functions
+          # deployment is enabled (it isn't) -> studio stuck Pending. Disable it.
+          persistence:
+            functions:
+              enabled: false
           # DB host per service. The chart's init-db (pg_isready) and every
           # service read .Values.environment.<svc>.DB_HOST (default
           # postgres.example.com); secret.db.host below is NOT used for this.
@@ -166,6 +187,10 @@ spec:
               DB_HOST: pg-rw.databases.svc.cluster.local
             storage:
               DB_HOST: pg-rw.databases.svc.cluster.local
+              # storage is Node.js and verifies the DB cert; CNPG serves a
+              # self-signed cert -> SELF_SIGNED_CERT_IN_CHAIN. Keep TLS but skip
+              # verification (traffic is also encrypted by istio ztunnel).
+              DB_SSL: no-verify
           secret:
             jwt:
               secretRef: supabase-jwt
