@@ -29,19 +29,19 @@ spec:
         priority: 1000
         description: "Cloudflare IP ranges"
         match:
-          versionedExpr: SRC_IPS_V1
-          config:
-            srcIpRanges:
-              {{- range .cloudflareIpRanges }}
-              - {{ . | quote }}
-              {{- end }}
+          - versionedExpr: SRC_IPS_V1
+            config:
+              - srcIpRanges:
+                  {{- range .cloudflareIpRanges }}
+                  - {{ . | quote }}
+                  {{- end }}
       - action: "deny(403)"
         priority: 2147483647
         description: default deny
         match:
-          versionedExpr: SRC_IPS_V1
-          config:
-            srcIpRanges: ["*"]
+          - versionedExpr: SRC_IPS_V1
+            config:
+              - srcIpRanges: ["*"]
 ---
 apiVersion: compute.gcp.upbound.io/v1beta1
 kind: BackendBucket
