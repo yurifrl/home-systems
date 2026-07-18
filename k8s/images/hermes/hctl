@@ -27,11 +27,34 @@ init/sidecar containers. Subcommands:
       then exits 0. Exits 1 (crash-loop) on push failure mid-loop so the
       failure surfaces in pod status.
 
+CLIENT subcommands (local machine, need kubectl + a working kubeconfig):
+
+  hctl exec [args...]
+      Run the `hermes` CLI inside the hermes-0 pod.
+
+  hctl bash
+      Open an interactive bash shell in the hermes-0 pod.
+
+  hctl status
+      Table of every hermes pod (phase, ready, restarts, age, note). Pure
+      observability — no side effects, no AI.
+
+  hctl doctor [text]
+      Open a pi session to diagnose AND fix hermes (an active flow — it will
+      change cluster/repo state). With text, that's the lead symptom. Without
+      text, scans the pods and, only if something's broken, builds a layered
+      prompt from what's actually failing.
+
+  hctl refresh
+      Delete the hermes-env secret (ExternalSecret recreates it), restart
+      the statefulset, and watch until ready.
+
 All subcommands are stdlib-only — the image base has python3, git, gh.
 """
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import os
 import shutil
@@ -407,7 +430,7 @@ _BACKUP_DIRS = ["memories", "skills", "cron"]
 
 
 def _write_backup_gitignore(repo_dir: str) -> None:
-    lines = ["# managed by `hctl backup` — fail-closed allowlist", "*", "!.gitignore"]
+    lines = ["# managed by `hctl backup` — fail-closed allowlist", "*", "!.gitignore", "!README.md"]
     for f in _BACKUP_FILES:
         lines.append(f"!{f}")
     for d in _BACKUP_DIRS:
@@ -563,19 +586,332 @@ def cmd_restore(args) -> int:
     return 0
 
 
+# ─────────────────────────────────────── client (local machine) ──
+#
+# These run on your laptop and talk to the pod over kubectl. Defaults match the
+# hermes statefulset; override via env if the deploy names ever change.
+
+_NS = _env("HERMES_NS") or "hermes"
+_SECRET = _env("HERMES_SECRET") or "hermes-env"
+_STS = _env("HERMES_STS") or "hermes"
+_CONTAINER = _env("HERMES_CONTAINER") or "hermes-agent"
+_POD = f"{_STS}-0"
+
+
+def cmd_exec(args) -> int:
+    """Run the `hermes` CLI inside the pod."""
+    return subprocess.run(
+        ["kubectl", "exec", "-it", _POD, "-n", _NS, "-c", _CONTAINER,
+         "--", "hermes", *args.args],
+    ).returncode
+
+
+def cmd_bash(_args) -> int:
+    """Open an interactive bash shell in the pod."""
+    _log(f"opening bash shell in {_POD} ({_NS})")
+    return subprocess.run(
+        ["kubectl", "exec", "-it", _POD, "-n", _NS, "-c", _CONTAINER,
+         "--", "/bin/bash"],
+    ).returncode
+
+
+def _age(ts: str) -> str:
+    """RFC3339 timestamp → human age like '3m', '2h4m', '5d'."""
+    if not ts:
+        return "?"
+    started = datetime.datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ").replace(
+        tzinfo=datetime.timezone.utc)
+    secs = int((datetime.datetime.now(datetime.timezone.utc) - started).total_seconds())
+    d, secs = divmod(secs, 86400)
+    h, secs = divmod(secs, 3600)
+    m, _ = divmod(secs, 60)
+    if d:
+        return f"{d}d{h}h"
+    if h:
+        return f"{h}h{m}m"
+    return f"{m}m"
+
+
+def _pod_summary(pod: dict) -> tuple[str, str, int, str]:
+    """→ (phase, ready 'n/m', restarts, reason). reason explains not-ready pods."""
+    st = pod.get("status", {})
+    phase = st.get("phase", "?")
+    cs = st.get("containerStatuses", []) or []
+    ready = sum(1 for c in cs if c.get("ready"))
+    restarts = sum(c.get("restartCount", 0) for c in cs)
+    # Blocking init container or waiting app container = why it's not up yet.
+    reason = ""
+    for c in (st.get("initContainerStatuses", []) or []):
+        if not c.get("ready"):
+            w = c.get("state", {}).get("waiting") or c.get("state", {}).get("running")
+            reason = f"init {c['name']}: {(w or {}).get('reason', 'running')}"
+            break
+    if not reason:
+        for c in cs:
+            w = c.get("state", {}).get("waiting")
+            if w:
+                reason = f"{c['name']}: {w.get('reason', '')}"
+                break
+    return phase, f"{ready}/{len(cs)}", restarts, reason
+
+
+def _failing_containers(pod: dict) -> list[str]:
+    """Names of init/app containers that aren't ready (candidates for log pulls)."""
+    st = pod.get("status", {})
+    names = []
+    for c in (st.get("initContainerStatuses", []) or []):
+        if not c.get("ready") and not c.get("state", {}).get("terminated", {}).get("reason") == "Completed":
+            names.append(c["name"])
+    for c in (st.get("containerStatuses", []) or []):
+        if not c.get("ready"):
+            names.append(c["name"])
+    return names
+
+
+def _scan_pods() -> dict | None:
+    """Snapshot every pod in the namespace, classified for both status + doctor.
+
+    Returns a dict with:
+      rows      list of (name, phase, ready, restarts, age, note) for the table
+      report    plain-text lines (same info) for a pi prompt
+      main_bad  is hermes-0 itself unhealthy / missing
+      dep_bad   names of unhealthy non-main (dependency) pods
+      broken    the raw unhealthy pod objects (for targeted log pulls)
+      bad       anything unhealthy at all
+    Returns None if pods can't be read.
+    """
+    out = _capture(["kubectl", "get", "pods", "-n", _NS, "-o", "json"])
+    try:
+        items = json.loads(out).get("items", [])
+    except json.JSONDecodeError:
+        _err(f"could not read pods (kubectl said: {out.strip()[:200]})")
+        return None
+    if not items:
+        _err(f"no pods in {_NS}")
+        return None
+
+    def _created(p):
+        return p.get("metadata", {}).get("creationTimestamp", "")
+
+    def _unhealthy(phase, ready, reason):
+        got, want = ready.split("/")
+        return phase not in ("Running", "Succeeded") or got != want or bool(reason)
+
+    # Main pod first, then dependencies alphabetically.
+    main = next((p for p in items if p["metadata"]["name"] == _POD), None)
+    others = sorted((p for p in items if p["metadata"]["name"] != _POD),
+                    key=lambda x: x["metadata"]["name"])
+    ordered = ([main] if main else []) + others
+
+    rows, report, broken, dep_bad = [], [], [], []
+    bad = False
+    main_bad = main is None
+    if main is None:
+        rows.append((_POD, "NOT FOUND", "0/0", "0", "?", "pod absent"))
+        report.append(f"{_POD}: NOT FOUND")
+        bad = True
+
+    for p in ordered:
+        name = p["metadata"]["name"]
+        phase, ready, restarts, reason = _pod_summary(p)
+        age = _age(_created(p))
+        rows.append((name, phase, ready, str(restarts), age, reason or ""))
+        report.append(f"{name}: {phase} (ready {ready}, {restarts} restarts, age {age})"
+                      + (f" — {reason}" if reason else ""))
+        if _unhealthy(phase, ready, reason):
+            bad = True
+            broken.append(p)
+            if name == _POD:
+                main_bad = True
+            else:
+                dep_bad.append(name)
+
+    return {"rows": rows, "report": report, "main_bad": main_bad,
+            "dep_bad": dep_bad, "broken": broken, "bad": bad}
+
+
+def cmd_status(_args) -> int:
+    """Pure status: print a table of every hermes pod. No side effects, no AI.
+
+    Just observability — for the diagnose+fix flow use `hctl doctor`.
+    """
+    h = _scan_pods()
+    if h is None:
+        return 1
+    headers = ("POD", "PHASE", "READY", "RESTARTS", "AGE", "NOTE")
+    cols = [headers, *h["rows"]]
+    widths = [max(len(str(r[i])) for r in cols) for i in range(len(headers))]
+    for r in cols:
+        print("  ".join(str(v).ljust(widths[i]) for i, v in enumerate(r)).rstrip(), flush=True)
+    return 0
+
+
+def _capture(cmd: list[str]) -> str:
+    """Run cmd, return combined stdout+stderr; never raises."""
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    return (r.stdout or "") + (r.stderr or "")
+
+
+def _git_recent() -> str:
+    """Recent commits touching the hermes chart/image — the usual 'what changed'."""
+    return _capture(["git", "log", "--oneline", "-n", "15", "--",
+                     "k8s/charts/hermes", "k8s/images/hermes"])
+
+
+def _diagnostics_text() -> str:
+    """Generic cluster context: pods, events, main-container logs."""
+    return "\n\n".join([
+        "### pods\n" + _capture(["kubectl", "get", "pods", "-n", _NS, "-o", "wide"]),
+        "### events\n" + _capture(["kubectl", "get", "events", "-n", _NS, "--sort-by=.lastTimestamp"]),
+        f"### logs ({_CONTAINER}, tail 200)\n" + _capture(
+            ["kubectl", "logs", f"statefulset/{_STS}", "-n", _NS, "-c", _CONTAINER, "--tail=200"]),
+    ])
+
+
+def _pod_logs(pod: dict, containers: list[str]) -> str:
+    name = pod["metadata"]["name"]
+    chunks = []
+    for c in containers:
+        cur = _capture(["kubectl", "logs", name, "-n", _NS, "-c", c, "--tail=120"])
+        prev = _capture(["kubectl", "logs", name, "-n", _NS, "-c", c, "--previous", "--tail=120"])
+        chunks.append(f"#### {name}/{c} (current)\n{cur}\n#### {name}/{c} (previous)\n{prev}")
+    return "\n\n".join(chunks)
+
+
+def _build_incident_prompt(report, main_bad, dep_bad, broken) -> str:
+    """Compose a layered prompt from what's actually broken."""
+    layers = [
+        "hermes is not fully up. Investigate what's broken: read the failing "
+        "containers' logs below, cross-reference the recent git changes to the "
+        "hermes chart/image, find the root cause, and fix it."
+    ]
+    if main_bad:
+        layers.append(
+            "The main agent pod (hermes-0) itself is not running — hermes is DOWN "
+            "and user-facing. Prioritize getting hermes-0 healthy.")
+    if dep_bad:
+        layers.append(
+            f"These hermes dependencies are unhealthy: {', '.join(dep_bad)}. "
+            "A failing dependency can block or degrade the agent — determine "
+            "whether it's the cause or a symptom.")
+
+    logs = "\n\n".join(
+        _pod_logs(p, _failing_containers(p)) for p in broken if _failing_containers(p))
+
+    return "\n\n".join([
+        "\n\n".join(layers),
+        "## observed state\n" + "\n".join(report),
+        "## recent git changes (hermes chart/image)\n" + _git_recent(),
+        "## failing container logs\n" + (logs or "(no logs available)"),
+    ])
+
+
+def _open_pi(prompt: str) -> int:
+    """Open a pi session seeded with the given prompt."""
+    _log("starting pi session with hermes context (ctrl+c to skip)")
+    return subprocess.run(["pi", prompt]).returncode
+
+
+def cmd_doctor(args) -> int:
+    """Open a pi session to diagnose AND fix hermes (active — mutates state).
+
+    Named 'doctor' not 'investigate' on purpose: a doctor diagnoses AND treats.
+    This goes and changes things (edits manifests, restarts pods, pushes fixes via pi), it is not a
+    read-only look. `status` is the passive counterpart.
+
+    Two modes, one command:
+      - With free-text  (`hctl doctor telegram bot stopped replying`):
+        the text is the lead symptom. We attach recent git history + full
+        cluster diagnostics and let pi take it from there.
+      - Without text: we scan every hermes pod, and only if something is
+        actually unhealthy do we build a *layered* prompt — a global
+        "find what's broken and fix it" instruction, plus a fragment when the
+        main agent (hermes-0) is down, plus a fragment naming any unhealthy
+        dependency, plus the failing containers' current+previous logs. If
+        everything is healthy there's nothing to fix, so we say so and exit.
+
+    Design choices:
+      - The prompt is composed from observed state so pi gets a focused brief
+        (agent-down vs dependency-down read differently) instead of a generic
+        "something's wrong".
+      - Logs are pulled only for failing containers to keep the prompt tight.
+      - Git history is included because the usual root cause is a recent change
+        to the hermes chart/image.
+      - This is split from `status` on purpose: status is pure observability,
+        doctor is the (heavier, interactive, state-changing) fix flow.
+        Ctrl+C at the pi prompt cleanly aborts before anything is changed.
+    """
+    text = " ".join(getattr(args, "text", []) or []).strip()
+    if text:
+        prompt = "\n\n".join([
+            f"there's something wrong with hermes, user says: {text}\n\ninvestigate and fix it.",
+            "## recent git changes (hermes chart/image)\n" + _git_recent(),
+            "## cluster state\n" + _diagnostics_text(),
+        ])
+        return _open_pi(prompt)
+
+    h = _scan_pods()
+    if h is None:
+        return 1
+    if not h["bad"]:
+        _log("all pods healthy — nothing to fix (pass a description to dig in anyway)")
+        return 0
+    return _open_pi(_build_incident_prompt(
+        h["report"], h["main_bad"], h["dep_bad"], h["broken"]))
+
+
+def cmd_refresh(_args) -> int:
+    """Delete the env secret, restart the statefulset, and wait for ready."""
+    _log(f"deleting secret {_SECRET} in {_NS} (ExternalSecret will recreate it)")
+    _run(["kubectl", "delete", "secret", _SECRET, "-n", _NS, "--ignore-not-found"])
+    _log(f"restarting statefulset {_STS} in {_NS}")
+    _run(["kubectl", "rollout", "restart", f"statefulset/{_STS}", "-n", _NS])
+    _log("watching rollout until ready")
+    _run(["kubectl", "rollout", "status", f"statefulset/{_STS}", "-n", _NS])
+    _log("done, hermes is ready")
+    return 0
+
+
 # ─────────────────────────────────────── argparse wiring ──
 
+_EPILOG = """\
+server commands (run INSIDE the container):
+  auth login                       gh auth login + setup-git from env token
+  op files sync                    download all attachments of a 1Password item
+  repos clone                      clone every <user>/<name> into <dest>/<name>
+  repos sync                       periodic + on-exit pull/commit/push loop
+  backup                           periodic git backup of the HERMES_HOME allowlist
+  restore                          seed an empty HERMES_HOME from the backup repo
+
+client commands (run on your LOCAL machine, talk to the pod via kubectl):
+  exec [args...]                   run the hermes CLI inside the pod
+  bash                             interactive bash shell in the pod
+  status                           table of every hermes pod (pure status)
+  doctor|fix [text]                open a pi session to diagnose AND fix (mutates state);
+                                   text = lead symptom, else auto-detects what's broken
+  refresh                          delete env secret, restart, wait for ready
+
+Run `hctl <command> --help` for per-command flags.
+"""
+
+
 def _build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="hctl", description="In-container helper for Hermes.")
-    sub = p.add_subparsers(dest="cmd", required=True)
+    p = argparse.ArgumentParser(
+        prog="hctl",
+        description="Hermes control CLI — a server side that runs in the container "
+                    "and a client side that drives the pod from your local machine.",
+        epilog=_EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    sub = p.add_subparsers(dest="cmd", required=True, metavar="<command>")
 
     # auth
-    auth = sub.add_parser("auth", help="auth subcommands").add_subparsers(dest="auth_cmd", required=True)
+    auth = sub.add_parser("auth").add_subparsers(dest="auth_cmd", required=True)
     auth_login = auth.add_parser("login", help="gh auth login + setup-git from env token")
     auth_login.set_defaults(func=cmd_auth_login)
 
     # op files sync
-    op = sub.add_parser("op", help="1Password helpers").add_subparsers(dest="op_cmd", required=True)
+    op = sub.add_parser("op").add_subparsers(dest="op_cmd", required=True)
     op_files = op.add_parser("files", help="files helpers").add_subparsers(dest="op_files_cmd", required=True)
     op_files_sync = op_files.add_parser("sync", help="download all attachments of an op item")
     op_files_sync.add_argument("--host", default="", help="OP Connect host (default: $OP_CONNECT_HOST)")
@@ -589,7 +925,7 @@ def _build_parser() -> argparse.ArgumentParser:
     op_files_sync.set_defaults(func=cmd_op_files_sync)
 
     # repos
-    repos = sub.add_parser("repos", help="git repos helpers").add_subparsers(dest="repos_cmd", required=True)
+    repos = sub.add_parser("repos").add_subparsers(dest="repos_cmd", required=True)
 
     rc = repos.add_parser("clone", help="clone every <user>/<name> into <dest>/<name>")
     rc.add_argument("--user", required=True, help="github user/org")
@@ -604,7 +940,7 @@ def _build_parser() -> argparse.ArgumentParser:
     rs.set_defaults(func=cmd_repos_sync)
 
     # backup / restore
-    bk = sub.add_parser("backup", help="periodic git backup of the HERMES_HOME allowlist")
+    bk = sub.add_parser("backup")
     bk.add_argument("--user", required=True, help="github user/org owning the backup repo")
     bk.add_argument("--repo", required=True, help="backup repo name (private)")
     bk.add_argument("--branch", default="main", help="branch (default: main)")
@@ -613,13 +949,31 @@ def _build_parser() -> argparse.ArgumentParser:
     bk.add_argument("--interval", default="1h", help="duration between cycles (e.g. 30s, 5m, 1h)")
     bk.set_defaults(func=cmd_backup)
 
-    rst = sub.add_parser("restore", help="seed an empty HERMES_HOME from the backup repo")
+    rst = sub.add_parser("restore")
     rst.add_argument("--user", required=True, help="github user/org owning the backup repo")
     rst.add_argument("--repo", required=True, help="backup repo name (private)")
     rst.add_argument("--branch", default="main", help="branch (default: main)")
     rst.add_argument("--home", default="", help="HERMES_HOME (default: $HERMES_HOME or /opt/data)")
     rst.add_argument("--dest", default="/backup", help="where to check out the backup repo")
     rst.set_defaults(func=cmd_restore)
+
+    # client (local machine → pod via kubectl)
+    ex = sub.add_parser("exec")
+    ex.add_argument("args", nargs=argparse.REMAINDER, help="args passed to `hermes`")
+    ex.set_defaults(func=cmd_exec)
+
+    bh = sub.add_parser("bash")
+    bh.set_defaults(func=cmd_bash)
+
+    st = sub.add_parser("status")
+    st.set_defaults(func=cmd_status)
+
+    rf = sub.add_parser("refresh")
+    rf.set_defaults(func=cmd_refresh)
+
+    inv = sub.add_parser("doctor", aliases=["fix"])
+    inv.add_argument("text", nargs=argparse.REMAINDER, help="optional lead symptom")
+    inv.set_defaults(func=cmd_doctor)
 
     return p
 

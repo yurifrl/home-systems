@@ -3,4 +3,4 @@ go = "latest"
 
 [env]
 KUBECONFIG = "{{env.HOME}}/.nostos/kubeconfig"
-_.path = [".bin"]
+_.path = [".bin", "k8s/images/hermes/"]

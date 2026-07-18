@@ -1234,7 +1234,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "crossplane_proxmox_values_schema_properties_signttldays",
-      "community": 9,
+      "community": 174,
       "norm_label": "signttldays"
     },
     {
@@ -1244,7 +1244,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "crossplane_proxmox_values_schema_signttldays_type",
-      "community": 9,
+      "community": 174,
       "norm_label": "type"
     },
     {
@@ -1254,7 +1254,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "crossplane_proxmox_values_schema_signttldays_minimum",
-      "community": 9,
+      "community": 174,
       "norm_label": "minimum"
     },
     {
@@ -1264,7 +1264,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "crossplane_proxmox_values_schema_signttldays_maximum",
-      "community": 9,
+      "community": 174,
       "norm_label": "maximum"
     },
     {
@@ -1944,7 +1944,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "hermes_values_schema_properties_telegramwebhook",
-      "community": 50,
+      "community": 18,
       "norm_label": "telegramwebhook"
     },
     {
@@ -1954,7 +1954,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "hermes_values_schema_telegramwebhook_type",
-      "community": 50,
+      "community": 18,
       "norm_label": "type"
     },
     {
@@ -1994,7 +1994,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "hermes_values_schema_properties_service",
-      "community": 23,
+      "community": 50,
       "norm_label": "service"
     },
     {
@@ -2004,7 +2004,7 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "hermes_values_schema_service_type",
-      "community": 23,
+      "community": 50,
       "norm_label": "type"
     },
     {
@@ -2144,7 +2144,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "hermes_values_schema_items_type",
-      "community": 30,
+      "community": 51,
       "norm_label": "type"
     },
     {
@@ -2224,7 +2224,7 @@
       "source_location": "L152",
       "_origin": "ast",
       "id": "hermes_values_schema_ingress_properties",
-      "community": 51,
+      "community": 18,
       "norm_label": "properties"
     },
     {
@@ -2234,7 +2234,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "hermes_values_schema_properties_serviceportnumber",
-      "community": 51,
+      "community": 18,
       "norm_label": "serviceportnumber"
     },
     {
@@ -2244,7 +2244,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "hermes_values_schema_serviceportnumber_anyof",
-      "community": 51,
+      "community": 18,
       "norm_label": "anyof"
     },
     {
@@ -2254,7 +2254,7 @@
       "source_location": "L168",
       "_origin": "ast",
       "id": "hermes_values_schema_properties_virtualservice",
-      "community": 50,
+      "community": 30,
       "norm_label": "virtualservice"
     },
     {
@@ -2264,7 +2264,7 @@
       "source_location": "L169",
       "_origin": "ast",
       "id": "hermes_values_schema_virtualservice_type",
-      "community": 50,
+      "community": 30,
       "norm_label": "type"
     },
     {
@@ -3064,7 +3064,7 @@
       "source_location": "L347",
       "_origin": "ast",
       "id": "hermes_values_schema_properties_authorizednamespaces",
-      "community": 30,
+      "community": 61,
       "norm_label": "authorizednamespaces"
     },
     {
@@ -3074,7 +3074,7 @@
       "source_location": "L348",
       "_origin": "ast",
       "id": "hermes_values_schema_authorizednamespaces_type",
-      "community": 30,
+      "community": 61,
       "norm_label": "type"
     },
     {
@@ -3084,7 +3084,7 @@
       "source_location": "L349",
       "_origin": "ast",
       "id": "hermes_values_schema_authorizednamespaces_items",
-      "community": 30,
+      "community": 61,
       "norm_label": "items"
     },
     {
@@ -3204,7 +3204,7 @@
       "source_location": "L384",
       "_origin": "ast",
       "id": "hermes_values_schema_properties_networkpolicy",
-      "community": 51,
+      "community": 50,
       "norm_label": "networkpolicy"
     },
     {
@@ -3214,7 +3214,7 @@
       "source_location": "L385",
       "_origin": "ast",
       "id": "hermes_values_schema_networkpolicy_type",
-      "community": 51,
+      "community": 50,
       "norm_label": "type"
     },
     {
@@ -3254,7 +3254,7 @@
       "source_location": "L392",
       "_origin": "ast",
       "id": "hermes_values_schema_policytypes_items",
-      "community": 30,
+      "community": 51,
       "norm_label": "items"
     },
     {
@@ -3264,7 +3264,7 @@
       "source_location": "L394",
       "_origin": "ast",
       "id": "hermes_values_schema_items_enum",
-      "community": 30,
+      "community": 51,
       "norm_label": "enum"
     },
     {
@@ -5916,6 +5916,176 @@
       "id": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_2026_07_12_utc",
       "community": 125,
       "norm_label": "2026-07-12 (utc)"
+    },
+    {
+      "label": "FP.md",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_fp",
+      "community": 143,
+      "norm_label": "fp.md"
+    },
+    {
+      "label": "Follow-up Plan: kube-apiserver CRD-cache OOM on the sole control-plane (dell01)",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_fp_follow_up_plan_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "community": 143,
+      "norm_label": "follow-up plan: kube-apiserver crd-cache oom on the sole control-plane (dell01)"
+    },
+    {
+      "label": "Durable Fix (chosen)",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_fp_durable_fix_chosen",
+      "community": 143,
+      "norm_label": "durable fix (chosen)"
+    },
+    {
+      "label": "Alerts",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_fp_alerts",
+      "community": 143,
+      "norm_label": "alerts"
+    },
+    {
+      "label": "Dashboards / Panels",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L37",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_fp_dashboards_panels",
+      "community": 143,
+      "norm_label": "dashboards / panels"
+    },
+    {
+      "label": "Gatus Entries",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L41",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_fp_gatus_entries",
+      "community": 143,
+      "norm_label": "gatus entries"
+    },
+    {
+      "label": "Beads",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L44",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_fp_beads",
+      "community": 143,
+      "norm_label": "beads"
+    },
+    {
+      "label": "Memory",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L55",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_fp_memory",
+      "community": 143,
+      "norm_label": "memory"
+    },
+    {
+      "label": "Alert Cleanup",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L59",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_fp_alert_cleanup",
+      "community": 143,
+      "norm_label": "alert cleanup"
+    },
+    {
+      "label": "PM.md",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_pm",
+      "community": 173,
+      "norm_label": "pm.md"
+    },
+    {
+      "label": "Postmortem: kube-apiserver CRD-cache OOM on the sole control-plane (dell01)",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L28",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_pm_postmortem_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "community": 173,
+      "norm_label": "postmortem: kube-apiserver crd-cache oom on the sole control-plane (dell01)"
+    },
+    {
+      "label": "What Happened",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L39",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_pm_what_happened",
+      "community": 173,
+      "norm_label": "what happened"
+    },
+    {
+      "label": "Detection Gap (how we catch it next time)",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L61",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_pm_detection_gap_how_we_catch_it_next_time",
+      "community": 173,
+      "norm_label": "detection gap (how we catch it next time)"
+    },
+    {
+      "label": "Mitigation (runbook \u2014 how to detect & fix this again)",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L82",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_pm_mitigation_runbook_how_to_detect_fix_this_again",
+      "community": 173,
+      "norm_label": "mitigation (runbook \u2014 how to detect & fix this again)"
+    },
+    {
+      "label": "Dead Ends",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L136",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_pm_dead_ends",
+      "community": 173,
+      "norm_label": "dead ends"
+    },
+    {
+      "label": "Timeline",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L161",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_pm_timeline",
+      "community": 173,
+      "norm_label": "timeline"
+    },
+    {
+      "label": "2026-07-13 (UTC)",
+      "file_type": "document",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L163",
+      "_origin": "ast",
+      "id": "2026_07_13_apiserver_crd_cache_oom_pm_2026_07_13_utc",
+      "community": 173,
+      "norm_label": "2026-07-13 (utc)"
     },
     {
       "label": "SKILL.md",
@@ -23026,9 +23196,9 @@
       "source_file": ".agents/postmortems/2026-07-11-vmsingle-storage-readonly/PM.md",
       "source_location": "L227",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "2026_07_11_vmsingle_storage_readonly_pm_timeline",
-      "target": "2026_07_11_vmsingle_storage_readonly_pm_2026_07_12_alert_semantics_follow_up_utc",
-      "confidence_score": 1.0
+      "target": "2026_07_11_vmsingle_storage_readonly_pm_2026_07_12_alert_semantics_follow_up_utc"
     },
     {
       "relation": "contains",
@@ -23036,9 +23206,9 @@
       "source_file": ".agents/postmortems/2026-07-12-tailscale-cilium-endpoint-recursion/PM.md",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "2026_07_12_tailscale_cilium_endpoint_recursion_pm",
-      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_postmortem_tailscale_selected_cilium_overlay_endpoints_and_broke_argocd_repo_access",
-      "confidence_score": 1.0
+      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_postmortem_tailscale_selected_cilium_overlay_endpoints_and_broke_argocd_repo_access"
     },
     {
       "relation": "contains",
@@ -23046,9 +23216,9 @@
       "source_file": ".agents/postmortems/2026-07-12-tailscale-cilium-endpoint-recursion/PM.md",
       "source_location": "L81",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_postmortem_tailscale_selected_cilium_overlay_endpoints_and_broke_argocd_repo_access",
-      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_dead_ends",
-      "confidence_score": 1.0
+      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_dead_ends"
     },
     {
       "relation": "contains",
@@ -23056,9 +23226,9 @@
       "source_file": ".agents/postmortems/2026-07-12-tailscale-cilium-endpoint-recursion/PM.md",
       "source_location": "L40",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_postmortem_tailscale_selected_cilium_overlay_endpoints_and_broke_argocd_repo_access",
-      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_detection_gap_how_we_catch_it_next_time",
-      "confidence_score": 1.0
+      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_detection_gap_how_we_catch_it_next_time"
     },
     {
       "relation": "contains",
@@ -23066,9 +23236,9 @@
       "source_file": ".agents/postmortems/2026-07-12-tailscale-cilium-endpoint-recursion/PM.md",
       "source_location": "L45",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_postmortem_tailscale_selected_cilium_overlay_endpoints_and_broke_argocd_repo_access",
-      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_mitigation_runbook_how_to_detect_fix_this_again",
-      "confidence_score": 1.0
+      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_mitigation_runbook_how_to_detect_fix_this_again"
     },
     {
       "relation": "contains",
@@ -23076,9 +23246,9 @@
       "source_file": ".agents/postmortems/2026-07-12-tailscale-cilium-endpoint-recursion/PM.md",
       "source_location": "L90",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_postmortem_tailscale_selected_cilium_overlay_endpoints_and_broke_argocd_repo_access",
-      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_timeline",
-      "confidence_score": 1.0
+      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_timeline"
     },
     {
       "relation": "contains",
@@ -23086,9 +23256,9 @@
       "source_file": ".agents/postmortems/2026-07-12-tailscale-cilium-endpoint-recursion/PM.md",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_postmortem_tailscale_selected_cilium_overlay_endpoints_and_broke_argocd_repo_access",
-      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_what_happened",
-      "confidence_score": 1.0
+      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_what_happened"
     },
     {
       "relation": "contains",
@@ -23096,8 +23266,158 @@
       "source_file": ".agents/postmortems/2026-07-12-tailscale-cilium-endpoint-recursion/PM.md",
       "source_location": "L91",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_timeline",
-      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_2026_07_12_utc",
+      "target": "2026_07_12_tailscale_cilium_endpoint_recursion_pm_2026_07_12_utc"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_fp",
+      "target": "2026_07_13_apiserver_crd_cache_oom_fp_follow_up_plan_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L59",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_fp_follow_up_plan_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "target": "2026_07_13_apiserver_crd_cache_oom_fp_alert_cleanup",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_fp_follow_up_plan_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "target": "2026_07_13_apiserver_crd_cache_oom_fp_alerts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_fp_follow_up_plan_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "target": "2026_07_13_apiserver_crd_cache_oom_fp_beads",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_fp_follow_up_plan_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "target": "2026_07_13_apiserver_crd_cache_oom_fp_dashboards_panels",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_fp_follow_up_plan_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "target": "2026_07_13_apiserver_crd_cache_oom_fp_durable_fix_chosen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_fp_follow_up_plan_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "target": "2026_07_13_apiserver_crd_cache_oom_fp_gatus_entries",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/FP.md",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_fp_follow_up_plan_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "target": "2026_07_13_apiserver_crd_cache_oom_fp_memory",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_pm",
+      "target": "2026_07_13_apiserver_crd_cache_oom_pm_postmortem_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L136",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_pm_postmortem_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "target": "2026_07_13_apiserver_crd_cache_oom_pm_dead_ends",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_pm_postmortem_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "target": "2026_07_13_apiserver_crd_cache_oom_pm_detection_gap_how_we_catch_it_next_time",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L82",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_pm_postmortem_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "target": "2026_07_13_apiserver_crd_cache_oom_pm_mitigation_runbook_how_to_detect_fix_this_again",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L161",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_pm_postmortem_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "target": "2026_07_13_apiserver_crd_cache_oom_pm_timeline",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_pm_postmortem_kube_apiserver_crd_cache_oom_on_the_sole_control_plane_dell01",
+      "target": "2026_07_13_apiserver_crd_cache_oom_pm_what_happened",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".agents/postmortems/2026-07-13-apiserver-crd-cache-oom/PM.md",
+      "source_location": "L163",
+      "weight": 1.0,
+      "source": "2026_07_13_apiserver_crd_cache_oom_pm_timeline",
+      "target": "2026_07_13_apiserver_crd_cache_oom_pm_2026_07_13_utc",
       "confidence_score": 1.0
     },
     {
@@ -33392,5 +33712,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "edd88ddc3b58bf96c7fc9e2f2f614f53d8506ada"
+  "built_at_commit": "49c04c319b8b480888d797067fb43a78eea8b832"
 }

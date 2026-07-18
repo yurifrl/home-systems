@@ -1,16 +1,16 @@
-# Graph Report - home-systems  (2026-07-13)
+# Graph Report - home-systems  (2026-07-15)
 
 ## Corpus Check
-- 158 files · ~265,949 words
+- 160 files · ~267,788 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1714 nodes · 1620 edges · 172 communities (154 shown, 18 thin omitted)
+- 1731 nodes · 1635 edges · 175 communities (157 shown, 18 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `edd88ddc`
+- Built from commit: `49c04c31`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -157,6 +157,7 @@
 - [[_COMMUNITY_Community 139|Community 139]]
 - [[_COMMUNITY_Community 140|Community 140]]
 - [[_COMMUNITY_Community 142|Community 142]]
+- [[_COMMUNITY_Community 143|Community 143]]
 - [[_COMMUNITY_Community 144|Community 144]]
 - [[_COMMUNITY_Community 145|Community 145]]
 - [[_COMMUNITY_Community 146|Community 146]]
@@ -176,6 +177,8 @@
 - [[_COMMUNITY_Community 160|Community 160]]
 - [[_COMMUNITY_Community 161|Community 161]]
 - [[_COMMUNITY_Community 162|Community 162]]
+- [[_COMMUNITY_Community 173|Community 173]]
+- [[_COMMUNITY_Community 174|Community 174]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `enabled` - 14 edges
@@ -195,7 +198,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (172 total, 18 thin omitted)
+## Communities (175 total, 18 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.04
@@ -234,8 +237,8 @@ Cohesion: 0.08
 Nodes (24): 1Password Secret Injection, Adding a New Service, Agent Instructions, AI-agent provisioning guardrails (HARD RULES), Architecture, Common Commands, Development Workflow, Documentation (+16 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.07
-Nodes (28): type, minLength, type, type, type, type, properties, type (+20 more)
+Cohesion: 0.08
+Nodes (24): type, minLength, type, type, type, type, properties, type (+16 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.08
@@ -270,8 +273,8 @@ Cohesion: 0.11
 Nodes (18): ADDED Requirements, Requirement: Canonical repo layout for nostos data, Requirement: CLAUDE.md reflects nostos workflow, Requirement: Cluster unaffected during migration, Requirement: Legacy pxe/ removal, Requirement: talos.yml pruned of pxe entries, Requirement: Taskfile wrappers for nostos commands, Requirement: Tool vendored under .submodules (+10 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.22
-Nodes (10): type, $ref, enabled, port, url, webhook, properties, type (+2 more)
+Cohesion: 0.14
+Nodes (15): type, properties, $ref, enabled, port, servicePortNumber, telegramWebhook, url (+7 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.11
@@ -290,8 +293,8 @@ Cohesion: 0.12
 Nodes (15): ADDED Requirements, guest-iso, Requirement: Build guest ISO, Requirement: Config-driven guest ISO entries, Requirement: End-to-end prepare, Requirement: Publish guest ISO, Requirement: Sign a download URL, Scenario: Build produces the artifact (+7 more)
 
 ### Community 23 - "Community 23"
-Cohesion: 0.12
-Nodes (16): enum, type, enum, type, $ref, items, type, externalTrafficPolicy (+8 more)
+Cohesion: 0.14
+Nodes (14): enum, type, enum, type, $ref, items, type, externalTrafficPolicy (+6 more)
 
 ### Community 24 - "Community 24"
 Cohesion: 0.12
@@ -318,8 +321,8 @@ Cohesion: 0.14
 Nodes (14): type, items, type, items, type, properties, type, annotations (+6 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.15
-Nodes (17): items, type, items, type, items, type, enum, minLength (+9 more)
+Cohesion: 0.17
+Nodes (13): items, type, items, type, minLength, items, type, gateways (+5 more)
 
 ### Community 31 - "Community 31"
 Cohesion: 0.14
@@ -399,11 +402,11 @@ Nodes (11): minLength, type, type, name, passthrough, started, vmId, type (+3 mo
 
 ### Community 50 - "Community 50"
 Cohesion: 0.18
-Nodes (11): enum, type, properties, podManagementPolicy, replicaCount, telegramWebhook, virtualService, minimum (+3 more)
+Nodes (11): type, enum, type, properties, networkPolicy, podManagementPolicy, replicaCount, service (+3 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.14
-Nodes (14): items, type, items, properties, type, properties, type, type (+6 more)
+Cohesion: 0.20
+Nodes (12): items, type, items, type, enum, type, properties, items (+4 more)
 
 ### Community 52 - "Community 52"
 Cohesion: 0.18
@@ -442,8 +445,8 @@ Cohesion: 0.20
 Nodes (9): Build and Push Multi-Arch Containers (ARM+x86), Cleanup, Configure Values, Deploy, Firecrawl Helm Chart, Image Strategy, Package and Push Helm Chart (OCI), Test (+1 more)
 
 ### Community 61 - "Community 61"
-Cohesion: 0.20
-Nodes (10): items, type, type, type, additionalEgress, allowDns, allowSameNamespace, tenantIsolation (+2 more)
+Cohesion: 0.15
+Nodes (13): items, type, type, type, items, type, additionalEgress, allowDns (+5 more)
 
 ### Community 62 - "Community 62"
 Cohesion: 0.20
@@ -753,6 +756,10 @@ Nodes (3): Deploy, Follow-up Plan: obs.syscd.live Error 1033, Items
 Cohesion: 0.50
 Nodes (3): Bind9 external-dns issue, References, Secrets
 
+### Community 143 - "Community 143"
+Cohesion: 0.22
+Nodes (8): Alert Cleanup, Alerts, Beads, Dashboards / Panels, Durable Fix (chosen), Follow-up Plan: kube-apiserver CRD-cache OOM on the sole control-plane (dell01), Gatus Entries, Memory
+
 ### Community 144 - "Community 144"
 Cohesion: 0.50
 Nodes (3): Query parameters, Tailscale auth-key refresh in nostos, Why this exists
@@ -769,8 +776,16 @@ Nodes (3): Add new domain checklist, Home Systems, Quickwit
 Cohesion: 0.50
 Nodes (3): Test Chart, Usage, Values
 
+### Community 173 - "Community 173"
+Cohesion: 0.25
+Nodes (7): 2026-07-13 (UTC), Dead Ends, Detection Gap (how we catch it next time), Mitigation (runbook — how to detect & fix this again), Postmortem: kube-apiserver CRD-cache OOM on the sole control-plane (dell01), Timeline, What Happened
+
+### Community 174 - "Community 174"
+Cohesion: 0.50
+Nodes (4): signTTLDays, maximum, minimum, type
+
 ## Knowledge Gaps
-- **1106 isolated node(s):** `$schema`, `permissionGate`, `version`, `setu-git.sh script`, `test-dns.sh script` (+1101 more)
+- **1118 isolated node(s):** `$schema`, `permissionGate`, `version`, `setu-git.sh script`, `test-dns.sh script` (+1113 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -779,12 +794,12 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `enabled` connect `Community 18` to `Community 33`, `Community 41`, `Community 43`, `Community 76`, `Community 51`, `Community 20`, `Community 61`, `Community 23`, `Community 29`, `Community 30`?**
   _High betweenness centrality (0.009) - this node is a cross-community bridge._
-- **Why does `properties` connect `Community 50` to `Community 33`, `Community 5`, `Community 41`, `Community 75`, `Community 76`, `Community 43`, `Community 18`, `Community 51`, `Community 20`, `Community 116`, `Community 61`, `Community 23`, `Community 29`?**
+- **Why does `properties` connect `Community 50` to `Community 33`, `Community 5`, `Community 41`, `Community 75`, `Community 76`, `Community 43`, `Community 18`, `Community 51`, `Community 20`, `Community 116`, `Community 61`, `Community 29`, `Community 30`?**
   _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **Why does `properties` connect `Community 29` to `Community 18`, `Community 116`, `Community 42`, `Community 78`?**
   _High betweenness centrality (0.005) - this node is a cross-community bridge._
 - **What connects `$schema`, `permissionGate`, `version` to the rest of the system?**
-  _1107 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1119 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.043478260869565216 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
