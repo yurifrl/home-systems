@@ -25,16 +25,27 @@ spec:
     type: CLOUD_ARMOR_EDGE
     description: "Allow only Cloudflare source IPs to the assets CDN"
     rule:
+      {{- /* Cloud Armor allows max 10 srcIpRanges per rule; Cloudflare ships
+             ~15 IPv4 ranges, so chunk them into consecutive allow rules. */ -}}
+      {{- $ranges := .cloudflareIpRanges }}
+      {{- $total := len $ranges }}
+      {{- $chunk := 10 }}
+      {{- $rules := div (add $total (sub $chunk 1)) $chunk | int }}
+      {{- range $i := until $rules }}
+      {{- $start := mul $i $chunk }}
+      {{- $end := add $start $chunk }}
+      {{- if gt $end $total }}{{- $end = $total }}{{- end }}
       - action: allow
-        priority: 1000
-        description: "Cloudflare IP ranges"
+        priority: {{ add 1000 $i }}
+        description: {{ printf "Cloudflare IP ranges %d-%d" (add $start 1) $end | quote }}
         match:
           - versionedExpr: SRC_IPS_V1
             config:
               - srcIpRanges:
-                  {{- range .cloudflareIpRanges }}
+                  {{- range slice $ranges $start $end }}
                   - {{ . | quote }}
                   {{- end }}
+      {{- end }}
       - action: "deny(403)"
         priority: 2147483647
         description: default deny
@@ -89,8 +100,11 @@ spec:
   providerConfigRef: { name: {{ $pc }} }
   forProvider:
     urlMapRef: { name: {{ .name }} }
-    sslCertificatesRefs:
-      - name: {{ .name }}
+    # Reference the google-managed cert by its deterministic self-link. Its
+    # crossplane kind is ManagedSSLCertificate, so sslCertificatesRefs (which
+    # resolves the classic SSLCertificate kind) can't be used here.
+    sslCertificates:
+      - https://www.googleapis.com/compute/v1/projects/{{ required "providerConfig.projectID required" $.Values.providerConfig.projectID }}/global/sslCertificates/{{ .name }}
 ---
 apiVersion: compute.gcp.upbound.io/v1beta1
 kind: GlobalAddress
