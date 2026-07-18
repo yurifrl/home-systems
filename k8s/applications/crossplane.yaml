@@ -26,6 +26,25 @@ spec:
     targetRevision: "2.3.3"
     helm:
       valuesObject:
+        # Replace the default "activate every MRD" (["*"]) with explicit per-family
+        # globs. This keeps every currently-installed provider fully active while
+        # letting a heavy provider (provider-gcp-compute) install its MRDs
+        # INACTIVE by default, so only the handful activated by a targeted MRAP
+        # create CRDs (avoids the ~100-CRD apiserver overload that forced its
+        # removal). Verified: MRAP '*' spans dots, so these globs cover all
+        # current CRDs (storage/iam/cloudplatform gcp, proxmox, cloudflare-zero).
+        provider:
+          defaultActivations:
+            - "*.storage.gcp.upbound.io"
+            - "*.storage.gcp.m.upbound.io"
+            - "*.iam.gcp.upbound.io"
+            - "*.iam.gcp.m.upbound.io"
+            - "*.cloudplatform.gcp.upbound.io"
+            - "*.cloudplatform.gcp.m.upbound.io"
+            - "*.proxmoxbpg.crossplane.io"
+            - "*.proxmoxbpg.m.crossplane.io"
+            - "*.zero.upjet-cloudflare.upbound.io"
+            - "*.zero.upjet-cloudflare.m.upbound.io"
         resourcesCrossplane:
           limits:
             cpu: 500m

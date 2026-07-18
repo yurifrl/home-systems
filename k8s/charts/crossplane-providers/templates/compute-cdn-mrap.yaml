@@ -1,0 +1,17 @@
+{{- /*
+  Activate only the compute CRDs the assets CDN needs. provider-gcp-compute
+  ships ~100 MRDs Inactive (the default MRAP no longer activates '*'); this MRAP
+  turns on just the load-balancer/CDN/Cloud-Armor ones, so only those become
+  CRDs and the apiserver isn't overloaded.
+*/ -}}
+{{- with .Values.computeCdnActivations }}
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: gcp-compute-cdn
+spec:
+  activate:
+    {{- range . }}
+    - {{ . | quote }}
+    {{- end }}
+{{- end }}

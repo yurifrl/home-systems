@@ -12,7 +12,7 @@ pinnedRuntimeConfig:
   apiserverHost: "192.168.68.100"
   apiserverPort: "6443"
 
-# Crossplane provider packages to install (Crossplane v2.3.2; cluster-scoped MRs).
+# Crossplane provider packages to install (Crossplane v2.3.3; cluster-scoped MRs).
 providers:
   - name: provider-gcp-storage
     package: xpkg.upbound.io/upbound/provider-gcp-storage:v2.5.4
@@ -22,6 +22,13 @@ providers:
     package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v2.5.4
   - name: provider-gcp-iam
     package: xpkg.upbound.io/upbound/provider-gcp-iam:v2.5.4
+  # Compute provider for the assets CDN (LB + Cloud CDN + Cloud Armor). Its MRDs
+  # install INACTIVE (default MRAP no longer activates '*'); only the ~8 CRDs in
+  # the computeCdnActivations MRAP below become CRDs, avoiding the apiserver
+  # overload that forced this provider's earlier removal. Unpinned — runs on any
+  # healthy worker.
+  - name: provider-gcp-compute
+    package: xpkg.upbound.io/upbound/provider-gcp-compute:v2.5.4
   # Proxmox VE provider (Upjet-generated wrapper around bpg/terraform-provider-proxmox).
   # Community provider; manages QEMU VMs as cluster-scoped managed resources
   # (group virtualenvironmentvm.proxmoxbpg.crossplane.io). Used by the
@@ -44,3 +51,25 @@ gcpCredentials:
   onepasswordKey: crossplane-gcp
   # Key inside the synced Secret holding the SA key JSON.
   credentialsKey: creds
+
+# MRAP that activates ONLY the compute CRDs the assets CDN needs (both the
+# legacy .upbound.io and modern .m.upbound.io variants). Everything else in
+# provider-gcp-compute stays an Inactive MRD -> no CRD, no apiserver load.
+# Verify exact plurals after install: kubectl get mrds | grep compute.gcp
+computeCdnActivations:
+  - backendbuckets.compute.gcp.upbound.io
+  - backendbuckets.compute.gcp.m.upbound.io
+  - urlmaps.compute.gcp.upbound.io
+  - urlmaps.compute.gcp.m.upbound.io
+  - targethttpsproxies.compute.gcp.upbound.io
+  - targethttpsproxies.compute.gcp.m.upbound.io
+  - globalforwardingrules.compute.gcp.upbound.io
+  - globalforwardingrules.compute.gcp.m.upbound.io
+  - globaladdresses.compute.gcp.upbound.io
+  - globaladdresses.compute.gcp.m.upbound.io
+  - managedsslcertificates.compute.gcp.upbound.io
+  - managedsslcertificates.compute.gcp.m.upbound.io
+  - sslcertificates.compute.gcp.upbound.io
+  - sslcertificates.compute.gcp.m.upbound.io
+  - securitypolicies.compute.gcp.upbound.io
+  - securitypolicies.compute.gcp.m.upbound.io
