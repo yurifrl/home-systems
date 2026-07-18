@@ -33,10 +33,11 @@ spec:
           # repo source below, merged at sync time. Nothing secret in this repo.
           - $values/gcp/values.yaml
         valuesObject:
-          # Keep existing GCP resources via deletionPolicy: Orphan without
-          # loading provider-gcp-compute's 192 CRDs into kube-apiserver.
+          # Assets CDN enabled. provider-gcp-compute's CRDs are scoped by the
+          # gcp-compute-cdn MRAP (crossplane-providers) so only the LB/CDN/Cloud
+          # Armor CRDs are active, not the full ~200. Real values in $values.
           assetsCdn:
-            enabled: false
+            enabled: true
     # PRIVATE: holds the real values. Register repo creds in ArgoCD first
     # (see k8s/charts/crossplane-gcp/README.md).
     - repoURL: git@github.com:yurifrl/home-systems-values.git
