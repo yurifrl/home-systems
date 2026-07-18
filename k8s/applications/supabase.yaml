@@ -51,6 +51,14 @@ spec:
                   property: db-database
             - name: supabase-dashboard
               namespace: supabase
+              # studio's OPENAI_API_KEY does a secretKeyRef on key `openAiApiKey`
+              # unconditionally; the key must exist or studio hits
+              # CreateContainerConfigError. Empty value is fine (AI stays off).
+              template:
+                data:
+                  username: "{{ .username }}"
+                  password: "{{ .password }}"
+                  openAiApiKey: ""
               data:
                 - secretKey: username
                   key: supabase
