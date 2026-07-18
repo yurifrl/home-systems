@@ -165,6 +165,10 @@ spec:
                 - CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION supabase_auth_admin;
                 - CREATE SCHEMA IF NOT EXISTS storage AUTHORIZATION supabase_storage_admin;
                 - CREATE SCHEMA IF NOT EXISTS realtime;
+                # realtime runs migrations with search_path _realtime (as
+                # supabase_admin); the schema must exist or it fails with
+                # invalid_schema_name.
+                - CREATE SCHEMA IF NOT EXISTS _realtime AUTHORIZATION supabase_admin;
                 - CREATE SCHEMA IF NOT EXISTS graphql_public;
                 - GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
                 - GRANT USAGE ON SCHEMA extensions TO anon, authenticated, service_role;
@@ -173,6 +177,9 @@ spec:
                 - ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
                 - GRANT ALL ON SCHEMA auth TO supabase_auth_admin;
                 - GRANT ALL ON SCHEMA storage TO supabase_storage_admin;
+                # storage-api migrations run CREATE SCHEMA IF NOT EXISTS storage,
+                # which requires CREATE on the database even when it exists.
+                - GRANT CREATE ON DATABASE supabase TO supabase_storage_admin;
 
             storage:
               storageClass: longhorn-ha
