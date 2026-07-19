@@ -41,6 +41,12 @@ spec:
       tolerations:
         - key: node.cilium.io/agent-not-ready
           operator: Exists
+        # macintel01 is intentionally cordoned; this pinned pod must still
+        # (re)schedule there, else a restart hangs Pending. Targeted — only
+        # this pod ignores the cordon, not the whole node.
+        - key: node.kubernetes.io/unschedulable
+          operator: Exists
+          effect: NoSchedule
       containers:
         - name: cloudflared
           image: cloudflare/cloudflared:latest

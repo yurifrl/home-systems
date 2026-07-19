@@ -28,6 +28,12 @@ spec:
       tolerations:
         - key: node.cilium.io/agent-not-ready
           operator: Exists
+        # macintel01 is intentionally cordoned; this pinned pod must still
+        # (re)schedule there. Recreate strategy deletes the old pod first, so
+        # without this a restart takes the stream fully down. Targeted to this pod.
+        - key: node.kubernetes.io/unschedulable
+          operator: Exists
+          effect: NoSchedule
       containers:
         - name: restreamer
           image: datarhei/restreamer:latest
