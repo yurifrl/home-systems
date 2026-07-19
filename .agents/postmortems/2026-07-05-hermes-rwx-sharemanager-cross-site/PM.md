@@ -26,6 +26,7 @@ related:
   - 2026-07-05-obs-cloudflared-1033
   - 2026-07-05-pc01-vxlan-tx-checksum-offload
   - 2026-07-05-cross-family-vxlan-endpoint-mesh
+  - 2026-07-18-cnpg-supabase-down-no-alert
 ---
 
 # Postmortem: hermes RWX mount blocked by Longhorn share-manager on a cross-site node

@@ -6,6 +6,7 @@ recurrence-detection grep key — free text here defeats the skill's purpose.
 ## components
 argocd, cloudflared, cilium, etcd, coredns, longhorn, cnpg, crossplane,
 metallb, istio, tailscale, gatus, kube-apiserver,
+csi-provisioner, kube-state-metrics, supabase,
 dell01, tp1, tp4, pc01, rpi01, macarm01, macintel01
 
 ## failure_mode
@@ -15,4 +16,5 @@ tailscale-accept-routes-lan-hijack, tailscale-config-flag-drift-crashloop,
 conversion-webhook-blocks-argocd-sync, apiserver-crd-cache-oom,
 cloudflared-tunnel-connector-gap, cloudflared-quic-edge-unreachable,
 aggressive-liveness-probe, cross-node-tcp-broken, dns-timeout,
-longhorn-sharemanager-on-cross-site-node
+longhorn-sharemanager-on-cross-site-node,
+csi-provisioner-pinned-to-cordoned-node, cnpg-replica-timeline-divergence
