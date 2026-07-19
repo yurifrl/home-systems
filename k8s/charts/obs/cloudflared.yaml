@@ -32,7 +32,10 @@ spec:
       # MUST run on macintel01: only the node itself can reach restreamer
       # (localhost:8080). cloudflared only makes outbound conns to Cloudflare.
       hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
+      # Default (host resolv.conf), not ClusterFirstWithHostNet: cloudflared only
+      # resolves the CF edge; routing DNS via CoreDNS (10.96.0.10) over macintel01's
+      # flaky cilium datapath caused 'region1.v2.argotunnel.com: i/o timeout' -> tunnel drops.
+      dnsPolicy: Default
       nodeSelector:
         kubernetes.io/hostname: macintel01
       tolerations:
