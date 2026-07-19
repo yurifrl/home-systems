@@ -111,3 +111,8 @@ cloudflareCredentials:
   enabled: true
   secretName: cloudflare-creds
   credentialsKey: credentials
+  # 1Password item + field holding the Cloudflare API token (reuses the one
+  # external-dns syncs). The token must have zone DNS:Edit for syscd.live (and
+  # Zone WAF:Edit + SSL:Edit for the later ruleset/cert work).
+  onepasswordKey: externaldns-cloudflare
+  tokenProperty: cloudflare_api_token

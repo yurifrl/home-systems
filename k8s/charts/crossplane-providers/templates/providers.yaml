@@ -35,8 +35,34 @@ spec:
 {{- end }}
 {{- if .Values.cloudflareCredentials.enabled }}
 ---
+# Cloudflare API token synced from 1Password, formatted as the JSON
+# ({"api_token":"..."}) the upjet-cloudflare ProviderConfig expects.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: {{ .Values.cloudflareCredentials.secretName }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: onepassword
+    kind: ClusterSecretStore
+  target:
+    name: {{ .Values.cloudflareCredentials.secretName }}
+    template:
+      engineVersion: v2
+      data:
+        {{ .Values.cloudflareCredentials.credentialsKey }}: '{"api_token":"{{ "{{ .token }}" }}"}'
+  data:
+    - secretKey: token
+      remoteRef:
+        key: {{ .Values.cloudflareCredentials.onepasswordKey }}
+        property: {{ .Values.cloudflareCredentials.tokenProperty }}
+---
 # Cloudflare API-token ProviderConfig for the DNS + Ruleset providers. The token
-# JSON ({"api_token":"..."}) lives in the existing cloudflare-creds secret.
+# JSON ({"api_token":"..."}) lives in the cloudflare-creds secret above.
 apiVersion: upjet-cloudflare.upbound.io/v1beta1
 kind: ProviderConfig
 metadata:
