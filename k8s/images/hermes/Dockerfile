@@ -94,6 +94,21 @@ RUN set -eu \
     && npm cache clean --force \
     && rm -rf /tmp/hermes-src.tar.gz "/tmp/hermes-agent-${CAL}"
 
+# TUI bundle (dashboard Chat tab). The wheel ships a prebuilt, self-contained
+# TUI at hermes_cli/tui_dist/entry.js, but hermes_cli/main.py:_make_tui_argv()
+# guards on the ui-tui/ *source* workspace — which lives only in the git repo,
+# not the wheel — and aborts ("TUI workspace is missing") BEFORE reaching its
+# bundled-wheel fallback. Setting HERMES_TUI_DIR to a dir whose dist/entry.js
+# resolves to the shipped bundle makes the launcher run the prebuilt TUI and
+# skip the source-workspace guard entirely, so `hermes --tui` (the Chat tab)
+# works without shipping/building the ui-tui Node workspace.
+RUN set -eu \
+    && SP="$(python -c 'import site; print(site.getsitepackages()[0])')" \
+    && test -f "$SP/hermes_cli/tui_dist/entry.js" \
+    && mkdir -p /usr/local/lib/hermes-tui \
+    && ln -s "$SP/hermes_cli/tui_dist" /usr/local/lib/hermes-tui/dist
+ENV HERMES_TUI_DIR=/usr/local/lib/hermes-tui
+
 # State (config.yaml, .env, memory, skills) lives here and is backed by a
 # persistent volume in Kubernetes.
 RUN mkdir -p /opt/data
