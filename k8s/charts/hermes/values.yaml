@@ -248,6 +248,16 @@ networkPolicy:
       ports:
         - protocol: TCP
           port: 4000
+    # camofox browser server (k8s/applications/camofox.yaml, own namespace).
+    # Was a hermes sidecar (no egress needed); now a separate Service reached
+    # via CAMOFOX_URL — needs an explicit egress rule to :9377.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: camofox
+      ports:
+        - protocol: TCP
+          port: 9377
     # 1Password Connect API (op-files init container syncs files via
     # onepassword-connect.1password.svc:8080). Without this the op-files
     # init container hangs on a blocked TCP connect and the pod never starts.
