@@ -59,8 +59,10 @@ spec:
               mountPath: /creds
               readOnly: true
           resources:
-            requests: { cpu: 20m, memory: 32Mi }
-            limits:   { cpu: 100m, memory: 128Mi }
+            requests: { cpu: 100m, memory: 32Mi }
+            # TLS/HTTP2 proxying of the ~5 Mbit/s HLS stream was CPU-bound at 100m
+            # (pegged at 99m under load -> ~0.5 Mbit/s throughput -> player stalled).
+            limits:   { cpu: "2", memory: 128Mi }
       volumes:
         - name: config
           configMap:
