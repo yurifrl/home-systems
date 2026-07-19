@@ -30,47 +30,11 @@ bootstrap:
   configKey: config.yaml
   soulKey: SOUL.md
 
+# Hermes config.yaml. Generic default — the lab's opinionated config.values
+# (model/agent/terminal/browser/...) lives in k8s/applications/hermes.yaml.
 config:
   raw: ""
-  values:
-    model:
-      # Inference flows through LiteLLM (OPENAI_BASE_URL) which is OpenAI-compat.
-      provider: openai-api
-      default: glm-5.2
-    agent:
-      max_turns: 90
-      gateway_timeout: 1800
-      restart_drain_timeout: 60
-      tool_use_enforcement: auto
-    terminal:
-      backend: local
-      cwd: .
-      timeout: 180
-    display:
-      tool_progress: all
-      interim_assistant_messages: true
-    browser:
-      inactivity_timeout: 120
-      command_timeout: 30
-      allow_private_urls: false
-      # Camofox (standalone browser server — k8s/applications/camofox.yaml).
-      # CAMOFOX_URL (env below) routes all browser tools here. These settings
-      # MUST live under browser.camofox (a top-level managed_persistence is
-      # silently ignored per the hermes docs).
-      camofox:
-        # Persist per-user browser profile/login state across sessions instead
-        # of a random ephemeral userId. Requires a camofox server with
-        # persistent-profile support.
-        managed_persistence: true
-    compression:
-      enabled: true
-      threshold: 0.5
-      target_ratio: 0.2
-      protect_last_n: 20
-    security:
-      redact_secrets: true
-      tirith_enabled: true
-      tirith_fail_open: true
+  values: {}
 
 soul:
   text: ""

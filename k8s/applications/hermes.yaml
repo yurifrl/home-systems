@@ -30,6 +30,83 @@ spec:
         valueFiles:
           - $values/hermes/values.yaml
         valuesObject:
+          # Inference flows through LiteLLM (OPENAI_BASE_URL) which is OpenAI-compat.
+          # The model list itself lives in the private litellm values
+          # (home-systems-values/litellm/values.yaml); `default` picks one of them.
+          config:
+            values:
+              model:
+                provider: openai-api
+                default: glm-5.2
+              agent:
+                max_turns: 90
+                gateway_timeout: 1800
+                restart_drain_timeout: 60
+                tool_use_enforcement: auto
+              terminal:
+                backend: local
+                cwd: .
+                timeout: 180
+              display:
+                tool_progress: all
+                interim_assistant_messages: true
+              browser:
+                inactivity_timeout: 120
+                command_timeout: 30
+                allow_private_urls: false
+                # Camofox (standalone browser server — k8s/applications/camofox.yaml).
+                # CAMOFOX_URL (env) routes all browser tools here. These settings
+                # MUST live under browser.camofox (a top-level managed_persistence
+                # is silently ignored per the hermes docs).
+                camofox:
+                  managed_persistence: true
+              compression:
+                enabled: true
+                threshold: 0.5
+                target_ratio: 0.2
+                protect_last_n: 20
+              security:
+                redact_secrets: true
+                tirith_enabled: true
+                tirith_fail_open: true
+              # Webhook adapter routes. board-games POSTs an HMAC-signed ping to
+              # /webhooks/login-alert; deliver_only:true pushes the rendered
+              # prompt straight to WhatsApp with ZERO LLM cost. The route inherits
+              # the global WEBHOOK_SECRET env (mapped below) since it has no per-
+              # route `secret`. The delivery chat_id (PII) stays in the private
+              # $values/hermes/values.yaml and deep-merges into this route.
+              platforms:
+                webhook:
+                  enabled: true
+                  extra:
+                    port: 8644
+                    routes:
+                      login-alert:
+                        deliver: "whatsapp"        # or "discord" / "telegram"
+                        deliver_only: true         # no LLM — plain push
+                        prompt: "🎲 {name} ({email}) wants to play — {count} waiting. Approve: {url}"
+
+          # Seed config.yaml onto the volume on every start so git stays the
+          # source of truth. Without this, config changes (model, webhook
+          # routes) never reach an already-provisioned volume.
+          bootstrap:
+            overwrite: true
+
+          # Exposes WEBHOOK_ENABLED/WEBHOOK_PORT env + the :8644 service port.
+          webhook:
+            enabled: true
+            port: 8644
+
+          # Map 1Password hermes-env BOARD_GAMES_WEBHOOK_SECRET -> the global
+          # WEBHOOK_SECRET env hermes uses as the route HMAC fallback.
+          # (Coexists with the chart's dataFrom extract for all other keys.)
+          externalSecret:
+            data:
+              - secretKey: WEBHOOK_SECRET
+                remoteRef:
+                  key: hermes-env
+                  property: BOARD_GAMES_WEBHOOK_SECRET
+
           virtualService:
             enabled: false
 

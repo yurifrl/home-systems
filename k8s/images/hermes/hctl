@@ -49,6 +49,11 @@ CLIENT subcommands (local machine, need kubectl + a working kubeconfig):
       Delete the hermes-env secret (ExternalSecret recreates it), restart
       the statefulset, and watch until ready.
 
+  hctl client backup
+      Snapshot the state volume and push it off-cluster to the Longhorn
+      backup target now, instead of waiting for the daily 02:00 job. Blocks
+      until the backup reports Completed.
+
 All subcommands are stdlib-only — the image base has python3, git, gh.
 """
 from __future__ import annotations
@@ -596,6 +601,8 @@ _SECRET = _env("HERMES_SECRET") or "hermes-env"
 _STS = _env("HERMES_STS") or "hermes"
 _CONTAINER = _env("HERMES_CONTAINER") or "hermes-agent"
 _POD = f"{_STS}-0"
+# State PVC holding /opt/data (creds, sessions, memories) — the volume worth backing up.
+_STATE_PVC = _env("HERMES_STATE_PVC") or f"state-{_STS}-0"
 
 
 def cmd_exec(args) -> int:
@@ -860,6 +867,70 @@ def cmd_doctor(args) -> int:
         h["report"], h["main_bad"], h["dep_bad"], h["broken"]))
 
 
+def cmd_backup_now(_args) -> int:
+    """Trigger an immediate off-cluster Longhorn backup of the state volume.
+
+    The daily RecurringJob already backs this volume up at 02:00 UTC; this is
+    for when you just changed something (e.g. re-paired WhatsApp) and don't
+    want to wait. Snapshots the state PVC, then pushes that snapshot to the
+    Longhorn backup target, blocking until it reports Completed.
+    """
+    vol = _capture(
+        ["kubectl", "get", "pvc", _STATE_PVC, "-n", _NS,
+         "-o", "jsonpath={.spec.volumeName}"]).strip()
+    if not vol or vol.startswith("error") or " " in vol:
+        _err(f"could not resolve Longhorn volume for PVC {_STATE_PVC} in {_NS}: {vol[:200]}")
+        return 1
+    name = "hctl-backup-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d-%H%M%S")
+    _log(f"snapshotting volume {vol} (PVC {_STATE_PVC}) as {name}")
+    snap = (
+        "apiVersion: longhorn.io/v1beta2\n"
+        "kind: Snapshot\n"
+        f"metadata:\n  name: {name}\n  namespace: longhorn-system\n"
+        f"spec:\n  volume: {vol}\n  createSnapshot: true\n"
+    )
+    subprocess.run(["kubectl", "create", "-f", "-"], input=snap, text=True, check=True)
+
+    _log("waiting for snapshot to be ready")
+    for _ in range(40):
+        ready = _capture(
+            ["kubectl", "get", "snapshots.longhorn.io", name, "-n", "longhorn-system",
+             "-o", "jsonpath={.status.readyToUse}"]).strip()
+        if ready == "true":
+            break
+        time.sleep(3)
+    else:
+        _err("snapshot did not become ready in time")
+        return 1
+
+    _log("pushing backup to the Longhorn backup target")
+    bk = (
+        "apiVersion: longhorn.io/v1beta2\n"
+        "kind: Backup\n"
+        f"metadata:\n  name: {name}\n  namespace: longhorn-system\n"
+        f"  labels:\n    backup-volume: {vol}\n"
+        f"spec:\n  snapshotName: {name}\n"
+    )
+    subprocess.run(["kubectl", "create", "-f", "-"], input=bk, text=True, check=True)
+
+    for _ in range(150):
+        state = _capture(
+            ["kubectl", "get", "backups.longhorn.io", name, "-n", "longhorn-system",
+             "-o", "jsonpath={.status.state}"]).strip()
+        if state == "Completed":
+            _log(f"backup {name} completed")
+            return 0
+        if state == "Error":
+            err = _capture(
+                ["kubectl", "get", "backups.longhorn.io", name, "-n", "longhorn-system",
+                 "-o", "jsonpath={.status.error}"]).strip()
+            _err(f"backup failed: {err}")
+            return 1
+        time.sleep(4)
+    _err("backup did not complete in time (still running — check `kubectl -n longhorn-system get backups.longhorn.io`)")
+    return 1
+
+
 def cmd_refresh(_args) -> int:
     """Delete the env secret, restart the statefulset, and wait for ready."""
     _log(f"deleting secret {_SECRET} in {_NS} (ExternalSecret will recreate it)")
@@ -884,12 +955,13 @@ server commands (run INSIDE the container):
   restore                          seed an empty HERMES_HOME from the backup repo
 
 client commands (run on your LOCAL machine, talk to the pod via kubectl):
-  exec [args...]                   run the hermes CLI inside the pod
+  exec|hermes [args...]            run the hermes CLI inside the pod
   bash                             interactive bash shell in the pod
   status                           table of every hermes pod (pure status)
   doctor|fix [text]                open a pi session to diagnose AND fix (mutates state);
                                    text = lead symptom, else auto-detects what's broken
   refresh                          delete env secret, restart, wait for ready
+  client backup                    trigger an immediate off-cluster Longhorn backup of the state volume
 
 Run `hctl <command> --help` for per-command flags.
 """
@@ -958,7 +1030,7 @@ def _build_parser() -> argparse.ArgumentParser:
     rst.set_defaults(func=cmd_restore)
 
     # client (local machine → pod via kubectl)
-    ex = sub.add_parser("exec")
+    ex = sub.add_parser("exec", aliases=["hermes"])
     ex.add_argument("args", nargs=argparse.REMAINDER, help="args passed to `hermes`")
     ex.set_defaults(func=cmd_exec)
 
@@ -970,6 +1042,10 @@ def _build_parser() -> argparse.ArgumentParser:
 
     rf = sub.add_parser("refresh")
     rf.set_defaults(func=cmd_refresh)
+
+    client = sub.add_parser("client").add_subparsers(dest="client_cmd", required=True)
+    client_backup = client.add_parser("backup", help="trigger an immediate off-cluster Longhorn backup of the state volume")
+    client_backup.set_defaults(func=cmd_backup_now)
 
     inv = sub.add_parser("doctor", aliases=["fix"])
     inv.add_argument("text", nargs=argparse.REMAINDER, help="optional lead symptom")
