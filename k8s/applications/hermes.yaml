@@ -212,8 +212,15 @@ spec:
                 ports:
                   - protocol: TCP
                     port: 9377
-              # Kube API server
-              - ports:
+              # Kube API server. A port-only egress rule allows :443 to
+              # external/CIDR destinations but NOT to an in-cluster ClusterIP
+              # peer, so it never actually reached the API service at
+              # 10.96.0.1:443 (kubectl timed out). Select the API server
+              # ClusterIP explicitly via ipBlock so the agent's RBAC works.
+              - to:
+                  - ipBlock:
+                      cidr: 10.96.0.1/32
+                ports:
                   - protocol: TCP
                     port: 443
               # General HTTPS/HTTP egress (GitHub, GHCR, web tools)
