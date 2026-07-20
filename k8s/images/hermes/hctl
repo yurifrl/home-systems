@@ -9,12 +9,6 @@ init/sidecar containers. Subcommands:
       hermes-env secret. Persists credentials to $HOME so subsequent git
       pushes work. Idempotent. Soft-skips when no token is set.
 
-  hctl op files sync
-      Download every file attachment of a 1Password item via the Connect
-      REST API into a directory. Dynamic by design — no filenames are
-      configured. Equivalent to the legacy `op-files-sync` script. Soft-
-      skips when env is incomplete.
-
   hctl repos clone --user U --repos a,b,c [--dest /workdir]
       Clone every <user>/<name> repo into <dest>/<name> if absent. Idempotent.
 
@@ -142,101 +136,6 @@ def cmd_auth_login(_args) -> int:
     _run(["gh", "auth", "status"])
     return 0
 
-
-# ─────────────────────────────────────── op files sync ──
-
-def cmd_op_files_sync(args) -> int:
-    """Download every file attachment of a 1Password item via Connect REST API.
-
-    Config resolution order (first non-empty wins):
-      flag  >  env
-    Token can come from:
-      --token              (literal; testing only)
-      --token-file PATH    (mounted secret)
-      --connect-credentials-secret NS/NAME[:KEY]
-                           (kubectl get secret … -o jsonpath; KEY default 'token')
-      OP_CONNECT_TOKEN env (fallback)
-    """
-    host = (args.host or _env("OP_CONNECT_HOST")).rstrip("/")
-    vault = args.vault or _env("OP_VAULT")
-    item = args.item or _env("OP_ITEM")
-    dest = args.dest or _env("OP_DEST")
-
-    token = (args.token or "").strip()
-    if not token and args.token_file:
-        try:
-            token = Path(args.token_file).read_text().strip()
-        except FileNotFoundError:
-            _err(f"op files sync: token file {args.token_file} not found")
-            return 0
-    if not token and args.connect_credentials_secret:
-        ref = args.connect_credentials_secret
-        key = "token"
-        if ":" in ref:
-            ref, key = ref.rsplit(":", 1)
-        if "/" not in ref:
-            _err("op files sync: --connect-credentials-secret must be NS/NAME[:KEY]")
-            return 10
-        ns, name = ref.split("/", 1)
-        try:
-            out = _run(
-                ["kubectl", "get", "secret", "-n", ns, name,
-                 "-o", f"jsonpath={{.data.{key}}}"],
-                capture=True, check=True,
-            ).stdout.strip()
-            import base64
-            token = base64.b64decode(out).decode().strip() if out else ""
-        except subprocess.CalledProcessError as e:
-            _err(f"op files sync: kubectl get secret failed: {e}")
-            return 0
-    if not token:
-        token = _env("OP_CONNECT_TOKEN")
-
-    if not all([host, vault, item, dest]):
-        _err("op files sync: missing host/vault/item/dest; skipping")
-        return 0
-    if not token:
-        _err("op files sync: no token available; skipping")
-        return 0
-
-    def get(path: str, raw: bool = False):
-        req = urllib.request.Request(host + path, headers={"Authorization": "Bearer " + token})
-        data = urllib.request.urlopen(req, timeout=20).read()
-        return data if raw else json.loads(data)
-
-    vaults = get("/v1/vaults")
-    vid = next((v["id"] for v in vaults if v.get("name") == vault), None)
-    if not vid:
-        _err(f"op files sync: vault {vault!r} not found; skipping")
-        return 0
-
-    q = urllib.parse.quote(f'title eq "{item}"')
-    items = get(f"/v1/vaults/{vid}/items?filter={q}")
-    if not items:
-        _err(f"op files sync: item {item!r} not found in vault {vault!r}; skipping")
-        return 0
-    iid = items[0]["id"]
-
-    full = get(f"/v1/vaults/{vid}/items/{iid}")
-    files = full.get("files", []) or []
-
-    os.makedirs(dest, exist_ok=True)
-    written = 0
-    for f in files:
-        name = os.path.basename(f.get("name", "")).strip()
-        if not name:
-            continue
-        cp = f.get("content_path") or f"/v1/vaults/{vid}/items/{iid}/files/{f['id']}/content"
-        blob = get(cp, raw=True)
-        out = os.path.join(dest, name)
-        with open(out, "wb") as fh:
-            fh.write(blob)
-        os.chmod(out, 0o600)
-        _log(f"op files sync: wrote {name} ({len(blob)} bytes)")
-        written += 1
-
-    _log(f"op files sync: done, {written} file(s) from item {item!r}")
-    return 0
 
 
 # ─────────────────────────────────────── repos clone ──
@@ -948,7 +847,6 @@ def cmd_refresh(_args) -> int:
 _EPILOG = """\
 server commands (run INSIDE the container):
   auth login                       gh auth login + setup-git from env token
-  op files sync                    download all attachments of a 1Password item
   repos clone                      clone every <user>/<name> into <dest>/<name>
   repos sync                       periodic + on-exit pull/commit/push loop
   backup                           periodic git backup of the HERMES_HOME allowlist
@@ -981,20 +879,6 @@ def _build_parser() -> argparse.ArgumentParser:
     auth = sub.add_parser("auth").add_subparsers(dest="auth_cmd", required=True)
     auth_login = auth.add_parser("login", help="gh auth login + setup-git from env token")
     auth_login.set_defaults(func=cmd_auth_login)
-
-    # op files sync
-    op = sub.add_parser("op").add_subparsers(dest="op_cmd", required=True)
-    op_files = op.add_parser("files", help="files helpers").add_subparsers(dest="op_files_cmd", required=True)
-    op_files_sync = op_files.add_parser("sync", help="download all attachments of an op item")
-    op_files_sync.add_argument("--host", default="", help="OP Connect host (default: $OP_CONNECT_HOST)")
-    op_files_sync.add_argument("--vault", default="", help="vault name (default: $OP_VAULT)")
-    op_files_sync.add_argument("--item", default="", help="item title (default: $OP_ITEM)")
-    op_files_sync.add_argument("--dest", default="", help="output directory (default: $OP_DEST)")
-    op_files_sync.add_argument("--token", default="", help="Connect token (testing only)")
-    op_files_sync.add_argument("--token-file", default="", help="path to file containing Connect token")
-    op_files_sync.add_argument("--connect-credentials-secret", default="",
-                               help="NS/NAME[:KEY] of a kubectl-fetched secret holding the token")
-    op_files_sync.set_defaults(func=cmd_op_files_sync)
 
     # repos
     repos = sub.add_parser("repos").add_subparsers(dest="repos_cmd", required=True)

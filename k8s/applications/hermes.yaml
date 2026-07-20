@@ -124,8 +124,6 @@ spec:
           auth:
             gitLogin:
               enabled: true
-          opFiles:
-            enabled: true
 
           gitRepos:
             enabled: false
@@ -175,7 +173,11 @@ spec:
 
           networkPolicy:
             enabled: true
+            policyTypes:
+              - Ingress
+              - Egress
             ingress:
+              # From the istio ingress gateway namespace to the API server.
               - from:
                   - namespaceSelector:
                       matchLabels:
@@ -183,3 +185,40 @@ spec:
                 ports:
                   - protocol: TCP
                     port: 8642
+            egress:
+              # DNS
+              - to:
+                  - namespaceSelector: {}
+                ports:
+                  - protocol: UDP
+                    port: 53
+                  - protocol: TCP
+                    port: 53
+              # LiteLLM proxy
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: litellm
+                ports:
+                  - protocol: TCP
+                    port: 4000
+              # camofox browser server (k8s/applications/camofox.yaml, own ns).
+              # Was a hermes sidecar (no egress needed); now a separate Service
+              # reached via CAMOFOX_URL — needs an explicit egress rule to :9377.
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: camofox
+                ports:
+                  - protocol: TCP
+                    port: 9377
+              # Kube API server
+              - ports:
+                  - protocol: TCP
+                    port: 443
+              # General HTTPS/HTTP egress (GitHub, GHCR, web tools)
+              - ports:
+                  - protocol: TCP
+                    port: 443
+                  - protocol: TCP
+                    port: 80

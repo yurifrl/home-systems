@@ -217,67 +217,15 @@ virtualService:
   timeout: "3600s"
   servicePortNumber: 8642
 
+# Ingress/egress allowlist is lab-specific — defined in the app yaml
+# (k8s/applications/hermes.yaml). Generic chart default: off.
 networkPolicy:
-  enabled: true
+  enabled: false
   policyTypes:
     - Ingress
     - Egress
-  ingress:
-    # From the istio ingress gateway namespace to the API server.
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: istio-system
-      ports:
-        - protocol: TCP
-          port: 8642
-  egress:
-    # DNS
-    - to:
-        - namespaceSelector: {}
-      ports:
-        - protocol: UDP
-          port: 53
-        - protocol: TCP
-          port: 53
-    # LiteLLM proxy
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: litellm
-      ports:
-        - protocol: TCP
-          port: 4000
-    # camofox browser server (k8s/applications/camofox.yaml, own namespace).
-    # Was a hermes sidecar (no egress needed); now a separate Service reached
-    # via CAMOFOX_URL — needs an explicit egress rule to :9377.
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: camofox
-      ports:
-        - protocol: TCP
-          port: 9377
-    # 1Password Connect API (op-files init container syncs files via
-    # onepassword-connect.1password.svc:8080). Without this the op-files
-    # init container hangs on a blocked TCP connect and the pod never starts.
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: 1password
-      ports:
-        - protocol: TCP
-          port: 8080
-    # Kube API server
-    - ports:
-        - protocol: TCP
-          port: 443
-    # General HTTPS/HTTP egress (GitHub, GHCR, web tools)
-    - ports:
-        - protocol: TCP
-          port: 443
-        - protocol: TCP
-          port: 80
+  ingress: []
+  egress: []
 
 tenantIsolation:
   enabled: true
@@ -345,11 +293,6 @@ topologySpreadConstraints: []
 # in the camofox namespace, not as a hermes sidecar. The hermes pod talks
 # to it via CAMOFOX_URL above.
 extraContainers: []
-
-# Files are synced into /opt/data/files dynamically at startup by the
-# `opFiles.enabled` chart-managed init container (1Password Connect REST
-# API). No filenames are configured anywhere; whatever attachments the
-# `opFiles.item` has are downloaded by name.
 
 extraVolumes: []
 extraVolumeMounts: []
@@ -455,18 +398,6 @@ dashboard:
 auth:
   gitLogin:
     enabled: false
-
-# op-files: download every file attachment of a 1Password item into a path
-# under /opt/data via the Connect REST API. Backed by `hctl op files sync`.
-# `connectCredentialsSecret` is read with the agent's existing cluster-read
-# RBAC; format is NS/NAME[:KEY] (default key: 'token').
-opFiles:
-  enabled: false
-  host: http://onepassword-connect.1password.svc.cluster.local:8080
-  vault: kubernetes
-  item: hermes-files
-  dest: /opt/data/files
-  connectCredentialsSecret: 1password/op-credentials
 
 # git-repos: clone a fixed list of GitHub repos into <mountPath>/<name> at
 # startup, then run a periodic + on-exit pull/commit/push loop in a sidecar.

@@ -100,7 +100,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or .Values.bootstrap.enabled $npmEnabled .Values.extraInitContainers .Values.auth.gitLogin.enabled .Values.opFiles.enabled .Values.gitRepos.enabled .Values.memoryBackup.restore.enabled }}
+      {{- if or .Values.bootstrap.enabled $npmEnabled .Values.extraInitContainers .Values.auth.gitLogin.enabled .Values.gitRepos.enabled .Values.memoryBackup.restore.enabled }}
       initContainers:
         {{- if .Values.memoryBackup.restore.enabled }}
         - name: memory-restore
@@ -206,31 +206,6 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "hermes-agent.secretName" . }}
-          volumeMounts:
-            - name: {{ $dataVolumeName }}
-              mountPath: {{ $mountPath }}
-            - name: tmp
-              mountPath: /tmp
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-        {{- end }}
-        {{- if .Values.opFiles.enabled }}
-        - name: op-files
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command:
-            - hctl
-            - op
-            - files
-            - sync
-            - --host={{ .Values.opFiles.host }}
-            - --vault={{ .Values.opFiles.vault }}
-            - --item={{ .Values.opFiles.item }}
-            - --dest={{ .Values.opFiles.dest }}
-            - --connect-credentials-secret={{ .Values.opFiles.connectCredentialsSecret }}
-          env:
-            - name: HOME
-              value: /tmp
           volumeMounts:
             - name: {{ $dataVolumeName }}
               mountPath: {{ $mountPath }}
