@@ -84,19 +84,18 @@ spec:
               port: "8428"
               retentionPeriod: "30d"
               replicaCount: 1
-              # Pin to tp1: the only node with a working, schedulable Longhorn
-              # disk (/var/mnt/storage). tp4's disk reports 0 capacity and
-              # rpi01 is unschedulable (flaky), so pinning elsewhere strands the
-              # RWO replica on a bad node and triggers endless salvage/detach.
-              nodeSelector:
-                kubernetes.io/hostname: tp1
+              # No nodeSelector: let the scheduler place vmsingle on any healthy
+              # node. Longhorn attaches the RWO volume wherever the pod lands and
+              # follows it on reschedule, so a bad node no longer takes VM down.
               extraArgs:
                 # PromQL/MetricsQL exemplar-style features are on by default in VM.
                 search.maxUniqueTimeseries: "1000000"
               storage:
-                # longhorn-single = best-effort data locality + 1 replica, so the
-                # replica co-locates on tp1 with the pod (local disk I/O, no
-                # cross-node dependency on the flaky rpi01 disk).
+                # longhorn-single = best-effort data locality + 1 replica. NOTE:
+                # true node-failure tolerance for the DATA needs >=2 healthy
+                # Longhorn storage nodes + longhorn-ha (2 replicas). Today tp1 is
+                # the only working storage node, so this stays single-replica
+                # until a second node's disk is fixed.
                 storageClassName: longhorn-single
                 accessModes:
                   - ReadWriteOnce
