@@ -17,7 +17,6 @@ machine:
     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
     key: ""
   certSANs:
-    - 192.168.0.91
     - 192.168.68.91
     - 100.118.143.56
   kubelet:
@@ -35,15 +34,11 @@ machine:
         memory.available: "500Mi"
         nodefs.available: "10%"
         imagefs.available: "10%"
-    # Register the kubelet on the Tailscale IP (100.64.0.0/10), NOT the roaming
-    # LAN address. This node moves between networks (DHCP), so its LAN IP is
-    # unstable and unreachable from other sites; the Tailscale IP is stable and
-    # every node routes the tailnet CGNAT directly, so cilium's VXLAN mesh works
-    # in BOTH directions (the LAN-IP nodeIP left return traffic unroutable ->
-    # broke pod DNS/service on this node). Matches the working macarm01 pattern.
-    # Pairs with --accept-routes below (to reach the CP LAN apiserver). The old
-    # 2026-06-05 TS-IP DNS break predates the cilium KubePrism fix and no longer
-    # applies.
+    # Register the kubelet on the Tailscale IP (100.64.0.0/10) to keep this
+    # node's cluster identity (100.118.143.56) stable across network moves,
+    # matching dell01. cilium's VXLAN meshes over the tailnet CGNAT in both
+    # directions; the KubePrism fix means the old 2026-06-05 TS-IP DNS break no
+    # longer applies.
     nodeIP:
       validSubnets:
         - 100.64.0.0/10
@@ -52,10 +47,10 @@ machine:
     interfaces:
       - interface: enp0s1
         addresses:
-          - 192.168.0.91/24
+          - 192.168.68.91/24
         routes:
           - network: 0.0.0.0/0
-            gateway: 192.168.0.1
+            gateway: 192.168.68.1
   install:
     disk: /dev/sda
     image: {{ .InstallImage }}
@@ -112,14 +107,9 @@ name: tailscale
 environment:
   - TS_AUTHKEY=tailscale://authkey?description=macintel01
   - TS_DEBUG_OMIT_LOCAL_ADDRS=true
-  # Advertise ONLY the pinned LAN /24 over Tailscale so this node's apiserver
-  # endpoint (192.168.0.91) is routable from every site. .91 is a static,
-  # below-DHCP-pool address, so the /24 is a stable subnet route. Distinct from
-  # rpi01's 192.168.9.0/24 - no collision.
-  # Do NOT advertise 10.96.0.0/12 (Service CIDR): if any node accepts routes it
-  # would pull 10.96.0.1/DNS across the tailnet and break cluster networking.
-  # --accept-routes is SAFE here only because the tailnet approves just LAN /24s
-  # (incl. 192.168.68.0/24 for the control plane) - never the Service/pod CIDRs.
-  # Needed so cilium's VXLAN to the CP node IPs (192.168.68.x) is reachable.
-  - TS_ROUTES=192.168.0.0/24
-  - TS_EXTRA_ARGS=--reset --accept-routes
+  # On-LAN node now (like dell01/macarm01): advertise the cluster LAN /24 and
+  # NEVER --accept-routes (it hijacks the pod CIDR and breaks node-local DNS).
+  # macintel01 sits directly on 192.168.68.0/24, so it reaches the CP apiserver
+  # and other node IPs over the LAN - no accepted routes needed.
+  - TS_ROUTES=192.168.68.0/24
+  - TS_EXTRA_ARGS=--reset
