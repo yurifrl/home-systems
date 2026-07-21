@@ -84,15 +84,20 @@ spec:
               port: "8428"
               retentionPeriod: "30d"
               replicaCount: 1
-              # Pin to a core LAN node: the RWO Longhorn PVC must not chase a
-              # cross-site node (macarm01/rpi01) whose data path is flaky and
-              # can't attach/resize the volume.
+              # Pin to tp1: the only node with a working, schedulable Longhorn
+              # disk (/var/mnt/storage). tp4's disk reports 0 capacity and
+              # rpi01 is unschedulable (flaky), so pinning elsewhere strands the
+              # RWO replica on a bad node and triggers endless salvage/detach.
               nodeSelector:
-                kubernetes.io/hostname: tp4
+                kubernetes.io/hostname: tp1
               extraArgs:
                 # PromQL/MetricsQL exemplar-style features are on by default in VM.
                 search.maxUniqueTimeseries: "1000000"
               storage:
+                # longhorn-single = best-effort data locality + 1 replica, so the
+                # replica co-locates on tp1 with the pod (local disk I/O, no
+                # cross-node dependency on the flaky rpi01 disk).
+                storageClassName: longhorn-single
                 accessModes:
                   - ReadWriteOnce
                 resources:
