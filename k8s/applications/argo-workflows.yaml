@@ -46,7 +46,7 @@ spec:
       targetRevision: "2.4.23"
     - chart: argo-workflows
       repoURL: https://argoproj.github.io/argo-helm
-      targetRevision: "1.0.20"
+      targetRevision: "1.0.21"
       helm:
         valuesObject:
           crds:
