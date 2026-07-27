@@ -1,0 +1,17 @@
+# Proxied CNAME: herdr.syscd.live -> the Mac's local cloudflared tunnel.
+# A specific record beats the *.syscd.live wildcard.
+apiVersion: dns.upjet-cloudflare.upbound.io/v1alpha1
+kind: Record
+metadata:
+  name: herdr-syscd-live
+spec:
+  deletionPolicy: {{ .Values.deletionPolicy }}
+  providerConfigRef:
+    name: default
+  forProvider:
+    zoneId: {{ .Values.zoneId | quote }}
+    name: {{ .Values.domain | quote }}
+    type: CNAME
+    content: {{ printf "%s.cfargotunnel.com" .Values.tunnelId | quote }}
+    proxied: true
+    ttl: 1

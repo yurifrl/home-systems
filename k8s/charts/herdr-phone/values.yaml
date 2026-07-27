@@ -1,0 +1,22 @@
+# Cloudflare account-side resources for herdr-phone (herdr.syscd.live).
+# The cloudflared connector runs on the Mac (local tunnel); this chart only
+# manages the DNS record + Access application via crossplane.
+#
+# accountId / zoneId are Cloudflare identifiers (not secret). The DNS CNAME
+# points the hostname at the Mac's local tunnel; update tunnelId if the tunnel
+# is recreated (`cloudflared tunnel create herdr-phone`).
+accountId: a65a20da3da91b9afc08ee1b9ddc8d37
+zoneId: "3f0394b664638cc4fcd10b0a9df35888"
+domain: herdr.syscd.live
+
+# Local Mac tunnel id (cloudflared tunnel list | grep herdr-phone).
+tunnelId: 168d9073-0468-4894-9103-b8ffd6f0e6d2
+
+# Access: allow this identity in (email OTP or Google IdP already configured on
+# the syscd.cloudflareaccess.com org).
+allowedEmail: yurifl03@gmail.com
+sessionDuration: 24h
+
+# Orphan keeps the Cloudflare resource if the MR is deleted (matches the repo's
+# crossplane default); flip to Delete for full git-owned lifecycle.
+deletionPolicy: Delete

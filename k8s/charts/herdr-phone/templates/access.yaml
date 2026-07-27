@@ -1,0 +1,27 @@
+# Cloudflare Access application protecting herdr.syscd.live. herdr-phone's origin
+# re-validates the Access JWT; the app's AUD tag goes into the Mac config
+# (kubectl get trustaccessapplication herdr-phone -o jsonpath='{.status.atProvider.aud}').
+# Inline allow-policy scopes entry to the configured identity (email OTP / Google).
+apiVersion: zero.upjet-cloudflare.upbound.io/v1alpha1
+kind: TrustAccessApplication
+metadata:
+  name: herdr-phone
+spec:
+  deletionPolicy: {{ .Values.deletionPolicy }}
+  providerConfigRef:
+    name: default
+  forProvider:
+    accountId: {{ .Values.accountId | quote }}
+    name: herdr
+    domain: {{ .Values.domain | quote }}
+    type: self_hosted
+    sessionDuration: {{ .Values.sessionDuration | quote }}
+    appLauncherVisible: false
+    autoRedirectToIdentity: false
+    policies:
+      - name: allow-yuri
+        decision: allow
+        precedence: 1
+        include:
+          - email:
+              email: {{ .Values.allowedEmail | quote }}
