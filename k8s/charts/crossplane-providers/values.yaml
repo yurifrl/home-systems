@@ -111,8 +111,9 @@ cloudflareCredentials:
   enabled: true
   secretName: cloudflare-creds
   credentialsKey: credentials
-  # 1Password item + field holding the Cloudflare API token (reuses the one
-  # external-dns syncs). The token must have zone DNS:Edit for syscd.live (and
-  # Zone WAF:Edit + SSL:Edit for the later ruleset/cert work).
-  onepasswordKey: externaldns-cloudflare
-  tokenProperty: cloudflare_api_token
+  # Dedicated crossplane Cloudflare token (separate from external-dns's). Scope:
+  # Zone DNS:Edit (syscd.live) + Account Access: Apps/Policies:Edit + Access:
+  # Orgs/IdP/Groups:Edit, so both the DNS Record and the Zero Trust Access
+  # resources reconcile from this one credential.
+  onepasswordKey: crossplane-cloudflare
+  tokenProperty: api_token
