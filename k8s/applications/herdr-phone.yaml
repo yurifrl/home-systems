@@ -20,7 +20,16 @@ spec:
     syncOptions:
       - ServerSideApply=true
       - SkipDryRunOnMissingResource=true
-  source:
-    repoURL: https://github.com/yurifrl/home-systems.git
-    targetRevision: HEAD
-    path: k8s/charts/herdr-phone
+  sources:
+    # PUBLIC: value-free chart (templates + placeholders).
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/herdr-phone
+      helm:
+        valueFiles:
+          # Real accountId/zoneId/tunnelId/emails come from the PRIVATE repo below.
+          - $values/herdr-phone/values.yaml
+    # PRIVATE: holds the real values (registered as an ArgoCD repo credential).
+    - repoURL: git@github.com:yurifrl/home-systems-values.git
+      targetRevision: HEAD
+      ref: values

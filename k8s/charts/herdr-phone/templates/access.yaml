@@ -19,9 +19,11 @@ spec:
     appLauncherVisible: false
     autoRedirectToIdentity: false
     policies:
-      - name: allow-yuri
+      - name: allow
         decision: allow
         precedence: 1
         include:
+        {{- range .Values.allowedEmails }}
           - email:
-              email: {{ .Values.allowedEmail | quote }}
+              email: {{ . | quote }}
+        {{- end }}
