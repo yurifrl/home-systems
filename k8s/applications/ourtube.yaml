@@ -113,6 +113,8 @@ spec:
               channelId: UCCJFWxm9fUtB4hPzNvmfcMA
             - name: Mr Sunday Movies
               channelId: UCkDSAQ_5-yx5hmuvUcsJL7A
+            - name: fern
+              channelId: UCODHrzPMGbNv67e84WDZhQQ
 
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
