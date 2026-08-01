@@ -1,0 +1,31 @@
+# CrashLoopBackOff alert. The alertname in the alertmanager group_by collapses
+# all pods into a single Discord notification per group_interval (5m), so a
+# node crash that throws many pods into CrashLoopBackOff produces one grouped
+# message, not a flood. repeat_interval (1h) caps re-notifications.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: crashloop-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  groups:
+    - name: crashloop.rules
+      rules:
+        - alert: KubePodCrashLooping
+          expr: |
+            sum by (namespace, pod) (
+              rate(kube_pod_container_status_restarts_total[15m]) * 60 * 15
+            ) >= 3
+          for: 5m
+          labels:
+            severity: critical
+            environment: production
+            service: crashloop
+          annotations:
+            summary: "Pod crashlooping"
+            description: "Pod {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.pod }}` }} restarted >=3 times in 15m (CrashLoopBackOff)."
