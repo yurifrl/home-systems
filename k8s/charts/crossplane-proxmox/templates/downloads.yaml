@@ -49,7 +49,9 @@ spec:
     datastoreId: {{ $iso.datastoreId }}
     fileName: {{ $ws.image.fileName }}
     url: {{ $ws.image.url | quote }}
-    decompressionAlgorithm: {{ $ws.image.decompressionAlgorithm }}
+    {{- with $ws.image.decompressionAlgorithm }}
+    decompressionAlgorithm: {{ . }}
+    {{- end }}
     overwrite: false
     verify: false
 {{- end }}

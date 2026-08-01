@@ -198,9 +198,9 @@ vms:
     # from nixos/workstation.version), public AllUsers:R. Pin the exact object in
     # image.url (PRIVATE overlay). Downloaded onto local:import, imported as scsi0.
     image:
-      fileName: workstation.qcow2                # decompressed name on local:import
-      url: ""                                     # HUMAN: https://storage.googleapis.com/<GCS_BUCKET_NAME>/workstation-0.1.0.qcow2.bz2
-      decompressionAlgorithm: bz2
+      fileName: workstation.qcow2                # imported name on local:import
+      url: ""                                     # HUMAN: https://storage.googleapis.com/<GCS_BUCKET_NAME>/workstation-<version>.qcow2 (UNCOMPRESSED; import can't decompress)
+      decompressionAlgorithm: ""                  # empty: import content type rejects on-download decompression
     # SEPARATE data disk that survives VM rebuilds -- the bpg-native analog of
     # foundry's `prevent_destroy = true` volume: deletionPolicy Orphan (chart
     # default) means Crossplane never destroys this volume, even on VM MR delete.
