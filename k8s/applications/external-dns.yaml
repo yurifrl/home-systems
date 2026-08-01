@@ -53,6 +53,7 @@ spec:
             - syscd.live
             - syscd.xyz
             - monaddaydream.com
+            - jogosdetabuleirodoyuri.com.br
           sources:
             - istio-gateway
             - istio-virtualservice

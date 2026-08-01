@@ -53,3 +53,8 @@ records:
     dnsName: obs.syscd.live
     target: 248f4b51-d33d-4896-89c1-acb748c54330.cfargotunnel.com
     proxied: true
+
+  - name: jogosdetabuleirodoyuri-com-br
+    dnsName: jogosdetabuleirodoyuri.com.br
+    target: b31e4822-8b42-44fa-b6ca-7feb86a56ec8.cfargotunnel.com
+    proxied: true
