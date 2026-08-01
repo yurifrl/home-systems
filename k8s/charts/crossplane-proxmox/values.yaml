@@ -166,6 +166,63 @@ vms:
       - device: hostpci1               # hostpci1: 01:00.1
         id: "0000:01:00.1"
 
+  # --- workstation dev VM (design.md; NixOS box, no proxmox/.conf source) ---
+  # Second EnvironmentVM next to talos-pc01, on vmbr0 (lands on 192.168.68.0/24,
+  # same L2 as the Talos nodes). No GPU passthrough (contended by talos/windows).
+  # Boot disk = NixOS qcow2 imported from GCS; a SEPARATE data disk survives VM
+  # rebuilds; cloud-init seeds the 1Password Service-Account token so the box can
+  # self-pull the rest via files/workstation-bootstrap.sh (design.md §4).
+  workstation:
+    enabled: false                     # flip true once the qcow2 is published + image.url set
+    name: workstation
+    vmId: 102
+    onBoot: true
+    started: true
+    machine: q35
+    scsiHardware: virtio-scsi-single
+    osType: l26
+    smbiosUuid: "141aa172-30f3-40d7-9cac-581ddfcb38b2"   # stable VM UUID (uuidgen)
+    bootOrder: [scsi0, net0]
+    cpu:
+      cores: 6
+      sockets: 1
+      type: host
+    memoryMiB: 16384
+    netMac: "BC:24:11:7C:B3:51"          # stable MAC (Proxmox BC:24:11 OUI)
+    disk:
+      interface: scsi0                 # boot disk: imports image below
+      sizeGiB: 40
+    # NixOS qcow2 built by the nixos CI (build-image action) and uploaded to the
+    # same GCS bucket as gatus/foundry. workstation is a versioned image, so CI
+    # names it workstation-<version>.qcow2.bz2 (e.g. workstation-0.1.0.qcow2.bz2
+    # from nixos/workstation.version), public AllUsers:R. Pin the exact object in
+    # image.url (PRIVATE overlay). Downloaded onto local:import, imported as scsi0.
+    image:
+      fileName: workstation.qcow2                # decompressed name on local:import
+      url: ""                                     # HUMAN: https://storage.googleapis.com/<GCS_BUCKET_NAME>/workstation-0.1.0.qcow2.bz2
+      decompressionAlgorithm: bz2
+    # SEPARATE data disk that survives VM rebuilds -- the bpg-native analog of
+    # foundry's `prevent_destroy = true` volume: deletionPolicy Orphan (chart
+    # default) means Crossplane never destroys this volume, even on VM MR delete.
+    dataDisk:
+      enabled: true
+      interface: scsi1
+      sizeGiB: 100
+      iothread: true
+    # cloud-init seed: userDataFileId -> a snippet (EnvironmentFile) that writes
+    # the 1Password Service-Account token and runs the on-box bootstrap.
+    cloudInit:
+      enabled: true
+      datastoreId: local
+      interface: ide2
+      userDataFileName: workstation-user-data.yaml
+      # Seed token (design.md §4). Materialised by the workstation-op-sa-token
+      # ExternalSecret (templates/workstation-seed-secret.yaml); its value is set
+      # here ONLY via the PRIVATE overlay -- NEVER commit a real token to the
+      # public chart. Empty => snippet renders with an empty token and the box
+      # bootstrap no-ops until a real token is supplied.
+      opServiceAccountToken: ""
+
 # --- Preflight (ArgoCD PreSync hook): fail the sync if a hard dep is missing ---
 preflight:
   enabled: true
@@ -193,3 +250,23 @@ isoPipeline:
   gcsOnepasswordProperty: creds
   winAdminSecret: proxmox-win-admin
   winAdminOnepasswordItem: windows-pc01-admin
+
+# --- Workstation dev VM seed secret (design.md §4) --------------------------
+# box-pulls-own-secrets: the workstation VM gets exactly ONE seed secret at
+# provision time -- a 1Password Service-Account token. The on-box bootstrap
+# (files/workstation-bootstrap.sh) uses `op` + that token to self-pull all
+# downstream secrets. Materialised from 1Password via the "onepassword"
+# ClusterSecretStore (vault "kubernetes"). Give the SA token minimal read-only
+# scope (that one vault only). enabled:false until the VM exists -- flip to true
+# (typically in the PRIVATE values overlay) once the workstation VM task lands.
+workstationSeed:
+  enabled: false
+  # k8s Secret the ExternalSecret writes (later injected into VM cloud-init).
+  secretName: workstation-op-sa-token
+  secretNamespace: crossplane-system
+  # env var name the bootstrap script expects; also the Secret data key.
+  secretKey: OP_SERVICE_ACCOUNT_TOKEN
+  # 1Password item + field holding the Service-Account token (vault "kubernetes").
+  onepasswordItem: workstation-op-service-account
+  onepasswordProperty: credential
+  refreshInterval: 1h

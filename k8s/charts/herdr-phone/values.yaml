@@ -8,5 +8,15 @@ tunnelId: "00000000-0000-0000-0000-000000000000"
 sessionDuration: 24h
 deletionPolicy: Orphan
 
+# herdr origin behind the tunnel. Moved from the Mac to the workstation VM
+# (design.md §5 -- optional phone path; Tailscale stays primary). cloudflared
+# runs ON the workstation (NixOS, nixos repo), not in-cluster; cloudflared-ingress.yaml
+# is the version-controlled source of truth for its ingress rule. Re-pointing is
+# this one value + tunnelId (the workstation's own cloudflared tunnel).
+# herdr must bind 0.0.0.0 (not 127.0.0.1) to be reachable over the tunnel.
+# HUMAN: set to the workstation MagicDNS name or LAN IP + herdr port, e.g.
+#   http://workstation.<tailnet>.ts.net:<port>  or  http://192.168.68.<x>:<port>
+herdrOrigin: "REPLACED_BY_PRIVATE_VALUES"
+
 # Access allow-list (OR logic); real emails come from the private repo.
 allowedEmails: []

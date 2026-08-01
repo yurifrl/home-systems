@@ -1,0 +1,21 @@
+# Canonical cloudflared ingress for the herdr tunnel, version-controlled next to
+# the account-side DNS + Access. cloudflared runs ON the workstation VM (NixOS,
+# nixos repo) -- NOT in-cluster -- so this ConfigMap is the source of truth for
+# that ingress rule (hostname -> the workstation herdr origin), not a running
+# workload. Re-pointing herdr from the Mac to the workstation is one value:
+# herdrOrigin (+ tunnelId = the workstation's own cloudflared tunnel).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: herdr-phone-cloudflared-ingress
+  namespace: crossplane-system
+data:
+  config.yaml: |
+    tunnel: {{ .Values.tunnelId }}
+    credentials-file: /creds/credentials.json
+    no-autoupdate: true
+    protocol: http2
+    ingress:
+      - hostname: {{ .Values.domain }}
+        service: {{ .Values.herdrOrigin | quote }}
+      - service: http_status:404

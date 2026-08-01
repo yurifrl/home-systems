@@ -1,0 +1,69 @@
+{{- $v := .Values.vms.workstation }}
+{{- if $v.enabled }}
+{{- $d := .Values.defaults }}
+apiVersion: virtualenvironmentvm.proxmoxbpg.crossplane.io/v1alpha1
+kind: EnvironmentVM
+metadata:
+  name: {{ $v.name }}
+  annotations:
+    # bpg provider imports/owns a VM by its bare numeric id (it Atoi's this).
+    crossplane.io/external-name: {{ $v.vmId | quote }}
+spec:
+  deletionPolicy: {{ .Values.deletionPolicy }}
+  providerConfigRef:
+    name: {{ .Values.providerConfig.name }}
+  forProvider:
+    nodeName: {{ $d.nodeName }}
+    vmId: {{ $v.vmId }}
+    name: {{ $v.name }}
+    machine: {{ $v.machine }}
+    scsiHardware: {{ $v.scsiHardware }}
+    onBoot: {{ $v.onBoot }}
+    started: {{ if hasKey $v "started" }}{{ $v.started }}{{ else }}{{ .Values.started }}{{ end }}
+    bootOrder:
+      {{- range $v.bootOrder }}
+      - {{ . }}
+      {{- end }}
+    agent:
+      - enabled: true
+    operatingSystem:
+      - type: {{ $v.osType }}
+    cpu:
+      - cores: {{ $v.cpu.cores }}
+        sockets: {{ $v.cpu.sockets }}
+        type: {{ $v.cpu.type | quote }}
+    memory:
+      - dedicated: {{ $v.memoryMiB }}
+    smbios:
+      - uuid: {{ $v.smbiosUuid }}
+    vga:
+      - type: std
+    networkDevice:
+      - bridge: {{ $d.bridge }}
+        model: virtio
+        macAddress: {{ $v.netMac }}
+        firewall: true
+    disk:
+      # boot disk: import the NixOS qcow2 fetched onto local:import (downloads.yaml).
+      - datastoreId: {{ $d.datastoreId }}
+        interface: {{ $v.disk.interface }}
+        size: {{ $v.disk.sizeGiB }}
+        importFrom: {{ .Values.isos.datastoreId }}:import/{{ $v.image.fileName }}
+      {{- if $v.dataDisk.enabled }}
+      # SEPARATE data disk (foundry prevent_destroy analog): the chart-wide
+      # deletionPolicy Orphan keeps this volume on the datastore across VM MR
+      # delete/recreate instead of destroying it.
+      - datastoreId: {{ $d.datastoreId }}
+        interface: {{ $v.dataDisk.interface }}
+        size: {{ $v.dataDisk.sizeGiB }}
+        iothread: {{ $v.dataDisk.iothread | default false }}
+      {{- end }}
+    {{- if $v.cloudInit.enabled }}
+    initialization:
+      # cloud-init seed drive: userDataFileId points at the snippet uploaded by
+      # templates/workstation-cloud-init.yaml (carries the 1Password SA token).
+      - datastoreId: {{ $v.cloudInit.datastoreId }}
+        interface: {{ $v.cloudInit.interface }}
+        userDataFileId: {{ $v.cloudInit.datastoreId }}:snippets/{{ $v.cloudInit.userDataFileName }}
+    {{- end }}
+{{- end }}

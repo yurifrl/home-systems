@@ -27,3 +27,29 @@ spec:
 ---
 {{- end }}
 {{- end }}
+{{- $ws := .Values.vms.workstation }}
+{{- if and $ws.enabled $ws.image.url }}
+# NixOS workstation boot image (qcow2) pulled onto local:import for VM disk
+# import. Published by the nixos CI build-image action to the same GCS bucket as
+# gatus/foundry: workstation-<version>.qcow2.bz2 (versioned image; public, AllUsers:R).
+# .qcow2.bz2 => decompressed to fileName by the provider (decompressionAlgorithm).
+apiVersion: virtualenvironmentdownloadfile.proxmoxbpg.crossplane.io/v1alpha1
+kind: EnvironmentDownloadFile
+metadata:
+  name: import-{{ $ws.image.fileName | lower | replace "_" "-" | replace "." "-" }}
+  annotations:
+    crossplane.io/external-name: {{ $iso.datastoreId }}:import/{{ $ws.image.fileName }}
+spec:
+  deletionPolicy: {{ $.Values.deletionPolicy }}
+  providerConfigRef:
+    name: {{ $.Values.providerConfig.name }}
+  forProvider:
+    nodeName: {{ $d.nodeName }}
+    contentType: import
+    datastoreId: {{ $iso.datastoreId }}
+    fileName: {{ $ws.image.fileName }}
+    url: {{ $ws.image.url | quote }}
+    decompressionAlgorithm: {{ $ws.image.decompressionAlgorithm }}
+    overwrite: false
+    verify: false
+{{- end }}
