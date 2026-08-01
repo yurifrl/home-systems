@@ -170,8 +170,8 @@ vms:
   # Second EnvironmentVM next to talos-pc01, on vmbr0 (lands on 192.168.68.0/24,
   # same L2 as the Talos nodes). No GPU passthrough (contended by talos/windows).
   # Boot disk = NixOS qcow2 imported from GCS; a SEPARATE data disk survives VM
-  # rebuilds; cloud-init seeds the 1Password Service-Account token so the box can
-  # self-pull the rest via files/workstation-bootstrap.sh (design.md §4).
+  # rebuilds; cloud-init pushes the Tailscale auth key (and optional kubeconfig/
+  # docker creds) onto the box so NixOS joins the tailnet as tag:workstation.
   workstation:
     enabled: false                     # flip true once the qcow2 is published + image.url set
     name: workstation
@@ -216,12 +216,13 @@ vms:
       datastoreId: local
       interface: ide2
       userDataFileName: workstation-user-data.yaml
-      # Seed token (design.md §4). Materialised by the workstation-op-sa-token
-      # ExternalSecret (templates/workstation-seed-secret.yaml); its value is set
-      # here ONLY via the PRIVATE overlay -- NEVER commit a real token to the
-      # public chart. Empty => snippet renders with an empty token and the box
-      # bootstrap no-ops until a real token is supplied.
-      opServiceAccountToken: ""
+      # Secrets pushed onto the box via cloud-init (bpg EnvironmentFile has no
+      # secretRef, so "push" = rendered cloud-init). Set in the PRIVATE overlay
+      # from the 1Password `workstation` item. Empty tailscaleAuthKey => the box
+      # boots but won't join the tailnet until one is supplied.
+      tailscaleAuthKey: ""
+      kubeconfig: ""
+      dockerConfigJson: ""
 
 # --- Preflight (ArgoCD PreSync hook): fail the sync if a hard dep is missing ---
 preflight:
@@ -251,22 +252,3 @@ isoPipeline:
   winAdminSecret: proxmox-win-admin
   winAdminOnepasswordItem: windows-pc01-admin
 
-# --- Workstation dev VM seed secret (design.md §4) --------------------------
-# box-pulls-own-secrets: the workstation VM gets exactly ONE seed secret at
-# provision time -- a 1Password Service-Account token. The on-box bootstrap
-# (files/workstation-bootstrap.sh) uses `op` + that token to self-pull all
-# downstream secrets. Materialised from 1Password via the "onepassword"
-# ClusterSecretStore (vault "kubernetes"). Give the SA token minimal read-only
-# scope (that one vault only). enabled:false until the VM exists -- flip to true
-# (typically in the PRIVATE values overlay) once the workstation VM task lands.
-workstationSeed:
-  enabled: false
-  # k8s Secret the ExternalSecret writes (later injected into VM cloud-init).
-  secretName: workstation-op-sa-token
-  secretNamespace: crossplane-system
-  # env var name the bootstrap script expects; also the Secret data key.
-  secretKey: OP_SERVICE_ACCOUNT_TOKEN
-  # 1Password item + field holding the Service-Account token (vault "kubernetes").
-  onepasswordItem: workstation-op-service-account
-  onepasswordProperty: credential
-  refreshInterval: 1h

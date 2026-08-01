@@ -40,6 +40,39 @@ Prerequisites (checked by preflight, fail-fast):
   `windows-pc01-admin` (Windows admin password), reachable via the `onepassword`
   `ClusterSecretStore`.
 
+## Workstation VM 102 (NixOS dev box) — first-time setup
+
+The workstation is a headless NixOS dev VM (k3s + docker + pi/herdr, reached over
+Tailscale). Its boot image is built by the **nixos** repo's CI (`build-image`
+action → `workstation-<version>.qcow2.bz2` in the nixos-images GCS bucket); this
+chart imports that image and boots VM 102. Unlike the declarative parts, seeding
+the box's secrets is a one-time laptop step (you hold the source creds), so:
+
+1. **Populate the 1Password `workstation` item** (Kubernetes vault) — one item,
+   one field per secret. This is a **laptop step** (run from an authenticated
+   machine; the cluster can't — see below). From the repo root:
+   ```bash
+   task proxmox:workstation-seed              # all runnable sections
+   task proxmox:workstation-seed -- tailscale # a single section (rotation)
+   ```
+   Script: `scripts/workstation-seed-secrets.sh` (operator tooling, NOT chart
+   content — it reads your local `op`/`talosctl`/docker-keychain/Tailscale-OAuth
+   context and writes into 1Password; Proxmox/the cluster only read the result).
+   It fills `TAILSCALE_AUTH_KEY` (minted via the tailnet API from an OAuth client
+   that owns `tag:workstation`; `TS_OAUTH_CLIENT_ID`/`_SECRET` on the item), plus
+   `KUBECONFIG` (talosctl) and `REGISTRY_DOCKERCONFIGJSON` (docker keychain) for
+   later use.
+2. **Push the key into the private overlay.** Copy `TAILSCALE_AUTH_KEY` from the
+   `workstation` item into `home-systems-values/proxmox/values.yaml` under
+   `vms.workstation.cloudInit.tailscaleAuthKey`. bpg `EnvironmentFile` has no
+   secretRef, so the box gets its key via the rendered cloud-init — the overlay
+   is the only place this value lives.
+3. **Enable + provision.** In the same overlay set `vms.workstation.enabled: true`
+   (`image.url` is already pinned there). Sync ArgoCD; Crossplane imports the
+   qcow2 and boots VM 102; cloud-init drops `/etc/tailscale/authkey` and NixOS
+   joins the tailnet as `tag:workstation`. Then `ssh root@workstation` over
+   Tailscale.
+
 ## Operating it
 
 **Switch the shared GPU (`0000:01:00.0`) between the VMs** — it's a one-line git

@@ -2,15 +2,15 @@
 {{- if and $v.enabled $v.cloudInit.enabled }}
 {{- $d := .Values.defaults }}
 {{- $ci := $v.cloudInit }}
-# cloud-init user-data snippet for the workstation VM. Seeds the 1Password
-# Service-Account token (box-pulls-own-secrets, design.md §4) and runs the
-# on-box bootstrap (files/workstation-bootstrap.sh, baked into the image) which
-# self-pulls the Tailscale key, GitHub deploy key, kubeconfig and registry creds.
+# cloud-init user-data for the workstation VM (push model). Drops the secrets
+# the box needs straight onto disk; NixOS does the rest (the tailscale service
+# reads /etc/tailscale/authkey and joins as tag:workstation; k3s/docker/pi/herdr
+# are declared in the image). No on-box `op`, no seed token.
 #
-# The token value comes from the workstation-op-sa-token ExternalSecret via the
-# PRIVATE values overlay (vms.workstation.cloudInit.opServiceAccountToken).
-# NEVER commit a real token to the public chart; empty renders an empty token
-# and the bootstrap no-ops until one is supplied.
+# Values come from the PRIVATE overlay (home-systems-values/proxmox/values.yaml,
+# vms.workstation.cloudInit.*), rendered from the 1Password `workstation` item
+# via `task proxmox:workstation-seed`. bpg EnvironmentFile has no secretRef, so
+# push = rendered cloud-init; keep these in the private overlay only.
 apiVersion: virtualenvironmentfile.proxmoxbpg.crossplane.io/v1alpha1
 kind: EnvironmentFile
 metadata:
@@ -30,10 +30,20 @@ spec:
         data: |
           #cloud-config
           write_files:
-            - path: /etc/workstation/op-token
+            - path: /etc/tailscale/authkey
               permissions: '0600'
               owner: root:root
-              content: {{ $ci.opServiceAccountToken | quote }}
-          runcmd:
-            - [ /bin/sh, -c, "OP_SERVICE_ACCOUNT_TOKEN=$(cat /etc/workstation/op-token) /usr/local/bin/workstation-bootstrap.sh" ]
+              content: {{ $ci.tailscaleAuthKey | quote }}
+          {{- if $ci.kubeconfig }}
+            - path: /root/.kube/config
+              permissions: '0600'
+              owner: root:root
+              content: {{ $ci.kubeconfig | quote }}
+          {{- end }}
+          {{- if $ci.dockerConfigJson }}
+            - path: /root/.docker/config.json
+              permissions: '0600'
+              owner: root:root
+              content: {{ $ci.dockerConfigJson | quote }}
+          {{- end }}
 {{- end }}
