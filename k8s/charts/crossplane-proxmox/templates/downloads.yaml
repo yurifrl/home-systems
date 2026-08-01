@@ -52,6 +52,7 @@ spec:
     {{- with $ws.image.decompressionAlgorithm }}
     decompressionAlgorithm: {{ . }}
     {{- end }}
+    uploadTimeout: {{ $ws.image.uploadTimeout | default 3600 }}
     overwrite: false
     verify: false
 {{- end }}

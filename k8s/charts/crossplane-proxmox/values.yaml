@@ -201,6 +201,7 @@ vms:
       fileName: workstation.qcow2                # imported name on local:import
       url: ""                                     # HUMAN: https://storage.googleapis.com/<GCS_BUCKET_NAME>/workstation-<version>.qcow2 (UNCOMPRESSED; import can't decompress)
       decompressionAlgorithm: ""                  # empty: import content type rejects on-download decompression
+      uploadTimeout: 3600                         # 18GB uncompressed image needs > default 600s to download
     # SEPARATE data disk that survives VM rebuilds -- the bpg-native analog of
     # foundry's `prevent_destroy = true` volume: deletionPolicy Orphan (chart
     # default) means Crossplane never destroys this volume, even on VM MR delete.
