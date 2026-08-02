@@ -10,6 +10,16 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
+  # Co-locate with the obsidian pod (and thus the EventBus + sensor): all NATS
+  # traffic stays node-local, avoiding the broken cross-node pod link.
+  template:
+    affinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: obsidian
+            topologyKey: kubernetes.io/hostname
   service:
     ports:
       - port: 12000
