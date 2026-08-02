@@ -63,6 +63,10 @@ spec:
           crds:
             install: true
             keep: true
+            # Render CRDs as plain manifests instead of a Helm pre-install hook
+            # Job; ArgoCD applies CRDs before the CronWorkflow/WorkflowTemplate
+            # CRs, avoiding the "sync tasks not valid" deadlock.
+            full: false
           workflow:
             serviceAccount:
               create: true
