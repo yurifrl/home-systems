@@ -69,7 +69,7 @@ bucketIAMMembers: []
 #  - name: board-games-assets-cdn-reader
 #    bucketRef: board-games-assets
 #    role: roles/storage.objectViewer
-#    member: "serviceAccount:service-PROJECT_NUMBER@cloud-cdn-fill.iam.gserviceaccount.com"
+#    member: "serviceAccount:service-PROJECT_NUMBER@https-lb.iam.gserviceaccount.com"
 
 # --- Assets CDN (global external HTTPS LB + Cloud CDN over the PRIVATE bucket) --
 # GCP-native CloudFront+OAC equivalent. Cloud Armor edge policy allows only
