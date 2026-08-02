@@ -10,16 +10,4 @@ metadata:
 spec:
   jetstream:
     version: latest
-    # Single replica + co-located with the eventsource/sensor and obsidian pod
-    # (podAffinity below): keeps all NATS traffic node-local. The cluster has a
-    # broken cross-node pod link (rpi01<->macarm01), so a multi-node jetstream
-    # raft cluster cannot form healthy connections. The CronWorkflow is the HA
-    # fallback for sync.
-    replicas: 1
-    affinity:
-      podAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                app: obsidian
-            topologyKey: kubernetes.io/hostname
+    replicas: 3

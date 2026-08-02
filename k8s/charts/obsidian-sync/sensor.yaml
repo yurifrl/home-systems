@@ -10,14 +10,6 @@ metadata:
 spec:
   template:
     serviceAccountName: obsidian-sensor
-    # Co-locate with the obsidian pod (and thus the EventBus): node-local NATS.
-    affinity:
-      podAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                app: obsidian
-            topologyKey: kubernetes.io/hostname
   dependencies:
     - name: obsidian-push
       eventSourceName: obsidian-repo-webhook
