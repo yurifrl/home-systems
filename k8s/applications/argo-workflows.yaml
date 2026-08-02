@@ -32,6 +32,9 @@ spec:
             - name: argo-workflows-stock-checker
           virtualServices:
             - name: argo-workflows
+              domains:
+                live: true
+                tech: true
               service:
                 name: argo-workflows-server
                 namespace: argo-workflows
