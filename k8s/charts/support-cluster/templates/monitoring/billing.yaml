@@ -102,4 +102,16 @@ spec:
           annotations:
             summary: "GCP budget {{ `{{ $labels.budget }}` }} over {{ $e.alertThreshold }}x"
             description: "Budget {{ `{{ $labels.budget }}` }} spend {{ `{{ $value | humanize }}` }} of its limit ({{ `{{ $labels.currency }}` }})."
+        # Fires at 100% — the same condition that trips the kill switch (billing
+        # detach). Persists after detach since spend stays >= limit.
+        - alert: GCPBudgetKillSwitch
+          expr: gcp_billing_cost / gcp_billing_amount >= 1
+          for: 1m
+          labels:
+            severity: critical
+            environment: production
+            service: gcp-billing-killswitch
+          annotations:
+            summary: "GCP kill switch condition: budget {{ `{{ $labels.budget }}` }} at 100%"
+            description: "Budget {{ `{{ $labels.budget }}` }} hit its limit ({{ `{{ $labels.currency }}` }}); the billing kill switch fires at this threshold."
 {{- end }}

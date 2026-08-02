@@ -137,6 +137,19 @@ billing:
     enabled: false
     subscription: billing-budget-alerts-exporter
     subscriberServiceAccount: ""   # exporter SA email (-> private)
+  # KILL SWITCH: at `ratio` of a budget, detaches billing from the WHOLE project
+  # (destructive, project-wide). dryRun=true alerts without detaching.
+  killSwitch:
+    enabled: false
+    name: billing-killswitch
+    region: us-east1
+    runtime: nodejs20
+    entryPoint: killswitch
+    sourceBucket: ""
+    sourceObject: billing-killswitch/latest.zip
+    runtimeServiceAccount: ""
+    ratio: 1.0
+    dryRun: true
 
 # --- Project services (API enablement) -------------------------------------
 projectServices: []
