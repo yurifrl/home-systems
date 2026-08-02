@@ -12,14 +12,33 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  entrypoint: sync
+  entrypoint: main
   synchronization:
     mutex:
       name: obsidian-vault-sync
   ttlStrategy:
     secondsAfterCompletion: 3600
   templates:
-    - name: sync
+    # Run the git sync, then stamp a label on this Workflow recording whether
+    # the Board Games inventory folder changed. A board-games Sensor watches
+    # for Succeeded workflows carrying board-games-inventory-changed=true.
+    - name: main
+      steps:
+        - - name: git-sync
+            template: git-sync
+        - - name: mark
+            template: mark
+            arguments:
+              parameters:
+                - name: bg-changed
+                  value: "{{steps.git-sync.outputs.parameters.bg-changed}}"
+
+    - name: git-sync
+      outputs:
+        parameters:
+          - name: bg-changed
+            valueFrom:
+              path: /tmp/bg-changed
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -53,18 +72,45 @@ spec:
           - |
             set -e
             VAULT=/config/vaults/Obsidian
+            INV='Yuri/Resources/Board Games/Inventory/'
             git config --global --add safe.directory "$VAULT"
             if [ ! -d "$VAULT/.git" ]; then
               mkdir -p "$VAULT"
               git clone "https://oauth2:${GITHUB_TOKEN}@github.com/yurifrl/Obsidian.git" "$VAULT"
-            else
-              git -C "$VAULT" pull --rebase --autostash
-              git -C "$VAULT" add -A
-              if ! git -C "$VAULT" diff --cached --quiet; then
-                git -C "$VAULT" \
-                  -c user.name=obsidian-sync \
-                  -c user.email=obsidian-sync@local \
-                  commit -m "auto: $(date -Iseconds)"
-                git -C "$VAULT" push
-              fi
+              printf true > /tmp/bg-changed   # first clone: sync board-games once
+              exit 0
             fi
+            BEFORE=$(git -C "$VAULT" rev-parse HEAD)
+            git -C "$VAULT" pull --rebase --autostash
+            git -C "$VAULT" add -A
+            if ! git -C "$VAULT" diff --cached --quiet; then
+              git -C "$VAULT" \
+                -c user.name=obsidian-sync \
+                -c user.email=obsidian-sync@local \
+                commit -m "auto: $(date -Iseconds)"
+              git -C "$VAULT" push
+            fi
+            AFTER=$(git -C "$VAULT" rev-parse HEAD)
+            CHANGED=$(git -C "$VAULT" -c core.quotePath=false diff --name-only "$BEFORE" "$AFTER")
+            echo '== files fetched/changed this sync =='
+            echo "$CHANGED"
+            if echo "$CHANGED" | grep -q "^$INV"; then
+              printf true > /tmp/bg-changed
+            else
+              printf false > /tmp/bg-changed
+            fi
+
+    - name: mark
+      inputs:
+        parameters:
+          - name: bg-changed
+      resource:
+        action: patch
+        mergeStrategy: merge
+        manifest: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: Workflow
+          metadata:
+            name: "{{workflow.name}}"
+            labels:
+              board-games-inventory-changed: "{{inputs.parameters.bg-changed}}"

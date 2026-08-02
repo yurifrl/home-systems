@@ -9,6 +9,10 @@ rules:
   - apiGroups: ["argoproj.io"]
     resources: ["workflowtaskresults"]
     verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+  # The `mark` step patches a label onto its own Workflow.
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflows"]
+    verbs: ["get", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
