@@ -47,6 +47,19 @@ providers:
   # to manage Access App + Service Token + Policy.
   - name: provider-cloudflare-zero
     package: xpkg.upbound.io/wildbitca/provider-cloudflare-zero:v0.2.6
+  # --- Billing spend system (budgets -> Pub/Sub -> Cloud Function -> Discord) ---
+  # All install their MRDs Inactive; only the globs in defaultActivations below
+  # become live CRDs. Budgets are alert-only (GCP never hard-caps spend).
+  - name: provider-gcp-billingbudgets
+    package: xpkg.upbound.io/upbound/provider-gcp-billingbudgets:v2.5.4
+  - name: provider-gcp-pubsub
+    package: xpkg.upbound.io/upbound/provider-gcp-pubsub:v2.5.4
+  - name: provider-gcp-cloudfunctions2
+    package: xpkg.upbound.io/upbound/provider-gcp-cloudfunctions2:v2.5.4
+  # Secret Manager holds the Discord webhook (fed from 1Password via ESO ->
+  # SecretManagerSecretVersion.secretDataSecretRef), so no secret lands in git.
+  - name: provider-gcp-secretmanager
+    package: xpkg.upbound.io/upbound/provider-gcp-secretmanager:v2.5.4
 
 # ExternalSecret that materialises the GCP service-account key JSON used by the
 # ProviderConfig. The 1Password item must expose a field whose value is the raw
@@ -74,6 +87,15 @@ defaultActivations:
   - "*.proxmoxbpg.m.crossplane.io"
   - "*.zero.upjet-cloudflare.upbound.io"
   - "*.zero.upjet-cloudflare.m.upbound.io"
+  # Billing spend system. Verify plurals post-install: kubectl get mrds | grep -E 'billingbudgets|pubsub|cloudfunctions2|secretmanager'
+  - "*.billingbudgets.gcp.upbound.io"
+  - "*.billingbudgets.gcp.m.upbound.io"
+  - "*.pubsub.gcp.upbound.io"
+  - "*.pubsub.gcp.m.upbound.io"
+  - "*.cloudfunctions2.gcp.upbound.io"
+  - "*.cloudfunctions2.gcp.m.upbound.io"
+  - "*.secretmanager.gcp.upbound.io"
+  - "*.secretmanager.gcp.m.upbound.io"
 
 # MRAP that activates ONLY the compute CRDs the assets CDN needs (both the
 # legacy .upbound.io and modern .m.upbound.io variants). Everything else in

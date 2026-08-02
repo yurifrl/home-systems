@@ -22,6 +22,12 @@ spec:
     name: {{ $pc }}
   forProvider:
     location: {{ .location | quote }}
+    {{- with .labels }}
+    # Labels surface in the billing export, so a Budget can filter spend to just
+    # this bucket via budgetFilter.labels (see templates/billing.yaml).
+    labels:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     {{- with .storageClass }}
     storageClass: {{ . | quote }}
     {{- end }}

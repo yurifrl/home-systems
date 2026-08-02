@@ -1,0 +1,105 @@
+# GCP billing exporter: subscribes to the budget Pub/Sub topic and exposes the
+# latest spend per budget as Prometheus gauges, then VMRule alerts to Discord
+# (the "attached" path — the independent path is the GCP Cloud Function). Budgets,
+# topic and subscription are created by k8s/charts/crossplane-gcp billing block;
+# the GCP SA key is synced into `credentialsSecret` by crossplane serviceAccountKeys.
+{{- if .Values.features.billingExporter }}
+{{- $e := .Values.billingExporter }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billing-exporter
+  namespace: monitoring
+  labels:
+    app: billing-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: billing-exporter
+  template:
+    metadata:
+      labels:
+        app: billing-exporter
+    spec:
+      containers:
+        - name: exporter
+          image: {{ $e.image | quote }}
+          ports:
+            - name: metrics
+              containerPort: 9109
+          env:
+            - name: GCP_PROJECT
+              value: {{ $e.gcpProject | quote }}
+            - name: PUBSUB_SUBSCRIPTION
+              value: {{ $e.subscription | quote }}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/secrets/gcp/{{ $e.credentialsKey }}
+          volumeMounts:
+            - name: gcp-key
+              mountPath: /var/secrets/gcp
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: gcp-key
+          secret:
+            secretName: {{ $e.credentialsSecret }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: billing-exporter
+  namespace: monitoring
+  labels:
+    app: billing-exporter
+spec:
+  selector:
+    app: billing-exporter
+  ports:
+    - name: metrics
+      port: 9109
+      targetPort: metrics
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: billing-exporter
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+spec:
+  selector:
+    matchLabels:
+      app: billing-exporter
+  endpoints:
+    - port: metrics
+      interval: 60s
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: billing-budget-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: gcp-billing.rules
+      rules:
+        - alert: GCPBudgetThresholdExceeded
+          expr: gcp_billing_cost / gcp_billing_amount >= {{ $e.alertThreshold }}
+          for: 5m
+          labels:
+            severity: critical
+            environment: production
+            service: gcp-billing
+          annotations:
+            summary: "GCP budget {{ `{{ $labels.budget }}` }} over {{ $e.alertThreshold }}x"
+            description: "Budget {{ `{{ $labels.budget }}` }} spend {{ `{{ $value | humanize }}` }} of its limit ({{ `{{ $labels.currency }}` }})."
+{{- end }}

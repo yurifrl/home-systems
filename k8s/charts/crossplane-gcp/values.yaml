@@ -97,6 +97,47 @@ assetsCdn:
 #    - 172.64.0.0/13
 #    - 131.0.72.0/22
 
+# --- Billing spend system (budgets -> Pub/Sub -> Cloud Function -> Discord) ---
+# Alert-only spot-spending: one budget per bucket, filtered by the bucket's
+# `budget` label. Real values (billing account, project number, budgets, SA
+# emails) live in the PRIVATE values repo. See templates/billing.yaml for the
+# honest caveats (no hard cap; validate upjet field shapes post-install).
+billing:
+  enabled: false
+  billingAccount: ""        # e.g. 000000-XXXXXX-XXXXXX  (secret -> private)
+  projectNumber: ""         # e.g. 555680140769           (secret -> private)
+  currency: BRL
+  topic: billing-budget-alerts
+  # Cloud Billing Budgets service agent, granted pubsub.publisher on the topic.
+  budgetServiceAgent: ""    # e.g. billing-budgets@system.gserviceaccount.com
+  budgets: []
+  #  - name: longhorn
+  #    label: longhorn        # must match buckets[].labels.budget
+  #    amount: 100
+  #    thresholds: [0.5, 0.9, 1.0]
+  # Discord webhook stored in Secret Manager, fed from a k8s Secret (ESO).
+  discordSecret:
+    name: billing-discord-webhook
+    k8sSecretName: billing-discord-webhook
+    k8sSecretNamespace: crossplane-system
+    k8sSecretKey: webhook-url
+    onepasswordKey: ""       # 1Password item key holding webhook-url (-> private)
+  # Independent Discord alerter (GCP-native, survives cluster outage).
+  function:
+    enabled: false
+    name: billing-discord
+    region: us-east1
+    runtime: nodejs20
+    entryPoint: notify
+    sourceBucket: ""         # functions-src bucket externalName (-> private)
+    sourceObject: billing-discord/latest.zip
+    runtimeServiceAccount: ""
+  # In-cluster Prometheus exporter pull subscription.
+  exporter:
+    enabled: false
+    subscription: billing-budget-alerts-exporter
+    subscriberServiceAccount: ""   # exporter SA email (-> private)
+
 # --- Project services (API enablement) -------------------------------------
 projectServices: []
 #  - name: iam

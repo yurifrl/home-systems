@@ -10,6 +10,20 @@ features:
   tailscale: true
   defaultServiceAccountWithImagePullSecret: true
   defaultLimitRange: true
+  # In-cluster GCP billing exporter (Pub/Sub -> Prometheus gauge). Pairs with the
+  # crossplane-gcp `billing` block that creates the budgets/topic/subscription.
+  billingExporter: false
+
+# In-cluster GCP billing exporter config (requires features.billingExporter).
+billingExporter:
+  image: ghcr.io/yurifrl/billing-exporter:latest
+  gcpProject: syscd-443112
+  subscription: billing-budget-alerts-exporter
+  # k8s Secret (from crossplane serviceAccountKeys) holding the GCP SA key JSON.
+  credentialsSecret: billing-exporter-gcs-key
+  credentialsKey: creds
+  # Alert when spend crosses this fraction of a budget's limit.
+  alertThreshold: 0.9
 
 # Namespaces to create default ServiceAccount with image pull secret
 # Requires features.defaultServiceAccountWithImagePullSecret: true

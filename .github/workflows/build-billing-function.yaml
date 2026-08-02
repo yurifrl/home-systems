@@ -1,0 +1,50 @@
+name: Build Billing Discord Function
+
+# Zips the Gen2 Cloud Function source and uploads it to the functions-src GCS
+# bucket. Crossplane's cloudfunctions2.Function references that object
+# (billing.function.sourceObject). Auth is Workload Identity Federation — the
+# WIF pool's attributeCondition must allow this repo (see gcp/values.yaml).
+#
+# NOTE: the Function references a stable object name (latest.zip), so a code
+# change re-uploads the object but does NOT auto-redeploy the function (the
+# Crossplane spec string is unchanged). Bump billing.function.sourceObject to a
+# versioned key to force a redeploy.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'functions/billing-discord/**'
+      - '.github/workflows/build-billing-function.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  # Fill these from the private values / GH repo variables.
+  WIF_PROVIDER: ${{ vars.GCP_WIF_PROVIDER }}          # projects/NUM/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+  DEPLOY_SA: ${{ vars.GCP_DEPLOY_SA }}                # e.g. billing-fn-deployer@syscd-443112.iam.gserviceaccount.com
+  SRC_BUCKET: ${{ vars.GCP_FUNCTIONS_SRC_BUCKET }}    # functions-src bucket name
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Zip source
+        run: |
+          cd functions/billing-discord
+          zip -r /tmp/billing-discord.zip . -x '*.git*'
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Upload to GCS
+        run: gcloud storage cp /tmp/billing-discord.zip gs://${{ env.SRC_BUCKET }}/billing-discord/latest.zip
