@@ -149,6 +149,10 @@ spec:
                 repository: ghcr.io/yurifrl/syscd-app
                 tag: latest
                 pullPolicy: Always
+              # amd64-only image; pc01 is the only schedulable amd64 node.
+              # ponytail: pin to pc01; build multi-arch images if HA matters.
+              nodeSelector:
+                kubernetes.io/hostname: pc01
               containerPort: 8080
               readinessProbe:
                 httpGet:
@@ -170,6 +174,8 @@ spec:
                 repository: ghcr.io/yurifrl/syscd-app-api
                 tag: latest
                 pullPolicy: Always
+              nodeSelector:
+                kubernetes.io/hostname: pc01
               containerPort: 3000
               readinessProbe:
                 httpGet:
