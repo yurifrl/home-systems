@@ -60,9 +60,10 @@ spec:
       {{- end }}
     {{- if $v.cloudInit.enabled }}
     initialization:
-      # cloud-init seed drive: userDataFileId points at the snippet uploaded by
-      # templates/workstation-cloud-init.yaml (carries the 1Password SA token).
-      - datastoreId: {{ $v.cloudInit.datastoreId }}
+      # cidata drive lives on the images-capable pool ($d.datastoreId, local-lvm);
+      # userDataFileId references the snippet uploaded to local:snippets by
+      # templates/workstation-cloud-init.yaml (push-model: carries the Tailscale key).
+      - datastoreId: {{ $d.datastoreId }}
         interface: {{ $v.cloudInit.interface }}
         userDataFileId: {{ $v.cloudInit.datastoreId }}:snippets/{{ $v.cloudInit.userDataFileName }}
     {{- end }}
