@@ -12,7 +12,7 @@ features:
   defaultLimitRange: true
   # In-cluster GCP billing exporter (Pub/Sub -> Prometheus gauge). Pairs with the
   # crossplane-gcp `billing` block that creates the budgets/topic/subscription.
-  billingExporter: false
+  billingExporter: true
 
 # In-cluster GCP billing exporter config (requires features.billingExporter).
 billingExporter:
@@ -20,8 +20,10 @@ billingExporter:
   gcpProject: syscd-443112
   subscription: billing-budget-alerts-exporter
   # k8s Secret (from crossplane serviceAccountKeys) holding the GCP SA key JSON.
+  # The upbound ServiceAccountKey connection secret exposes the JSON under
+  # `private_key` (not `creds`).
   credentialsSecret: billing-exporter-gcs-key
-  credentialsKey: creds
+  credentialsKey: private_key
   # Alert when spend crosses this fraction of a budget's limit.
   alertThreshold: 0.9
 
