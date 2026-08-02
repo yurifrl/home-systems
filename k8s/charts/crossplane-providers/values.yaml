@@ -60,6 +60,12 @@ providers:
   # SecretManagerSecretVersion.secretDataSecretRef), so no secret lands in git.
   - name: provider-gcp-secretmanager
     package: xpkg.upbound.io/upbound/provider-gcp-secretmanager:v2.5.4
+  # Certificate Manager: DNS-authorized managed TLS cert for the assets CDN LB.
+  # Classic LB-authorized certs can't validate behind the Cloudflare proxy;
+  # DNS authorization validates via a zone CNAME and auto-renews. MRDs install
+  # Inactive; only the certificatemanager glob in defaultActivations goes live.
+  - name: provider-gcp-certificatemanager
+    package: xpkg.upbound.io/upbound/provider-gcp-certificatemanager:v2.5.4
 
 # ExternalSecret that materialises the GCP service-account key JSON used by the
 # ProviderConfig. The 1Password item must expose a field whose value is the raw
@@ -96,6 +102,9 @@ defaultActivations:
   - "*.cloudfunctions2.gcp.m.upbound.io"
   - "*.secretmanager.gcp.upbound.io"
   - "*.secretmanager.gcp.m.upbound.io"
+  # Certificate Manager (assets CDN DNS-authorized TLS cert).
+  - "*.certificatemanager.gcp.upbound.io"
+  - "*.certificatemanager.gcp.m.upbound.io"
 
 # MRAP that activates ONLY the compute CRDs the assets CDN needs (both the
 # legacy .upbound.io and modern .m.upbound.io variants). Everything else in

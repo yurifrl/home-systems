@@ -80,16 +80,59 @@ spec:
   forProvider:
     defaultServiceRef: { name: {{ .name }} }
 ---
-apiVersion: compute.gcp.upbound.io/v1beta1
-kind: ManagedSSLCertificate
+# DNS-authorized Google-managed cert (Certificate Manager). A classic
+# ManagedSSLCertificate is LB-authorized: Google validates by reaching the LB
+# at the public hostname. That hostname is proxied through Cloudflare, so Google
+# never sees the LB and the cert stays FAILED_NOT_VISIBLE forever. DNS
+# authorization proves ownership via a CNAME in the zone instead, which works
+# behind the proxy and auto-renews. The validation CNAME is created in
+# Cloudflare (see cloudflare-cdn.yaml, gated on assetsCdn.dnsAuthCname).
+apiVersion: certificatemanager.gcp.upbound.io/v1beta1
+kind: DNSAuthorization
 metadata:
   name: {{ .name }}
 spec:
   deletionPolicy: {{ $dp }}
   providerConfigRef: { name: {{ $pc }} }
   forProvider:
+    location: global
+    domain: {{ required "assetsCdn.domain required" .domain | quote }}
+---
+apiVersion: certificatemanager.gcp.upbound.io/v1beta1
+kind: Certificate
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: {{ $pc }} }
+  forProvider:
+    location: global
     managed:
-      - domains: [{{ required "assetsCdn.domain required" .domain | quote }}]
+      - domains: [{{ .domain | quote }}]
+        dnsAuthorizationsRefs:
+          - name: {{ .name }}
+---
+apiVersion: certificatemanager.gcp.upbound.io/v1beta1
+kind: CertificateMap
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: {{ $pc }} }
+  forProvider: {}
+---
+apiVersion: certificatemanager.gcp.upbound.io/v1beta1
+kind: CertificateMapEntry
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: {{ $pc }} }
+  forProvider:
+    mapRef: { name: {{ .name }} }
+    certificatesRefs:
+      - name: {{ .name }}
+    hostname: {{ .domain | quote }}
 ---
 apiVersion: compute.gcp.upbound.io/v1beta1
 kind: TargetHTTPSProxy
@@ -100,11 +143,9 @@ spec:
   providerConfigRef: { name: {{ $pc }} }
   forProvider:
     urlMapRef: { name: {{ .name }} }
-    # Reference the google-managed cert by its deterministic self-link. Its
-    # crossplane kind is ManagedSSLCertificate, so sslCertificatesRefs (which
-    # resolves the classic SSLCertificate kind) can't be used here.
-    sslCertificates:
-      - https://www.googleapis.com/compute/v1/projects/{{ required "providerConfig.projectID required" $.Values.providerConfig.projectID }}/global/sslCertificates/{{ .name }}
+    # Serve TLS from the Certificate Manager cert map (DNS-authorized managed
+    # cert) rather than a classic ssl-certificate self-link.
+    certificateMap: "//certificatemanager.googleapis.com/projects/{{ required "providerConfig.projectID required" $.Values.providerConfig.projectID }}/locations/global/certificateMaps/{{ .name }}"
 ---
 apiVersion: compute.gcp.upbound.io/v1beta1
 kind: GlobalAddress

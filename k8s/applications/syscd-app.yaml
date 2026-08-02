@@ -28,15 +28,112 @@ spec:
       path: k8s/charts/support
       helm:
         valuesObject:
+          configMaps:
+            - name: ourtube-channels
+              data:
+                channels.yaml: |
+                  channels:
+                    - channelId: UCXuqSBlHAE6Xw-yeJA0Tunw
+                      name: Linus Tech Tips
+                    - channelId: UCrTNhL_yO3tPTdQ5XgmmWjA
+                      name: RedLetterMedia
+                    - channelId: UCiER8p540j2SosO7OX7E0VA
+                      name: Legends of Avantris
+                    - channelId: UCyRhIGDUKdIOw07Pd8pHxCw
+                      name: Shut Up & Sit Down
+                    - channelId: UCDjzWHhTShC59KtduL-jeig
+                      name: Estranha História
+                    - channelId: UCW7AGm8JSBEEew61dJIgl_A
+                      name: Tom Cardy
+                    - channelId: UC2J6g9iavgANTSKEemLFOTA
+                      name: This Aged Great!
+                    - channelId: UC1lIHn3KlcJimyxsVugP4uw
+                      name: Aging Wheels
+                    - channelId: UCGeIjGngCkErevSNHdZYD5Q
+                      name: Expleened (Storymode)
+                    - channelId: UC6ext5UAbrLT2e5y5BC6RTQ
+                      name: The Adam Friedland Show
+                    - channelId: UC_S45UpAYVuc0fYEcHN9BVQ
+                      name: Boy Boy
+                    - channelId: UC8Q7XEy86Q7T-3kNpNjYgwA
+                      name: Incognito Mode
+                    - channelId: UCejzv0MInydp0Isrza8e0tw
+                      name: Jenna Phipps
+                    - channelId: UCFhXFikryT4aFcLkLw2LBLA
+                      name: NileRed
+                    - channelId: UCR1D15p_vdP3HkrH8wgjQRw
+                      name: Internet Historian
+                    - channelId: UCRcgy6GzDeccI7dkbbBna3Q
+                      name: LEMMiNO
+                    - channelId: UCtU-oQXFKUMFvhunPrx7U-w
+                      name: No Pun Included
+                    - channelId: UC1ZBQ-F-yktYD4m5AzM6pww
+                      name: Mustard
+                    - channelId: UClt01z1wHHT7c5lKcU8pxRQ
+                      name: hbomberguy
+                    - channelId: UCG1h-Wqjtwz7uUANw6gazRw
+                      name: Lindsay Ellis
+                    - channelId: UCNvsIonJdJ5E4EXMa65VYpA
+                      name: ContraPoints
+                    - channelId: UCSc16oMxxlcJSb9SXkjwMjA
+                      name: YMS
+                    - channelId: UCrq3JYirgV-BLluzTF6X_7A
+                      name: STRANGE ÆONS
+                    - channelId: UCnCk_o6ySiM_ZzxubCv899Q
+                      name: fig tree
+                    - channelId: UC7-E5xhZBZdW-8d7V80mzfg
+                      name: Jenny Nicholson
+                    - channelId: UCyNtlmLB73-7gtlBz00XOQQ
+                      name: Folding Ideas
+                    - channelId: UC6me-RzbQFQ-kRyr6BlGZWg
+                      name: Paul E.T.
+                    - channelId: UCj1VqrHhDte54oLgPG4xpuQ
+                      name: Stuff Made Here
+                    - channelId: UCCJD5wGU6pLiCHKH2Sr_4fg
+                      name: Quinns Quest
+                    - channelId: UC2P1bJ-udK3UhVX2QvnkS9g
+                      name: OneShortEye
+                    - channelId: UCj564l7fIN58l-1lgnfOpSA
+                      name: Zwigs
+                    - channelId: UCL5rT0UDW0HzGqKwNiN2XxQ
+                      name: Philip Thompson
+                    - channelId: UCXh9mHdcBD-3aGCiECZMP1Q
+                      name: Not An Engineer
+                    - channelId: UC6k_GngLDtxbkUlZOq6_h5g
+                      name: The McElroy Family
+                    - channelId: UCvYwePdbWSEwUa-Pk02u3Zw
+                      name: Questing Beast
+                    - channelId: UCCXR2kCo7Lcw_BKwWxo09kw
+                      name: Zee Bashew
+                    - channelId: UCFfH-JnmTDr5izA35fHQe5g
+                      name: Alex Hillman
+                    - channelId: UCqB1bhMwGsW-yefBxYwFCCg
+                      name: Tonbis AI Garage
+                    - channelId: UCNSfV3L4jv7Kx22lxo0Sv-g
+                      name: Cameron Gray
+                    - channelId: UCbRP3c757lWg9M-U7TyEkXA
+                      name: Theo - t3.gg
+                    - channelId: UCrVLgIniVg6jW38uVqDRIiQ
+                      name: Everything Smart Home
+                    - channelId: UCJa14zeVf8p6clixTOIOVyQ
+                      name: jakkuh
+                    - channelId: UCxLYtICsUCWdr1YPrj5DtwA
+                      name: Ordinary Things
+                    - channelId: UCCJFWxm9fUtB4hPzNvmfcMA
+                      name: James May’s Planet Gin
+                    - channelId: UCkDSAQ_5-yx5hmuvUcsJL7A
+                      name: Mr Sunday Movies
+                    - channelId: UCODHrzPMGbNv67e84WDZhQQ
+                      name: fern
+          externalSecrets:
+            - name: syscd-app
           deployments:
+            # Static web build served by busybox httpd on :8080.
             - name: syscd-app
               image:
                 repository: ghcr.io/yurifrl/syscd-app
                 tag: latest
                 pullPolicy: Always
-              # Image is built amd64-only.
-              nodeSelector:
-                kubernetes.io/hostname: pc01
               containerPort: 8080
               readinessProbe:
                 httpGet:
@@ -50,9 +147,51 @@ spec:
                   memory: 32Mi
                 limits:
                   memory: 128Mi
+            # Hono API (bun server/index.ts): budget/health/ourtube + auth.
+            # Poller + retention run in-process; channels seeded from the
+            # ourtube-channels ConfigMap via OT_CHANNELS_CONFIG_PATH.
+            - name: syscd-api
+              image:
+                repository: ghcr.io/yurifrl/syscd-app-api
+                tag: latest
+                pullPolicy: Always
+              containerPort: 3000
+              readinessProbe:
+                httpGet:
+                  path: /health
+                  port: http
+                initialDelaySeconds: 5
+                periodSeconds: 10
+              resources:
+                requests:
+                  cpu: 20m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+              envFrom:
+                - secretRef:
+                    name: syscd-app
+              env:
+                - name: OT_CHANNELS_CONFIG_PATH
+                  value: /config/channels.yaml
+                - name: APP_BASE_URL
+                  value: https://app.syscd.live
+                - name: API_BASE_URL
+                  value: https://api.syscd.live
+              volumes:
+                - name: channels
+                  configMap:
+                    name: ourtube-channels
+              volumeMounts:
+                - name: channels
+                  mountPath: /config
+                  readOnly: true
           services:
             - name: syscd-app
               port: 80
+              targetPort: http
+            - name: syscd-api
+              port: 3000
               targetPort: http
           virtualServices:
             - name: syscd-app
@@ -65,3 +204,10 @@ spec:
                 name: syscd-app
                 namespace: syscd-app
                 port: 80
+            - name: syscd-api
+              hosts:
+                - api.syscd.live
+              service:
+                name: syscd-api
+                namespace: syscd-app
+                port: 3000
