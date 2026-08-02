@@ -44,6 +44,14 @@ spec:
     - chart: argo-events
       repoURL: https://argoproj.github.io/argo-helm
       targetRevision: "2.4.24"
+      helm:
+        valuesObject:
+          # Cluster-scoped controller so it reconciles EventBus/EventSource/
+          # Sensor in other namespaces (e.g. obsidian). This is the chart
+          # default; pinned here so an upstream change can't silently break it.
+          controller:
+            rbac:
+              namespaced: false
     - chart: argo-workflows
       repoURL: https://argoproj.github.io/argo-helm
       targetRevision: "1.0.23"
