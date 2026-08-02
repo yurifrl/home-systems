@@ -13,6 +13,24 @@
 {{- if .enabled }}
 {{- $pc := $.Values.providerConfig.name }}
 {{- $dp := $.Values.deletionPolicy }}
+{{- if .providerServiceAccount }}
+---
+# The crossplane provider SA needs Certificate Manager perms to manage the
+# DNS-authorized cert below. Its other roles are bootstrapped, but this one is
+# assets-CDN-specific, so it lives with the feature. Requires the SA to already
+# hold resourcemanager.projectIamAdmin (it does).
+apiVersion: cloudplatform.gcp.upbound.io/v1beta1
+kind: ProjectIAMMember
+metadata:
+  name: {{ .name }}-certmanager-editor
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: {{ $pc }} }
+  forProvider:
+    project: {{ required "providerConfig.projectID required" $.Values.providerConfig.projectID | quote }}
+    role: roles/certificatemanager.editor
+    member: {{ printf "serviceAccount:%s" .providerServiceAccount | quote }}
+{{- end }}
 ---
 apiVersion: compute.gcp.upbound.io/v1beta1
 kind: SecurityPolicy
