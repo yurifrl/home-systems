@@ -29,7 +29,6 @@ spec:
           externalSecrets:
             - name: argo-workflows
               decodingStrategy: Auto
-            - name: argo-workflows-stock-checker
           virtualServices:
             - name: argo-workflows
               domains:

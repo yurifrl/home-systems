@@ -58,6 +58,7 @@ spec:
     member: "serviceAccount:{{ . }}"
 {{- end }}
 {{- range $b.budgets }}
+{{- if $b.budgetsEnabled }}
 ---
 # {{ .name }}: {{ $b.currency }} {{ .amount }} alert-only budget, scoped to
 # resources labelled budget={{ .label }}.
@@ -88,6 +89,7 @@ spec:
     allUpdatesRule:
       - pubsubTopic: {{ $topicPath | quote }}
         schemaVersion: "1.0"
+{{- end }}
 {{- end }}
 {{- with $b.discordSecret }}
 ---

@@ -48,10 +48,9 @@ providers:
   - name: provider-cloudflare-zero
     package: xpkg.upbound.io/wildbitca/provider-cloudflare-zero:v0.2.6
   # --- Billing spend system (budgets -> Pub/Sub -> Cloud Function -> Discord) ---
-  # All install their MRDs Inactive; only the globs in defaultActivations below
-  # become live CRDs. Budgets are alert-only (GCP never hard-caps spend).
-  - name: provider-gcp-billingbudgets
-    package: xpkg.upbound.io/upbound/provider-gcp-billingbudgets:v2.5.4
+  # NOTE: the upbound GCP provider has NO native Budget resource (google_billing_budget
+  # is unmapped in provider-upjet-gcp v2.5.x). Budgets are created out-of-band /
+  # via provider-terraform (TBD). The topic/functions/secretmanager below ARE native.
   - name: provider-gcp-pubsub
     package: xpkg.upbound.io/upbound/provider-gcp-pubsub:v2.5.4
   - name: provider-gcp-cloudfunctions2
@@ -93,9 +92,7 @@ defaultActivations:
   - "*.proxmoxbpg.m.crossplane.io"
   - "*.zero.upjet-cloudflare.upbound.io"
   - "*.zero.upjet-cloudflare.m.upbound.io"
-  # Billing spend system. Verify plurals post-install: kubectl get mrds | grep -E 'billingbudgets|pubsub|cloudfunctions2|secretmanager'
-  - "*.billingbudgets.gcp.upbound.io"
-  - "*.billingbudgets.gcp.m.upbound.io"
+  # Billing spend system. Verify plurals post-install: kubectl get mrds | grep -E 'pubsub|cloudfunctions2|secretmanager'
   - "*.pubsub.gcp.upbound.io"
   - "*.pubsub.gcp.m.upbound.io"
   - "*.cloudfunctions2.gcp.upbound.io"

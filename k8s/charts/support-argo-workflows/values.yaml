@@ -1,8 +1,1 @@
-stockChecker:
-  enabled: true
-  schedule: "*/10 * * * *"
-  products:
-    - name: "EAH-8"
-      url: "https://br.store.ui.com/br/pt/category/all-door-access/products/eah-8"
-      outOfStockText: "Esgotado"
-
+{}
