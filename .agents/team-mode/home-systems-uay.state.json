@@ -1,0 +1,20 @@
+{
+ "raised": {},
+ "accomplished": [
+  {
+   "id": "home-systems-uay.2",
+   "title": "Stop KubePodNotReady alert flood (root cause: macintel01 node down ~4d)",
+   "at": "2026-08-01T21:20:03Z"
+  }
+ ],
+ "epic": "home-systems-uay",
+ "session": "019fbed7-10cb-7c3e-8b47-628bcb4e2370",
+ "updated": "2026-08-02T12:58:44Z",
+ "counts": {
+  "active": 0,
+  "review": 0,
+  "clarify": 1,
+  "done": 1
+ },
+ "lastLlmCheck": "2026-08-01T21:20:06Z"
+}
