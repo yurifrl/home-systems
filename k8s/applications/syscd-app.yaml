@@ -127,6 +127,21 @@ spec:
                       name: fern
           externalSecrets:
             - name: syscd-app
+            # CNPG declarative role password must live in the `databases` ns
+            # (the pg cluster's ns) as a basic-auth secret. postgres.yaml points
+            # the `syscd` role's passwordSecret at this `syscd-db` secret.
+            - name: syscd-db-roles
+              namespace: databases
+              targetName: syscd-db
+              template:
+                type: kubernetes.io/basic-auth
+                data:
+                  username: syscd
+                  password: "{{ .password }}"
+              data:
+                - secretKey: password
+                  key: syscd-app
+                  property: DB_PASSWORD
           deployments:
             # Static web build served by busybox httpd on :8080.
             - name: syscd-app

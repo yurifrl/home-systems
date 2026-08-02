@@ -126,6 +126,15 @@ spec:
                 login: true
                 passwordSecret:
                   name: litellm-db
+              # syscd-app (budget/health/ourtube API) login role. Password lives
+              # in the `syscd-app` 1Password item (field DB_PASSWORD, Kubernetes
+              # vault); mirrored into the databases ns as the `syscd-db`
+              # basic-auth secret by an ExternalSecret in home-systems-values.
+              - name: syscd
+                ensure: present
+                login: true
+                passwordSecret:
+                  name: syscd-db
 
             # initdb bootstrap (runs ONCE at cluster creation as superuser).
             # The existing `pg` cluster already bootstrapped, so applying this
@@ -216,6 +225,10 @@ spec:
             - name: litellm
               ensure: present
               owner: litellm
+              databaseReclaimPolicy: retain
+            - name: budget
+              ensure: present
+              owner: syscd
               databaseReclaimPolicy: retain
 
           # ---------------------------------------------------------------------
