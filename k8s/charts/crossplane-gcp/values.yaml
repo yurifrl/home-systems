@@ -107,6 +107,9 @@ billing:
   billingAccount: ""        # e.g. 000000-XXXXXX-XXXXXX  (secret -> private)
   projectNumber: ""         # e.g. 555680140769           (secret -> private)
   currency: BRL
+  # Native Budget CRD does not exist in the upbound GCP provider; keep budgets
+  # off until provider-terraform (or another mechanism) is wired in.
+  budgetsEnabled: false
   topic: billing-budget-alerts
   # Cloud Billing Budgets service agent, granted pubsub.publisher on the topic.
   budgetServiceAgent: ""    # e.g. billing-budgets@system.gserviceaccount.com
