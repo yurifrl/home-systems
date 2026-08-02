@@ -8,6 +8,11 @@ metadata:
   annotations:
     # After the providers are installed and healthy.
     argocd.argoproj.io/sync-wave: "0"
+    # Diff via server-side apply dry-run instead of parsing the cluster's
+    # aggregated OpenAPI v2, which omits many upjet CRDs (e.g.
+    # pubsub.gcp.upbound.io/Subscription) and otherwise fails structured-merge
+    # diff with "unable to resolve parseableType", blocking the whole app sync.
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
 spec:
   project: default
   destination:
