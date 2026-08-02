@@ -96,6 +96,16 @@ assetsCdn:
 #    - 104.24.0.0/14
 #    - 172.64.0.0/13
 #    - 131.0.72.0/22
+#  # Declarative Cloudflare edge protection for the assets host (scoped to
+#  # `domain`; needs the API token to hold Cache/WAF/Config scopes).
+#  manageCloudflareRules: true
+#  cacheEdgeTtlSeconds: 86400              # cache covers at edge, override origin private
+#  rateLimit:                             # free plan: period must be 10
+#    requestsPerPeriod: 300
+#    periodSeconds: 10
+#    mitigationTimeoutSeconds: 10
+#  geoAllowCountries: ["BR"]               # block everything else at the edge
+#  threatScoreBlock: 50                    # block (not challenge) high-threat IPs
 
 # --- Billing spend system (budgets -> Pub/Sub -> Cloud Function -> Discord) ---
 # Alert-only spot-spending: one budget per bucket, filtered by the bucket's

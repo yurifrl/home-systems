@@ -63,5 +63,95 @@ spec:
     proxied: false
     ttl: 1
 {{- end }}
+{{- if .manageCloudflareRules }}
+{{- /*
+  Edge protection rulesets, each scoped to `domain` so the rest of the zone is
+  untouched. Every phase's zone entrypoint is otherwise empty (only Cloudflare's
+  default managed WAF/DDoS rulesets exist). Requires the cloudflare-creds token
+  to hold Cache Settings / Zone WAF / Config Settings edit scopes.
+*/ -}}
+{{- $host := printf "(http.host eq \"%s\")" .domain }}
+{{- $countries := list }}{{- range .geoAllowCountries }}{{ $countries = append $countries (printf "\"%s\"" .) }}{{- end }}
+---
+# Cache the covers at the edge, overriding the origin's `private, max-age=0` so
+# repeat views hit Cloudflare's free edge instead of billable GCP CDN egress.
+apiVersion: cloudflare.upjet-cloudflare.upbound.io/v1alpha1
+kind: Ruleset
+metadata:
+  name: {{ .name }}-cache
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: default }
+  forProvider:
+    zoneId: {{ .cloudflareZoneId | quote }}
+    name: {{ printf "%s cache" .name | quote }}
+    kind: zone
+    phase: http_request_cache_settings
+    rules:
+      - action: set_cache_settings
+        enabled: true
+        description: cache assets at edge, override origin private
+        expression: {{ $host | quote }}
+        actionParameters:
+          cache: true
+          edgeTtl:
+            mode: override_origin
+            default: {{ .cacheEdgeTtlSeconds }}
+          browserTtl:
+            mode: override_origin
+            default: {{ .cacheEdgeTtlSeconds }}
+---
+# Per-IP rate limit (flood protection). cf.colo.id is required for zone rules.
+apiVersion: cloudflare.upjet-cloudflare.upbound.io/v1alpha1
+kind: Ruleset
+metadata:
+  name: {{ .name }}-ratelimit
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: default }
+  forProvider:
+    zoneId: {{ .cloudflareZoneId | quote }}
+    name: {{ printf "%s ratelimit" .name | quote }}
+    kind: zone
+    phase: http_ratelimit
+    rules:
+      - action: block
+        enabled: true
+        description: per-IP rate limit for assets
+        expression: {{ $host | quote }}
+        ratelimit:
+          characteristics: ["ip.src", "cf.colo.id"]
+          period: {{ .rateLimit.periodSeconds }}
+          requestsPerPeriod: {{ .rateLimit.requestsPerPeriod }}
+          mitigationTimeout: {{ .rateLimit.mitigationTimeoutSeconds }}
+---
+# Geo restriction (allow-list) + high-threat-score block. Uses block, never
+# challenge, so non-browser clients (e.g. Obsidian image fetch) still load.
+apiVersion: cloudflare.upjet-cloudflare.upbound.io/v1alpha1
+kind: Ruleset
+metadata:
+  name: {{ .name }}-firewall
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef: { name: default }
+  forProvider:
+    zoneId: {{ .cloudflareZoneId | quote }}
+    name: {{ printf "%s firewall" .name | quote }}
+    kind: zone
+    phase: http_request_firewall_custom
+    rules:
+{{- if .geoAllowCountries }}
+      - action: block
+        enabled: true
+        description: geo allow-list for assets
+        expression: {{ printf "%s and not ip.geoip.country in {%s}" $host (join " " $countries) | quote }}
+{{- end }}
+{{- if .threatScoreBlock }}
+      - action: block
+        enabled: true
+        description: block high threat score for assets
+        expression: {{ printf "%s and cf.threat_score gt %v" $host .threatScoreBlock | quote }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
