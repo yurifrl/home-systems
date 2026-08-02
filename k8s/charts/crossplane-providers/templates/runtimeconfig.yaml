@@ -16,7 +16,11 @@ spec:
           nodeSelector:
             kubernetes.io/arch: {{ .Values.runtimeArch }}
           # containers is a required field on the DeploymentRuntimeConfig pod
-          # template; the name is the strategic-merge key, so this only sets the
-          # nodeSelector without otherwise altering the package-runtime container.
+          # template; the name is the strategic-merge key. nodeSelector pins arch;
+          # HOME=/tmp gives the uid-2000 runtime a writable home so providers that
+          # shell out over SSH (proxmox-bpg snippet upload) can create ~/.ssh.
           containers:
             - name: package-runtime
+              env:
+                - name: HOME
+                  value: /tmp
