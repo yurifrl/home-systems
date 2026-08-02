@@ -16,12 +16,11 @@ global:
 
 controller:
   replicas: 1
-  # Co-locate with repoServer on one node: this cluster has a flaky cross-node
-  # datapath (see pc01 VXLAN + 2026-07-05 postmortems), and controller<->repo
-  # gRPC over a bad cross-node hop drops mid-stream, aborting cluster sync for
-  # every app. Same node = loopback, no VXLAN.
-  nodeSelector:
-    kubernetes.io/hostname: macintel01
+  # controller<->repo gRPC over a flaky cross-node hop drops mid-stream and
+  # aborts cluster sync (see pc01 VXLAN + 2026-07-05 postmortems). The controller
+  # schedules freely; repoServer co-locates onto its node via podAffinity so the
+  # gRPC stays on loopback -- no hardcoded node, so a node outage can't strand
+  # ArgoCD (2026-08-01: macintel01 down stranded the whole control plane).
   metrics:
     enabled: true
     serviceMonitor:
@@ -78,9 +77,16 @@ server:
 
 repoServer:
   replicas: 1
-  # Pinned to the same node as the controller (see controller.nodeSelector).
-  nodeSelector:
-    kubernetes.io/hostname: macintel01
+  # Co-locate with the application-controller (loopback gRPC) without pinning to
+  # a specific node, so the scheduler keeps them together wherever the
+  # controller lands.
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: argocd-application-controller
+          topologyKey: kubernetes.io/hostname
   # Default probes (timeoutSeconds: 1) trip while repo-server renders large Helm
   # charts: crossplane provider CRDs balloon the --api-versions list and a single
   # `helm template` can take ~60s, so /healthz can't answer in 1s -> liveness
