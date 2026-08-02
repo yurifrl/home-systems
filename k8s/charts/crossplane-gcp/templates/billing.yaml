@@ -3,20 +3,14 @@
 
   Flow:
     Budget (per bucket, label-filtered, alert-only) --thresholds-->
-      Pub/Sub topic  --> Cloud Function (Gen2) --> Discord webhook   [independent]
-                     --> Subscription --> in-cluster exporter        [Prometheus]
+      Pub/Sub topic  --> Cloud Function billing-discord --> Discord   [notify]
+                     --> Cloud Function billing-killswitch --> detach billing [HARD STOP]
+                     --> Subscription --> in-cluster exporter --> Prometheus
 
-  IMPORTANT / honest caveats:
-  - GCP budgets NEVER hard-cap spend. They only publish threshold notifications.
-  - A label-scoped budget only counts spend from resources carrying that label
-    (buckets get labels.budget via templates/buckets.yaml).
-  - Upjet singleton blocks are rendered as single-item lists (amount,
-    budgetFilter, allUpdatesRule, specifiedAmount). Validate field shapes and
-    CRD plurals against the INSTALLED CRDs before trusting reconciliation:
-      kubectl get mrds | grep -E 'billingbudgets|pubsub|cloudfunctions2|secretmanager'
-  - The crossplane SA needs roles/billing.costsManager on the billing account,
-    and the billing-budgets service agent needs pubsub.publisher on the topic
-    (granted below). These are billing-account-level and enabled out of band.
+  NOTE: the upbound GCP provider has NO native Budget resource, so Budgets are
+  gated behind billing.budgetsEnabled (off) pending provider-terraform. The topic,
+  functions, Secret Manager and IAM below are native v1beta2 managed resources.
+  Kill switch DETACHES billing project-wide (destructive); dryRun guards it.
 */ -}}
 {{- if .Values.billing.enabled }}
 {{- $pc := .Values.providerConfig.name }}
@@ -25,8 +19,7 @@
 {{- $proj := $b.projectNumber }}
 {{- $topicPath := printf "projects/%s/topics/%s" .Values.providerConfig.projectID $b.topic }}
 ---
-# Pub/Sub topic every budget publishes threshold updates to.
-apiVersion: pubsub.gcp.upbound.io/v1beta1
+apiVersion: pubsub.gcp.upbound.io/v1beta2
 kind: Topic
 metadata:
   name: {{ $b.topic }}
@@ -40,9 +33,9 @@ spec:
     project: {{ .Values.providerConfig.projectID | quote }}
 {{- with $b.budgetServiceAgent }}
 ---
-# Allow the Cloud Billing Budgets service agent to publish to the topic. Without
-# this the budget silently fails to deliver notifications.
-apiVersion: pubsub.gcp.upbound.io/v1beta1
+# Cloud Billing budgets service agent must publish to the topic or notifications
+# silently fail to deliver.
+apiVersion: pubsub.gcp.upbound.io/v1beta2
 kind: TopicIAMMember
 metadata:
   name: {{ $b.topic }}-budgets-publisher
@@ -60,8 +53,7 @@ spec:
 {{- range $b.budgets }}
 {{- if $b.budgetsEnabled }}
 ---
-# {{ .name }}: {{ $b.currency }} {{ .amount }} alert-only budget, scoped to
-# resources labelled budget={{ .label }}.
+# Budget requires provider-terraform (no native CRD). Rendered only when enabled.
 apiVersion: billingbudgets.gcp.upbound.io/v1beta1
 kind: Budget
 metadata:
@@ -71,7 +63,7 @@ spec:
   providerConfigRef:
     name: {{ $pc }}
   forProvider:
-    billingAccount: {{ required "billing.billingAccount required" $b.billingAccount | quote }}
+    billingAccount: {{ $b.billingAccount | quote }}
     displayName: {{ printf "%s (%s %v)" .name $b.currency .amount | quote }}
     amount:
       - specifiedAmount:
@@ -94,7 +86,7 @@ spec:
 {{- with $b.discordSecret }}
 ---
 # Discord webhook synced from 1Password into a k8s Secret, which feeds the
-# SecretManagerSecretVersion below (so the URL never lands in git).
+# SecretVersion below (so the URL never lands in git).
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -115,9 +107,8 @@ spec:
         key: {{ required "discordSecret.onepasswordKey required" .onepasswordKey }}
         property: {{ .k8sSecretKey }}
 ---
-# Discord webhook in Secret Manager, sourced from the k8s Secret above.
-apiVersion: secretmanager.gcp.upbound.io/v1beta1
-kind: SecretManagerSecret
+apiVersion: secretmanager.gcp.upbound.io/v1beta2
+kind: Secret
 metadata:
   name: {{ .name }}
   annotations:
@@ -129,11 +120,10 @@ spec:
   forProvider:
     project: {{ $.Values.providerConfig.projectID | quote }}
     replication:
-      - auto:
-          - {}
+      auto: {}
 ---
 apiVersion: secretmanager.gcp.upbound.io/v1beta1
-kind: SecretManagerSecretVersion
+kind: SecretVersion
 metadata:
   name: {{ .name }}-version
 spec:
@@ -151,9 +141,9 @@ spec:
 {{- if $b.function.enabled }}
 {{- $f := $b.function }}
 ---
-# Independent Discord alerter: Gen2 Cloud Function triggered by the topic. Lives
-# entirely in GCP, so it fires even when the cluster is down.
-apiVersion: cloudfunctions2.gcp.upbound.io/v1beta1
+# Independent Discord alerter: Gen2 Cloud Function triggered by the topic. Runs
+# in GCP, so it fires even when the cluster is down.
+apiVersion: cloudfunctions2.gcp.upbound.io/v1beta2
 kind: Function
 metadata:
   name: {{ $f.name }}
@@ -167,30 +157,29 @@ spec:
     project: {{ $.Values.providerConfig.projectID | quote }}
     location: {{ $f.region | quote }}
     buildConfig:
-      - runtime: {{ $f.runtime | quote }}
-        entryPoint: {{ $f.entryPoint | quote }}
-        source:
-          - storageSource:
-              - bucket: {{ required "billing.function.sourceBucket required" $f.sourceBucket | quote }}
-                object: {{ $f.sourceObject | quote }}
+      runtime: {{ $f.runtime | quote }}
+      entryPoint: {{ $f.entryPoint | quote }}
+      source:
+        storageSource:
+          bucket: {{ required "billing.function.sourceBucket required" $f.sourceBucket | quote }}
+          object: {{ $f.sourceObject | quote }}
     serviceConfig:
-      - availableMemory: 256M
-        timeoutSeconds: 60
-        serviceAccountEmail: {{ required "billing.function.runtimeServiceAccount required" $f.runtimeServiceAccount | quote }}
-        secretEnvironmentVariables:
-          - key: DISCORD_WEBHOOK_URL
-            projectId: {{ $.Values.providerConfig.projectID | quote }}
-            secret: {{ $b.discordSecret.name | quote }}
-            version: latest
+      availableMemory: 256M
+      timeoutSeconds: 60
+      serviceAccountEmail: {{ required "billing.function.runtimeServiceAccount required" $f.runtimeServiceAccount | quote }}
+      secretEnvironmentVariables:
+        - key: DISCORD_WEBHOOK_URL
+          projectId: {{ $.Values.providerConfig.projectID | quote }}
+          secret: {{ $b.discordSecret.name | quote }}
+          version: latest
     eventTrigger:
-      - eventType: google.cloud.pubsub.topic.v1.messagePublished
-        pubsubTopic: {{ $topicPath | quote }}
-        triggerRegion: {{ $f.region | quote }}
-        retryPolicy: RETRY_POLICY_RETRY
+      eventType: google.cloud.pubsub.topic.v1.messagePublished
+      pubsubTopic: {{ $topicPath | quote }}
+      triggerRegion: {{ $f.region | quote }}
+      retryPolicy: RETRY_POLICY_RETRY
 ---
-# Let the function's runtime SA read the Discord webhook secret.
-apiVersion: secretmanager.gcp.upbound.io/v1beta1
-kind: SecretManagerSecretIAMMember
+apiVersion: secretmanager.gcp.upbound.io/v1beta2
+kind: SecretIAMMember
 metadata:
   name: {{ $b.discordSecret.name }}-fn-accessor
 spec:
@@ -207,9 +196,9 @@ spec:
 {{- if $b.killSwitch.enabled }}
 {{- $k := $b.killSwitch }}
 ---
-# KILL SWITCH: same topic trigger, but at KILL_RATIO it DETACHES billing from the
+# KILL SWITCH: same topic trigger, at KILL_RATIO it DETACHES billing from the
 # whole project (GCP's only hard stop). dryRun=true alerts without detaching.
-apiVersion: cloudfunctions2.gcp.upbound.io/v1beta1
+apiVersion: cloudfunctions2.gcp.upbound.io/v1beta2
 kind: Function
 metadata:
   name: {{ $k.name }}
@@ -223,33 +212,33 @@ spec:
     project: {{ $.Values.providerConfig.projectID | quote }}
     location: {{ $k.region | quote }}
     buildConfig:
-      - runtime: {{ $k.runtime | quote }}
-        entryPoint: {{ $k.entryPoint | quote }}
-        source:
-          - storageSource:
-              - bucket: {{ required "billing.killSwitch.sourceBucket required" $k.sourceBucket | quote }}
-                object: {{ $k.sourceObject | quote }}
+      runtime: {{ $k.runtime | quote }}
+      entryPoint: {{ $k.entryPoint | quote }}
+      source:
+        storageSource:
+          bucket: {{ required "billing.killSwitch.sourceBucket required" $k.sourceBucket | quote }}
+          object: {{ $k.sourceObject | quote }}
     serviceConfig:
-      - availableMemory: 256M
-        timeoutSeconds: 120
-        serviceAccountEmail: {{ required "billing.killSwitch.runtimeServiceAccount required" $k.runtimeServiceAccount | quote }}
-        environmentVariables:
-          PROJECT_ID: {{ $.Values.providerConfig.projectID | quote }}
-          KILL_RATIO: {{ $k.ratio | default 1.0 | quote }}
-          KILL_DRY_RUN: {{ $k.dryRun | default true | quote }}
-        secretEnvironmentVariables:
-          - key: DISCORD_WEBHOOK_URL
-            projectId: {{ $.Values.providerConfig.projectID | quote }}
-            secret: {{ $b.discordSecret.name | quote }}
-            version: latest
+      availableMemory: 256M
+      timeoutSeconds: 120
+      serviceAccountEmail: {{ required "billing.killSwitch.runtimeServiceAccount required" $k.runtimeServiceAccount | quote }}
+      environmentVariables:
+        PROJECT_ID: {{ $.Values.providerConfig.projectID | quote }}
+        KILL_RATIO: {{ $k.ratio | default 1.0 | quote }}
+        KILL_DRY_RUN: {{ $k.dryRun | default true | quote }}
+      secretEnvironmentVariables:
+        - key: DISCORD_WEBHOOK_URL
+          projectId: {{ $.Values.providerConfig.projectID | quote }}
+          secret: {{ $b.discordSecret.name | quote }}
+          version: latest
     eventTrigger:
-      - eventType: google.cloud.pubsub.topic.v1.messagePublished
-        pubsubTopic: {{ $topicPath | quote }}
-        triggerRegion: {{ $k.region | quote }}
-        retryPolicy: RETRY_POLICY_DO_NOT_RETRY
+      eventType: google.cloud.pubsub.topic.v1.messagePublished
+      pubsubTopic: {{ $topicPath | quote }}
+      triggerRegion: {{ $k.region | quote }}
+      retryPolicy: RETRY_POLICY_DO_NOT_RETRY
 ---
-apiVersion: secretmanager.gcp.upbound.io/v1beta1
-kind: SecretManagerSecretIAMMember
+apiVersion: secretmanager.gcp.upbound.io/v1beta2
+kind: SecretIAMMember
 metadata:
   name: {{ $b.discordSecret.name }}-killswitch-accessor
 spec:
@@ -264,7 +253,7 @@ spec:
     member: "serviceAccount:{{ $k.runtimeServiceAccount }}"
 ---
 # Lets the kill switch detach the project's billing account.
-apiVersion: cloudplatform.gcp.upbound.io/v1beta1
+apiVersion: cloudplatform.gcp.upbound.io/v1beta2
 kind: ProjectIAMMember
 metadata:
   name: billing-killswitch-project-manager
@@ -281,7 +270,7 @@ spec:
 ---
 # Pull subscription the in-cluster exporter consumes to expose cost as a
 # Prometheus gauge (see support-cluster monitoring/billing.yaml).
-apiVersion: pubsub.gcp.upbound.io/v1beta1
+apiVersion: pubsub.gcp.upbound.io/v1beta2
 kind: Subscription
 metadata:
   name: {{ $b.exporter.subscription }}
@@ -297,11 +286,10 @@ spec:
       name: {{ $b.topic }}
     ackDeadlineSeconds: 20
     expirationPolicy:
-      - ttl: ""
+      ttl: ""
 {{- with $b.exporter.subscriberServiceAccount }}
 ---
-# Let the in-cluster exporter SA pull from the subscription.
-apiVersion: pubsub.gcp.upbound.io/v1beta1
+apiVersion: pubsub.gcp.upbound.io/v1beta2
 kind: SubscriptionIAMMember
 metadata:
   name: {{ $b.exporter.subscription }}-subscriber
