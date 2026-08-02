@@ -5,6 +5,8 @@ kind: EventBus
 metadata:
   name: default
   namespace: obsidian
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   jetstream:
     version: latest

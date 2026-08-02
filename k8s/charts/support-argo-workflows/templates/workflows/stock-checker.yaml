@@ -4,6 +4,8 @@ kind: WorkflowTemplate
 metadata:
   name: {{ .Release.Name }}-stock-checker
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   entrypoint: check-stock
   arguments:
@@ -120,6 +122,8 @@ kind: CronWorkflow
 metadata:
   name: {{ .Release.Name }}-stock-checker-cron
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   schedule: {{ .Values.stockChecker.schedule | default "*/15 * * * *" | quote }}
   concurrencyPolicy: Replace

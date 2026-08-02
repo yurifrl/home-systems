@@ -3,6 +3,8 @@ kind: WorkflowTemplate
 metadata:
   name: {{ .Release.Name }}-mqtt-monitor
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   entrypoint: monitor-distance
   templates:

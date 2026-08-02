@@ -6,6 +6,8 @@ kind: CronWorkflow
 metadata:
   name: obsidian-vault-sync
   namespace: obsidian
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   schedule: "*/5 * * * *"
   concurrencyPolicy: Forbid

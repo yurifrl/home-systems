@@ -7,6 +7,8 @@ kind: EventSource
 metadata:
   name: obsidian-repo-webhook
   namespace: obsidian
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   service:
     ports:
