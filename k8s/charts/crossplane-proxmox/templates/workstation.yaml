@@ -45,9 +45,11 @@ spec:
         firewall: true
     disk:
       # boot disk: import the NixOS qcow2 fetched onto local:import (downloads.yaml).
+      # fileFormat raw: local-lvm (LVM-thin) stores raw only; bpg converts qcow2->raw on import.
       - datastoreId: {{ $d.datastoreId }}
         interface: {{ $v.disk.interface }}
         size: {{ $v.disk.sizeGiB }}
+        fileFormat: raw
         importFrom: {{ .Values.isos.datastoreId }}:import/{{ $v.image.fileName }}
       {{- if $v.dataDisk.enabled }}
       # SEPARATE data disk (foundry prevent_destroy analog): the chart-wide
@@ -56,6 +58,7 @@ spec:
       - datastoreId: {{ $d.datastoreId }}
         interface: {{ $v.dataDisk.interface }}
         size: {{ $v.dataDisk.sizeGiB }}
+        fileFormat: raw
         iothread: {{ $v.dataDisk.iothread | default false }}
       {{- end }}
     {{- if $v.cloudInit.enabled }}
