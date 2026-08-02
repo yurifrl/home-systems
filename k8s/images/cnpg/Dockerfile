@@ -24,7 +24,7 @@ ARG PG_MAJOR=16
 # renovate: datasource=docker depName=ghcr.io/cloudnative-pg/postgresql
 # Full base tag. Auto-detection in CNPG requires the tag to start with the PG
 # major; this is the FROM tag, our own image tag is derived from it in CI.
-ARG BASE_PG_VERSION=16.10-system-trixie
+ARG BASE_PG_VERSION=16.14-system-trixie
 ARG BASE_IMAGE=ghcr.io/cloudnative-pg/postgresql:${BASE_PG_VERSION}
 
 # Pinned extension versions (git tags). Bump deliberately — these are compiled
