@@ -32,26 +32,6 @@ spec:
       helm:
         releaseName: firecrawl
         valuesObject:
-          # Pin ALL firecrawl pods to dell01 (amd64, 7.2 GB RAM, lots of
-          # CPU). The arm64 SBCs (tp1/tp4) are saturated with 20+ system
-          # services each (cert-manager, crossplane, external-dns, argo,
-          # 1Password Connect, ...) and Kubernetes overcommits memory
-          # limits 220%+ on tp4. RabbitMQ kept self-shutting on tp4 due
-          # to its internal `system_memory_high_watermark` /
-          # `disk_almost_full` alarms once it shared the node with all
-          # those neighbours, and workers ECONNREFUSED to it on a loop.
-          # Stateful pods (postgres/rabbitmq/redis) are tiny next to the
-          # workers, so co-locating everything on dell01 is the clean
-          # answer.
-          # Pin ALL firecrawl pods to pc01 (amd64, ~12Gi RAM, mostly idle).
-          # Moved off dell01 (2026-06-11): firecrawl's working set kept
-          # tripping Talos' node-wide OOM-killer on the 8Gi sole control-plane,
-          # taking apiserver/scheduler/cilium (and hermes) down with it. pc01
-          # is amd64 so the official ghcr images (incl. nuq-postgres) run as-is.
-          global:
-            nodeSelector:
-              kubernetes.io/hostname: pc01
-
           # Make service names readable: firecrawl-api / firecrawl-redis / etc
           # instead of firecrawl-firecrawl-api.
           fullnameOverride: firecrawl

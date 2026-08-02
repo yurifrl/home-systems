@@ -110,9 +110,6 @@ spec:
           virtualService:
             enabled: false
 
-          nodeSelector:
-            kubernetes.io/hostname: tp1
-
           persistence:
             existingClaim: hermes-state
             backup:

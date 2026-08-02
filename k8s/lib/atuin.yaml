@@ -55,8 +55,6 @@ spec:
                     secretKeyRef:
                       name: atuin-secrets
                       key: ATUIN_DB_URI
-              nodeSelector:
-                syscd.dev/storage: tp1
     - repoURL: https://charts.bitnami.com/bitnami
       chart: postgresql
       targetRevision: "16.7.18"
@@ -70,8 +68,6 @@ spec:
               adminPasswordKey: ATUIN_DB_PASSWORD
               userPasswordKey: ATUIN_DB_PASSWORD
           primary:
-            nodeSelector:
-              syscd.dev/storage: tp1
             persistence:
               enabled: true
               storageClass: "local-path"

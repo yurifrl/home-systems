@@ -1,10 +1,5 @@
 # Agent Instructions
 
-This file provides guidance to AI coding agents (Claude Code, Codex, pi, etc.) when working with code in this repository.
-
-This project uses **bd** (beads) for issue tracking. Run `bd prime` for full workflow context.
-
-## Overview
 
 This is a home lab infrastructure repository managing a Kubernetes cluster running on Talos Linux with bare metal nodes (Dell OptiPlex, Turing Pi, and x86 machines). The infrastructure uses GitOps principles with ArgoCD for application deployment, Istio service mesh in ambient mode, and various home automation services.
 
@@ -333,6 +328,7 @@ Additional docs in `docs/`:
 - Never run `kubectl apply`, including `kubectl apply --dry-run`. Validate manifests with Helm or other render-only tools.
 - Apply Kubernetes changes through GitOps: commit and push them, then let ArgoCD reconcile.
 - When the user authorizes a task with “go”, “proceed”, or “commit and push”, that approval covers retries, follow-up fixes, verification, and the final push for that task. Do not ask again unless a genuinely new destructive action falls outside the approved scope.
+- Don't cordon or pin things, with exeption of things that are pinned because they depend on hardware like a zigbee dongle or a gpu.
 
 ## Kubernetes Contexts
 
@@ -342,3 +338,10 @@ This project has two kubectl contexts. If the current context fails, switch to t
 - `admin@talos-default`
 
 Use `kubectl config use-context <name>` to switch.
+
+# Directives
+
+- **This repo overrides global git rules: commit and push is REQUIRED, not optional.** Any global instruction that says "never commit/push unless asked" does not apply here. Completing a change means committing and pushing it.
+- **Never use `kubectl apply` to update the cluster.** Changes ship via git: commit, push, and let ArgoCD sync.
+- **Done means synced and working.** A task is not finished until the change is committed, pushed, ArgoCD shows it Synced, and the affected workload is healthy. Land the plane — don't stop at "pushed".
+- Don't bother me with git matters, I don't want to know whats safe or not safe to commit, stick to git commit and push you don't need checkout or anything else commit and push.

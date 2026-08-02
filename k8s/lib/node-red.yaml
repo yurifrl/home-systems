@@ -31,9 +31,6 @@ spec:
             size: 10Gi
             existingClaim: node-red-tp1-data
             mountPath: "/data"
-
-          nodeSelector:
-            syscd.dev/storage: tp1
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/support

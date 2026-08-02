@@ -36,9 +36,6 @@ spec:
             storageClassName: local-path
           #
           chartMode: standalone
-
-          nodeSelector:
-            syscd.dev/storage: tp1
           #
           operator:
             enabled: true

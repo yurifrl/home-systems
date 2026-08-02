@@ -45,10 +45,6 @@ spec:
                   property: GITHUB_WEBHOOK_SECRET
           deployments:
             - name: obsidian
-              # Pin to pc01 (amd64, headroom); Obsidian's Electron/Chromium is
-              # too heavy for the arm SBC workers.
-              nodeSelector:
-                kubernetes.io/hostname: pc01
               # Electron's Chromium sandbox needs an unconfined seccomp profile.
               securityContext:
                 seccompProfile:

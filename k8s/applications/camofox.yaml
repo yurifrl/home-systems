@@ -35,12 +35,6 @@ spec:
         valuesObject:
           deployments:
             - name: camofox
-              # Pin to pc01 (amd64, ~12Gi RAM, mostly idle). Moved off dell01
-              # (2026-06-11): headless Firefox + firecrawl were OOM-killing the
-              # 8Gi sole control-plane. pc01 has ample headroom; hermes still
-              # reaches camofox in-cluster via CAMOFOX_URL (Service is global).
-              nodeSelector:
-                kubernetes.io/hostname: pc01
               # /dev/shm needs to be tmpfs-backed memory; the default 64Mi
               # shm is too small for headless Firefox and causes random
               # renderer crashes. 1Gi memory-backed emptyDir matches what
