@@ -125,7 +125,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  schedule: {{ .Values.stockChecker.schedule | default "*/15 * * * *" | quote }}
+  schedules:
+    - {{ .Values.stockChecker.schedule | default "*/15 * * * *" | quote }}
   concurrencyPolicy: Replace
   workflowSpec:
     workflowTemplateRef:

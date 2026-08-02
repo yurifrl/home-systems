@@ -9,7 +9,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  schedule: "*/5 * * * *"
+  schedules:
+    - "*/5 * * * *"
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 60
   workflowSpec:
