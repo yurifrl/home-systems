@@ -19,9 +19,10 @@ spec:
   ttlStrategy:
     secondsAfterCompletion: 3600
   templates:
-    # Run the git sync, then stamp a label on this Workflow recording whether
-    # the Board Games inventory folder changed. A board-games Sensor watches
-    # for Succeeded workflows carrying board-games-inventory-changed=true.
+    # Run the git sync, then record the list of changed files as an annotation
+    # on this Workflow. Downstream consumers (e.g. board-games) watch these
+    # annotations and decide for themselves whether a change concerns them —
+    # this template stays generic and knows nothing about them.
     - name: main
       steps:
         - - name: git-sync
@@ -30,15 +31,15 @@ spec:
             template: mark
             arguments:
               parameters:
-                - name: bg-changed
-                  value: "{{steps.git-sync.outputs.parameters.bg-changed}}"
+                - name: changed
+                  value: "{{steps.git-sync.outputs.parameters.changed}}"
 
     - name: git-sync
       outputs:
         parameters:
-          - name: bg-changed
+          - name: changed
             valueFrom:
-              path: /tmp/bg-changed
+              path: /tmp/changed
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -72,12 +73,12 @@ spec:
           - |
             set -e
             VAULT=/config/vaults/Obsidian
-            INV='Yuri/Resources/Board Games/Inventory/'
             git config --global --add safe.directory "$VAULT"
             if [ ! -d "$VAULT/.git" ]; then
               mkdir -p "$VAULT"
               git clone "https://oauth2:${GITHUB_TOKEN}@github.com/yurifrl/Obsidian.git" "$VAULT"
-              printf true > /tmp/bg-changed   # first clone: sync board-games once
+              # Fresh clone: report every tracked file as "changed".
+              git -C "$VAULT" -c core.quotePath=false ls-files | tr '\n' ';' > /tmp/changed
               exit 0
             fi
             BEFORE=$(git -C "$VAULT" rev-parse HEAD)
@@ -92,18 +93,15 @@ spec:
             fi
             AFTER=$(git -C "$VAULT" rev-parse HEAD)
             CHANGED=$(git -C "$VAULT" -c core.quotePath=false diff --name-only "$BEFORE" "$AFTER")
-            echo '== files fetched/changed this sync =='
+            echo '== files changed this sync =='
             echo "$CHANGED"
-            if echo "$CHANGED" | grep -q "^$INV"; then
-              printf true > /tmp/bg-changed
-            else
-              printf false > /tmp/bg-changed
-            fi
+            # Semicolon-joined so consumers can substring/regex-match paths.
+            printf '%s' "$(echo "$CHANGED" | tr '\n' ';')" > /tmp/changed
 
     - name: mark
       inputs:
         parameters:
-          - name: bg-changed
+          - name: changed
       resource:
         action: patch
         mergeStrategy: merge
@@ -112,5 +110,5 @@ spec:
           kind: Workflow
           metadata:
             name: "{{workflow.name}}"
-            labels:
-              board-games-inventory-changed: "{{inputs.parameters.bg-changed}}"
+            annotations:
+              changed-files: "{{inputs.parameters.changed}}"
