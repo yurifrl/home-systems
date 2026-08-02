@@ -45,6 +45,10 @@ spec:
                   property: GITHUB_WEBHOOK_SECRET
           deployments:
             - name: obsidian
+              # RWO volume (longhorn-single): tear down old pod before starting new one,
+              # otherwise rollouts deadlock on Multi-Attach.
+              strategy:
+                type: Recreate
               # Electron's Chromium sandbox needs an unconfined seccomp profile.
               securityContext:
                 seccompProfile:
