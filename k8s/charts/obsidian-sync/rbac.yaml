@@ -1,0 +1,25 @@
+# Workflow pods (running as the namespace `default` SA) need to write
+# workflowtaskresults. Mirrors k8s/charts/support-argo-workflows rbac.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: obsidian-vault-sync-workflow
+  namespace: obsidian
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflowtaskresults"]
+    verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: obsidian-vault-sync-workflow
+  namespace: obsidian
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: obsidian-vault-sync-workflow
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: obsidian

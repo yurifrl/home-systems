@@ -1,0 +1,28 @@
+# Receives GitHub push webhooks for yurifrl/Obsidian. argo-events creates a
+# Service `obsidian-repo-webhook-eventsource-svc` on port 12000; the
+# VirtualService (in obsidian.yaml) exposes it publicly so GitHub can reach it.
+# GITHUB_WEBHOOK_SECRET validates the HMAC signature GitHub sends.
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: obsidian-repo-webhook
+  namespace: obsidian
+spec:
+  service:
+    ports:
+      - port: 12000
+        targetPort: 12000
+  github:
+    obsidian:
+      repositories:
+        - owner: yurifrl
+          repository: Obsidian
+      events:
+        - push
+      webhook:
+        endpoint: /webhook
+        port: "12000"
+        method: POST
+      webhookSecret:
+        name: obsidian
+        key: GITHUB_WEBHOOK_SECRET

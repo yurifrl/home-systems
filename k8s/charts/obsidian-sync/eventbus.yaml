@@ -1,0 +1,11 @@
+# Argo Events needs an EventBus per namespace for EventSource <-> Sensor
+# communication. None existed anywhere in the cluster before this.
+apiVersion: argoproj.io/v1alpha1
+kind: EventBus
+metadata:
+  name: default
+  namespace: obsidian
+spec:
+  jetstream:
+    version: latest
+    replicas: 3

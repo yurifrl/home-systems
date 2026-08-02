@@ -1,0 +1,60 @@
+# On a push to the Obsidian repo, submit the vault-sync WorkflowTemplate.
+# The template's mutex serializes this against the cron run.
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: obsidian-vault-sync
+  namespace: obsidian
+spec:
+  template:
+    serviceAccountName: obsidian-sensor
+  dependencies:
+    - name: obsidian-push
+      eventSourceName: obsidian-repo-webhook
+      eventName: obsidian
+  triggers:
+    - template:
+        name: submit-sync
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: obsidian-vault-sync-
+                namespace: obsidian
+              spec:
+                workflowTemplateRef:
+                  name: obsidian-vault-sync
+---
+# The sensor pod submits Workflows, so its SA needs create/get/list on them.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: obsidian-sensor
+  namespace: obsidian
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: obsidian-sensor
+  namespace: obsidian
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflows"]
+    verbs: ["create", "get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: obsidian-sensor
+  namespace: obsidian
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: obsidian-sensor
+subjects:
+  - kind: ServiceAccount
+    name: obsidian-sensor
+    namespace: obsidian

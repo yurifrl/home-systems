@@ -1,0 +1,68 @@
+# Vault git sync as an Argo Workflow, replacing the old in-pod polling
+# sidecar. Runs in the `obsidian` namespace and mounts the same
+# obsidian-config PVC, so it co-locates (podAffinity) with the obsidian pod
+# to share the RWO Longhorn volume on whatever node that pod runs. The
+# spec-level mutex serializes the cron run against webhook-triggered runs so
+# two git operations never race on the same working tree.
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: obsidian-vault-sync
+  namespace: obsidian
+spec:
+  entrypoint: sync
+  synchronization:
+    mutex:
+      name: obsidian-vault-sync
+  ttlStrategy:
+    secondsAfterCompletion: 3600
+  templates:
+    - name: sync
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: obsidian
+              topologyKey: kubernetes.io/hostname
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: obsidian-config
+      container:
+        image: alpine/git:latest
+        volumeMounts:
+          - name: config
+            mountPath: /config
+        env:
+          - name: GITHUB_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: obsidian
+                key: GITHUB_TOKEN
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            memory: 256Mi
+        command: ["sh", "-c"]
+        args:
+          - |
+            set -e
+            VAULT=/config/vaults/Obsidian
+            git config --global --add safe.directory "$VAULT"
+            if [ ! -d "$VAULT/.git" ]; then
+              mkdir -p "$VAULT"
+              git clone "https://oauth2:${GITHUB_TOKEN}@github.com/yurifrl/Obsidian.git" "$VAULT"
+            else
+              git -C "$VAULT" pull --rebase --autostash
+              git -C "$VAULT" add -A
+              if ! git -C "$VAULT" diff --cached --quiet; then
+                git -C "$VAULT" \
+                  -c user.name=obsidian-sync \
+                  -c user.email=obsidian-sync@local \
+                  commit -m "auto: $(date -Iseconds)"
+                git -C "$VAULT" push
+              fi
+            fi

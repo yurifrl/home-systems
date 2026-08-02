@@ -1,0 +1,15 @@
+# Recurrent sync: catches vault edits made inside the Obsidian web app
+# (commit + push) and pulls remote changes on a timer. `Forbid` + the
+# WorkflowTemplate mutex guarantee only one sync runs at a time.
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: obsidian-vault-sync
+  namespace: obsidian
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 60
+  workflowSpec:
+    workflowTemplateRef:
+      name: obsidian-vault-sync

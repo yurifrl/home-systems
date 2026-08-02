@@ -13,7 +13,7 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: false
+      selfHeal: true
     syncOptions:
       - ServerSideApply=true
       - CreateNamespace=true
@@ -60,6 +60,7 @@ spec:
           controller:
             workflowNamespaces:
               - argo-workflows
+              - obsidian
           useStaticCredentials: true
           server:
             extraArgs:

@@ -40,6 +40,9 @@ spec:
                 - secretKey: GITHUB_TOKEN
                   key: obsidian
                   property: GITHUB_TOKEN
+                - secretKey: GITHUB_WEBHOOK_SECRET
+                  key: obsidian
+                  property: GITHUB_WEBHOOK_SECRET
           deployments:
             - name: obsidian
               # Pin to pc01 (amd64, headroom); Obsidian's Electron/Chromium is
@@ -104,50 +107,6 @@ spec:
                       memory: 16Mi
                     limits:
                       memory: 32Mi
-                # Self-sync sidecar: commits + pushes vault edits back to git
-                # and pulls remote changes, so the config volume stays in sync
-                # with github.com/yurifrl/Obsidian. Tolerant of transient
-                # failures (|| true) so a flaky network can't crash the pod.
-                - name: vault-sync
-                  image: alpine/git:latest
-                  env:
-                    - name: GITHUB_TOKEN
-                      valueFrom:
-                        secretKeyRef:
-                          name: obsidian
-                          key: GITHUB_TOKEN
-                  command:
-                    - sh
-                    - -c
-                    - |
-                      VAULT=/config/vaults/Obsidian
-                      git config --global --add safe.directory "$VAULT"
-                      while true; do
-                        if [ ! -d "$VAULT/.git" ]; then
-                          mkdir -p "$VAULT"
-                          git clone "https://oauth2:${GITHUB_TOKEN}@github.com/yurifrl/Obsidian.git" "$VAULT" || true
-                        else
-                          git -C "$VAULT" pull --rebase --autostash || true
-                          git -C "$VAULT" add -A || true
-                          if ! git -C "$VAULT" diff --cached --quiet; then
-                            git -C "$VAULT" \
-                              -c user.name=obsidian-sync \
-                              -c user.email=obsidian-sync@local \
-                              commit -m "auto: $(date -Iseconds)" || true
-                            git -C "$VAULT" push || true
-                          fi
-                        fi
-                        sleep 300
-                      done
-                  volumeMounts:
-                    - name: config
-                      mountPath: /config
-                  resources:
-                    requests:
-                      cpu: 10m
-                      memory: 32Mi
-                    limits:
-                      memory: 256Mi
           services:
             - name: obsidian
               port: 3000
@@ -162,3 +121,16 @@ spec:
                 name: obsidian
                 namespace: obsidian
                 port: 3000
+            # Public endpoint GitHub posts Obsidian push webhooks to.
+            - name: obsidian-repo-webhook
+              domains:
+                live: true
+              service:
+                name: obsidian-repo-webhook-eventsource-svc
+                namespace: obsidian
+                port: 12000
+    # Vault git sync: WorkflowTemplate + CronWorkflow (and, once enabled, the
+    # argo-events webhook pipeline) that replaced the in-pod vault-sync sidecar.
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/obsidian-sync
