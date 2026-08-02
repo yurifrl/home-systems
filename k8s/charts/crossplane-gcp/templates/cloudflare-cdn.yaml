@@ -21,29 +21,27 @@ spec:
     content: {{ .lbIp | quote }}
     proxied: true
     ttl: 1
-{{- range $i, $ca := (.caaIssuers | default (list "pki.goog" "letsencrypt.org")) }}
----
-# CAA authorizing the CAs that may issue for this exact hostname. pki.goog is
-# Google Trust Services (the LB's Certificate Manager cert); letsencrypt.org
-# covers the Cloudflare edge. Scoped to the subdomain so the shared zone apex is
-# untouched. Without a definitive CAA, Google's issuance failed with reason=CAA.
-apiVersion: dns.upjet-cloudflare.upbound.io/v1alpha1
-kind: Record
-metadata:
-  name: {{ $.Values.assetsCdn.name }}-caa-{{ $i }}
-spec:
-  deletionPolicy: {{ $dp }}
-  providerConfigRef: { name: default }
-  forProvider:
-    zoneId: {{ $.Values.assetsCdn.cloudflareZoneId | quote }}
-    name: {{ $.Values.assetsCdn.domain | quote }}
-    type: CAA
-    data:
-      flags: 0
-      tag: issue
-      value: {{ $ca | quote }}
-    ttl: 1
-{{- end }}
+{{- /*
+  CAA: assets-bg.syscd.live must authorize the CAs that issue for this exact
+  host — pki.goog (Google Trust Services, the LB's Certificate Manager cert) and
+  letsencrypt.org (Cloudflare edge). Without a definitive CAA, Google's issuance
+  failed with failureReason=CAA (indeterminate lookup => refuse, RFC 8659).
+
+  These are NOT rendered as crossplane Records: provider-cloudflare-dns v0.2.6
+  cannot reconcile CAA — upjet mis-serializes Terraform's Dynamic-typed
+  data.flags (observe fails "allowed Float64Type/StringType, Received
+  ObjectType"). They are created directly against the Cloudflare API instead
+  (stable, set-once, survives cert auto-renewal). Reproduce with:
+
+    for CA in pki.goog letsencrypt.org; do
+      curl -s -X POST \
+        "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records" \
+        -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" \
+        --data "{\"type\":\"CAA\",\"name\":\"assets-bg.syscd.live\",\"data\":{\"flags\":0,\"tag\":\"issue\",\"value\":\"$CA\"},\"ttl\":1}"
+    done
+
+  Revisit as crossplane Records once the provider fixes Dynamic-field handling.
+*/ -}}
 {{- if .dnsAuthCname }}
 ---
 # Certificate Manager DNS-authorization validation record. Its target is
