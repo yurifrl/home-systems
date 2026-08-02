@@ -6,7 +6,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir \
       google-cloud-pubsub==2.* \
       prometheus_client==0.*
-COPY main.py .
+COPY main.py weekly.py ./
 
 USER 1000
 EXPOSE 9109

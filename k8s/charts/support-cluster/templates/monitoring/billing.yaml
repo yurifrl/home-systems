@@ -114,4 +114,58 @@ spec:
           annotations:
             summary: "GCP kill switch condition: budget {{ `{{ $labels.budget }}` }} at 100%"
             description: "Budget {{ `{{ $labels.budget }}` }} hit its limit ({{ `{{ $labels.currency }}` }}); the billing kill switch fires at this threshold."
+---
+# Discord webhook (from 1Password) for the weekly summary CronJob.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: billing-discord-webhook
+  namespace: monitoring
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: onepassword
+    kind: ClusterSecretStore
+  target:
+    name: billing-discord-webhook
+  data:
+    - secretKey: webhook-url
+      remoteRef:
+        key: billing-discord-webhook
+        property: webhook-url
+---
+# Weekly month-to-date spend summary to Discord (reads the exporter gauges from
+# VictoriaMetrics; no GCP creds needed).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: billing-weekly-summary
+  namespace: monitoring
+spec:
+  schedule: {{ $e.weeklySchedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: summary
+              image: {{ $e.image | quote }}
+              command: ["python", "/app/weekly.py"]
+              env:
+                - name: DISCORD_WEBHOOK_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: billing-discord-webhook
+                      key: webhook-url
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 64Mi
+                limits:
+                  memory: 128Mi
 {{- end }}

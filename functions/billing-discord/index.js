@@ -14,14 +14,16 @@ functions.cloudEvent('notify', async (event) => {
   if (!data) return;
   const n = JSON.parse(Buffer.from(data, 'base64').toString());
 
+  // GCP publishes cost refreshes several times a day; only alert when a budget
+  // threshold (25/50/80/100%) is actually crossed.
+  if (!n.alertThresholdExceeded) return;
+
   const name = n.budgetDisplayName || 'budget';
   const cost = Number(n.costAmount ?? 0);
   const budget = Number(n.budgetAmount ?? 0);
   const ccy = n.currencyCode || '';
   const pct = budget ? Math.round((cost / budget) * 100) : 0;
-  const threshold = n.alertThresholdExceeded
-    ? ` (crossed ${Math.round(n.alertThresholdExceeded * 100)}%)`
-    : '';
+  const threshold = ` (crossed ${Math.round(n.alertThresholdExceeded * 100)}%)`;
 
   if (!WEBHOOK) {
     console.error('DISCORD_WEBHOOK_URL unset');

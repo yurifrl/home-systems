@@ -26,6 +26,8 @@ billingExporter:
   credentialsKey: private_key
   # Alert when spend crosses this fraction of a budget's limit.
   alertThreshold: 0.9
+  # Weekly Discord spend summary (Mondays 12:00 UTC ~ 09:00 BRT).
+  weeklySchedule: "0 12 * * 1"
 
 # Namespaces to create default ServiceAccount with image pull secret
 # Requires features.defaultServiceAccountWithImagePullSecret: true
