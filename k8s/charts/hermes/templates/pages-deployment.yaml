@@ -22,10 +22,8 @@ spec:
     spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- with (.Values.pages.nodeSelector | default .Values.nodeSelector) }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      affinity:
+        {{- include "hermes-agent.workdirColocationAffinity" . | nindent 8 }}
       volumes:
         - name: workdir
           persistentVolumeClaim:

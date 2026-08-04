@@ -15,6 +15,15 @@
 {{- end -}}
 {{- end -}}
 
+{{- define "hermes-agent.workdirColocationAffinity" -}}
+podAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchLabels:
+          {{- include "hermes-agent.selectorLabels" . | nindent 10 }}
+      topologyKey: kubernetes.io/hostname
+{{- end -}}
+
 {{- define "hermes-agent.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
