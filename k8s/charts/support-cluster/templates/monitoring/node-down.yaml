@@ -1,0 +1,50 @@
+# Node-down alert — fires when a Kubernetes node has been NotReady for >5m.
+# Complements crashloop and pod-readiness alerts: those catch pods failing on a
+# healthy node; this catches the node itself dying (hardware, network partition,
+# kubelet hang). A node going NotReady on a Talos cluster almost always means
+# the machine needs physical attention.
+#
+# Uses kube_node_status_condition from kube-state-metrics (bundled with vmks).
+# Evaluated by VMAlert (selectAllByDefault); severity=critical routes to Discord
+# via the VMAlertmanagerConfig in this chart.
+#
+# NOTE: if kube-state-metrics itself is down (e.g. cross-site node can't reach
+# the apiserver), this alert goes silent too. The watchdog alert
+# (victoriametrics-watchdog.yaml) covers that case.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: node-down-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  groups:
+    - name: node.rules
+      rules:
+        - alert: KubeNodeNotReady
+          expr: |
+            kube_node_status_condition{condition="Ready",status="true"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            environment: production
+            service: node-health
+          annotations:
+            summary: "Node {{ `{{ $labels.node }}` }} is NotReady"
+            description: "Node {{ `{{ $labels.node }}` }} has been NotReady for >5m. The node may have crashed, lost network, or the kubelet is hung. Check physical hardware and network connectivity."
+
+        - alert: KubeNodeUnreachable
+          expr: |
+            kube_node_status_condition{condition="Ready",status="unknown"} == 1
+          for: 5m
+          labels:
+            severity: critical
+            environment: production
+            service: node-health
+          annotations:
+            summary: "Node {{ `{{ $labels.node }}` }} is Unreachable"
+            description: "Node {{ `{{ $labels.node }}` }} has been Unreachable for >5m. The node-controller has stopped receiving heartbeats — likely a network partition or kubelet crash."
