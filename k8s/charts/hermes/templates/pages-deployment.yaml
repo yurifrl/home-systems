@@ -12,6 +12,8 @@ metadata:
     app.kubernetes.io/component: pages
 spec:
   replicas: {{ .Values.pages.replicas }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: {{ $name }}
