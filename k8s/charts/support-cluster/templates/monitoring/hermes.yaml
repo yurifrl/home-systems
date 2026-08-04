@@ -1,32 +1,13 @@
 # Hermes-down alert. The hermes agent runs as the single StatefulSet pod
-# hermes-0, fronted by the `hermes` ClusterIP service on :8642 (apiServer).
-# When hermes-0 is not Running/Ready (e.g. stuck in Init on an unmountable RWO
-# volume, as in the 35h outage on 2026-08-04) the service has zero endpoints
-# and a TCP connect fails -> probe_success == 0.
+# hermes-0. Fire when the StatefulSet has zero ready replicas for >10m —
+# one signal that catches the whole failure class: stuck Init on an
+# unmountable RWO volume (the 35h outage on 2026-08-04), CrashLoopBackOff,
+# or unschedulable. max() collapses KSM's duplicate scrape series (both the
+# kube-state-metrics and kubernetes-services-annotations jobs export it) into
+# a single alert.
 #
-# This uses a blackbox TCP probe rather than kube_statefulset_* metrics on
-# purpose: kube-state-metrics is currently inert, so all kube_*-based alerts
-# (KubePodNotReady, KubePodCrashLooping) are silent. A direct probe does not
-# depend on KSM. The apiServer's HTTP GET hangs without auth, so tcp_connect
-# (port open = process listening) is the correct liveness check.
-#
-# Test: https://blackbox-exporter.syscd.live/probe?target=hermes.hermes.svc.cluster.local:8642&module=tcp_connect&debug=true
-apiVersion: operator.victoriametrics.com/v1beta1
-kind: VMProbe
-metadata:
-  name: hermes-probe
-  namespace: monitoring
-spec:
-  jobName: "probe/monitoring/hermes-probe"
-  interval: 30s
-  module: tcp_connect # k8s/applications/blackbox-exporter.yaml
-  vmProberSpec:
-    url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
-  targets:
-    staticConfig:
-      targets:
-        - hermes.hermes.svc.cluster.local:8642
----
+# Depends on kube-state-metrics. severity=critical + environment=production
+# routes to Discord via the VMAlertmanagerConfig in this chart.
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMRule
 metadata:
@@ -42,12 +23,12 @@ spec:
     - name: hermes.rules
       rules:
         - alert: HermesDown
-          expr: probe_success{job="probe/monitoring/hermes-probe"} == 0
-          for: 5m
+          expr: max(kube_statefulset_status_replicas_ready{namespace="hermes",statefulset="hermes"}) < 1
+          for: 10m
           labels:
             severity: critical
             environment: production
             service: hermes
           annotations:
             summary: "Hermes is down"
-            description: "The hermes agent (hermes-0 / hermes.hermes.svc:8642) has been unreachable for >5m. Likely the pod is not Running (stuck Init on a volume mount, CrashLoopBackOff, or unschedulable)."
+            description: "The hermes StatefulSet (namespace hermes) has had zero ready replicas for >10m. hermes-0 is not Running — stuck Init on a volume mount, CrashLoopBackOff, or unschedulable."
