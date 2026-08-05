@@ -15,25 +15,48 @@ data:
   render.sh: |
     #!/usr/bin/env bash
     set -euo pipefail
-    : "${ROOT_PASSWORD:?}"; : "${YURI_PASSWORD:?}"; : "${TAILSCALE_AUTHKEY:?}"
+    : "${ROOT_PASSWORD:?}"; : "${YURI_PASSWORD:?}"
+    : "${TS_OAUTH_CLIENT_ID:?}"; : "${TS_OAUTH_CLIENT_SECRET:?}"
     MR="{{ $ci.mrName }}"
     FILENAME="{{ $ci.userDataFileName }}"
     GROUP="virtualenvironmentfile.proxmoxbpg.crossplane.io"
+    TS_TAG="{{ $r.tsTag }}"
+    TS_EXPIRY="{{ $r.tsKeyExpirySeconds }}"
 
-    # Deterministic salt (derived from the plaintext) => identical hash every run
-    # => identical patch => server-side no-op. Idempotent: no churn on the MR.
+    # 1) Durable OAuth client -> short-lived access token. The client secret never
+    # expires; auth keys minted from it do, so we re-mint on every (weekly) run.
+    token="$(curl -sf -d "client_id=${TS_OAUTH_CLIENT_ID}" -d "client_secret=${TS_OAUTH_CLIENT_SECRET}" \
+      https://api.tailscale.com/api/v2/oauth/token | jq -r .access_token)"
+    if [ -z "$token" ] || [ "$token" = null ]; then
+      echo "FATAL: OAuth token request failed. Is TS_OAUTH_CLIENT_SECRET a real" \
+           "OAuth client secret (tskey-client-...), not an auth key (tskey-auth-...)?" >&2
+      exit 1
+    fi
+
+    # 2) Mint a fresh, tagged, pre-authorized single-use auth key for this VM.
+    authkey="$(curl -sf -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" \
+      -d "{\"capabilities\":{\"devices\":{\"create\":{\"reusable\":false,\"ephemeral\":false,\"preauthorized\":true,\"tags\":[\"${TS_TAG}\"]}}},\"expirySeconds\":${TS_EXPIRY}}" \
+      https://api.tailscale.com/api/v2/tailnet/-/keys | jq -r .key)"
+    if [ -z "$authkey" ] || [ "$authkey" = null ]; then
+      echo "FATAL: auth key mint failed (check the OAuth client has the auth_keys" \
+           "write scope and owns ${TS_TAG})." >&2
+      exit 1
+    fi
+
+    # 3) Deterministic salt => identical password hash every run => the only thing
+    # that changes weekly is the freshly-minted key. Passwords never churn.
     salt() { printf '%s' "$1" | sha256sum | cut -c1-16; }
     root_hash="$(openssl passwd -6 -salt "$(salt "$ROOT_PASSWORD")" "$ROOT_PASSWORD")"
     yuri_hash="$(openssl passwd -6 -salt "$(salt "$YURI_PASSWORD")" "$YURI_PASSWORD")"
 
-    # Build cloud-config with printf (indentation-safe; no heredoc contamination).
+    # 4) Build cloud-config with printf (indentation-safe; no heredoc contamination).
     data="$(printf '%s\n' \
       '#cloud-config' \
       'write_files:' \
       '  - path: /etc/tailscale/authkey' \
       "    permissions: '0600'" \
       '    owner: root:root' \
-      "    content: \"${TAILSCALE_AUTHKEY}\"" \
+      "    content: \"${authkey}\"" \
       'chpasswd:' \
       '  expire: false' \
       '  users:' \
@@ -48,7 +71,7 @@ data:
       '{spec:{forProvider:{sourceRaw:[{fileName:$fn,data:$data}]}}}')"
 
     kubectl patch "environmentfile.${GROUP}" "$MR" --type=merge -p "$patch"
-    echo "rendered + patched ${MR} cloud-init ($(printf '%s' "$data" | wc -l) lines) — hashes only"
+    echo "rendered + patched ${MR}: fresh ${TS_TAG} key + password hashes (no plaintext)"
 ---
 apiVersion: v1
 kind: ServiceAccount

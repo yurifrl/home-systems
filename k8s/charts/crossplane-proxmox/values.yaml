@@ -219,15 +219,18 @@ vms:
       userDataFileName: workstation-user-data.yaml
       mrName: workstation-cloud-init      # EnvironmentFile MR the render job patches
       # cloud-init is rendered IN-CLUSTER; no secrets (not even hashes) live in git.
-      # An ExternalSecret pulls the `workstation` 1Password item and the render
-      # CronJob hashes the passwords and patches this MR's data. ArgoCD ignores
-      # that field (applications/crossplane-proxmox.yaml) so the job owns it.
+      # An ExternalSecret pulls the `workstation` 1Password item; the render CronJob
+      # mints a fresh Tailscale key from the (never-expiring) OAuth client, hashes
+      # the passwords, and patches this MR's data. ArgoCD ignores that field
+      # (applications/crossplane-proxmox.yaml) so the job owns it.
       render:
         enabled: true
-        image: nixery.dev/shell/kubectl/openssl/jq/coreutils/bash
-        schedule: "0 * * * *"             # hourly; idempotent (deterministic salt) => no churn
+        image: nixery.dev/shell/kubectl/openssl/jq/curl/coreutils/bash
+        schedule: "0 4 * * 1"             # weekly: re-mint a fresh tailnet key before it ages out
         secretName: workstation-cloud-init-op
         onepasswordItem: workstation
+        tsTag: tag:workstation            # tag the minted key (and thus the VM) gets
+        tsKeyExpirySeconds: 7776000       # 90d (Tailscale max); re-minted weekly so never stale
 
 # --- Preflight (ArgoCD PreSync hook): fail the sync if a hard dep is missing ---
 preflight:
