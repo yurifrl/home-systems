@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: syscd-api-access
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # After crossplane providers install the Cloudflare Zero Trust CRDs.
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: crossplane-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true
+  sources:
+    # PUBLIC: value-free chart (template + placeholders).
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/syscd-api-access
+      helm:
+        valueFiles:
+          # Real accountId comes from the PRIVATE repo below.
+          - $values/syscd-api-access/values.yaml
+    # PRIVATE: holds the real Cloudflare accountId (registered ArgoCD repo cred).
+    - repoURL: git@github.com:yurifrl/home-systems-values.git
+      targetRevision: HEAD
+      ref: values
