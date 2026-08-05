@@ -1,0 +1,131 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: buzz
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: buzz
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    # App: Buzz relay (single binary: WebSocket + REST + web UI). Only shipped
+    # as an OCI Helm chart. ArgoCD >= 3.1 native OCI sources require the FULL
+    # artifact path as repoURL (the repoURL/…/charts + chart: buzz split form
+    # 403s on GHCR) and a placeholder path ".".
+    - repoURL: oci://ghcr.io/block/buzz/charts/buzz
+      path: .
+      targetRevision: 0.1.7
+      helm:
+        releaseName: buzz
+        valuesObject:
+          # Public wss:// URL clients connect to. Drives RELAY_URL, the default
+          # media base URL, and (unused here) the chart's own ingress host.
+          relayUrl: wss://buzz.syscd.live
+
+          # 64-char lowercase-hex Nostr pubkey of the relay operator. REQUIRED
+          # (requireRelayMembership defaults true). The chart hard-fails on any
+          # other value, so the app will not sync until this is a real key.
+          ownerPubkey: "REPLACE_WITH_64_HEX_OWNER_PUBKEY"
+
+          # Single replica: no Redis (buzz-pubsub) and no git-hook HMAC secret
+          # needed. Huddle audio (single-pod-only until an SFU exists) stays
+          # valid at 1 replica.
+          replicaCount: 1
+
+          # GitOps-safe secrets: everything sensitive comes from the
+          # buzz-secrets Secret (ExternalSecret below), never chart autogen
+          # (which regenerates on every `helm template`/ArgoCD sync).
+          secrets:
+            existingSecret: buzz-secrets
+
+          # DATABASE_URL lives in buzz-secrets (points at the shared CNPG `pg`
+          # cluster, db `buzz`, role `buzz`). Leave this empty.
+          externalPostgresql:
+            url: ""
+
+          # S3-compatible object store for media + git state. Targets the
+          # in-cluster MinIO at minio.minio.svc:9000. Access/secret keys live in
+          # buzz-secrets. (0.1.7 uses path-style addressing by default, which is
+          # what MinIO wants.)
+          s3:
+            endpoint: "http://minio.minio.svc.cluster.local:9000"
+            bucket: "buzz-media"
+
+          # Per-replica ephemeral git hydration cache (git ref/object state is
+          # object-store-backed; this PVC is not shared state). RWO is fine.
+          persistence:
+            git:
+              enabled: true
+              accessMode: ReadWriteOnce
+              storageClass: longhorn-single
+              size: 10Gi
+
+          # Networking is handled by the Istio VirtualService (support chart
+          # below) + Cloudflare tunnel, not the chart's own ingress/HTTPRoute.
+          ingress:
+            enabled: false
+          httproute:
+            enabled: false
+
+    # Cluster glue: ExternalSecrets (1Password) + Istio VirtualService.
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            # Relay secret bundle in the `buzz` namespace, from the 1Password
+            # "buzz" item. WebSocket/relay identity + DB URL + S3 creds.
+            - name: buzz-secrets
+              key: buzz
+              data:
+                - secretKey: BUZZ_RELAY_PRIVATE_KEY
+                  key: buzz
+                  property: RELAY_PRIVATE_KEY
+                - secretKey: DATABASE_URL
+                  key: buzz
+                  property: DATABASE_URL
+                - secretKey: BUZZ_S3_ACCESS_KEY
+                  key: buzz
+                  property: S3_ACCESS_KEY
+                - secretKey: BUZZ_S3_SECRET_KEY
+                  key: buzz
+                  property: S3_SECRET_KEY
+            # CNPG role password for the `buzz` login role, in the databases
+            # namespace. basic-auth so the operator's passwordSecret ref works.
+            - name: buzz-db
+              namespace: databases
+              key: buzz
+              template:
+                type: kubernetes.io/basic-auth
+                metadata:
+                  labels:
+                    cnpg.io/reload: "true"
+              data:
+                - secretKey: username
+                  key: buzz
+                  property: DB_USERNAME
+                - secretKey: password
+                  key: buzz
+                  property: DB_PASSWORD
+          virtualServices:
+            - name: buzz
+              hosts:
+                - buzz.syscd.live
+              service:
+                name: buzz
+                namespace: buzz
+                port: 3000

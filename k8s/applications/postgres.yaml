@@ -137,6 +137,15 @@ spec:
                 login: true
                 passwordSecret:
                   name: syscd-db
+              # Buzz relay's login role. Password lives in the `buzz` 1Password
+              # item (field DB_PASSWORD); mirrored into the databases ns as the
+              # `buzz-db` basic-auth secret by an ExternalSecret in
+              # k8s/applications/buzz.yaml.
+              - name: buzz
+                ensure: present
+                login: true
+                passwordSecret:
+                  name: buzz-db
 
             # initdb bootstrap (runs ONCE at cluster creation as superuser).
             # The existing `pg` cluster already bootstrapped, so applying this
@@ -231,6 +240,10 @@ spec:
             - name: budget
               ensure: present
               owner: syscd
+              databaseReclaimPolicy: retain
+            - name: buzz
+              ensure: present
+              owner: buzz
               databaseReclaimPolicy: retain
 
           # ---------------------------------------------------------------------
