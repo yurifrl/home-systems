@@ -1,0 +1,116 @@
+{{- $v := .Values.vms.workstation }}
+{{- if and $v.enabled $v.cloudInit.enabled $v.cloudInit.render.enabled }}
+{{- $ci := $v.cloudInit }}
+{{- $r := $ci.render }}
+{{- $name := printf "%s-workstation-cloud-init-render" .Release.Name }}
+# In-cluster render of the workstation cloud-init (mirrors the iso-pipeline pattern).
+# Reads the ESO-materialised secret, hashes the passwords, and patches the cloud-init
+# EnvironmentFile MR. ArgoCD ignores that MR's sourceRaw field so this owns it.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+data:
+  render.sh: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    : "${ROOT_PASSWORD:?}"; : "${YURI_PASSWORD:?}"; : "${TAILSCALE_AUTHKEY:?}"
+    MR="{{ $ci.mrName }}"
+    FILENAME="{{ $ci.userDataFileName }}"
+    GROUP="virtualenvironmentfile.proxmoxbpg.crossplane.io"
+
+    # Deterministic salt (derived from the plaintext) => identical hash every run
+    # => identical patch => server-side no-op. Idempotent: no churn on the MR.
+    salt() { printf '%s' "$1" | sha256sum | cut -c1-16; }
+    root_hash="$(openssl passwd -6 -salt "$(salt "$ROOT_PASSWORD")" "$ROOT_PASSWORD")"
+    yuri_hash="$(openssl passwd -6 -salt "$(salt "$YURI_PASSWORD")" "$YURI_PASSWORD")"
+
+    # Build cloud-config with printf (indentation-safe; no heredoc contamination).
+    data="$(printf '%s\n' \
+      '#cloud-config' \
+      'write_files:' \
+      '  - path: /etc/tailscale/authkey' \
+      "    permissions: '0600'" \
+      '    owner: root:root' \
+      "    content: \"${TAILSCALE_AUTHKEY}\"" \
+      'chpasswd:' \
+      '  expire: false' \
+      '  users:' \
+      '    - name: root' \
+      "      password: \"${root_hash}\"" \
+      '      type: hash' \
+      '    - name: yuri-workstation' \
+      "      password: \"${yuri_hash}\"" \
+      '      type: hash')"
+
+    patch="$(jq -cn --arg fn "$FILENAME" --arg data "$data" \
+      '{spec:{forProvider:{sourceRaw:[{fileName:$fn,data:$data}]}}}')"
+
+    kubectl patch "environmentfile.${GROUP}" "$MR" --type=merge -p "$patch"
+    echo "rendered + patched ${MR} cloud-init ($(printf '%s' "$data" | wc -l) lines) — hashes only"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $name }}
+rules:
+  - apiGroups: ["virtualenvironmentfile.proxmoxbpg.crossplane.io"]
+    resources: ["environmentfiles"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $name }}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: {{ $name }}}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $name }}
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: {{ $r.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 300
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 300
+      template:
+        spec:
+          restartPolicy: Never
+          serviceAccountName: {{ $name }}
+          containers:
+            - name: render
+              image: {{ $r.image }}
+              command: ["bash", "/scripts/render.sh"]
+              env:
+                - name: ROOT_PASSWORD
+                  valueFrom: {secretKeyRef: {name: {{ $r.secretName }}, key: root-password}}
+                - name: YURI_PASSWORD
+                  valueFrom: {secretKeyRef: {name: {{ $r.secretName }}, key: yuri-password}}
+                - name: TAILSCALE_AUTHKEY
+                  valueFrom: {secretKeyRef: {name: {{ $r.secretName }}, key: tailscale-authkey}}
+              volumeMounts:
+                - {name: scripts, mountPath: /scripts}
+              resources:
+                requests: {cpu: "50m", memory: 64Mi}
+                limits: {memory: 128Mi}
+          volumes:
+            - name: scripts
+              configMap: {name: {{ $name }}, items: [{key: render.sh, path: render.sh}]}
+{{- end }}

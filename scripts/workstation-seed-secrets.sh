@@ -91,6 +91,21 @@ seed_tailscale() {
   set_field TAILSCALE_AUTH_KEY "$key"
 }
 
+seed_passwords() {
+  echo "[PASSWORDS] root + yuri-workstation login passwords (idempotent, generate-if-absent)"
+  need openssl
+  local f pw
+  for f in ROOT_PASSWORD YURI_WORKSTATION_PASSWORD; do
+    if op read "op://$VAULT/$ITEM/$f" >/dev/null 2>&1; then
+      echo "  = $f already set (kept; delete the field in 1Password to rotate)"
+    else
+      pw=$(openssl rand -base64 32 | LC_ALL=C tr -dc "A-Za-z0-9"); pw=${pw:0:20}
+      [ ${#pw} -eq 20 ] || { echo "  password gen failed" >&2; return 1; }
+      set_field "$f" "$pw"
+    fi
+  done
+}
+
 seed_github() {
   echo "[GITHUB_DEPLOY_KEY] generate ed25519 deploy keypair"
   need ssh-keygen
@@ -117,15 +132,16 @@ EOF
 
 main() {
   need op
-  local secs=("$@"); [ ${#secs[@]} -eq 0 ] && secs=(kubeconfig docker tailscale github)
+  local secs=("$@"); [ ${#secs[@]} -eq 0 ] && secs=(passwords kubeconfig docker tailscale github)
   local rc=0
   for s in "${secs[@]}"; do
     case "$s" in
+      passwords)  seed_passwords  || rc=1;;
       kubeconfig) seed_kubeconfig || rc=1;;
       docker)     seed_docker     || rc=1;;
       tailscale)  seed_tailscale  || rc=1;;
       github)     seed_github     || rc=1;;
-      *) echo "unknown section: $s (kubeconfig|docker|tailscale|github)" >&2; rc=1;;
+      *) echo "unknown section: $s (passwords|kubeconfig|docker|tailscale|github)" >&2; rc=1;;
     esac
   done
   note_op_token

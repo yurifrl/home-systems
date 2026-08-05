@@ -217,13 +217,17 @@ vms:
       datastoreId: local
       interface: ide2
       userDataFileName: workstation-user-data.yaml
-      # Secrets pushed onto the box via cloud-init (bpg EnvironmentFile has no
-      # secretRef, so "push" = rendered cloud-init). Set in the PRIVATE overlay
-      # from the 1Password `workstation` item. Empty tailscaleAuthKey => the box
-      # boots but won't join the tailnet until one is supplied.
-      tailscaleAuthKey: ""
-      kubeconfig: ""
-      dockerConfigJson: ""
+      mrName: workstation-cloud-init      # EnvironmentFile MR the render job patches
+      # cloud-init is rendered IN-CLUSTER; no secrets (not even hashes) live in git.
+      # An ExternalSecret pulls the `workstation` 1Password item and the render
+      # CronJob hashes the passwords and patches this MR's data. ArgoCD ignores
+      # that field (applications/crossplane-proxmox.yaml) so the job owns it.
+      render:
+        enabled: true
+        image: nixery.dev/shell/kubectl/openssl/jq/coreutils/bash
+        schedule: "0 * * * *"             # hourly; idempotent (deterministic salt) => no churn
+        secretName: workstation-cloud-init-op
+        onepasswordItem: workstation
 
 # --- Preflight (ArgoCD PreSync hook): fail the sync if a hard dep is missing ---
 preflight:

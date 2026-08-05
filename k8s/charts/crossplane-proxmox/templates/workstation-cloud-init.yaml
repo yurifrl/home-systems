@@ -2,19 +2,19 @@
 {{- if and $v.enabled $v.cloudInit.enabled }}
 {{- $d := .Values.defaults }}
 {{- $ci := $v.cloudInit }}
-# cloud-init user-data for the workstation VM (push model). Drops the secrets
-# the box needs straight onto disk; NixOS does the rest (the tailscale service
-# reads /etc/tailscale/authkey and joins as tag:workstation; k3s/docker/pi/herdr
-# are declared in the image). No on-box `op`, no seed token.
+# cloud-init user-data for the workstation VM (push model), rendered IN-CLUSTER.
 #
-# Values come from the PRIVATE overlay (home-systems-values/proxmox/values.yaml,
-# vms.workstation.cloudInit.*), rendered from the 1Password `workstation` item
-# via `task proxmox:workstation-seed`. bpg EnvironmentFile has no secretRef, so
-# push = rendered cloud-init; keep these in the private overlay only.
+# This EnvironmentFile is a STUB: git owns its structure, NOT its secret-bearing
+# `data`. The workstation-cloud-init-render CronJob (workstation-cloud-init-
+# render.yaml) reads the `workstation` 1Password item via an ExternalSecret,
+# hashes the passwords, and patches .spec.forProvider.sourceRaw[0].data with the
+# real cloud-config (Tailscale authkey + chpasswd for root/yuri-workstation).
+# ArgoCD ignores that field (applications/crossplane-proxmox.yaml) so the job owns
+# it and selfHeal won't revert it. Result: NO secret -- not even a hash -- in git.
 apiVersion: virtualenvironmentfile.proxmoxbpg.crossplane.io/v1alpha1
 kind: EnvironmentFile
 metadata:
-  name: workstation-cloud-init
+  name: {{ $ci.mrName }}
   annotations:
     crossplane.io/external-name: {{ $ci.datastoreId }}:snippets/{{ $ci.userDataFileName }}
 spec:
@@ -27,23 +27,9 @@ spec:
     datastoreId: {{ $ci.datastoreId }}
     sourceRaw:
       - fileName: {{ $ci.userDataFileName }}
+        # Placeholder only; the render CronJob replaces this in-cluster. Kept
+        # minimal + valid so the provider can create the snippet before first render.
         data: |
           #cloud-config
-          write_files:
-            - path: /etc/tailscale/authkey
-              permissions: '0600'
-              owner: root:root
-              content: {{ $ci.tailscaleAuthKey | quote }}
-          {{- if $ci.kubeconfig }}
-            - path: /root/.kube/config
-              permissions: '0600'
-              owner: root:root
-              content: {{ $ci.kubeconfig | quote }}
-          {{- end }}
-          {{- if $ci.dockerConfigJson }}
-            - path: /root/.docker/config.json
-              permissions: '0600'
-              owner: root:root
-              content: {{ $ci.dockerConfigJson | quote }}
-          {{- end }}
+          # awaiting in-cluster render (workstation-cloud-init-render CronJob)
 {{- end }}

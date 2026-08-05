@@ -6,7 +6,7 @@ tasks:
       - rsync -avz ./proxmox/ root@192.168.68.112:/etc/pve/qemu-server/
 
   workstation-seed:
-    desc: "Seed/rotate the 1Password 'workstation' item (sections: kubeconfig docker tailscale github)"
+    desc: "Seed/rotate the 1Password 'workstation' item (sections: passwords kubeconfig docker tailscale github)"
     cmds:
       - ./scripts/workstation-seed-secrets.sh {{.CLI_ARGS}}
 

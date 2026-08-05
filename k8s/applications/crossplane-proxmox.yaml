@@ -21,6 +21,14 @@ spec:
       name: iso-win11-24h2-combined-iso
       jsonPointers:
         - /spec/forProvider/url
+    # The workstation-cloud-init-render CronJob renders the cloud-init (Tailscale
+    # key + password hashes) in-cluster and patches this field; let it own it so
+    # selfHeal doesn't revert it back to the git placeholder.
+    - group: virtualenvironmentfile.proxmoxbpg.crossplane.io
+      kind: EnvironmentFile
+      name: workstation-cloud-init
+      jsonPointers:
+        - /spec/forProvider/sourceRaw
   syncPolicy:
     automated:
       prune: true
