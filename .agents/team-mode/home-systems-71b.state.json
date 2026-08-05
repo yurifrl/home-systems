@@ -1,0 +1,19 @@
+{
+ "raised": {},
+ "accomplished": [
+  {
+   "id": "home-systems-71b.2",
+   "title": "scope-research: discover Cloudflare Access apps + policies",
+   "at": "2026-08-02T13:25:13Z"
+  }
+ ],
+ "epic": "home-systems-71b",
+ "session": "019fc29e-74a3-74ad-b514-ff763fb17818",
+ "updated": "2026-08-04T14:57:49Z",
+ "counts": {
+  "active": 0,
+  "review": 0,
+  "clarify": 1,
+  "done": 1
+ }
+}
