@@ -41,6 +41,10 @@ spec:
             - name: dashboard
               containerPort: {{ .Values.dashboard.port }}
           env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ printf "%v" $value | quote }}
+            {{- end }}
             - name: HERMES_HOME
               value: {{ .Values.persistence.mountPath | quote }}
             - name: HOME

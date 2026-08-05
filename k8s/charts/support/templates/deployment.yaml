@@ -18,6 +18,15 @@ spec:
     metadata:
       labels:
         app: {{ .name }}
+      {{- if or .podAnnotations .rollOnConfigChange }}
+      annotations:
+        {{- with .podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .rollOnConfigChange }}
+        checksum/config: {{ $.Values.configMaps | default (list) | toYaml | sha256sum }}
+        {{- end }}
+      {{- end }}
     spec:
       nodeSelector: {{ toYaml .nodeSelector | nindent 8 }}
       {{- with .tolerations }}
