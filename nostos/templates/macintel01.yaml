@@ -1,44 +1,52 @@
 # Talos machineconfig TEMPLATE for macintel01 (2020 Core i7 / 32GB Intel Mac, amd64)
-# Role: control plane, running as a UTM VM on macOS (x86_64 guest, HVF).
-# Boot the metal-amd64 ISO into maintenance, then `nostos apply macintel01`.
+# Role: CONTROL PLANE, running as a UTM VM on macOS (x86_64 guest, HVF).
 #
-# VERIFY AT MAINTENANCE (UTM names differ; see vm01 lessons):
-#   - network interface name  (vm01 was enp0s1; confirm with `get links`)
-#   - install.disk            (UTM virtio: ISO=vda, hard disk=vdb; confirm with `get disks`)
-#   - enable virtio-rng + a real hard disk in UTM before applying
+# Promoted worker->controlplane on 2026-08-05 to replace the 8GB dell01 CP,
+# which repeatedly OOM-wedged etcd/apiserver. This node is ALREADY installed and
+# running, so promotion is in-place:
+#   nostos render macintel01 && nostos apply macintel01 --mode reboot
+# apply-config swaps machine.type worker->controlplane and reboots; on boot
+# Talos starts etcd + the control-plane static pods and auto-joins the existing
+# etcd member (dell01) over the tailnet. No ISO / maintenance boot required.
+#
+# Secrets are the shared cluster secrets (1Password "kubernetes" vault), identical
+# to dell01, so this node joins the SAME cluster/etcd.
 version: v1alpha1
 debug: false
 persist: true
 
 machine:
-  type: worker
+  type: controlplane
   token: "op://kubernetes/talos/MACHINE_TOKEN"
   ca:
     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
-    key: ""
+    key: "op://kubernetes/talos/MACHINE_CA_KEY"
   certSANs:
     - 192.168.68.91
-    - 100.118.143.56
+    - 100.65.212.5
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
+    # Node-protection for a combined control-plane + workload node. Reserve OS +
+    # kubelet + control-plane overhead so the kubepods cgroup can never starve
+    # etcd/apiserver (the exact failure that took down the 8GB dell01 CP).
+    # Sized for 32GB: ~3Gi carved out, evict low-priority pods at 1Gi free.
+    # Workloads are admitted here but ranked below essentials via PriorityClasses.
     extraConfig:
       systemReserved:
-        cpu: 150m
-        memory: 512Mi
+        cpu: 200m
+        memory: 1Gi
       kubeReserved:
-        cpu: 150m
-        memory: 512Mi
+        cpu: 300m
+        memory: 2Gi
       evictionHard:
-        memory.available: "500Mi"
+        memory.available: "1Gi"
         nodefs.available: "10%"
         imagefs.available: "10%"
-    # Register the kubelet on the Tailscale IP (100.64.0.0/10) to keep this
-    # node's cluster identity (100.118.143.56) stable across network moves,
-    # matching dell01. cilium's VXLAN meshes over the tailnet CGNAT in both
-    # directions; the KubePrism fix means the old 2026-06-05 TS-IP DNS break no
-    # longer applies.
+    # Register kubelet on the Tailscale IP so this CP's cilium VXLAN endpoint is
+    # a 100.x address like every other node. Agents reach the apiserver via
+    # KubePrism (localhost:7445), not this IP.
     nodeIP:
       validSubnets:
         - 100.64.0.0/10
@@ -46,11 +54,15 @@ machine:
     hostname: macintel01
     interfaces:
       - interface: enp0s1
+        dhcp: false
         addresses:
           - 192.168.68.91/24
         routes:
           - network: 0.0.0.0/0
             gateway: 192.168.68.1
+    nameservers:
+      - 192.168.68.1
+      - 8.8.8.8
   install:
     disk: /dev/sda
     image: {{ .InstallImage }}
@@ -68,38 +80,102 @@ machine:
     hostDNS:
       enabled: true
       forwardKubeDNSToHost: true
+  nodeLabels:
+    node.kubernetes.io/exclude-from-external-load-balancers: ""
+    node.longhorn.io/create-default-disk: "false"
   registries:
     config:
       ghcr.io:
         auth:
           username: "op://kubernetes/ghcr-image-pull-secret/username"
           password: "op://kubernetes/ghcr-image-pull-secret/password"
-  nodeLabels:
-    node.kubernetes.io/exclude-from-external-load-balancers: ""
 
 cluster:
   id: "op://kubernetes/talos/CLUSTER_ID"
   secret: "op://kubernetes/talos/CLUSTER_SECRET"
-  # DEMOTED to worker (was controlplane). CP = dell01+tp1+tp4 (home LAN).
-  # controlPlane.endpoint + extraHostEntries are injected by nostos.
+  # 32GB control plane: DO allow general scheduling (no NoSchedule taint) so this
+  # node's capacity isn't wasted. Essential control-plane/CNI/storage pods win
+  # via system-*-critical / longhorn-critical PriorityClasses; important infra
+  # rides platform-critical; normal apps sit at default(0) and are evicted first.
+  allowSchedulingOnControlPlanes: true
+  # controlPlane.endpoint + extraHostEntries are injected by nostos from
+  # cluster.endpoint and the controlplane node set. Do not hardcode here.
   clusterName: talos-default
   network:
+    cni:
+      # Cilium is the CNI (already running cluster-wide). Talos must NOT install
+      # flannel; cilium-agent DaemonSet covers this node.
+      name: none
     dnsDomain: cluster.local
     podSubnets:
       - 10.244.0.0/16
     serviceSubnets:
       - 10.96.0.0/12
   token: "op://kubernetes/talos/CLUSTER_TOKEN"
+  secretboxEncryptionSecret: "op://kubernetes/talos/CLUSTER_SECRETBOXENCRYPTIONSECRET"
   ca:
     crt: "op://kubernetes/talos/CLUSTER_CA_CRT"
-    key: ""
+    key: "op://kubernetes/talos/CLUSTER_CA_KEY"
+  aggregatorCA:
+    crt: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_CRT"
+    key: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_KEY"
+  serviceAccount:
+    key: "op://kubernetes/talos/CLUSTER_SERVICEACCOUNT_KEY"
+  apiServer:
+    image: registry.k8s.io/kube-apiserver:v1.32.1
+    certSANs:
+      - 192.168.68.91
+      - 100.65.212.5
+    disablePodSecurityPolicy: true
+    admissionControl:
+      - name: PodSecurity
+        configuration:
+          apiVersion: pod-security.admission.config.k8s.io/v1alpha1
+          kind: PodSecurityConfiguration
+          defaults:
+            enforce: privileged
+            enforce-version: latest
+            audit: privileged
+            audit-version: latest
+            warn: privileged
+            warn-version: latest
+          exemptions:
+            namespaces:
+              - kube-system
+              - metallb-system
+              - istio-system
+            runtimeClasses: []
+            usernames: []
+    auditPolicy:
+      apiVersion: audit.k8s.io/v1
+      kind: Policy
+      rules:
+        - level: Metadata
+  controllerManager:
+    image: registry.k8s.io/kube-controller-manager:v1.32.1
+  proxy:
+    image: registry.k8s.io/kube-proxy:v1.32.1
+  scheduler:
+    image: registry.k8s.io/kube-scheduler:v1.32.1
   discovery:
     enabled: true
     registries:
       kubernetes:
         disabled: true
       service: {}
-
+  etcd:
+    # Advertise the etcd peer URL on the Tailscale CGNAT range so the peer is
+    # reachable cross-LAN without importing routes (matches dell01).
+    advertisedSubnets:
+      - 100.64.0.0/10
+    # Tolerate slow/overloaded etcd so a busy leader does not trigger election
+    # storms. Must match dell01's timings during the 2-member window.
+    extraArgs:
+      heartbeat-interval: "1000"
+      election-timeout: "10000"
+    ca:
+      crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
+      key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
 ---
 apiVersion: v1alpha1
 kind: ExtensionServiceConfig
@@ -107,9 +183,7 @@ name: tailscale
 environment:
   - TS_AUTHKEY=tailscale://authkey?description=macintel01
   - TS_DEBUG_OMIT_LOCAL_ADDRS=true
-  # On-LAN node now (like dell01/macarm01): advertise the cluster LAN /24 and
-  # NEVER --accept-routes (it hijacks the pod CIDR and breaks node-local DNS).
-  # macintel01 sits directly on 192.168.68.0/24, so it reaches the CP apiserver
-  # and other node IPs over the LAN - no accepted routes needed.
+  # On-LAN node: advertise the cluster LAN /24 and NEVER --accept-routes (it
+  # hijacks the pod CIDR and breaks node-local DNS).
   - TS_ROUTES=192.168.68.0/24
   - TS_EXTRA_ARGS=--reset

@@ -1,23 +1,23 @@
 # Talos machineconfig TEMPLATE for dell01 (OptiPlex 3080M, amd64)
-# Role: control plane node at 192.168.68.100
+# Role: WORKER at 192.168.68.100
 #
-# Rendered via `task pxe:config NODE=dell01`:
-#   - 1Password secret references (op-colon-slash-slash) are injected
-#   - Output lands in pxe/assets/configs/<mac-hex-hyphens>.yaml
-#   - Served over HTTP during PXE boot via talos.config= kernel arg
+# DEMOTED controlplane->worker on 2026-08-05. The control plane moved to
+# macintel01 (32GB) because dell01's 8GB repeatedly OOM-wedged etcd/apiserver.
+# In-place demotion via `nostos apply dell01 --mode reboot` after dell01 was
+# removed from etcd (`talosctl etcd remove-member`). As a worker Talos runs no
+# etcd; the stale /var/lib/etcd is ignored.
 #
-# Secrets are reused from the original cluster (stored in 1Password "kubernetes" vault)
-# so workers (tp1/tp4/rpi) can re-join without regenerating configs.
+# Secrets are the shared cluster secrets (1Password "kubernetes" vault).
 version: v1alpha1
 debug: false
 persist: true
 
 machine:
-  type: controlplane
+  type: worker
   token: "op://kubernetes/talos/MACHINE_TOKEN"
   ca:
     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
-    key: "op://kubernetes/talos/MACHINE_CA_KEY"
+    key: ""
   certSANs:
     - 192.168.68.100
     - 100.82.148.37
@@ -25,12 +25,8 @@ machine:
     image: ghcr.io/siderolabs/kubelet:v1.32.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
-    # Node-protection: reserve memory for the OS + kubelet + control-plane
-    # static pods so the kubepods cgroup (capped at Allocatable via the
-    # default enforceNodeAllocatable: [pods]) can never consume the whole
-    # 7.6Gi node. Without this, Allocatable ~= Capacity and a workload spike
-    # OOMs the node itself, taking down etcd/apiserver (2026-06-14 incident).
-    # evictionHard makes the kubelet shed low-priority pods before that limit.
+    # Keep node-protection reservations: dell01 is only 8GB, so guard the OS +
+    # kubelet against a workload spike OOMing the node.
     extraConfig:
       systemReserved:
         cpu: 150m
@@ -42,27 +38,9 @@ machine:
         memory.available: "500Mi"
         nodefs.available: "10%"
         imagefs.available: "10%"
-    # Register kubelet on the Tailscale IP so this control plane's cilium VXLAN
-    # endpoint is a 100.x address like every other node (homogeneous mesh,
-    # home-systems-h27). Agents reach the apiserver via KubePrism (localhost:7445),
-    # not this IP. LAN nodes stay accept-routes-free and hostDNS answers
-    # ClusterDNS node-locally, so the 2026-06-05 DNS break (accept-routes
-    # importing pod/Service CIDR) can't recur. dell01 keeps its 192.168.68.100
-    # interface address for LAN break-glass.
     nodeIP:
       validSubnets:
         - 100.64.0.0/10
-    # PROVISIONAL (2026-06-27): disabled with the /dev/sda Longhorn volume
-    # below (failing WALRAM SSD). Binding a non-existent source would fail
-    # the kubelet. Re-enable together with the disks block.
-    # extraMounts:
-    #   - destination: /var/mnt/storage
-    #     type: bind
-    #     source: /var/mnt/storage
-    #     options:
-    #       - bind
-    #       - rshared
-    #       - rw
   network:
     hostname: dell01
     interfaces:
@@ -93,22 +71,9 @@ machine:
     hostDNS:
       enabled: true
       forwardKubeDNSToHost: true
-  # PROVISIONAL (2026-06-27): /dev/sda (WALRAM-256GB SATA SSD) failed after a
-  # power-cut - READ FPDMA QUEUED timeouts + XFS corruption. Talos looped
-  # retrying its mount, stalling the volume phase and blocking kubelet/etcd,
-  # so dell01 went NotReady. Disabled until the SSD is wiped-and-proven or
-  # replaced. Re-enable the disks block + create-default-disk to restore
-  # Longhorn storage on this node.
-  # disks:
-  #   - device: /dev/sda
-  #     partitions:
-  #       - mountpoint: /var/mnt/storage
-  #         size: 0
   nodeLabels:
     node.kubernetes.io/exclude-from-external-load-balancers: ""
     node.longhorn.io/create-default-disk: "false"
-  # Node-level auth for the private ghcr.io registry: every pod on this node can
-  # pull ghcr.io/yurifrl/* with no imagePullSecret (global, no per-namespace).
   registries:
     config:
       ghcr.io:
@@ -119,93 +84,25 @@ machine:
 cluster:
   id: "op://kubernetes/talos/CLUSTER_ID"
   secret: "op://kubernetes/talos/CLUSTER_SECRET"
-  # Control-plane-only: dell01 is the SOLE control plane (2026-07-04). Keep the
-  # node-role.kubernetes.io/control-plane:NoSchedule taint so general workloads
-  # land on the workers (pc01/tp1/tp4) instead of burying the apiserver/etcd
-  # under ~100 pods, which is what starved apid/etcd and caused the outage.
-  allowSchedulingOnControlPlanes: false
-  # controlPlane.endpoint + extraHostEntries are injected by nostos from
-  # cluster.endpoint and the controlplane node set. Do not hardcode here.
+  # Worker: controlPlane.endpoint + extraHostEntries injected by nostos (now
+  # pointing at macintel01, the sole control plane).
   clusterName: talos-default
   network:
-    cni:
-      # Cilium is the CNI. Talos must NOT bootstrap flannel. With cni:none the
-      # node stays NotReady until Cilium is installed (manual `helm install`
-      # during the bootstrap window; ArgoCD app k8s/applications/cilium.yaml
-      # adopts it for day-2). See nostos/manifests/cilium/.
-      name: none
     dnsDomain: cluster.local
     podSubnets:
       - 10.244.0.0/16
     serviceSubnets:
       - 10.96.0.0/12
   token: "op://kubernetes/talos/CLUSTER_TOKEN"
-  secretboxEncryptionSecret: "op://kubernetes/talos/CLUSTER_SECRETBOXENCRYPTIONSECRET"
   ca:
     crt: "op://kubernetes/talos/CLUSTER_CA_CRT"
-    key: "op://kubernetes/talos/CLUSTER_CA_KEY"
-  aggregatorCA:
-    crt: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_CRT"
-    key: "op://kubernetes/talos/CLUSTER_AGGREGATORCA_KEY"
-  serviceAccount:
-    key: "op://kubernetes/talos/CLUSTER_SERVICEACCOUNT_KEY"
-  apiServer:
-    image: registry.k8s.io/kube-apiserver:v1.32.1
-    certSANs:
-      - 192.168.68.100
-      - 100.82.148.37
-    disablePodSecurityPolicy: true
-    admissionControl:
-      - name: PodSecurity
-        configuration:
-          apiVersion: pod-security.admission.config.k8s.io/v1alpha1
-          kind: PodSecurityConfiguration
-          defaults:
-            enforce: privileged
-            enforce-version: latest
-            audit: privileged
-            audit-version: latest
-            warn: privileged
-            warn-version: latest
-          exemptions:
-            namespaces:
-              - kube-system
-              - metallb-system
-              - istio-system
-            runtimeClasses: []
-            usernames: []
-    auditPolicy:
-      apiVersion: audit.k8s.io/v1
-      kind: Policy
-      rules:
-        - level: Metadata
-  controllerManager:
-    image: registry.k8s.io/kube-controller-manager:v1.32.1
-  proxy:
-    image: registry.k8s.io/kube-proxy:v1.32.1
-  scheduler:
-    image: registry.k8s.io/kube-scheduler:v1.32.1
+    key: ""
   discovery:
     enabled: true
     registries:
       kubernetes:
         disabled: true
       service: {}
-  etcd:
-    # Advertise the etcd peer URL on the Tailscale CGNAT range so offsite
-    # controlplanes (rpi01) can reach this peer cross-LAN without importing
-    # routes. Pairs with rpi01's etcd.advertisedSubnets.
-    advertisedSubnets:
-      - 100.64.0.0/10
-    # Tolerate slow/overloaded etcd (eMMC on tp1/tp4; multi-second applies seen
-    # 2026-07-02) so a busy leader does not trigger election storms. election
-    # must exceed worst-case apply latency; heartbeat 1s, election 10s.
-    extraArgs:
-      heartbeat-interval: "1000"
-      election-timeout: "10000"
-    ca:
-      crt: "op://kubernetes/talos/CLUSTER_ETCD_CA_CRT"
-      key: "op://kubernetes/talos/CLUSTER_ETCD_CA_KEY"
 ---
 apiVersion: v1alpha1
 kind: ExtensionServiceConfig

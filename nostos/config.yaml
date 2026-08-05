@@ -60,7 +60,7 @@ nodes:
     mac: "d0:94:66:d9:eb:a5"
     ip: 192.168.68.100
     tailscale_ip: 100.82.148.37
-    role: controlplane
+    role: worker
     arch: amd64
     install_disk: /dev/nvme0n1
     template: dell01.yaml
@@ -131,15 +131,19 @@ nodes:
       method: pxe
   macintel01:
     # amd64 control plane running as a UTM VM on a 2020 Core i7 / 32GB Intel Mac.
-    # Not PXE/TPI-bootable: boot the metal-amd64 ISO into maintenance, then
-    # `nostos apply macintel01`. mac/boot.method only satisfy validation.
-    # VERIFY at maintenance: NIC name (enp0s1?) + install_disk (vdb?).
+    # Promoted worker->controlplane 2026-08-05 to replace the 8GB dell01 CP,
+    # which OOM-wedged etcd/apiserver (2026-07-13 + 2026-08-05 incidents). 32GB
+    # gives etcd/apiserver real headroom; workloads still run here, protected by
+    # kubelet reservations + PriorityClasses rather than a NoSchedule taint.
+    # In-place promotion via `nostos apply macintel01 --mode reboot` (node is
+    # already installed; apply-config swaps type worker->controlplane + reboots,
+    # etcd auto-joins dell01 over the tailnet). No ISO/maintenance boot needed.
     # Static IP .91 on the 192.168.68.0/24 cluster LAN (same net as dell01 CP
     # and macarm01 .90), above the DHCP pool so it can't be leased away.
     mac: "00:0c:29:ac:01:01"
     ip: 192.168.68.91
-    tailscale_ip: 100.118.143.56
-    role: worker
+    tailscale_ip: 100.65.212.5
+    role: controlplane
     arch: amd64
     install_disk: /dev/sda
     template: macintel01.yaml
