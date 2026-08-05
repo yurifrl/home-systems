@@ -40,8 +40,6 @@ spec:
             - --pod-recommendation-min-cpu-millicores=50
             - --pod-recommendation-min-memory-mb=128
         updater:
-          extraArgs:
-            - --vpa-object-default-update-mode=Auto
           resources:
             limits:
               cpu: 100m

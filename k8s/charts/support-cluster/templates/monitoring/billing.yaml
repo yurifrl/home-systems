@@ -93,7 +93,9 @@ spec:
     - name: gcp-billing.rules
       rules:
         - alert: GCPBudgetThresholdExceeded
-          expr: gcp_billing_cost / gcp_billing_amount >= {{ $e.alertThreshold }}
+          # Exclude leftover synthetic/test budgets (e.g. "SYNTHETIC TEST budget"
+          # sits permanently at ratio 1.0 and would page forever). Real budgets only.
+          expr: gcp_billing_cost{budget!~"(?i).*(synthetic|test).*"} / gcp_billing_amount >= {{ $e.alertThreshold }}
           for: 5m
           labels:
             severity: critical
@@ -105,7 +107,7 @@ spec:
         # Fires at 100% — the same condition that trips the kill switch (billing
         # detach). Persists after detach since spend stays >= limit.
         - alert: GCPBudgetKillSwitch
-          expr: gcp_billing_cost / gcp_billing_amount >= 1
+          expr: gcp_billing_cost{budget!~"(?i).*(synthetic|test).*"} / gcp_billing_amount >= 1
           for: 1m
           labels:
             severity: critical

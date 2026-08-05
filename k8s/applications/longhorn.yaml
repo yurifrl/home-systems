@@ -146,6 +146,8 @@ parameters:
   fsType: ext4
   dataLocality: best-effort
 reclaimPolicy: Delete
+# Allow online PVC expansion (needed to grow a full volume in place, e.g. obsidian-config).
+allowVolumeExpansion: true
 volumeBindingMode: Immediate
 ---
 # StorageClass for replica=2 (minimal HA, requires 2+ nodes)

@@ -31,6 +31,10 @@ spec:
           image:
             tag: latest
             pullPolicy: Always
+          # Published image is amd64-only; pin to amd64 nodes (pc01/macintel01)
+          # so it never lands on an arm64 node and crashloops (exec format error).
+          nodeSelector:
+            kubernetes.io/arch: amd64
           persistence:
             storageClass: longhorn-single
           env:

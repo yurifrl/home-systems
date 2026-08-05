@@ -29,8 +29,11 @@ spec:
       helm:
         valuesObject:
           persistentVolumeClaims:
+            # Vault (git-synced, ~7.3G) + app config outgrew 10Gi and filled the
+            # volume 100% (KubePersistentVolumeCriticalFull). Grown to 20Gi;
+            # longhorn-single now allows online expansion.
             - name: obsidian-config
-              storage: 10Gi
+              storage: 20Gi
               storageClassName: longhorn-single
           # Pulls GITHUB_TOKEN from the 1Password "obsidian" item (Kubernetes
           # vault) into a k8s Secret named "obsidian".
