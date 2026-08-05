@@ -39,19 +39,14 @@ spec:
                 provider: openai-api
                 default: kimi-k3
               # Fallback chain: try models in order when the primary fails.
-              # 1-5: via LiteLLM proxy (openai-api provider). 6-7: direct API.
-              # 8: Hermes Portal (Nous) as last resort.
+              # 1-3: via LiteLLM proxy (openai-api). 4-5: direct API. 6: Nous.
               fallback_providers:
                 - provider: openai-api
-                  model: claude-opus-4
-                - provider: openai-api
-                  model: gpt-5
-                - provider: openai-api
-                  model: deepseek-v3.2
-                - provider: openai-api
-                  model: kimi-k2.5
+                  model: kimi-k3
                 - provider: openai-api
                   model: glm-5.2
+                - provider: openai-api
+                  model: claude-opus-4
                 - provider: moonshot
                   model: kimi-k3
                 - provider: openrouter
