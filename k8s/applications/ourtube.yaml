@@ -115,6 +115,8 @@ spec:
               channelId: UCkDSAQ_5-yx5hmuvUcsJL7A
             - name: fern
               channelId: UCODHrzPMGbNv67e84WDZhQQ
+            - name: otlavspa
+              channelId: UCgoVlLWCP34BbwaN_LRyNXQ
 
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
