@@ -78,14 +78,14 @@ spec:
           s3:
             endpoint: "https://storage.googleapis.com"
 
-          # Per-replica ephemeral git hydration cache (git ref/object state is
-          # object-store-backed; this PVC is not shared state). RWO is fine.
+          # Git ref/object state is object-store-backed (GCS), so this is only a
+          # throwaway per-pod hydration cache. Use emptyDir instead of a
+          # ReadWriteOnce Longhorn PVC: this cluster's Longhorn datapath is
+          # flaky (volumes get stuck "not ready for workloads" on attach), and
+          # nothing here needs to survive a restart.
           persistence:
             git:
-              enabled: true
-              accessMode: ReadWriteOnce
-              storageClass: longhorn-single
-              size: 10Gi
+              enabled: false
 
           # Networking is handled by the Istio VirtualService (support chart
           # below) + Cloudflare tunnel, not the chart's own ingress/HTTPRoute.
