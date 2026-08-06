@@ -15,6 +15,17 @@ spec:
         spec:
           nodeSelector:
             kubernetes.io/arch: {{ .Values.runtimeArch }}
+          # Keep provider runtime pods OFF the control-plane node. The provider
+          # LIST/watch load is heavy (they pegged the sole 8-CPU CP macintel01 at
+          # ~104%, starving kube-apiserver and firing ControlPlaneAPIUnreachable +
+          # NodeCPUCritical). Schedule them on amd64 WORKERS (pc01/dell01) instead.
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/control-plane
+                        operator: DoesNotExist
           # containers is a required field on the DeploymentRuntimeConfig pod
           # template; the name is the strategic-merge key. nodeSelector pins arch;
           # HOME=/tmp gives the uid-2000 runtime a writable home so providers that
