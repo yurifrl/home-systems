@@ -9,7 +9,7 @@ runtimeArch: amd64
 pinnedRuntimeConfig:
   name: gcp-storage-pinned
   nodeHostname: pc01
-  apiserverHost: "192.168.68.100"
+  apiserverHost: "192.168.68.91"
   apiserverPort: "6443"
 
 # Crossplane provider packages to install (Crossplane v2.3.3; cluster-scoped MRs).
