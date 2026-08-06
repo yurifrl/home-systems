@@ -1,6 +1,12 @@
 apiVersion: v2
 name: herdr-phone
-description: Cloudflare DNS + Access for herdr.syscd.live (herdr-phone runs cloudflared on the workstation VM; this chart manages the account-side resources via crossplane + the canonical cloudflared ingress config)
+description: >-
+  Cloudflare Access gate for herdr.syscd.space. Routing + DNS for
+  <app>.syscd.space is owned by the apps-space chart (wildcard *.syscd.space ->
+  in-cluster cloudflared -> workstation LAN port); this chart only adds the
+  Access application that protects the herdr hostname, because herdr is remote
+  shell access and must never be a public app. herdr-phone on the box (external
+  front-door mode) re-validates the Access JWT this app mints.
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "1.0.0"

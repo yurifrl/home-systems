@@ -1,6 +1,8 @@
-# Cloudflare Access application protecting herdr.syscd.live. herdr-phone's origin
-# re-validates the Access JWT; the app's AUD tag goes into the Mac config
-# (kubectl get trustaccessapplication herdr-phone -o jsonpath='{.status.atProvider.aud}').
+# Cloudflare Access application protecting herdr.syscd.space. herdr-phone's origin
+# (external front-door mode, on the workstation) re-validates the Access JWT; the
+# app's AUD tag goes into the box config (services.herdrPhone.audience in nixos):
+#   kubectl get trustaccessapplication herdr-phone -o jsonpath='{.status.atProvider.aud}'
+#   (or read it publicly from the login redirect of https://herdr.syscd.space).
 # Inline allow-policy scopes entry to the configured identity (email OTP / Google).
 apiVersion: zero.upjet-cloudflare.upbound.io/v1alpha1
 kind: TrustAccessApplication
