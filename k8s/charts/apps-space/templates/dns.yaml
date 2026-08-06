@@ -1,0 +1,19 @@
+# Proxied wildcard CNAME: *.syscd.space -> the dedicated apps cloudflared tunnel.
+# One record covers every <app>.syscd.space; per-app routing to the right port is
+# done by the cloudflared ingress (cloudflared.yaml), so adding an app never needs
+# a new DNS record. Managed by crossplane (upjet-cloudflare), same as herdr-phone.
+apiVersion: dns.upjet-cloudflare.upbound.io/v1alpha1
+kind: Record
+metadata:
+  name: wildcard-syscd-space
+spec:
+  deletionPolicy: {{ .Values.deletionPolicy }}
+  providerConfigRef:
+    name: default
+  forProvider:
+    zoneId: {{ .Values.zoneId | quote }}
+    name: {{ printf "*.%s" .Values.domain | quote }}
+    type: CNAME
+    content: {{ printf "%s.cfargotunnel.com" .Values.tunnelId | quote }}
+    proxied: true
+    ttl: 1

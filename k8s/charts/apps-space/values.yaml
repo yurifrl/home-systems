@@ -1,0 +1,38 @@
+# PUBLIC, value-free defaults. Real values live in the PRIVATE home-systems-values
+# repo (apps-space/values.yaml), merged at sync time via $values (see
+# k8s/applications/apps-space.yaml). Placeholders only here.
+
+# Cloudflare identifiers (real values in the private overlay).
+accountId: "REPLACED_BY_PRIVATE_VALUES"
+# Zone id for syscd.space.
+zoneId: "REPLACED_BY_PRIVATE_VALUES"
+domain: syscd.space
+
+# Dedicated cloudflared tunnel for the *.syscd.space app proxy. NOT the main
+# nixos-1 tunnel (that one is a SPOF fronting every *.syscd.live service) and NOT
+# the herdr tunnel -- a purpose-scoped tunnel so a bad edit here can never take
+# production down. Credentials live in the 1Password item referenced by
+# tunnelSecret.onepasswordItem and are delivered in-cluster via ESO (never on the
+# box, never in git).
+tunnelId: "00000000-0000-0000-0000-000000000000"
+
+# Where the apps run: the workstation dev VM, reached over the LAN (cluster nodes
+# and the VM share L2, 192.168.68.0/24). The box firewall must allow these ports
+# on its LAN interface (nixos modules/workstation/apps-proxy.nix).
+workstationHost: "REPLACED_BY_PRIVATE_VALUES"
+
+# The app -> port map. Each entry publishes https://<name>.syscd.space and routes
+# it to http://<workstationHost>:<port>. Adding an app = one entry here; the
+# wildcard DNS record already resolves every *.syscd.space name to this tunnel.
+apps: []
+# - name: board-games
+#   port: 8080
+
+# 1Password item (Kubernetes vault) holding the tunnel credentials.json, extracted
+# by ESO into the creds secret cloudflared mounts.
+tunnelSecret:
+  onepasswordItem: cloudflare-tunnel-syscd-apps
+  secretName: cloudflare-tunnel-syscd-apps
+
+image: cloudflare/cloudflared:latest
+deletionPolicy: Delete
