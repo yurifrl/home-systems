@@ -5,47 +5,9 @@
 # domain gates the whole edge; a more-specific per-host app (e.g. herdr-phone)
 # still overrides it for that hostname.
 #
-# The attached policies are EXISTING, reusable, account-level Access policies
-# ADOPTED into crossplane below via crossplane.io/external-name (import id
-# format: <accountId>/<policyId>). They are shared with other apps
-# (e.g. *.syscd.live), so:
-#   - deletionPolicy: Orphan  -> removing the MR never deletes the real policy.
-#   - forProvider MUST mirror the live policy exactly (name/decision/include),
-#     or a reconcile would mutate the shared policy. Real definitions live in
-#     the PRIVATE home-systems-values overlay, never in this public chart.
-{{- range .Values.access.policies }}
----
-apiVersion: zero.upjet-cloudflare.upbound.io/v1alpha1
-kind: TrustAccessPolicy
-metadata:
-  name: {{ .key }}
-  annotations:
-    crossplane.io/external-name: {{ printf "%s/%s" $.Values.accountId .id | quote }}
-spec:
-  deletionPolicy: Orphan
-  providerConfigRef:
-    name: default
-  forProvider:
-    accountId: {{ $.Values.accountId | quote }}
-    name: {{ .name | quote }}
-    decision: {{ .decision | quote }}
-    {{- with .sessionDuration }}
-    sessionDuration: {{ . | quote }}
-    {{- end }}
-    include:
-      {{- toYaml .include | nindent 6 }}
-    {{- with .exclude }}
-    exclude:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .require }}
-    require:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-{{- end }}
----
-# The wildcard application. References the adopted reusable policies by UUID, in
-# ascending order of precedence (list order).
+# The attached policies are the GLOBAL, reusable account-level policies owned by
+# the cloudflare-access chart (single source of truth); this app only references
+# them by id. Ordering of the list = ascending precedence.
 apiVersion: zero.upjet-cloudflare.upbound.io/v1alpha1
 kind: TrustAccessApplication
 metadata:
@@ -63,7 +25,7 @@ spec:
     appLauncherVisible: false
     autoRedirectToIdentity: false
     policies:
-    {{- range .Values.access.policies }}
-      - id: {{ .id | quote }}
+    {{- range .Values.access.policyIds }}
+      - id: {{ . | quote }}
     {{- end }}
 {{- end }}

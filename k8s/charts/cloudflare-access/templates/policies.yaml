@@ -1,0 +1,39 @@
+{{- /*
+Reusable, account-level Cloudflare Access policies, ADOPTED from pre-existing
+Cloudflare policies into crossplane. Consumers (per-app TrustAccessApplications
+in their own charts) attach these by id. Shared across apps, so:
+  - deletionPolicy: Orphan  -> removing the MR never deletes the real policy.
+  - forProvider MUST mirror the live policy exactly (name/decision/include),
+    else a reconcile mutates a policy other apps depend on.
+Real definitions live in the PRIVATE home-systems-values overlay.
+*/ -}}
+{{- range .Values.policies }}
+---
+apiVersion: zero.upjet-cloudflare.upbound.io/v1alpha1
+kind: TrustAccessPolicy
+metadata:
+  name: {{ .key }}
+  annotations:
+    crossplane.io/external-name: {{ printf "%s/%s" $.Values.accountId .id | quote }}
+spec:
+  deletionPolicy: Orphan
+  providerConfigRef:
+    name: default
+  forProvider:
+    accountId: {{ $.Values.accountId | quote }}
+    name: {{ .name | quote }}
+    decision: {{ .decision | quote }}
+    {{- with .sessionDuration }}
+    sessionDuration: {{ . | quote }}
+    {{- end }}
+    include:
+      {{- toYaml .include | nindent 6 }}
+    {{- with .exclude }}
+    exclude:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .require }}
+    require:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+{{- end }}

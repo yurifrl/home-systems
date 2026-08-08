@@ -1,0 +1,12 @@
+apiVersion: v2
+name: cloudflare-access
+description: >-
+  Global, account-level Cloudflare Access resources shared across apps. Owns the
+  reusable Access policies (e.g. Service Auth, Admin) that multiple applications
+  attach by id (*.syscd.space, *.syscd.live, herdr, ...). These are ADOPTED into
+  crossplane from pre-existing Cloudflare policies via crossplane.io/external-name;
+  per-app TrustAccessApplications live in their own app charts and only reference
+  these policies by id. Single source of truth for the shared policy definitions.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

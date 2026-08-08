@@ -18,22 +18,16 @@ domain: syscd.space
 accountId: "REPLACED_BY_PRIVATE_VALUES"
 
 # Cloudflare Access in front of *.syscd.space. Disabled by default here; the
-# PRIVATE overlay turns it on and supplies the real policies (which include
-# email allow-lists -- never committed to this public chart). Each policy is an
-# EXISTING reusable account-level Access policy adopted via external-name.
+# PRIVATE overlay turns it on and supplies the policy ids. The policies
+# themselves are GLOBAL, owned by the cloudflare-access chart -- this app only
+# references them by id.
 access:
   enabled: false
   appName: syscd-space
   sessionDuration: 24h
-  # List of reusable policies to adopt + attach, in ascending precedence order.
-  # Shape (real values in the private overlay):
-  #   - key: <k8s-name>        # metadata.name of the TrustAccessPolicy MR
-  #     id: <policy-uuid>      # existing Cloudflare Access policy id
-  #     name: <policy name>    # MUST match the live policy
-  #     decision: <allow|non_identity|deny|bypass>
-  #     sessionDuration: 24h
-  #     include: [ ... ]       # MUST mirror the live policy's include rules
-  policies: []
+  # Ids of the reusable account-level policies to attach, in ascending
+  # precedence order (real values in the private overlay).
+  policyIds: []
 
 # The dedicated syscd-apps tunnel the wildcard points at. Adding an app is a
 # one-line ingress edit in the VM's cloudflared.nix; the wildcard already
