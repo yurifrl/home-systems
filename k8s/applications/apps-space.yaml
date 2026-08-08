@@ -6,7 +6,8 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    # After crossplane providers install the Cloudflare DNS CRDs and ESO is up.
+    # DNS-only: manages the *.syscd.space wildcard CNAME. The connector runs on
+    # the workstation VM (nixos cloudflared.nix), not here.
     argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
@@ -28,7 +29,7 @@ spec:
       path: k8s/charts/apps-space
       helm:
         valueFiles:
-          # Real accountId/zoneId/tunnelId/workstationHost/apps come from the PRIVATE repo.
+          # Real zoneId/tunnelId come from the PRIVATE repo.
           - $values/apps-space/values.yaml
     # PRIVATE: holds the real values (registered as an ArgoCD repo credential).
     - repoURL: git@github.com:yurifrl/home-systems-values.git
