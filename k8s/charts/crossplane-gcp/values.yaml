@@ -37,6 +37,14 @@ serviceAccounts: []
 #    accountId: foundry-gcs-access-sa
 #    displayName: Foundry GCS Access Service Account
 
+# --- Service account IAM bindings (grant a member a role ON an SA) ----------
+# e.g. let a GitHub Workload Identity principalSet impersonate a deployer SA.
+serviceAccountIAMMembers: []
+#  - name: billing-fn-deployer-wif
+#    serviceAccountRef: billing-fn-deployer-sa   # or serviceAccountId: <full path>
+#    role: roles/iam.workloadIdentityUser
+#    member: "principalSet://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL/attribute.repository/OWNER/REPO"
+
 # --- Service account keys (for external auth like VM, not Workload Identity) -
 serviceAccountKeys: []
 #  - name: victoriametrics-sa-key
