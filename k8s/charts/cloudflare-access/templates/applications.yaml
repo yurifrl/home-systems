@@ -1,0 +1,46 @@
+{{- /*
+Cloudflare Access applications (self_hosted). Each gates a hostname/wildcard and
+attaches policies -- either shared reusable ones by id (policyIds, defined in
+policies.yaml) or inline per-app policies (inlinePolicies, e.g. a bypass rule
+for an API that does its own authz). metadata.name is the crossplane MR name and
+is load-bearing (external consumers read the app by it, e.g. the herdr AUD
+lookup), so it stays stable; appName is the Cloudflare-side display name.
+Set externalName to adopt an existing Cloudflare application (preserves its id
+and AUD) instead of creating a new one.
+*/ -}}
+{{- range .Values.applications }}
+---
+apiVersion: zero.upjet-cloudflare.upbound.io/v1alpha1
+kind: TrustAccessApplication
+metadata:
+  name: {{ .name }}
+  {{- with .externalName }}
+  annotations:
+    crossplane.io/external-name: {{ . | quote }}
+  {{- end }}
+spec:
+  deletionPolicy: {{ .deletionPolicy | default "Delete" }}
+  providerConfigRef:
+    name: default
+  forProvider:
+    accountId: {{ $.Values.accountId | quote }}
+    name: {{ .appName | default .name | quote }}
+    domain: {{ .domain | quote }}
+    type: {{ .type | default "self_hosted" | quote }}
+    sessionDuration: {{ .sessionDuration | default "24h" | quote }}
+    appLauncherVisible: false
+    autoRedirectToIdentity: false
+    policies:
+    {{- range .policyIds }}
+      - id: {{ . | quote }}
+    {{- end }}
+    {{- range .inlinePolicies }}
+      - name: {{ .name | quote }}
+        decision: {{ .decision | quote }}
+        {{- with .precedence }}
+        precedence: {{ . }}
+        {{- end }}
+        include:
+          {{- toYaml .include | nindent 10 }}
+    {{- end }}
+{{- end }}

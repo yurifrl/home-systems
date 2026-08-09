@@ -1,0 +1,24 @@
+{{- /*
+Cloudflare DNS records that front the Access applications above, reconciled by
+provider-cloudflare-dns. e.g. the proxied *.syscd.space wildcard CNAME -> the
+syscd-apps cloudflared tunnel; the matching wildcard Access app gates it.
+Real zone/tunnel ids live in the PRIVATE overlay.
+*/ -}}
+{{- range .Values.dnsRecords }}
+---
+apiVersion: dns.upjet-cloudflare.upbound.io/v1alpha1
+kind: Record
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: {{ .deletionPolicy | default "Delete" }}
+  providerConfigRef:
+    name: default
+  forProvider:
+    zoneId: {{ .zoneId | quote }}
+    name: {{ .recordName | quote }}
+    type: {{ .type | quote }}
+    content: {{ .content | quote }}
+    proxied: {{ .proxied | default false }}
+    ttl: {{ .ttl | default 1 }}
+{{- end }}

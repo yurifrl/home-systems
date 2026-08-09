@@ -1,0 +1,48 @@
+# PUBLIC, value-free defaults. Every real value -- accountId, policy ids/emails,
+# application domains, DNS zone/tunnel ids -- lives in the PRIVATE
+# home-systems-values repo (cloudflare-access/values.yaml), merged at sync time
+# via $values (see k8s/applications/cloudflare-access.yaml). Placeholders only.
+accountId: "REPLACED_BY_PRIVATE_VALUES"
+
+# Shared, account-level Access policies -- EXISTING reusable Cloudflare policies
+# ADOPTED into crossplane by id via external-name (<accountId>/<id>).
+#   - deletionPolicy Orphan -> removing the MR never deletes the real policy.
+#   - forProvider MUST mirror the live policy exactly (name/decision/include),
+#     else a reconcile mutates a policy other apps depend on.
+# Shape (real values in the private overlay):
+#   - key: <k8s-name>       # metadata.name of the TrustAccessPolicy MR
+#     id: <policy-uuid>     # existing Cloudflare Access policy id
+#     name: <policy name>   # MUST match the live policy
+#     decision: <allow|non_identity|deny|bypass>
+#     sessionDuration: 24h
+#     include: [ ... ]      # MUST mirror the live policy's include rules
+policies: []
+
+# Per-app Access applications. Each attaches shared policies by id (policyIds)
+# and/or defines inline policies (inlinePolicies).
+# Shape (real values in the private overlay):
+#   - name: <mr-name>            # metadata.name of the TrustAccessApplication MR
+#     appName: <cloudflare name> # forProvider.name (defaults to name)
+#     domain: <host or wildcard>
+#     sessionDuration: 24h
+#     deletionPolicy: Delete
+#     externalName: <cf-app-id>  # optional: adopt an existing Cloudflare app
+#     policyIds: [ <policy-uuid> ]
+#     inlinePolicies:
+#       - name: bypass
+#         decision: bypass
+#         precedence: 1
+#         include: [ { everyone: {} } ]
+applications: []
+
+# Crossplane-managed Cloudflare DNS records (provider-cloudflare-dns).
+# Shape (real values in the private overlay):
+#   - name: <mr-name>
+#     zoneId: <zone-id>
+#     recordName: <fqdn or wildcard>
+#     type: CNAME
+#     content: <target>
+#     proxied: true
+#     ttl: 1
+#     deletionPolicy: Delete
+dnsRecords: []

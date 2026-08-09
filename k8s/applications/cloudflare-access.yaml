@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudflare-access
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # After crossplane providers install the Cloudflare DNS + Zero Trust CRDs.
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: crossplane-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true
+  sources:
+    # PUBLIC: value-free chart (templates + placeholders).
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/cloudflare-access
+      helm:
+        valueFiles:
+          # Real accountId, policy ids/emails, app domains, DNS zone/tunnel ids
+          # come from the PRIVATE repo below.
+          - $values/cloudflare-access/values.yaml
+    # PRIVATE: holds the real values (registered as an ArgoCD repo credential).
+    - repoURL: git@github.com:yurifrl/home-systems-values.git
+      targetRevision: HEAD
+      ref: values
