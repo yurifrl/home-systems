@@ -32,6 +32,17 @@ spec:
           # shell out over SSH (proxmox-bpg snippet upload) can create ~/.ssh.
           containers:
             - name: package-runtime
+              # Throttle apiserver load. Upjet/upbound providers default to poll
+              # 10m + reconcile-rate 10; across 12 providers that drove constant
+              # status PUT/PATCH + LIST/watch churn that pegged the control-plane
+              # apiserver and timed out ArgoCD's openapi sync. NOTE the flag is
+              # --poll (a Go duration), NOT --poll-interval (that name crashes the
+              # provider). --max-reconcile-rate is an int and also caps
+              # MaxConcurrentReconciles.
+              args:
+                - --poll=1h
+                - --max-reconcile-rate=2
+                - --sync=1h
               env:
                 - name: HOME
                   value: /tmp
