@@ -40,32 +40,4 @@ spec:
       {{- toYaml . | nindent 6 }}
     {{- end }}
 {{- end }}
-{{- with .Values.cloudflareAccess.application }}
----
-# Cloudflare Access in front of the *.syscd.space wildcard. Without this, every
-# <app>.syscd.space the workstation tunnel serves (herdr = remote shell,
-# board-games, ...) is open to the internet. A self_hosted app on the wildcard
-# domain gates the whole edge; it attaches the global policies above by id, in
-# ascending precedence order (policy list order).
-apiVersion: zero.upjet-cloudflare.upbound.io/v1alpha1
-kind: TrustAccessApplication
-metadata:
-  name: {{ .name }}
-spec:
-  deletionPolicy: Delete
-  providerConfigRef:
-    name: default
-  forProvider:
-    accountId: {{ $.Values.cloudflareAccess.accountId | quote }}
-    name: {{ .name | quote }}
-    domain: {{ .domain | quote }}
-    type: self_hosted
-    sessionDuration: {{ .sessionDuration | quote }}
-    appLauncherVisible: false
-    autoRedirectToIdentity: false
-    policies:
-    {{- range $.Values.cloudflareAccess.policies }}
-      - id: {{ .id | quote }}
-    {{- end }}
-{{- end }}
 {{- end }}
