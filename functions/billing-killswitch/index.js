@@ -12,9 +12,6 @@ const { GoogleAuth } = require('google-auth-library');
 const WEBHOOK = process.env.DISCORD_WEBHOOK_URL;
 const PROJECT = process.env.PROJECT_ID;
 const KILL_RATIO = Number(process.env.KILL_RATIO || '1.0');
-// Safety: when true, the switch alerts but does NOT detach billing. Flip to
-// false in YAML only once you've verified the alert path.
-const DRY_RUN = (process.env.KILL_DRY_RUN || 'true') === 'true';
 
 const auth = new GoogleAuth({ scopes: 'https://www.googleapis.com/auth/cloud-platform' });
 
@@ -40,14 +37,10 @@ functions.cloudEvent('killswitch', async (event) => {
   const name = n.budgetDisplayName || 'budget';
   const ccy = n.currencyCode || '';
   await discord(
-    `@here KILL SWITCH${DRY_RUN ? ' (DRY RUN)' : ''}: budget *${name}* hit ${Math.round(ratio * 100)}% ` +
+    `@here KILL SWITCH: budget *${name}* hit ${Math.round(ratio * 100)}% ` +
     `(${ccy} ${cost} / ${ccy} ${budget}). ` +
-    (DRY_RUN
-      ? `dryRun=true, billing NOT detached.`
-      : `Detaching billing from project ${PROJECT} now — ALL project resources will stop.`)
+    `Detaching billing from project ${PROJECT} now — ALL project resources will stop.`
   );
-
-  if (DRY_RUN) return;
 
   try {
     const client = await auth.getClient();
