@@ -117,6 +117,8 @@ spec:
               channelId: UCODHrzPMGbNv67e84WDZhQQ
             - name: otlavspa
               channelId: UCgoVlLWCP34BbwaN_LRyNXQ
+            - name: What On Earth Is This?
+              channelId: UCL14t3D_hreM5WnorC3VJ5g
 
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
