@@ -119,6 +119,8 @@ spec:
               channelId: UCgoVlLWCP34BbwaN_LRyNXQ
             - name: What On Earth Is This?
               channelId: UCL14t3D_hreM5WnorC3VJ5g
+            - name: Better Stack
+              channelId: UCkVfrGwV-iG9bSsgCbrNPxQ
 
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
