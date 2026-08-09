@@ -24,10 +24,6 @@ spec:
             kubernetes.io/hostname: {{ .nodeHostname }}
           containers:
             - name: package-runtime
-              # Same apiserver-load throttle as the shared runtime config.
-              args:
-                - --poll-interval=10m
-                - --max-reconcile-rate=1
               env:
                 - name: KUBERNETES_SERVICE_HOST
                   value: {{ .apiserverHost | quote }}

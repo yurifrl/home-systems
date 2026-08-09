@@ -32,13 +32,6 @@ spec:
           # shell out over SSH (proxmox-bpg snippet upload) can create ~/.ssh.
           containers:
             - name: package-runtime
-              # Throttle apiserver load. Default upjet providers poll external
-              # APIs every 1m and reconcile at rate 10 -> constant status PUT/PATCH
-              # + LIST/watch churn that pegged the control-plane apiserver and
-              # timed out ArgoCD's openapi sync. 10m poll + rate 1 cuts it ~10x.
-              args:
-                - --poll-interval=10m
-                - --max-reconcile-rate=1
               env:
                 - name: HOME
                   value: /tmp
