@@ -44,7 +44,7 @@ Prerequisites (checked by preflight, fail-fast):
 
 The workstation is a headless NixOS dev VM (k3s + docker + pi/herdr, reached over
 Tailscale). Its boot image is built by the **nixos** repo's CI (`build-image`
-action → `workstation-<version>.qcow2.bz2` in the nixos-images GCS bucket); this
+action → `nixos-workstation.qcow2` in the nixos-images GCS bucket); this
 chart imports that image and boots VM 102. Unlike the declarative parts, seeding
 the box's secrets is a one-time laptop step (you hold the source creds), so:
 
