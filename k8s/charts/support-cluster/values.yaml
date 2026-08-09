@@ -93,7 +93,7 @@ nicOffloadFix:
 # the same as a dead one — the timeout is the only mitigation). image needs
 # kubectl + jq (alpine/k8s bundles both).
 nodeReaper:
-  enabled: false
+  enabled: true
   image: alpine/k8s:1.32.1
   schedule: "*/5 * * * *"
   notReadySeconds: 900
