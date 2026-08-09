@@ -2,6 +2,28 @@
 # This determines whether VMServiceScrape (VictoriaMetrics) or ServiceMonitor (Prometheus Operator) resources are used
 monitoringProvider: victoriametrics
 
+# Global, account-level Cloudflare Access policies (reusable, shared across apps).
+# Disabled here; the PRIVATE overlay ($values/support-cluster/values.yaml) turns
+# it on and supplies accountId + the real policy definitions (which include email
+# allow-lists -- never committed to this public chart). Each policy is an EXISTING
+# reusable policy ADOPTED via external-name; forProvider must mirror the live one.
+cloudflareAccess:
+  enabled: false
+  accountId: "REPLACED_BY_PRIVATE_VALUES"
+  # The *.syscd.space wildcard Access application (non-secret; kept public).
+  application:
+    name: syscd-space
+    domain: "*.syscd.space"
+    sessionDuration: 24h
+  # Shape (real values in the private overlay):
+  #   - key: <k8s-name>       # metadata.name of the TrustAccessPolicy MR
+  #     id: <policy-uuid>     # existing Cloudflare Access policy id
+  #     name: <policy name>   # MUST match the live policy
+  #     decision: <allow|non_identity|deny|bypass>
+  #     sessionDuration: 24h
+  #     include: [ ... ]      # MUST mirror the live policy's include rules
+  policies: []
+
 # Feature flags for enabling different components
 features:
   serviceLevelObjectives: false 

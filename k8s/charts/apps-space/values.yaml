@@ -13,22 +13,6 @@
 zoneId: "REPLACED_BY_PRIVATE_VALUES"
 domain: syscd.space
 
-# Cloudflare account id for the Access application (real value in the private
-# overlay). Only used when access.enabled is true.
-accountId: "REPLACED_BY_PRIVATE_VALUES"
-
-# Cloudflare Access in front of *.syscd.space. Disabled by default here; the
-# PRIVATE overlay turns it on and supplies the policy ids. The policies
-# themselves are GLOBAL, owned by the cloudflare-access chart -- this app only
-# references them by id.
-access:
-  enabled: false
-  appName: syscd-space
-  sessionDuration: 24h
-  # Ids of the reusable account-level policies to attach, in ascending
-  # precedence order (real values in the private overlay).
-  policyIds: []
-
 # The dedicated syscd-apps tunnel the wildcard points at. Adding an app is a
 # one-line ingress edit in the VM's cloudflared.nix; the wildcard already
 # resolves every *.syscd.space name to this tunnel, so DNS never changes.

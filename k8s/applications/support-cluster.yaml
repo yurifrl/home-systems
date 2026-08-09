@@ -27,6 +27,11 @@ spec:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/support-cluster
+      helm:
+        valueFiles:
+          # Real Cloudflare Access accountId + policy definitions (incl. email
+          # allow-lists) come from the PRIVATE repo below.
+          - $values/support-cluster/values.yaml
 
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
@@ -64,3 +69,9 @@ spec:
                 name: longhorn-frontend
                 namespace: longhorn-system
                 port: 80
+
+    # PRIVATE: holds the real Cloudflare Access values, registered as an ArgoCD
+    # repo credential. Referenced via $values above.
+    - repoURL: git@github.com:yurifrl/home-systems-values.git
+      targetRevision: HEAD
+      ref: values

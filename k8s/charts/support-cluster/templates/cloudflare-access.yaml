@@ -1,0 +1,71 @@
+{{- /*
+Global, account-level Cloudflare Access policies (reusable, shared across apps:
+*.syscd.space, *.syscd.live, herdr, ...). ADOPTED from pre-existing Cloudflare
+policies into crossplane via crossplane.io/external-name; per-app
+TrustAccessApplications (e.g. apps-space) attach these by id. Shared, so:
+  - deletionPolicy: Orphan  -> removing the MR never deletes the real policy.
+  - forProvider MUST mirror the live policy exactly (name/decision/include),
+    else a reconcile mutates a policy other apps depend on.
+Real definitions (incl. email allow-lists) live in the PRIVATE
+home-systems-values overlay ($values/support-cluster/values.yaml).
+*/ -}}
+{{- if .Values.cloudflareAccess.enabled }}
+{{- range .Values.cloudflareAccess.policies }}
+---
+apiVersion: zero.upjet-cloudflare.upbound.io/v1alpha1
+kind: TrustAccessPolicy
+metadata:
+  name: {{ .key }}
+  annotations:
+    crossplane.io/external-name: {{ printf "%s/%s" $.Values.cloudflareAccess.accountId .id | quote }}
+spec:
+  deletionPolicy: Orphan
+  providerConfigRef:
+    name: default
+  forProvider:
+    accountId: {{ $.Values.cloudflareAccess.accountId | quote }}
+    name: {{ .name | quote }}
+    decision: {{ .decision | quote }}
+    {{- with .sessionDuration }}
+    sessionDuration: {{ . | quote }}
+    {{- end }}
+    include:
+      {{- toYaml .include | nindent 6 }}
+    {{- with .exclude }}
+    exclude:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .require }}
+    require:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+{{- end }}
+{{- with .Values.cloudflareAccess.application }}
+---
+# Cloudflare Access in front of the *.syscd.space wildcard. Without this, every
+# <app>.syscd.space the workstation tunnel serves (herdr = remote shell,
+# board-games, ...) is open to the internet. A self_hosted app on the wildcard
+# domain gates the whole edge; it attaches the global policies above by id, in
+# ascending precedence order (policy list order).
+apiVersion: zero.upjet-cloudflare.upbound.io/v1alpha1
+kind: TrustAccessApplication
+metadata:
+  name: {{ .name }}
+spec:
+  deletionPolicy: Delete
+  providerConfigRef:
+    name: default
+  forProvider:
+    accountId: {{ $.Values.cloudflareAccess.accountId | quote }}
+    name: {{ .name | quote }}
+    domain: {{ .domain | quote }}
+    type: self_hosted
+    sessionDuration: {{ .sessionDuration | quote }}
+    appLauncherVisible: false
+    autoRedirectToIdentity: false
+    policies:
+    {{- range $.Values.cloudflareAccess.policies }}
+      - id: {{ .id | quote }}
+    {{- end }}
+{{- end }}
+{{- end }}
