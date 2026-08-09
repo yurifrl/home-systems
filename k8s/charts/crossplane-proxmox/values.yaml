@@ -198,7 +198,7 @@ vms:
     # one copy). Pin the object in image.url (PRIVATE overlay). Downloaded onto
     # local:import, imported as scsi0.
     image:
-      fileName: workstation.qcow2                # imported name on local:import
+      fileName: nixos-workstation.qcow2          # imported name on local:import
       url: ""                                     # HUMAN: https://storage.googleapis.com/<GCS_BUCKET_NAME>/nixos-workstation.qcow2 (UNCOMPRESSED; import can't decompress)
       decompressionAlgorithm: ""                  # empty: import content type rejects on-download decompression
       uploadTimeout: 3600                         # 18GB uncompressed image needs > default 600s to download
