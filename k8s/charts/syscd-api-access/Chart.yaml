@@ -1,6 +1,0 @@
-apiVersion: v2
-name: syscd-api-access
-description: Cloudflare Access bypass for api.syscd.live. The syscd API authenticates every request itself (Google session cookie + AUTH_ALLOWED_EMAILS), so CF Access must not gate browser XHRs to it. Account-side resource managed via crossplane.
-type: application
-version: 0.1.0
-appVersion: "1.0.0"

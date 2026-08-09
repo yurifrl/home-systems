@@ -1,7 +1,0 @@
-# PUBLIC, value-free defaults. The real accountId lives in the PRIVATE
-# home-systems-values repo (syscd-api-access/values.yaml), merged at sync time
-# via $values (see k8s/applications/syscd-api-access.yaml). Placeholders only.
-accountId: "REPLACED_BY_PRIVATE_VALUES"
-domain: api.example.invalid
-sessionDuration: 24h
-deletionPolicy: Orphan
