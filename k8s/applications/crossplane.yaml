@@ -31,6 +31,13 @@ spec:
         # crashing crossplane core with "leader election lost" -> restart storm ->
         # more apiserver load -> lease lost again. Disable it.
         leaderElection: false
+        # Throttle core's reconcile loop. Core (not the providers) reconciles
+        # ManagedResourceDefinitions; a hot no-op loop was PUTting MRDs at ~20/s,
+        # pegging the apiserver and stalling ArgoCD. Lower the global reconcile
+        # rate and stretch the sync interval.
+        args:
+          - --max-reconcile-rate=2
+          - --sync-interval=30m
         # NOTE: the `default` ManagedResourceActivationPolicy (narrowed from the
         # ["*"] crossplane bootstraps) is NOT settable from this chart's values —
         # the deployment args are just ["core","start"]. It is owned as an explicit
