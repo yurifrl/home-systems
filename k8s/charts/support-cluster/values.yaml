@@ -20,11 +20,6 @@ syscdSpace:
 cloudflareAccess:
   enabled: false
   accountId: "REPLACED_BY_PRIVATE_VALUES"
-  # The *.syscd.space wildcard Access application (non-secret; kept public).
-  application:
-    name: syscd-space
-    domain: "*.syscd.space"
-    sessionDuration: 24h
   # Shape (real values in the private overlay):
   #   - key: <k8s-name>       # metadata.name of the TrustAccessPolicy MR
   #     id: <policy-uuid>     # existing Cloudflare Access policy id
