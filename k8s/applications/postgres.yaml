@@ -203,7 +203,7 @@ spec:
 
             storage:
               storageClass: longhorn-ha
-              size: 2Gi
+              size: 5Gi
 
             resources:
               requests:
