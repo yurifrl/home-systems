@@ -78,38 +78,78 @@ gcpCredentials:
   # Key inside the synced Secret holding the SA key JSON.
   credentialsKey: creds
 
-# The `default` MRAP activate list. Replaces crossplane core's ["*"] so heavy
-# providers install their MRDs Inactive (no CRD, no apiserver load). One glob per
-# active provider family (both legacy .upbound.io and modern .m.upbound.io).
+# The `default` MRAP activate list. Replaces crossplane core's ["*"].
+#
+# HARD RULE: NEVER use a family glob ("*.<group>") here. A glob activates every
+# MRD in the family; upjet/upbound providers ship hundreds of MRDs per family,
+# so one glob can create 90-190 CRDs. With ~500 provider MRDs that blew the
+# aggregated openapi/v2 doc to 37 MB / 19 s to serve, which timed out ArgoCD's
+# cluster-cache sync and stalled EVERY Application with a ComparisonError.
+# Crossplane also forbids flipping an MRD back to Inactive once Active, so a
+# glob's damage cannot be undone by narrowing later -- the stale CRDs must be
+# deleted by hand. List ONLY the specific plurals actually consumed by charts.
+# Add a plural here only when a chart starts using that exact kind.
 defaultActivations:
-  - "*.storage.gcp.upbound.io"
-  - "*.storage.gcp.m.upbound.io"
-  - "*.iam.gcp.upbound.io"
-  - "*.iam.gcp.m.upbound.io"
-  - "*.cloudplatform.gcp.upbound.io"
-  - "*.cloudplatform.gcp.m.upbound.io"
-  - "*.proxmoxbpg.crossplane.io"
-  - "*.proxmoxbpg.m.crossplane.io"
-  # Cloudflare Zero Trust: NEVER use a family glob here ("*.zero.upjet-cloudflare.*").
-  # The glob activates all 94 MRDs -> 94 CRDs -> bloats openapi/v2 and stalls
-  # ArgoCD. List ONLY the specific plurals actually consumed by charts
-  # (apps-space / herdr-phone / syscd-api-access TrustAccessApplication,
-  # cloudflare-access TrustAccessPolicy). Add a plural here only when a chart
-  # starts using that kind.
+  - "bucketiammembers.storage.gcp.upbound.io"
+  - "buckets.storage.gcp.upbound.io"
+  - "certificatemapentries.certificatemanager.gcp.upbound.io"
+  - "certificatemaps.certificatemanager.gcp.upbound.io"
+  - "certificates.certificatemanager.gcp.upbound.io"
+  - "dnsauthorizations.certificatemanager.gcp.upbound.io"
+  - "environmentdownloadfiles.virtualenvironmentdownloadfile.proxmoxbpg.crossplane.io"
+  - "environmentdownloadfiles.virtualenvironmentdownloadfile.proxmoxbpg.m.crossplane.io"
+  - "environmentfiles.virtualenvironmentfile.proxmoxbpg.crossplane.io"
+  - "environmentfiles.virtualenvironmentfile.proxmoxbpg.m.crossplane.io"
+  - "environmentvms.virtualenvironmentvm.proxmoxbpg.crossplane.io"
+  - "environmentvms.virtualenvironmentvm.proxmoxbpg.m.crossplane.io"
+  - "folderiammembers.cloudplatform.gcp.m.upbound.io"
+  - "folderiammembers.cloudplatform.gcp.upbound.io"
+  - "folders.cloudplatform.gcp.m.upbound.io"
+  - "folders.cloudplatform.gcp.upbound.io"
+  - "functions.cloudfunctions2.gcp.upbound.io"
+  - "hmackeys.storage.gcp.upbound.io"
+  - "organizationiamauditconfigs.cloudplatform.gcp.m.upbound.io"
+  - "organizationiamauditconfigs.cloudplatform.gcp.upbound.io"
+  - "organizationiamcustomroles.cloudplatform.gcp.m.upbound.io"
+  - "organizationiamcustomroles.cloudplatform.gcp.upbound.io"
+  - "organizationiammembers.cloudplatform.gcp.m.upbound.io"
+  - "organizationiammembers.cloudplatform.gcp.upbound.io"
+  - "projectdefaultserviceaccounts.cloudplatform.gcp.m.upbound.io"
+  - "projectdefaultserviceaccounts.cloudplatform.gcp.upbound.io"
+  - "projectiamauditconfigs.cloudplatform.gcp.m.upbound.io"
+  - "projectiamauditconfigs.cloudplatform.gcp.upbound.io"
+  - "projectiamcustomroles.cloudplatform.gcp.m.upbound.io"
+  - "projectiamcustomroles.cloudplatform.gcp.upbound.io"
+  - "projectiammembers.cloudplatform.gcp.m.upbound.io"
+  - "projectiammembers.cloudplatform.gcp.upbound.io"
+  - "projects.cloudplatform.gcp.m.upbound.io"
+  - "projects.cloudplatform.gcp.upbound.io"
+  - "projectservices.cloudplatform.gcp.m.upbound.io"
+  - "projectservices.cloudplatform.gcp.upbound.io"
+  - "projectusageexportbuckets.cloudplatform.gcp.m.upbound.io"
+  - "projectusageexportbuckets.cloudplatform.gcp.upbound.io"
+  - "secretiammembers.secretmanager.gcp.upbound.io"
+  - "secrets.secretmanager.gcp.upbound.io"
+  - "secretversions.secretmanager.gcp.upbound.io"
+  - "serviceaccountiammembers.cloudplatform.gcp.m.upbound.io"
+  - "serviceaccountiammembers.cloudplatform.gcp.upbound.io"
+  - "serviceaccountkeys.cloudplatform.gcp.m.upbound.io"
+  - "serviceaccountkeys.cloudplatform.gcp.upbound.io"
+  - "serviceaccounts.cloudplatform.gcp.m.upbound.io"
+  - "serviceaccounts.cloudplatform.gcp.upbound.io"
+  - "servicenetworkingpeereddnsdomains.cloudplatform.gcp.m.upbound.io"
+  - "servicenetworkingpeereddnsdomains.cloudplatform.gcp.upbound.io"
+  - "subscriptioniammembers.pubsub.gcp.upbound.io"
+  - "subscriptions.pubsub.gcp.upbound.io"
+  - "topiciammembers.pubsub.gcp.upbound.io"
+  - "topics.pubsub.gcp.upbound.io"
+  - "workloadidentitypoolproviders.iam.gcp.upbound.io"
+  - "workloadidentitypools.iam.gcp.upbound.io"
+  # Cloudflare Zero Trust (specific plurals only -- see HARD RULE above).
   - "trustaccessapplications.zero.upjet-cloudflare.upbound.io"
   - "trustaccessapplications.zero.upjet-cloudflare.m.upbound.io"
   - "trustaccesspolicies.zero.upjet-cloudflare.upbound.io"
   - "trustaccesspolicies.zero.upjet-cloudflare.m.upbound.io"
-  # Billing spend system. Verify plurals post-install: kubectl get mrds | grep -E 'pubsub|cloudfunctions2|secretmanager'
-  - "*.pubsub.gcp.upbound.io"
-  - "*.pubsub.gcp.m.upbound.io"
-  - "*.cloudfunctions2.gcp.upbound.io"
-  - "*.cloudfunctions2.gcp.m.upbound.io"
-  - "*.secretmanager.gcp.upbound.io"
-  - "*.secretmanager.gcp.m.upbound.io"
-  # Certificate Manager (assets CDN DNS-authorized TLS cert).
-  - "*.certificatemanager.gcp.upbound.io"
-  - "*.certificatemanager.gcp.m.upbound.io"
 
 # MRAP that activates ONLY the compute CRDs the assets CDN needs (both the
 # legacy .upbound.io and modern .m.upbound.io variants). Everything else in
