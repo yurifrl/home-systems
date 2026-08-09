@@ -95,3 +95,58 @@ All committed & pushed. **They take effect only after dell01 recovers and ArgoCD
 5. Fix hermes-memory-backup gh auth in `home-systems-values` (private repo).
 6. Refresh the Discord webhook secret for `billing-weekly-summary`.
 7. Longer term: bigger install disk for tp4 (30 GB eMMC).
+
+---
+
+## Addendum 2026-08-06 — Control-plane migration + two residual alerts
+
+The control plane was migrated off the fragile 8 GB `dell01` onto the 32 GB
+`macintel01` (etcd forfeit/leave -> macintel01 sole member; dell01 demoted to a
+clean worker). This resolved the memory-OOM failure mode. Commits `8d8d0955`
+(nostos topology), `582262a8` + `41ff4970` (crossplane). Two alerts remain
+firing afterward, with a shared root cause.
+
+### ControlPlaneAPIUnreachable (critical) + NodeCPUCritical on macintel01 (critical)
+
+**Status: reported, not auto-fixable without a user/hardware decision.**
+
+**Root cause.** `macintel01` is an **8-vCPU UTM VM**. As the sole control plane it
+sits at **~105% CPU sustained**: `kube-apiserver` alone uses ~2.8 cores, and
+etcd (a Talos *system service*, not a kube-system pod) + kubelet/containerd +
+possible hypervisor steal consume the remaining ~4 cores. The driver is
+crossplane's watch/LIST traffic over ~480 MRDs -- the same crossplane pressure
+behind the 2026-07-13 apiserver-CRD-cache OOM postmortem, now **CPU-bound**
+instead of memory-bound (the 32 GB move fixed memory: node mem sits ~40%).
+
+`ControlPlaneAPIUnreachable` is a *downstream effect*, not an outage: the
+`control-plane-probe` blackbox check does an authenticated `LIST` of **all**
+kube-system pods with a **5 s** deadline. The CPU-starved apiserver returns
+HTTP **200** but cannot stream the (large) response body within 5 s ->
+`probe_success=0`. The API is reachable but degraded (slow), confirmed by
+`kubectl` working with ~12-15 s timeouts.
+
+**Fixed autonomously.** Moved crossplane provider runtime pods **off** the
+control-plane node via nodeAffinity (`node-role.kubernetes.io/control-plane
+DoesNotExist`) on the shared `amd64-only` DeploymentRuntimeConfig
+(commit `41ff4970`). Providers now run on amd64 workers (pc01/dell01). Correct
+hygiene, but node CPU stayed ~105% because the freed ~1.2 cores were
+immediately absorbed by the previously-throttled apiserver/etcd.
+
+**Remaining options (need a decision -- each is hardware or reverses the
+"use macintel01's 32 GB for workloads" preference, so not done unilaterally):**
+
+1. **Add vCPUs to the `macintel01` UTM VM (8 -> 12-16).** Direct fix for a
+   CPU-bound VM; requires reconfiguring the VM on the Mac host (host must have
+   spare cores). **Recommended.**
+2. **Taint the control plane** (`node-role.kubernetes.io/control-plane:NoSchedule`)
+   and add tolerations to an allow-list of essential workloads. Standard k8s
+   pattern; guarantees the apiserver/etcd keep their CPU, but reduces macintel01
+   workload utilization (reverses the stated "utilize the node" preference).
+3. **Reduce crossplane's apiserver load** (fewer MRDs/CRDs). Investigated
+   previously and found to be a dead-end: Crossplane forbids `Active->Inactive`
+   MRD state and deleting MRDs leaves the CRDs registered via ProviderRevision
+   ownerRefs.
+
+**Not done (would be a hack):** switching the probe to `/readyz`, or raising its
+5 s timeout, would silence `ControlPlaneAPIUnreachable` -- but that masks the real
+apiserver degradation, so the probe is left as the honest signal it currently is.
