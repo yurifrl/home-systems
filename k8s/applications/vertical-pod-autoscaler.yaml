@@ -39,6 +39,11 @@ spec:
           extraArgs:
             - --pod-recommendation-min-cpu-millicores=50
             - --pod-recommendation-min-memory-mb=128
+            # Goldilocks creates a recommendation VPA for every workload in every
+            # namespace, so the recommender writes VPA + checkpoint objects for a
+            # large set each cycle. Default interval is 1m; recommendations don't
+            # need that freshness. Stretch to 10m to cut apiserver write load ~10x.
+            - --recommender-interval=10m
         updater:
           resources:
             limits:
