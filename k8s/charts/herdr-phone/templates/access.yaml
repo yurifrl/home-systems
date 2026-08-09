@@ -3,7 +3,9 @@
 # app's AUD tag goes into the box config (services.herdrPhone.audience in nixos):
 #   kubectl get trustaccessapplication herdr-phone -o jsonpath='{.status.atProvider.aud}'
 #   (or read it publicly from the login redirect of https://herdr.syscd.space).
-# Inline allow-policy scopes entry to the configured identity (email OTP / Google).
+# Attaches the shared reusable Admin policy by id (owned/adopted in the
+# support-cluster chart) -- same identities as every other *.syscd.* app, no
+# per-host allow-list here. Changing the attached policy does NOT change the AUD.
 apiVersion: zero.upjet-cloudflare.upbound.io/v1alpha1
 kind: TrustAccessApplication
 metadata:
@@ -21,11 +23,6 @@ spec:
     appLauncherVisible: false
     autoRedirectToIdentity: false
     policies:
-      - name: allow
-        decision: allow
-        precedence: 1
-        include:
-        {{- range .Values.allowedEmails }}
-          - email:
-              email: {{ . | quote }}
-        {{- end }}
+    {{- range .Values.policyIds }}
+      - id: {{ . | quote }}
+    {{- end }}

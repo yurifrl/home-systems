@@ -11,5 +11,6 @@ domain: herdr.syscd.space
 sessionDuration: 24h
 deletionPolicy: Delete
 
-# Access allow-list (OR logic); real emails come from the private repo.
-allowedEmails: []
+# Reusable Access policies attached to this app, by id (defined/adopted in the
+# support-cluster chart). Real ids come from the private repo.
+policyIds: []
