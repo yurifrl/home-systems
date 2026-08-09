@@ -26,6 +26,11 @@ spec:
     targetRevision: "2.3.4"
     helm:
       valuesObject:
+        # Single-replica control plane: leader election is pointless here and its
+        # lease renewal FLAPS whenever the (single, overloaded) apiserver is slow,
+        # crashing crossplane core with "leader election lost" -> restart storm ->
+        # more apiserver load -> lease lost again. Disable it.
+        leaderElection: false
         # NOTE: the `default` ManagedResourceActivationPolicy (narrowed from the
         # ["*"] crossplane bootstraps) is NOT settable from this chart's values —
         # the deployment args are just ["core","start"]. It is owned as an explicit
