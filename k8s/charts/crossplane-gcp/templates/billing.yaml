@@ -225,7 +225,7 @@ spec:
       environmentVariables:
         PROJECT_ID: {{ $.Values.providerConfig.projectID | quote }}
         KILL_RATIO: {{ $k.ratio | default 1.0 | quote }}
-        KILL_DRY_RUN: {{ $k.dryRun | default true | quote }}
+        KILL_DRY_RUN: {{ (kindIs "invalid" $k.dryRun | ternary true $k.dryRun) | quote }}
       secretEnvironmentVariables:
         - key: DISCORD_WEBHOOK_URL
           projectId: {{ $.Values.providerConfig.projectID | quote }}
