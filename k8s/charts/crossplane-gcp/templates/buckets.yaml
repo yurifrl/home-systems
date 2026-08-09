@@ -48,4 +48,12 @@ spec:
     retentionPolicy:
       {{- toYaml . | nindent 6 }}
     {{- end }}
+    {{- with .versioning }}
+    versioning:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .lifecycleRule }}
+    lifecycleRule:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
 {{- end }}
