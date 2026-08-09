@@ -90,8 +90,16 @@ defaultActivations:
   - "*.cloudplatform.gcp.m.upbound.io"
   - "*.proxmoxbpg.crossplane.io"
   - "*.proxmoxbpg.m.crossplane.io"
-  - "*.zero.upjet-cloudflare.upbound.io"
-  - "*.zero.upjet-cloudflare.m.upbound.io"
+  # Cloudflare Zero Trust: NEVER use a family glob here ("*.zero.upjet-cloudflare.*").
+  # The glob activates all 94 MRDs -> 94 CRDs -> bloats openapi/v2 and stalls
+  # ArgoCD. List ONLY the specific plurals actually consumed by charts
+  # (apps-space / herdr-phone / syscd-api-access TrustAccessApplication,
+  # cloudflare-access TrustAccessPolicy). Add a plural here only when a chart
+  # starts using that kind.
+  - "trustaccessapplications.zero.upjet-cloudflare.upbound.io"
+  - "trustaccessapplications.zero.upjet-cloudflare.m.upbound.io"
+  - "trustaccesspolicies.zero.upjet-cloudflare.upbound.io"
+  - "trustaccesspolicies.zero.upjet-cloudflare.m.upbound.io"
   # Billing spend system. Verify plurals post-install: kubectl get mrds | grep -E 'pubsub|cloudfunctions2|secretmanager'
   - "*.pubsub.gcp.upbound.io"
   - "*.pubsub.gcp.m.upbound.io"
