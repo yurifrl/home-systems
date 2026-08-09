@@ -1,0 +1,135 @@
+{{- if .Values.nodeReaper.enabled }}
+# node-reaper: force-reschedule pods off a worker that has died hard.
+#
+# WHY: when a worker dies hard (powered off, won't boot), Kubernetes does NOT
+# reclaim its workloads on its own. The node sits NotReady forever and its pods
+# hang in `Terminating` indefinitely, because the API can never get deletion
+# confirmation from a kubelet that is gone. Deployments limp back after the
+# ~5min unreachable toleration (the ReplicaSet spawns a replacement elsewhere
+# without waiting for the old pod), but StatefulSets do NOT: their at-most-one
+# guarantee makes them refuse to recreate a pod while the old one is stuck
+# Terminating. So single-replica stateful services on a dead node stay down
+# until something forcibly clears the dead pods.
+#
+# FIX: the native `node.kubernetes.io/out-of-service:NoExecute` taint (GA in
+# 1.31) is the official "this node is truly gone, reclaim it" switch. When
+# applied, Kubernetes immediately force-deletes the node's pods and detaches
+# their volumes, StatefulSets included, so everything reschedules onto healthy
+# nodes. It does NOT reboot the node and does NOT delete the Node object — the
+# dead node just stays NotReady until a human deals with it.
+#
+# This CronJob applies that taint to any WORKER node that has been NotReady
+# longer than notReadySeconds, and removes it again once the node reports Ready.
+#
+# LIMITATION (no fencing): the Macs have no BMC/IPMI, so there is no way to
+# confirm out-of-band that a node is actually powered off. This job trusts the
+# Kubernetes Ready condition + a conservative timeout — a node that is alive but
+# network-partitioned looks identical to a dead one. A false positive could let
+# a second copy of a pod start; the timeout is the only mitigation here. Control
+# plane nodes are excluded (tainting them out-of-service does not help and is
+# unsafe).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: node-reaper
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: node-reaper
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: node-reaper
+  labels:
+    app: node-reaper
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: node-reaper
+  labels:
+    app: node-reaper
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: node-reaper
+subjects:
+  - kind: ServiceAccount
+    name: node-reaper
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: node-reaper
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: node-reaper
+spec:
+  schedule: {{ .Values.nodeReaper.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 120
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 120
+      template:
+        metadata:
+          labels:
+            app: node-reaper
+        spec:
+          serviceAccountName: node-reaper
+          restartPolicy: Never
+          priorityClassName: platform-critical
+          # No broad tolerations on purpose: this job must run on a HEALTHY node,
+          # never get scheduled onto the NotReady node it is meant to reap.
+          containers:
+            - name: reaper
+              image: {{ .Values.nodeReaper.image }}
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  THRESHOLD={{ .Values.nodeReaper.notReadySeconds }}
+                  TAINT=node.kubernetes.io/out-of-service
+                  # Emit one action per line: "<VERB> <node>" where VERB is TAINT|UNTAINT.
+                  # - TAINT:   worker NotReady (Ready != True) for >= THRESHOLD and not yet tainted.
+                  # - UNTAINT: node Ready again but still carries the out-of-service taint.
+                  # Control-plane nodes are excluded. Time math is done in jq (fromdateiso8601)
+                  # to avoid busybox `date -d` portability issues.
+                  kubectl get nodes -o json | jq -r --argjson threshold "$THRESHOLD" '
+                    .items[]
+                    | select(.metadata.labels | has("node-role.kubernetes.io/control-plane") | not)
+                    | . as $n
+                    | ($n.status.conditions[] | select(.type=="Ready")) as $r
+                    | (($n.spec.taints // []) | map(select(.key=="node.kubernetes.io/out-of-service")) | length) as $tainted
+                    | (now - ($r.lastTransitionTime | fromdateiso8601)) as $age
+                    | if $r.status == "True" and $tainted > 0 then "UNTAINT \($n.metadata.name)"
+                      elif $r.status != "True" and $age >= $threshold and $tainted == 0 then "TAINT \($n.metadata.name)"
+                      else empty end
+                  ' | while read -r verb node; do
+                    case "$verb" in
+                      TAINT)
+                        echo "reaper: $node NotReady >= ${THRESHOLD}s, applying ${TAINT} (force-reschedule its pods)"
+                        kubectl taint nodes "$node" "${TAINT}=nodedown:NoExecute" --overwrite
+                        ;;
+                      UNTAINT)
+                        echo "reaper: $node is Ready again, removing ${TAINT}"
+                        kubectl taint nodes "$node" "${TAINT}:NoExecute-"
+                        ;;
+                    esac
+                  done
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 64Mi
+{{- end }}

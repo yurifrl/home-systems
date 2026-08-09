@@ -83,6 +83,21 @@ nicOffloadFix:
   nodeSelector:
     kubernetes.io/hostname: pc01
 
+# node-reaper: when a worker dies hard it stays NotReady forever and its pods
+# hang in Terminating (StatefulSets never self-heal). This CronJob applies the
+# native `node.kubernetes.io/out-of-service:NoExecute` taint to any worker that
+# has been NotReady longer than notReadySeconds, which force-reschedules its
+# pods onto healthy nodes, then removes the taint once the node is Ready again.
+# It never reboots or deletes the node. No BMC fencing exists on this hardware,
+# so it trusts the Ready condition + timeout (a partitioned-but-alive node looks
+# the same as a dead one — the timeout is the only mitigation). image needs
+# kubectl + jq (alpine/k8s bundles both).
+nodeReaper:
+  enabled: true
+  image: alpine/k8s:1.32.1
+  schedule: "*/5 * * * *"
+  notReadySeconds: 900
+
 # Tailscale
 tailscale:
   connectors:
