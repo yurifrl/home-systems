@@ -36,8 +36,8 @@ spec:
         # pegging the apiserver and stalling ArgoCD. Lower the global reconcile
         # rate and stretch the sync interval.
         args:
-          - --max-reconcile-rate=2
-          - --sync-interval=30m
+          - --max-reconcile-rate=1
+          - --sync-interval=1h
         # NOTE: the `default` ManagedResourceActivationPolicy (narrowed from the
         # ["*"] crossplane bootstraps) is NOT settable from this chart's values —
         # the deployment args are just ["core","start"]. It is owned as an explicit
