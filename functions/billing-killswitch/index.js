@@ -37,9 +37,12 @@ functions.cloudEvent('killswitch', async (event) => {
   const name = n.budgetDisplayName || 'budget';
   const ccy = n.currencyCode || '';
   await discord(
-    `@here KILL SWITCH: budget *${name}* hit ${Math.round(ratio * 100)}% ` +
-    `(${ccy} ${cost} / ${ccy} ${budget}). ` +
-    `Detaching billing from project ${PROJECT} now — ALL project resources will stop.`
+    `@here\n` +
+    `🚨🚨🚨 **KILL SWITCH TRIGGERING** 🚨🚨🚨\n` +
+    `This is NOT a budget alert — the hard stop is firing RIGHT NOW.\n` +
+    `Budget *${name}* hit **${Math.round(ratio * 100)}%** (${ccy} ${cost} / ${ccy} ${budget}), ` +
+    `at/over the ${Math.round(KILL_RATIO * 100)}% kill threshold.\n` +
+    `**DETACHING billing from project \`${PROJECT}\` NOW — ALL project resources will stop and some will be deleted after GCP's grace period.**`
   );
 
   try {
@@ -49,9 +52,15 @@ functions.cloudEvent('killswitch', async (event) => {
       method: 'PUT',
       data: { billingAccountName: '' },
     });
-    await discord(`Billing DETACHED from project ${PROJECT}. Re-link billing to recover.`);
+    await discord(
+      `☠️ **KILL SWITCH COMPLETE** — billing DETACHED from project \`${PROJECT}\`.\n` +
+      `The project is now unbilled and shutting down. Re-link the billing account to recover.`
+    );
   } catch (e) {
-    await discord(`KILL SWITCH FAILED to detach billing for ${PROJECT}: ${e.message}. Detach manually.`);
+    await discord(
+      `⚠️ **KILL SWITCH FAILED** to detach billing for \`${PROJECT}\`: ${e.message}\n` +
+      `Detach billing MANUALLY now.`
+    );
     throw e;
   }
 });
