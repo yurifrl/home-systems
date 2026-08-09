@@ -31,8 +31,8 @@ spec:
 {{- if and $ws.enabled $ws.image.url }}
 # NixOS workstation boot image (qcow2) pulled onto local:import for VM disk
 # import. Published by the nixos CI build-image action to the same GCS bucket as
-# gatus/foundry: workstation-<version>.qcow2.bz2 (versioned image; public, AllUsers:R).
-# .qcow2.bz2 => decompressed to fileName by the provider (decompressionAlgorithm).
+# gatus/foundry, under one stable name: nixos-workstation.qcow2 (uncompressed;
+# bucket versioning + keep-only-current lifecycle keeps exactly one copy).
 apiVersion: virtualenvironmentdownloadfile.proxmoxbpg.crossplane.io/v1alpha1
 kind: EnvironmentDownloadFile
 metadata:

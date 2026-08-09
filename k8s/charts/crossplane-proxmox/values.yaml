@@ -193,13 +193,13 @@ vms:
       interface: scsi0                 # boot disk: imports image below
       sizeGiB: 40
     # NixOS qcow2 built by the nixos CI (build-image action) and uploaded to the
-    # same GCS bucket as gatus/foundry. workstation is a versioned image, so CI
-    # names it workstation-<version>.qcow2.bz2 (e.g. workstation-0.1.0.qcow2.bz2
-    # from nixos/workstation.version), public AllUsers:R. Pin the exact object in
-    # image.url (PRIVATE overlay). Downloaded onto local:import, imported as scsi0.
+    # same GCS bucket as gatus/foundry, under one stable name: nixos-workstation.qcow2
+    # (uncompressed; bucket versioning + keep-only-current lifecycle keeps exactly
+    # one copy). Pin the object in image.url (PRIVATE overlay). Downloaded onto
+    # local:import, imported as scsi0.
     image:
       fileName: workstation.qcow2                # imported name on local:import
-      url: ""                                     # HUMAN: https://storage.googleapis.com/<GCS_BUCKET_NAME>/workstation-<version>.qcow2 (UNCOMPRESSED; import can't decompress)
+      url: ""                                     # HUMAN: https://storage.googleapis.com/<GCS_BUCKET_NAME>/nixos-workstation.qcow2 (UNCOMPRESSED; import can't decompress)
       decompressionAlgorithm: ""                  # empty: import content type rejects on-download decompression
       uploadTimeout: 3600                         # 18GB uncompressed image needs > default 600s to download
     # SEPARATE data disk that survives VM rebuilds -- the bpg-native analog of
