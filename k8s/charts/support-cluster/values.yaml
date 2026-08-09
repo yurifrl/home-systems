@@ -2,6 +2,16 @@
 # This determines whether VMServiceScrape (VictoriaMetrics) or ServiceMonitor (Prometheus Operator) resources are used
 monitoringProvider: victoriametrics
 
+# Wildcard *.syscd.space DNS -> the syscd-apps cloudflared tunnel (moved here from
+# the retired apps-space chart). Disabled here; the PRIVATE overlay turns it on
+# and supplies the real zoneId/tunnelId. Gated by the *.syscd.space Access app in
+# cloudflareAccess below.
+syscdSpace:
+  enabled: false
+  zoneId: "REPLACED_BY_PRIVATE_VALUES"
+  domain: syscd.space
+  tunnelId: "00000000-0000-0000-0000-000000000000"
+
 # Global, account-level Cloudflare Access policies (reusable, shared across apps).
 # Disabled here; the PRIVATE overlay ($values/support-cluster/values.yaml) turns
 # it on and supplies accountId + the real policy definitions (which include email

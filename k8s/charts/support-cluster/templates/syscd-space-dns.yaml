@@ -1,0 +1,23 @@
+{{- if .Values.syscdSpace.enabled }}
+# Proxied wildcard CNAME: *.syscd.space -> the dedicated syscd-apps cloudflared
+# tunnel (moved here from the retired apps-space chart). One record covers every
+# <app>.syscd.space; the connector runs on the workstation VM (nixos
+# modules/workstation/cloudflared.nix) and does per-app routing in its ingress,
+# so adding an app never needs a new DNS record. The *.syscd.space Access app
+# (cloudflare-access.yaml in this chart) gates it. Managed by crossplane.
+apiVersion: dns.upjet-cloudflare.upbound.io/v1alpha1
+kind: Record
+metadata:
+  name: wildcard-syscd-space
+spec:
+  deletionPolicy: Delete
+  providerConfigRef:
+    name: default
+  forProvider:
+    zoneId: {{ .Values.syscdSpace.zoneId | quote }}
+    name: {{ printf "*.%s" .Values.syscdSpace.domain | quote }}
+    type: CNAME
+    content: {{ printf "%s.cfargotunnel.com" .Values.syscdSpace.tunnelId | quote }}
+    proxied: true
+    ttl: 1
+{{- end }}
