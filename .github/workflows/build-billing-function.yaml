@@ -20,6 +20,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
   id-token: write
 
 env:
@@ -52,16 +53,26 @@ jobs:
             # Pin the chart's sourceObject for this function to the new object.
             sed -i -E "s#(sourceObject: $fn/).*#\1$sha.zip#" "${VALUES_FILE}"
           done
-      - name: Commit sourceObject bump
+      - name: Open and merge sourceObject bump PR
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if git diff --quiet -- "${VALUES_FILE}"; then
             echo "No sourceObject change; nothing to commit."
             exit 0
           fi
+          # main is protected (changes must go through a PR with 0 required
+          # approvals), so land the bump via an auto-created, self-merged PR
+          # rather than pushing to main directly.
+          branch="ci/billing-sourceobject-${GITHUB_SHA}"
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${branch}"
           git add "${VALUES_FILE}"
           git commit -m "ci(billing-functions): pin sourceObject to ${GITHUB_SHA} [skip ci]"
-          git pull --rebase origin main
-          git push origin HEAD:main
+          git push origin "${branch}"
+          gh pr create --base main --head "${branch}" \
+            --title "ci(billing-functions): pin sourceObject to ${GITHUB_SHA}" \
+            --body "Automated content-addressed deploy bump. [skip ci]"
+          gh pr merge "${branch}" --squash --delete-branch
