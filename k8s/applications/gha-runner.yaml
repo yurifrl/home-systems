@@ -35,6 +35,13 @@ spec:
     - chart: gha-runner-scale-set-controller
       repoURL: ghcr.io/actions/actions-runner-controller-charts
       targetRevision: "0.14.2"
+      helm:
+        # The ARC CRDs (autoscalingrunnersets/ephemeralrunners/... ) are
+        # 600KB-1.2MB each, far over the 262144-byte client-side-apply
+        # annotation limit, so ArgoCD cannot apply them. They are bootstrapped
+        # server-side (kubectl apply --server-side) and pinned to this chart
+        # version; skip them here so the app can reach Synced.
+        skipCrds: true
 
     - chart: gha-runner-scale-set
       repoURL: ghcr.io/actions/actions-runner-controller-charts
