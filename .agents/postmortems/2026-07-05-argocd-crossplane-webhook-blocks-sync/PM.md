@@ -22,6 +22,7 @@ supersedes: []
 related:
   - 2026-07-05-pc01-vxlan-tx-checksum-offload
   - 2026-07-13-apiserver-crd-cache-oom
+  - 2026-08-09-argocd-appset-dual-manager-prune
 ---
 
 # Postmortem: ArgoCD cluster sync fully blocked by an unreachable crossplane conversion webhook
