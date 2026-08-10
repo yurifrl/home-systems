@@ -4,4 +4,4 @@ description: >-
   All Cloudflare Zero Trust Access resources in one place -- shared Access
   policies, per-app Access applications, and the crossplane-managed Cloudflare
   DNS records that front them. Reconciled by provider-cloudflare.
-version: 0.1.0
+version: 0.1.1
