@@ -25,7 +25,7 @@ spec:
         path: k8s/applications
         directory:
           recurse: false
-          include: '{{ path.filename }}'
+          include: '{{ .path.filename }}'
       destination:
         server: https://kubernetes.default.svc
         namespace: argocd
