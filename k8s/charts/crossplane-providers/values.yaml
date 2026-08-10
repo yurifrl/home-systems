@@ -22,6 +22,11 @@ providers:
     package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v2.5.4
   - name: provider-gcp-iam
     package: xpkg.upbound.io/upbound/provider-gcp-iam:v2.5.4
+    # Conversion webhook (v1beta1<->v1beta2 WorkloadIdentityPoolProvider) must be
+    # served for the crossplane-gcp app to sync. A fresh pod can't bootstrap its
+    # manager through the kube-proxy VIP in this stretched cluster, so it never
+    # registers /convert. Pin to the direct-apiserver path like storage.
+    runtimeConfig: gcp-storage-pinned
   # Compute provider for the assets CDN (LB + Cloud CDN + Cloud Armor). Its MRDs
   # install INACTIVE (default MRAP no longer activates '*'); only the ~8 CRDs in
   # the computeCdnActivations MRAP below become CRDs, avoiding the apiserver
