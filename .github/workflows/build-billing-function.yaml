@@ -1,14 +1,14 @@
 name: Build Billing Functions
 
 # Zips each Gen2 Cloud Function under functions/ and uploads it to the
-# functions-src GCS bucket. Crossplane's cloudfunctions2.Function resources
-# reference these objects (billing.function.sourceObject /
-# billing.killSwitch.sourceObject). Auth is Workload Identity Federation — the
-# WIF pool's attributeCondition must allow this repo (see gcp/values.yaml).
+# functions-src GCS bucket, then pins the Crossplane Function to that exact,
+# content-addressed object (<fn>/<git-sha>.zip) by writing sourceObject into the
+# public chart values and pushing. ArgoCD then redeploys the function from the
+# new object — so a code change actually ships, with no manual version bump.
 #
-# NOTE: the Functions reference stable object names (latest.zip), so a code
-# change re-uploads the object but does NOT auto-redeploy (the Crossplane spec
-# string is unchanged). Bump the sourceObject to a versioned key to force one.
+# Auth is Workload Identity Federation. The WIF principalSet for this repo must
+# hold roles/iam.workloadIdentityUser on the deployer SA (crossplane-gcp
+# ServiceAccountIAMMember billing-fn-deployer-wif) or the impersonation 403s.
 
 on:
   push:
@@ -19,13 +19,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 env:
   WIF_PROVIDER: ${{ vars.GCP_WIF_PROVIDER }}
   DEPLOY_SA: ${{ vars.GCP_DEPLOY_SA }}
   SRC_BUCKET: ${{ vars.GCP_FUNCTIONS_SRC_BUCKET }}
+  VALUES_FILE: k8s/charts/crossplane-gcp/values.yaml
 
 jobs:
   upload:
@@ -37,10 +38,30 @@ jobs:
           workload_identity_provider: ${{ env.WIF_PROVIDER }}
           service_account: ${{ env.DEPLOY_SA }}
       - uses: google-github-actions/setup-gcloud@v3
-      - name: Zip and upload each function
+      - name: Zip, upload (content-addressed), and pin sourceObject
         run: |
+          set -euo pipefail
+          sha="${GITHUB_SHA}"
           for dir in functions/*/; do
             fn=$(basename "$dir")
             (cd "$dir" && zip -r "/tmp/$fn.zip" . -x '*.git*')
+            # Content-addressed object forces a Crossplane rebuild; latest.zip
+            # kept as a convenience pointer / rollback reference.
+            gcloud storage cp "/tmp/$fn.zip" "gs://${SRC_BUCKET}/$fn/$sha.zip"
             gcloud storage cp "/tmp/$fn.zip" "gs://${SRC_BUCKET}/$fn/latest.zip"
+            # Pin the chart's sourceObject for this function to the new object.
+            sed -i -E "s#(sourceObject: $fn/).*#\1$sha.zip#" "${VALUES_FILE}"
           done
+      - name: Commit sourceObject bump
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- "${VALUES_FILE}"; then
+            echo "No sourceObject change; nothing to commit."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "${VALUES_FILE}"
+          git commit -m "ci(billing-functions): pin sourceObject to ${GITHUB_SHA} [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
