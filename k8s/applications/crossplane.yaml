@@ -31,6 +31,15 @@ spec:
         # crashing crossplane core with "leader election lost" -> restart storm ->
         # more apiserver load -> lease lost again. Disable it.
         leaderElection: false
+        # The in-cluster apiserver ClusterIP VIP (kube-proxy/Cilium) is unreliable
+        # in this stretched two-LAN cluster: a freshly (re)started core cannot sync
+        # its watch caches through the VIP and crashloops with "failed to wait for
+        # CompositionRevision cache to sync". Point core straight at the
+        # control-plane apiserver (same remedy as the gcp-storage-pinned provider
+        # runtime config), bypassing the VIP.
+        extraEnvVarsCrossplane:
+          KUBERNETES_SERVICE_HOST: "192.168.68.91"
+          KUBERNETES_SERVICE_PORT: "6443"
         # Throttle core's reconcile loop. Core (not the providers) reconciles
         # ManagedResourceDefinitions; a hot no-op loop was PUTting MRDs at ~20/s,
         # pegging the apiserver and stalling ArgoCD. Lower the global reconcile
