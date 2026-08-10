@@ -45,6 +45,9 @@ jobs:
           sha="${GITHUB_SHA}"
           for dir in functions/*/; do
             fn=$(basename "$dir")
+            # Stamp the version (git sha) into the artifact so the running
+            # function can report exactly which build fired an alert.
+            printf '%s' "$sha" > "$dir/VERSION"
             (cd "$dir" && zip -r "/tmp/$fn.zip" . -x '*.git*')
             # Content-addressed object forces a Crossplane rebuild; latest.zip
             # kept as a convenience pointer / rollback reference.

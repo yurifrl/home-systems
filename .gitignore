@@ -37,3 +37,6 @@ hack/obs-srt/
 
 # Local-only edge/probe working notes (real hostnames — never commit)
 /.agents/local/
+
+# CI stamps build version into function zips; not committed
+functions/*/VERSION

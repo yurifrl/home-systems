@@ -6,6 +6,14 @@
 // Budget Pub/Sub payload:
 // https://cloud.google.com/billing/docs/how-to/budgets-programmatic-notifications
 const functions = require('@google-cloud/functions-framework');
+const fs = require('fs');
+const path = require('path');
+
+// Build version (git sha) stamped into the zip by CI; shown in the alert.
+const VERSION = (() => {
+  try { return fs.readFileSync(path.join(__dirname, 'VERSION'), 'utf8').trim().slice(0, 12); }
+  catch { return process.env.FN_VERSION || 'dev'; }
+})();
 
 const WEBHOOK = process.env.DISCORD_WEBHOOK_URL;
 
@@ -31,7 +39,7 @@ functions.cloudEvent('notify', async (event) => {
   }
 
   const content =
-    `GCP spend: *${name}* at ${ccy} ${cost.toFixed(2)} / ${ccy} ${budget.toFixed(2)} = ${pct}%${threshold}`;
+    `GCP spend: *${name}* at ${ccy} ${cost.toFixed(2)} / ${ccy} ${budget.toFixed(2)} = ${pct}%${threshold} \`v${VERSION}\``;
 
   const res = await fetch(WEBHOOK, {
     method: 'POST',

@@ -8,6 +8,15 @@
 // loses billing once detached), then confirm.
 const functions = require('@google-cloud/functions-framework');
 const { GoogleAuth } = require('google-auth-library');
+const fs = require('fs');
+const path = require('path');
+
+// Build version (git sha) stamped into the zip by CI; shown in every alert so
+// you can tell exactly which deployed build fired.
+const VERSION = (() => {
+  try { return fs.readFileSync(path.join(__dirname, 'VERSION'), 'utf8').trim().slice(0, 12); }
+  catch { return process.env.FN_VERSION || 'dev'; }
+})();
 
 const WEBHOOK = process.env.DISCORD_WEBHOOK_URL;
 const PROJECT = process.env.PROJECT_ID;
@@ -38,7 +47,7 @@ functions.cloudEvent('killswitch', async (event) => {
   const ccy = n.currencyCode || '';
   await discord(
     `@here\n` +
-    `🚨🚨🚨 **KILL SWITCH TRIGGERING** 🚨🚨🚨\n` +
+    `🚨🚨🚨 **KILL SWITCH TRIGGERING** 🚨🚨🚨 \`v${VERSION}\`\n` +
     `This is NOT a budget alert — the hard stop is firing RIGHT NOW.\n` +
     `Budget *${name}* hit **${Math.round(ratio * 100)}%** (${ccy} ${cost} / ${ccy} ${budget}), ` +
     `at/over the ${Math.round(KILL_RATIO * 100)}% kill threshold.\n` +
@@ -53,12 +62,12 @@ functions.cloudEvent('killswitch', async (event) => {
       data: { billingAccountName: '' },
     });
     await discord(
-      `☠️ **KILL SWITCH COMPLETE** — billing DETACHED from project \`${PROJECT}\`.\n` +
+      `☠️ **KILL SWITCH COMPLETE** \`v${VERSION}\` — billing DETACHED from project \`${PROJECT}\`.\n` +
       `The project is now unbilled and shutting down. Re-link the billing account to recover.`
     );
   } catch (e) {
     await discord(
-      `⚠️ **KILL SWITCH FAILED** to detach billing for \`${PROJECT}\`: ${e.message}\n` +
+      `⚠️ **KILL SWITCH FAILED** \`v${VERSION}\` to detach billing for \`${PROJECT}\`: ${e.message}\n` +
       `Detach billing MANUALLY now.`
     );
     throw e;
