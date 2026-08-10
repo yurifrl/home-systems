@@ -10,7 +10,7 @@
   NOTE: the upbound GCP provider has NO native Budget resource, so Budgets are
   gated behind billing.budgetsEnabled (off) pending provider-terraform. The topic,
   functions, Secret Manager and IAM below are native v1beta2 managed resources.
-  Kill switch DETACHES billing project-wide (destructive); dryRun guards it.
+  Kill switch DETACHES billing project-wide (destructive) on threshold crossing.
 */ -}}
 {{- if .Values.billing.enabled }}
 {{- $pc := .Values.providerConfig.name }}
@@ -197,7 +197,7 @@ spec:
 {{- $k := $b.killSwitch }}
 ---
 # KILL SWITCH: same topic trigger, at KILL_RATIO it DETACHES billing from the
-# whole project (GCP's only hard stop). dryRun=true alerts without detaching.
+# whole project (GCP's only hard stop). Always acts on threshold crossing.
 apiVersion: cloudfunctions2.gcp.upbound.io/v1beta2
 kind: Function
 metadata:
@@ -225,7 +225,6 @@ spec:
       environmentVariables:
         PROJECT_ID: {{ $.Values.providerConfig.projectID | quote }}
         KILL_RATIO: {{ $k.ratio | default 1.0 | quote }}
-        KILL_DRY_RUN: {{ (kindIs "invalid" $k.dryRun | ternary true $k.dryRun) | quote }}
       secretEnvironmentVariables:
         - key: DISCORD_WEBHOOK_URL
           projectId: {{ $.Values.providerConfig.projectID | quote }}

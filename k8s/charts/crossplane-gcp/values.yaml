@@ -159,7 +159,7 @@ billing:
     subscription: billing-budget-alerts-exporter
     subscriberServiceAccount: ""   # exporter SA email (-> private)
   # KILL SWITCH: at `ratio` of a budget, detaches billing from the WHOLE project
-  # (destructive, project-wide). dryRun=true alerts without detaching.
+  # (destructive, project-wide) on every threshold crossing.
   killSwitch:
     enabled: false
     name: billing-killswitch
@@ -170,7 +170,6 @@ billing:
     sourceObject: billing-killswitch/latest.zip
     runtimeServiceAccount: ""
     ratio: 1.0
-    dryRun: true
 
 # --- Project services (API enablement) -------------------------------------
 projectServices: []
