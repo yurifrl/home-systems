@@ -151,7 +151,7 @@ billing:
     runtime: nodejs20
     entryPoint: notify
     sourceBucket: ""         # functions-src bucket externalName (-> private)
-    sourceObject: billing-discord/cb42191b1f0493418c01820af20e9ba5ad6d05d8.zip
+    sourceObject: billing-discord/0b91adb180d8ee05d261c8bac82a5eb16ca1c223.zip
     runtimeServiceAccount: ""
   # In-cluster Prometheus exporter pull subscription.
   exporter:
@@ -167,7 +167,7 @@ billing:
     runtime: nodejs20
     entryPoint: killswitch
     sourceBucket: ""
-    sourceObject: billing-killswitch/cb42191b1f0493418c01820af20e9ba5ad6d05d8.zip
+    sourceObject: billing-killswitch/0b91adb180d8ee05d261c8bac82a5eb16ca1c223.zip
     runtimeServiceAccount: ""
     ratio: 1.0
 
