@@ -169,6 +169,30 @@ spec:
                   scheme: 'http'
 
           # ----------------------------------------------------------------
+          # kube-state-metrics scrape
+          # ----------------------------------------------------------------
+          # KSM emits a ~3.4MB /metrics payload for this cluster. vmagent runs
+          # CPU-limited (500m) on a Raspberry Pi (rpi01); under load it cannot
+          # pull that payload within the default 10s scrape timeout, so scrapes
+          # intermittently time out (broken pipe) and every kube_* series goes
+          # dark - which silently disarms the HermesDown/KubePodNotReady alerts.
+          # KSM state changes slowly, so a 60s interval / 30s timeout loses no
+          # fidelity while giving vmagent ample room. The endpoints array must be
+          # restated in full because overriding it replaces the chart default,
+          # including the labeldrop relabel.
+          kube-state-metrics:
+            vmScrape:
+              spec:
+                endpoints:
+                  - port: http
+                    honorLabels: true
+                    interval: 60s
+                    scrapeTimeout: 30s
+                    metricRelabelConfigs:
+                      - action: labeldrop
+                        regex: (uid|container_id|image_id)
+
+          # ----------------------------------------------------------------
           # Alerting / recording rule evaluation
           # ----------------------------------------------------------------
           vmalert:
