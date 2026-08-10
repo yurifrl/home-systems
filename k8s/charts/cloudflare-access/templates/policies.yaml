@@ -16,7 +16,7 @@ kind: TrustAccessPolicy
 metadata:
   name: {{ .key }}
   annotations:
-    crossplane.io/external-name: {{ printf "%s/%s" $.Values.accountId .id | quote }}
+    crossplane.io/external-name: {{ .id | quote }}
 spec:
   deletionPolicy: Orphan
   providerConfigRef:
