@@ -10,6 +10,10 @@ apiVersion: dns.upjet-cloudflare.upbound.io/v1alpha1
 kind: Record
 metadata:
   name: {{ .name }}
+  {{- with .externalName }}
+  annotations:
+    crossplane.io/external-name: {{ . | quote }}
+  {{- end }}
 spec:
   deletionPolicy: {{ .deletionPolicy | default "Delete" }}
   providerConfigRef:
