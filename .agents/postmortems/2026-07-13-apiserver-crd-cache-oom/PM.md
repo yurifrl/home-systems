@@ -24,6 +24,7 @@ supersedes: []
 related:
   - 2026-07-05-argocd-crossplane-webhook-blocks-sync
   - 2026-08-09-argocd-appset-dual-manager-prune
+  - 2026-08-10-longhorn-daemonsets-excluded-from-dell01
 ---
 
 # Postmortem: kube-apiserver CRD-cache OOM on the sole control-plane (dell01)
