@@ -31,8 +31,6 @@ nostos/state/
 # python bytecode
 __pycache__/
 *.pyc
-.submodules/nostos
-.submodules/home-systems-values
 hack/obs-srt/
 
 # Local-only edge/probe working notes (real hostnames — never commit)

@@ -1,0 +1,6 @@
+[submodule ".submodules/home-systems-values"]
+	path = .submodules/home-systems-values
+	url = git@github.com:yurifrl/home-systems-values.git
+[submodule ".submodules/nostos"]
+	path = .submodules/nostos
+	url = git@github.com:yurifrl/nostos.git
