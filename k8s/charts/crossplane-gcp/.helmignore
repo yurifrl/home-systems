@@ -1,0 +1,5 @@
+# Cloud Function source (billing-discord, billing-killswitch) is colocated here
+# next to the Crossplane Function MRs that deploy it, but it is NOT a Helm
+# template — CI zips it from disk and uploads to GCS. Keep it out of the chart
+# package / render.
+functions/

@@ -14,7 +14,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'functions/**'
+      - 'k8s/charts/crossplane-gcp/functions/**'
       - '.github/workflows/build-billing-function.yaml'
   workflow_dispatch:
 
@@ -43,7 +43,7 @@ jobs:
         run: |
           set -euo pipefail
           sha="${GITHUB_SHA}"
-          for dir in functions/*/; do
+          for dir in k8s/charts/crossplane-gcp/functions/*/; do
             fn=$(basename "$dir")
             # Stamp the version (git sha) into the artifact so the running
             # function can report exactly which build fired an alert.
