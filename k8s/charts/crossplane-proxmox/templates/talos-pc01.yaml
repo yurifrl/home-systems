@@ -34,6 +34,9 @@ spec:
         type: {{ $v.cpu.type | quote }}
     memory:
       - dedicated: {{ $v.memoryMiB }}
+        {{- if $v.floatingMiB }}
+        floating: {{ $v.floatingMiB }}   # balloon floor: min guaranteed; VM balloons between floating..dedicated
+        {{- end }}
     smbios:
       - uuid: {{ $v.smbiosUuid }}
     vga:

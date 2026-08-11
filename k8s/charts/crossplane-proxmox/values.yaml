@@ -98,7 +98,8 @@ vms:
       cores: 4                         # cores: 4
       sockets: 1                       # sockets: 1
       type: x86-64-v2-AES              # cpu: x86-64-v2-AES
-    memoryMiB: 12288                   # memory: 12288
+    memoryMiB: 12288                   # memory: 12288 (dedicated/max)
+    floatingMiB: 6144                  # balloon floor: coexist w/ workstation on the 15.6GiB host
     netMac: BC:24:11:45:72:B6          # net0 virtio mac
     disk:
       interface: scsi0                 # scsi0: local-lvm:...,size=30G
@@ -188,6 +189,7 @@ vms:
       sockets: 1
       type: host
     memoryMiB: 16384
+    floatingMiB: 6144                    # balloon floor: coexist w/ talos-pc01 on the 15.6GiB host
     netMac: "BC:24:11:7C:B3:51"          # stable MAC (Proxmox BC:24:11 OUI)
     disk:
       interface: scsi0                 # boot disk: imports image below
