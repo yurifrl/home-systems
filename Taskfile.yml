@@ -10,3 +10,4 @@ includes:
   proxmox: ./taskfiles/proxmox.yml
   clusterbootstrap: ./taskfiles/clusterbootstrap.yml
   backup: ./taskfiles/backup.yml
+  submodules: ./taskfiles/submodules.yml

@@ -1,0 +1,17 @@
+version: '3'
+
+tasks:
+  init:
+    desc: Init and update submodules at recorded commits (fresh clones)
+    cmds:
+      - git submodule update --init --recursive
+
+  sync:
+    desc: Pull latest default-branch commits into submodules and update parent gitlinks
+    cmds:
+      - git submodule update --remote --merge --recursive
+
+  status:
+    desc: Show submodule commits and dirty state
+    cmds:
+      - git submodule status --recursive
