@@ -21,6 +21,7 @@ supersedes: []
 related:
   - 2026-07-05-pc01-vxlan-tx-checksum-offload
   - 2026-07-05-cross-family-vxlan-endpoint-mesh
+  - 2026-08-11-tailscale-gateway-orphaned-device
 ---
 
 # Postmortem: pc01 off the tailnet (ext-tailscale flag-drift crashloop)
