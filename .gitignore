@@ -21,6 +21,7 @@ nostos/state/
 *.db
 .beads-credential-key
 .beads/proxieddb/
+.beads/issues.jsonl
 
 /.crew/
 /.crew
