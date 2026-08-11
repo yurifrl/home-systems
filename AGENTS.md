@@ -345,3 +345,11 @@ Use `kubectl config use-context <name>` to switch.
 - **Never use `kubectl apply` to update the cluster.** Changes ship via git: commit, push, and let ArgoCD sync.
 - **Done means synced and working.** A task is not finished until the change is committed, pushed, ArgoCD shows it Synced, and the affected workload is healthy. Land the plane — don't stop at "pushed".
 - Don't bother me with git matters, I don't want to know whats safe or not safe to commit, stick to git commit and push you don't need checkout or anything else commit and push.
+
+# Argo
+
+To declare a aplication change is done, changes in charts or in applications need to be sync, otherwise they are not done, when you push a change wait 10sec to a minute max, then you can try to force a sync and before you wait look for sync errors like: 
+
+`kubectl get application <application> -n argocd -o jsonpath="{.status.operationState.message}{\"\n\"}{.status.conditions}{\"\n\"}"`
+
+Then iterate, don't park waiting, do trobleshoot, things should sync fairly quick
