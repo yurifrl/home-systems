@@ -49,23 +49,37 @@ data:
     root_hash="$(openssl passwd -6 -salt "$(salt "$ROOT_PASSWORD")" "$ROOT_PASSWORD")"
     yuri_hash="$(openssl passwd -6 -salt "$(salt "$YURI_PASSWORD")" "$YURI_PASSWORD")"
 
-    # 4) Build cloud-config with printf (indentation-safe; no heredoc contamination).
-    data="$(printf '%s\n' \
-      '#cloud-config' \
-      'write_files:' \
-      '  - path: /etc/tailscale/authkey' \
-      "    permissions: '0600'" \
-      '    owner: root:root' \
-      "    content: \"${authkey}\"" \
-      'chpasswd:' \
-      '  expire: false' \
-      '  users:' \
-      '    - name: root' \
-      "      password: \"${root_hash}\"" \
-      '      type: hash' \
-      '    - name: yuri-workstation' \
-      "      password: \"${yuri_hash}\"" \
-      '      type: hash')"
+    # 4) Build cloud-config as an array (indentation-safe; no heredoc contamination).
+    lines=(
+      '#cloud-config'
+      'write_files:'
+      '  - path: /etc/tailscale/authkey'
+      "    permissions: '0600'"
+      '    owner: root:root'
+      "    content: \"${authkey}\""
+    )
+    # Company tailnet key is optional: only written when present in the 1Password
+    # item. The second tailscaled on the VM consumes /etc/tailscale/authkey-company.
+    if [ -n "${TAILSCALE_AUTHKEY_COMPANY:-}" ]; then
+      lines+=(
+        '  - path: /etc/tailscale/authkey-company'
+        "    permissions: '0600'"
+        '    owner: root:root'
+        "    content: \"${TAILSCALE_AUTHKEY_COMPANY}\""
+      )
+    fi
+    lines+=(
+      'chpasswd:'
+      '  expire: false'
+      '  users:'
+      '    - name: root'
+      "      password: \"${root_hash}\""
+      '      type: hash'
+      '    - name: yuri-workstation'
+      "      password: \"${yuri_hash}\""
+      '      type: hash'
+    )
+    data="$(printf '%s\n' "${lines[@]}")"
 
     patch="$(jq -cn --arg fn "$FILENAME" --arg data "$data" \
       '{spec:{forProvider:{sourceRaw:[{fileName:$fn,data:$data}]}}}')"
@@ -126,8 +140,12 @@ spec:
                   valueFrom: {secretKeyRef: {name: {{ $r.secretName }}, key: root-password}}
                 - name: YURI_PASSWORD
                   valueFrom: {secretKeyRef: {name: {{ $r.secretName }}, key: yuri-password}}
-                - name: TAILSCALE_AUTHKEY
-                  valueFrom: {secretKeyRef: {name: {{ $r.secretName }}, key: tailscale-authkey}}
+                - name: TAILSCALE_AUTHKEY_COMPANY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $r.secretName }}
+                      key: tailscale-authkey-company
+                      optional: true
               volumeMounts:
                 - {name: scripts, mountPath: /scripts}
               resources:
