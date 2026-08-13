@@ -142,14 +142,40 @@ configs:
     # Crossplane upbound provider CRDs use webhook conversion. When a provider
     # pod is unreachable (e.g. wedged node), the apiserver's conversion call
     # times out, that single LIST fails, and ArgoCD's whole cluster cache sync
-    # aborts -> NO app can sync (see 2026-07-05 postmortem). The upbound
-    # exclusion was removed once the GCP providers were pinned to a stable
-    # worker with a direct API path; if a
-    # provider pod goes Pending/crashloops again, re-add an `*.upbound.io`
-    # block here to decouple ArgoCD from the webhooks.
+    # aborts -> NO app can sync (2026-07-05 and 2026-08-12 postmortems). The
+    # node pin that was supposed to keep the webhook reachable failed (pc01
+    # wedged), so the `*.upbound.io` exclusion is back PERMANENTLY: decouple
+    # ArgoCD's cluster cache from the conversion webhooks entirely.
+    #
+    # Tradeoff: crossplane-gcp / crossplane / crossplane-proxmox apps show those
+    # MRs as OutOfSync/Unknown (no live-state diff), but they all use
+    # ServerSideApply so syncs still apply correctly; Crossplane owns their
+    # reconciliation anyway. Every other app keeps syncing when a webhook dies.
+    #
     # The blocks below are the argo-cd chart defaults, kept because setting this
     # key replaces the chart default wholesale.
     resource.exclusions: |
+      # Crossplane upbound GCP provider CRDs (webhook-converted). Excluding the
+      # whole group means a dead conversion webhook can no longer abort the
+      # cluster-wide cache sync. apiGroups are matched EXACTLY (no glob), so
+      # every webhook-converted group is listed explicitly.
+      - apiGroups:
+          - gcp.upbound.io
+          - gcp.m.upbound.io
+          - certificatemanager.gcp.upbound.io
+          - cloudfunctions2.gcp.upbound.io
+          - cloudplatform.gcp.upbound.io
+          - cloudplatform.gcp.m.upbound.io
+          - compute.gcp.upbound.io
+          - compute.gcp.m.upbound.io
+          - iam.gcp.upbound.io
+          - pubsub.gcp.upbound.io
+          - secretmanager.gcp.upbound.io
+          - storage.gcp.upbound.io
+        kinds:
+          - "*"
+        clusters:
+          - "*"
       - apiGroups:
           - metallb.io
         kinds:
