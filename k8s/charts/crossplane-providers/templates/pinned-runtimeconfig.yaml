@@ -6,8 +6,17 @@
   out and the provider crashloops -> its conversion webhook has no endpoint ->
   every ArgoCD app gets stuck sync=Unknown (cluster cache can't list the CRDs).
 
-  Pin the provider to a worker and point it directly at the control-plane
-  apiserver so it has a stable connection without using the Service VIP.
+  Point it directly at the control-plane apiserver (KUBERNETES_SERVICE_HOST) so it
+  has a stable connection without the Service VIP. The direct-apiserver IP is on
+  the shared 192.168.68.x LAN that all amd64 workers sit on, so it works from any
+  of them.
+
+  Do NOT hostname-pin these providers. These images are amd64-only, so pin to
+  arch and keep them off the control-plane, but let the pod float across healthy
+  amd64 workers. A hostname pin (e.g. pc01) is a single point of failure: when
+  that node's containerd breaks the conversion webhook loses its endpoint and
+  every ArgoCD app jams with ComparisonError. Arch-pin lets the scheduler
+  reschedule the webhook onto a surviving amd64 worker.
 */ -}}
 {{- with .Values.pinnedRuntimeConfig }}
 apiVersion: pkg.crossplane.io/v1beta1
@@ -21,7 +30,16 @@ spec:
       template:
         spec:
           nodeSelector:
-            kubernetes.io/hostname: {{ .nodeHostname }}
+            kubernetes.io/arch: amd64
+          # Keep webhook providers off the control-plane (same as the shared
+          # amd64-only config): their LIST/watch load pegs the apiserver.
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/control-plane
+                        operator: DoesNotExist
           containers:
             - name: package-runtime
               # Same apiserver-load throttle as the shared runtime config.

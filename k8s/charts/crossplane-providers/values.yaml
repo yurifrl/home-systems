@@ -4,11 +4,12 @@
 runtimeConfigName: amd64-only
 runtimeArch: amd64
 
-# Dedicated runtime config for providers that need a stable API path. Keep them
-# on pc01 and bypass the kube-proxy Service VIP.
+# Dedicated runtime config for providers that need a stable API path. Point them
+# directly at the control-plane apiserver (bypass the kube-proxy Service VIP) but
+# let them float across healthy amd64 workers -- NOT pinned to one node, so a
+# single node failure can't take the conversion webhook down and jam every app.
 pinnedRuntimeConfig:
   name: gcp-storage-pinned
-  nodeHostname: pc01
   apiserverHost: "192.168.68.91"
   apiserverPort: "6443"
 

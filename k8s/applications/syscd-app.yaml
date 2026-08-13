@@ -149,10 +149,10 @@ spec:
                 repository: ghcr.io/yurifrl/syscd-app
                 tag: latest
                 pullPolicy: Always
-              # amd64-only image; pc01 is the only schedulable amd64 node.
-              # ponytail: pin to pc01; build multi-arch images if HA matters.
+              # amd64-only image: pin to arch, not a node, so it floats across
+              # any healthy amd64 worker (dell01/pc01) instead of dying with pc01.
               nodeSelector:
-                kubernetes.io/hostname: pc01
+                kubernetes.io/arch: amd64
               containerPort: 8080
               readinessProbe:
                 httpGet:
@@ -174,8 +174,9 @@ spec:
                 repository: ghcr.io/yurifrl/syscd-app-api
                 tag: latest
                 pullPolicy: Always
+              # amd64-only image: pin to arch, not a node (same as syscd-app).
               nodeSelector:
-                kubernetes.io/hostname: pc01
+                kubernetes.io/arch: amd64
               containerPort: 3000
               readinessProbe:
                 httpGet:
