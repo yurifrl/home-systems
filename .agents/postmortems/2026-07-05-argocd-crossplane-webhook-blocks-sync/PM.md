@@ -1,9 +1,10 @@
 ---
 date: 2026-07-05
-status: implemented
-incident_status: resolved
+status: reopened
+incident_status: mitigated
 sessions:
   - 019f3230-1736-7b7d-a71d-58b37aa4133c
+  - 019ff7ef-8422-75c6-a0a8-fe79d96eb26e
 components:
   - argocd
   - crossplane
@@ -15,7 +16,7 @@ symptoms:
 failure_mode: conversion-webhook-blocks-argocd-sync
 affected_urls:
   - https://argocd.syscd.live
-beads: [home-systems-57s]
+beads: [home-systems-57s, home-systems-idb]
 memories:
   - argocd-crossplane-webhook-blocks-sync-2026-07-05
 supersedes: []
@@ -168,3 +169,92 @@ fix the pc01 datapath, then metrics + alerting recover on their own.
   re-patched + hard refresh after repo-server fetched the new commit.
 - `09:28` Stable: `argocd` app `Synced`, no error conditions; 40 apps
   reconciling (30 `Synced/Healthy`).
+
+---
+
+## Recurrence — 2026-08-12/13 (GMT-0300)
+
+**Same component + same failure_mode.** Reopened. The 2026-07-05 fix
+(`resource.exclusions` for the upbound groups) was **later removed from git**
+because the in-file comment claimed the exclusion was redundant once the GCP
+providers were pinned to a "stable" worker with a direct API path. The pin
+failed, the exclusion was gone, and the exact same cascade returned.
+
+**Why the prior follow-ups did not prevent this (per bead):**
+- `home-systems-57s` (epic) — **never-done** (still OPEN). The exclusion it
+  shipped was subsequently deleted from `manifests/values/argocd.yaml`; the
+  "pin makes exclusion redundant" rationale in the comment was wrong.
+- `home-systems-meb` (verify scrape) — **never-done** (OPEN) at the time; the
+  metrics stack is alive now (verified this session, see below).
+- `home-systems-gqy` (verify alert fires) — **never-done** (OPEN). The
+  `ArgoCDClusterCacheDown` alert was deployed but unverified; during the
+  ~18h window this incident ran, it did not page (likely the metrics stack
+  dark window `home-systems-k5b`, still OPEN).
+- `home-systems-k5b` (VM stack dark) — **never-done** (OPEN), the detection
+  gap that let this run silent for ~18h.
+- `home-systems-1l9` (metallb exclusion doc) — **never-done** (OPEN).
+
+**The lesson:** the durable fix is the exclusion, NOT the node pin. A node pin
+is a single point of failure; the exclusion is what actually decouples ArgoCD's
+shared cache from webhook health. Never remove the exclusion in favor of a pin.
+
+### What happened this time
+
+pc01's containerd broke (`FailedCreatePodSandBox`, runc broken-pipe /
+missing-`/proc/<pid>` errors). Cilium agent on pc01 went down → held the
+`node.cilium.io/agent-not-ready:NoSchedule` taint → `provider-gcp-storage` and
+`provider-gcp-iam` (hard-pinned to pc01 via `nodeSelector:
+kubernetes.io/hostname: pc01`) stayed `Pending` with zero endpoints. The
+`provider-gcp-storage` Service (`10.111.26.85`) had no backend → `connection
+refused` on the `BucketIAMMember.storage.gcp.upbound.io` conversion call →
+ArgoCD's shared cluster cache aborted → every Application `ComparisonError`.
+Identical mechanism to 2026-07-05, different node fault (containerd vs VXLAN).
+
+### Fix applied this recurrence (committed `476806b0`)
+
+- Re-added the upbound exclusion to `manifests/values/argocd.yaml`
+  `configs.cm."resource.exclusions"`, but **explicit per-group** (ArgoCD
+  matches `apiGroups` EXACTLY, no glob): `gcp.upbound.io`, `gcp.m.upbound.io`,
+  and all 10 `*.gcp[.m].upbound.io` webhook-converted groups, `kinds: ["*"]`.
+- **Rewrote the misleading comment** that caused the 2026-07-05 exclusion to
+  be removed — it now states the pin failed and the exclusion is permanent.
+- Break-glass live `argocd-cm` patch (the self-managed `argocd` app could not
+  apply its own fix — its diff step was blocked by the same jam), then
+  `kubectl delete pod argocd-application-controller-0` to rebuild the cache.
+- Verified: `litellm` conditions clean (0 conversion-webhook mentions); fleet
+  moved from all-`ComparisonError` to `Synced`/`Unknown`-recomputing; all 13
+  webhook-conversion CRD groups on the cluster now covered by exclusions.
+
+### Detection verified working this session
+
+`min(argocd_cluster_connection_status) = 1` confirmed live from vmsingle (2
+series). The metrics stack is up (vmagent/vmalert/vmsingle Running on
+rpi01/tp4). So `ArgoCDClusterCacheDown` can now fire — the 2026-07-05
+dark-metrics gap is closed. It did NOT page during this incident's ~18h window
+because that window overlapped the metrics-dark period; detection is healthy
+now.
+
+### Timeline (2026-08-12/13, GMT-0300)
+- `08-12 15:16` First `ComparisonError` recorded on `argocd` app:
+  `BucketIAMMember.storage.gcp.upbound.io` conversion webhook `connection
+  refused` to `10.111.26.85:9443`.
+- `08-12→08-13` Incident runs ~18h unnoticed (metrics-dark gap; no page).
+- `08-13 07:45` User reports all apps `ComparisonError` (screenshot).
+- `08-13` Diagnosed: pc01 containerd broken → cilium taint → storage/iam
+  provider pods Pending → webhook no endpoints → cache abort.
+- `08-13` Found exclusion had been removed from git; comment blamed pin.
+- `08-13` Re-added explicit per-group exclusion (commit `476806b0`), patched
+  live cm, restarted application-controller. Fleet recovered.
+
+### Dead ends (this recurrence)
+- Initially suspected the two-LAN Tailscale partition (the 2026-07-05 cause)
+  — but pc01's kubelet was `Ready`; the real fault was containerd, not the
+  datapath.
+- Considered re-pinning the providers to another amd64 node — but dell01 and
+  macarm01 were also `NotReady`, so there was no healthy amd64 target; the
+  exclusion is the correct fix regardless of node health.
+- Regenerating `manifests/argocd.yaml` via `helm template` produced a huge
+  chart-drift diff (9.5.17 → 10.1.3) — a red herring; the `argocd` app is
+  self-managed from chart `10.3.2` + the values file, so the rendered file is
+  a stale artifact and was reverted.
+
