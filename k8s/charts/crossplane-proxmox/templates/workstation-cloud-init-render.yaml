@@ -17,6 +17,7 @@ data:
     set -euo pipefail
     : "${ROOT_PASSWORD:?}"; : "${YURI_PASSWORD:?}"
     : "${TS_OAUTH_CLIENT_ID:?}"; : "${TS_OAUTH_CLIENT_SECRET:?}"
+    : "${GITHUB_DEPLOY_KEY:?}"
     MR="{{ $ci.mrName }}"
     FILENAME="{{ $ci.userDataFileName }}"
     GROUP="virtualenvironmentfile.proxmoxbpg.crossplane.io"
@@ -49,6 +50,12 @@ data:
     root_hash="$(openssl passwd -6 -salt "$(salt "$ROOT_PASSWORD")" "$ROOT_PASSWORD")"
     yuri_hash="$(openssl passwd -6 -salt "$(salt "$YURI_PASSWORD")" "$YURI_PASSWORD")"
 
+    # GitHub SSH key -> base64 so the multi-line private key survives the
+    # single-line cloud-config `content` field (decoded on the VM via encoding: b64).
+    # printf '%s\n' guarantees the trailing newline OpenSSH requires (the 1Password
+    # field was stored via $(cat ...), which strips it).
+    gh_key_b64="$(printf '%s\n' "$GITHUB_DEPLOY_KEY" | base64 | tr -d '\n')"
+
     # 4) Build cloud-config as an array (indentation-safe; no heredoc contamination).
     lines=(
       '#cloud-config'
@@ -68,6 +75,18 @@ data:
         "    content: \"${TAILSCALE_AUTHKEY_COMPANY}\""
       )
     fi
+    lines+=(
+      '  - path: /root/.ssh/id_workstation_deploy'
+      "    permissions: '0600'"
+      '    owner: root:root'
+      '    encoding: b64'
+      "    content: \"${gh_key_b64}\""
+      '  - path: /home/yuri-workstation/.ssh/id_workstation_deploy'
+      "    permissions: '0600'"
+      '    owner: yuri-workstation:users'
+      '    encoding: b64'
+      "    content: \"${gh_key_b64}\""
+    )
     lines+=(
       'chpasswd:'
       '  expire: false'
@@ -146,6 +165,8 @@ spec:
                       name: {{ $r.secretName }}
                       key: tailscale-authkey-company
                       optional: true
+                - name: GITHUB_DEPLOY_KEY
+                  valueFrom: {secretKeyRef: {name: {{ $r.secretName }}, key: github-deploy-key}}
               volumeMounts:
                 - {name: scripts, mountPath: /scripts}
               resources:
