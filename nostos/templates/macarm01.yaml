@@ -30,7 +30,7 @@ machine:
       - 192.168.68.1
       - 8.8.8.8
   install:
-    disk: /dev/vdb
+    disk: /dev/nvme0n1
     image: {{ .InstallImage }}
     wipe: true
   features:

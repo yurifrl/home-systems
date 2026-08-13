@@ -120,7 +120,7 @@ nodes:
     ip: 192.168.68.90
     role: worker
     arch: arm64
-    install_disk: /dev/vdb
+    install_disk: /dev/nvme0n1
     template: macarm01.yaml
     # arm64 VM: tailscale + iscsi-tools + util-linux-tools + entropy kernel args
     # baked in. Source: nostos/manifests/schematics/vm01-arm64.yaml
