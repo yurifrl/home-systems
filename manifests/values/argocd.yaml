@@ -124,6 +124,10 @@ notifications:
       enabled: true
 
 configs:
+  params:
+    # Private/local-only submodules are not manifest sources. Disabling recursive
+    # checkout prevents them from blocking repository generation.
+    reposerver.enable.git.submodule: false
   cm:
     # Passwordless UI: --disable-auth only opens the API; the web UI still shows
     # a login page without a session. Anonymous access gives the UI a session.
