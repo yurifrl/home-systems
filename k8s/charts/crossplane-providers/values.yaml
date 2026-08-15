@@ -114,6 +114,7 @@ defaultActivations:
   - "folders.cloudplatform.gcp.upbound.io"
   - "functions.cloudfunctions2.gcp.upbound.io"
   - "hmackeys.storage.gcp.upbound.io"
+  - "objectaccesscontrols.storage.gcp.m.upbound.io"
   - "organizationiamauditconfigs.cloudplatform.gcp.m.upbound.io"
   - "organizationiamauditconfigs.cloudplatform.gcp.upbound.io"
   - "organizationiamcustomroles.cloudplatform.gcp.m.upbound.io"
