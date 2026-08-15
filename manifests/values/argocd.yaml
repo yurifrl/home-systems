@@ -159,23 +159,11 @@ configs:
     # The blocks below are the argo-cd chart defaults, kept because setting this
     # key replaces the chart default wholesale.
     resource.exclusions: |
-      # Crossplane upbound GCP provider CRDs (webhook-converted). Excluding the
-      # whole group means a dead conversion webhook can no longer abort the
-      # cluster-wide cache sync. apiGroups are matched EXACTLY (no glob), so
-      # every webhook-converted group is listed explicitly.
+      # Exclude every Upbound provider API group. This includes storage without
+      # a special-case rule, so a failed conversion webhook cannot halt Argo CD's
+      # cluster cache or unrelated application syncs.
       - apiGroups:
-          - gcp.upbound.io
-          - gcp.m.upbound.io
-          - certificatemanager.gcp.upbound.io
-          - cloudfunctions2.gcp.upbound.io
-          - cloudplatform.gcp.upbound.io
-          - cloudplatform.gcp.m.upbound.io
-          - compute.gcp.upbound.io
-          - compute.gcp.m.upbound.io
-          - iam.gcp.upbound.io
-          - pubsub.gcp.upbound.io
-          - secretmanager.gcp.upbound.io
-          - storage.gcp.upbound.io
+          - "*.upbound.io"
         kinds:
           - "*"
         clusters:

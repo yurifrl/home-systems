@@ -97,6 +97,7 @@ gcpCredentials:
 # Add a plural here only when a chart starts using that exact kind.
 defaultActivations:
   - "bucketiammembers.storage.gcp.upbound.io"
+  - "bucketiampolicies.storage.gcp.upbound.io"
   - "buckets.storage.gcp.upbound.io"
   - "certificatemapentries.certificatemanager.gcp.upbound.io"
   - "certificatemaps.certificatemanager.gcp.upbound.io"
