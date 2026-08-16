@@ -314,6 +314,15 @@ sharedStorage:
     accessMode: ReadWriteMany
     size: 20Gi
 
+migration:
+  state:
+    target:
+      enabled: false
+      claimName: ""
+      storageClass: ""
+      accessMode: ReadWriteMany
+      size: 5Gi
+
 repositorySync:
   enabled: false
   replicas: 1

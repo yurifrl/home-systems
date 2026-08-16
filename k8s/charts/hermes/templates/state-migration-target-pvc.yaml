@@ -1,0 +1,17 @@
+{{- if .Values.migration.state.target.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ required "migration.state.target.claimName is required when migration.state.target.enabled=true" .Values.migration.state.target.claimName }}
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.migration.state.target.accessMode }}
+  {{- with .Values.migration.state.target.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.migration.state.target.size | quote }}
+{{- end }}
