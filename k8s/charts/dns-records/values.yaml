@@ -19,6 +19,12 @@ records:
     proxied: false
     ttl: 300
 
+  - name: omniroute-syscd-tech
+    dnsName: omniroute.syscd.tech
+    target: digitalocean-nixos-01.tailcecc0.ts.net
+    proxied: false
+    ttl: 300
+
   - name: up-syscd-live
     dnsName: up.syscd.live
     target: 3b90d790-0a11-46ae-9421-d195cc828947.cfargotunnel.com
