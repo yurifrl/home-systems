@@ -30,6 +30,15 @@ fixing the first eliminates the class.
    (argo-cd #20828, #4155, design discussion #13239). This also creates the
    bootstrap deadlock: the fix for Argo ships through Argo.
 
+## Placement policy
+
+The control-plane node is the most reliable node in this stretched cluster
+(same machine as the apiserver, no cross-LAN hop, first up after power events).
+**Cluster-critical singletons get pinned there, and every pin must carry a
+comment saying why.** The existing "keep providers off the control-plane" rule
+still applies to heavy LIST/watch provider runtimes — it is about apiserver
+load, not a blanket ban. First applications: crossplane-rbac-manager.
+
 ## Workstreams
 
 ### A. Crossplane core reliability
