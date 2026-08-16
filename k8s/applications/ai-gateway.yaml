@@ -33,9 +33,9 @@ spec:
             http:
               - match:
                   - uri:
-                      prefix: /omni
+                      prefix: /omni/v1
                 rewrite:
-                  uri: /
+                  uri: /v1
                 route:
                   - destination:
                       host: omniroute.omniroute.svc.cluster.local
@@ -43,16 +43,23 @@ spec:
                         number: 20128
               - match:
                   - uri:
-                      prefix: /lite
+                      prefix: /lite/v1
                 rewrite:
-                  uri: /
+                  uri: /v1
                 route:
                   - destination:
                       host: litellm.litellm.svc.cluster.local
                       port:
                         number: 4000
-              - route:
+              - match:
+                  - uri:
+                      prefix: /v1
+                route:
                   - destination:
                       host: litellm.litellm.svc.cluster.local
                       port:
                         number: 4000
+              - directResponse:
+                  status: 404
+                  body:
+                    string: '{"error":"not_found"}'
