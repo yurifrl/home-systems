@@ -145,7 +145,7 @@ host-level CPU as follows:
 | containerd, /sbin/init (Talos) | ~0.33 | system daemons, not pods |
 | tail (scheduler, envoy, coredns, operator, metallb, crossplane, ...) | ~1.6 | each <0.1 cores |
 
-Sum ≈ 7.0 of 8 cores — matches the 97% load. The "unaccounted" host CPU is
+Sum ≈ 7.8 of 8 cores — matches the 97% load. The "unaccounted" host CPU is
 **tailscaled (1.2 cores) plus the Talos system daemons (init/containerd/kubelet
 at ~0.7 cores)**; all the rest is pod-metrics-visible.
 
