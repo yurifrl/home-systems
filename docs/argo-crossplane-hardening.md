@@ -128,6 +128,54 @@ Ref: https://docs.crossplane.io/latest/guides/crossplane-with-argo-cd/
       DeploymentRuntimeConfig (link 2 was silent drift; a periodic diff catches
       it).
 
+## macintel01 host-level CPU attribution (card home-systems-cex.3, 2026-08-16)
+
+The 97% reading in the postmortem is reproducible now. Read-only Talos
+diagnostics over a 221s window (load avg 28-39 on 8 CPUs) attribute the
+host-level CPU as follows:
+
+| consumer | cores | note |
+|---|---|---|
+| kube-apiserver | ~2.2 | serving all clients + etcd fanout |
+| **tailscaled** | **~1.2** | **host-level only; invisible to pod metrics** |
+| etcd | ~1.1 | raft agreement latency (see below) |
+| cilium-agent | ~0.66 | |
+| kube-controller-manager | ~0.37 | |
+| kubelet | ~0.31 | |
+| containerd, /sbin/init (Talos) | ~0.33 | system daemons, not pods |
+| tail (scheduler, envoy, coredns, operator, metallb, crossplane, ...) | ~1.6 | each <0.1 cores |
+
+Sum ≈ 7.0 of 8 cores — matches the 97% load. The "unaccounted" host CPU is
+**tailscaled (1.2 cores) plus the Talos system daemons (init/containerd/kubelet
+at ~0.7 cores)**; all the rest is pod-metrics-visible.
+
+**Root cause of tailscaled burn:** ext-tailscale logs show continuous
+connection-tracker churn against stale/unreachable peers (`derp-N does not know
+about peer [ArzyN], removing route`, `open-conn-track: timeout opening ...
+online=no, lastseen=254h`, `open-conn-track: flow TCP got RST by peer`) and
+repeated disco re-pins. The 2026-07-12 Tailscale↔Cilium endpoint-recursion
+postmortem is the same class. This is a *network health* symptom, not a sizing
+one.
+
+**etcd is latent:** `apply request took too long ... 217-315ms` warnings on
+simple reads (`agreement among raft nodes before linearized reading`),
+consistent with cross-site etcd peer links over the Tailscale mesh.
+
+### Bounded next step (no control-plane workloads added)
+
+1. **Read-only:** `talosctl -n <cp> logs ext-tailscale | grep -E
+   'derp.*removing route|open-conn-track: timeout|disco: node .* now using'` on
+   macintel01/dell01 to confirm the stale-peer churn correlates with the tailscaled
+   CPU spikes; then decide whether to flush the stale offline peers from the
+   Tailscale coord server (user action on tailnet admin console).
+2. **Later (separate card):** reduce etcd raft RTT between control-plane nodes —
+   the two members are cross-site over Tailscale; consider co-locating or adding
+   a third voter so no single site is a quorum minority. Do NOT add workloads
+   to the control plane to do this.
+
+Verified: `talosctl processes` sampled twice 221s apart; loadavg 28.46→39.34;
+etcd slow-apply warnings present. No nodes/workloads restarted or mutated.
+
 ## Status log
 
 - 2026-08-15: Incident recovered. Submodule checkout disabled for Argo repo
