@@ -39,7 +39,11 @@ spec:
           # Add a line here AND set that app's REDIS_URL to
           # redis://redis.redis.svc.cluster.local:6379/<n> when it starts
           # using Redis:
-          #   0 - litellm (router cache, rate limits, budgets)
+          #   0, 1, 2, 5 - harbor (core, jobservice, registry, trivy)
+          #   3 - n8n (Bull queue)
+          #   4 - firecrawl (queue and rate limits)
+          #   6 - happy
+          #   7 - litellm (router cache, rate limits, budgets)
           statefulSets:
             - name: redis
               replicas: 1

@@ -117,6 +117,7 @@ playwright:
   replicaCount: 1
 
 redis:
+  enabled: true
   image: redis:alpine
   replicaCount: 1
 

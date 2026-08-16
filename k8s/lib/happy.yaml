@@ -69,7 +69,7 @@ spec:
                     - name: DATABASE_URL
                       value: "postgres://happy:happy@localhost:5432/happy?sslmode=disable"
                     - name: REDIS_URL
-                      value: "redis://localhost:6379"
+                      value: "redis://redis.redis.svc.cluster.local:6379/6"
                     - name: PORT
                       value: "3005"
                     - name: S3_HOST
@@ -119,20 +119,6 @@ spec:
                     requests:
                       cpu: 100m
                       memory: 128Mi
-                - name: redis
-                  image: "redis:7-alpine"
-                  imagePullPolicy: IfNotPresent
-                  ports:
-                    - name: redis
-                      containerPort: 6379
-                      protocol: TCP
-                  resources:
-                    limits:
-                      cpu: 100m
-                      memory: 128Mi
-                    requests:
-                      cpu: 50m
-                      memory: 64Mi
                 - name: minio
                   image: "minio/minio:latest"
                   imagePullPolicy: IfNotPresent

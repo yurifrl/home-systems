@@ -36,8 +36,6 @@ spec:
               size: 500Mi
             database:
               size: 2Gi
-            redis:
-              size: 500Mi
             trivy:
               size: 2Gi
 
@@ -50,13 +48,14 @@ spec:
             username: postgres
             password: harborpassword123
 
-        # Redis with nodeSelector
         redis:
-          type: internal
-          nodeSelector:
-            kubernetes.io/arch: amd64
-          internal:
-            password: harborpassword123
+          type: external
+          external:
+            addr: redis.redis.svc.cluster.local:6379
+            coreDatabaseIndex: "0"
+            jobserviceDatabaseIndex: "1"
+            registryDatabaseIndex: "2"
+            trivyAdapterIndex: "5"
 
         # Disable unused components
         notary:

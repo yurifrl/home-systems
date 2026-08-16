@@ -36,6 +36,12 @@ spec:
           # instead of firecrawl-firecrawl-api.
           fullnameOverride: firecrawl
 
+          redis:
+            enabled: false
+          config:
+            REDIS_URL: redis://redis.redis.svc.cluster.local:6379/4
+            REDIS_RATE_LIMIT_URL: redis://redis.redis.svc.cluster.local:6379/4
+
           # Hobby / low-use sizing. Browser-side scrapes are 1-2 URLs at a
           # time, no AI extract, no full-site crawls. Trim every component to
           # the floor that still works:

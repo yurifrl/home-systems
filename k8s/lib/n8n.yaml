@@ -18,28 +18,6 @@ spec:
       - CreateNamespace=true
   sources:
     - repoURL: registry-1.docker.io
-      chart: bitnamicharts/redis
-      targetRevision: "*"
-      helm:
-        valuesObject:
-          architecture: standalone
-          auth:
-            enabled: false
-          master:
-            persistence:
-              enabled: false
-            resources:
-              requests:
-                memory: 256Mi
-                cpu: 100m
-              limits:
-                memory: 456Mi
-                cpu: 200m
-          replica:
-            replicaCount: 0
-          sentinel:
-            enabled: false
-    - repoURL: registry-1.docker.io
       chart: bitnamicharts/postgresql
       targetRevision: "*"
       helm:
@@ -100,8 +78,9 @@ spec:
                     active: true
                 bull:
                   redis:
-                    host: n8n-redis-master
+                    host: redis.redis.svc.cluster.local
                     port: 6379
+                    db: 3
             extraEnv: &extraEnv
               N8N_LOG_LEVEL:
                 value: debug
@@ -133,17 +112,4 @@ spec:
             extraEnv: *extraEnv # using YAML magic (anchors) to reference main extraEnv
 
           valkey:
-            enabled: true
-            architecture: standalone
-            sentinel:
-              enabled: false
-            auth:
-              enabled: false
-            primary:
-              kind: Deployment
-              persistence:
-                enabled: false
-              resources:
-                requests:
-                  memory: 256Mi
-                  cpu: 100m
+            enabled: false
