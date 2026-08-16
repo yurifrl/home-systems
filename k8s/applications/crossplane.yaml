@@ -40,6 +40,16 @@ spec:
         extraEnvVarsCrossplane:
           KUBERNETES_SERVICE_HOST: "192.168.68.91"
           KUBERNETES_SERVICE_PORT: "6443"
+        # rbac-manager needs the SAME two remedies as core above: its lease
+        # renewals through the flaky VIP crashed it with "leader election lost"
+        # (700+ restarts over 3 days). While it is down, new ProviderRevisions
+        # get no RBAC, which disables provider SafeStart and crashloops any
+        # provider whose MRDs are intentionally inactive (2026-08-15 incident).
+        rbacManager:
+          leaderElection: false
+        extraEnvVarsRBACManager:
+          KUBERNETES_SERVICE_HOST: "192.168.68.91"
+          KUBERNETES_SERVICE_PORT: "6443"
         # Throttle core's reconcile loop. Core (not the providers) reconciles
         # ManagedResourceDefinitions; a hot no-op loop was PUTting MRDs at ~20/s,
         # pegging the apiserver and stalling ArgoCD. Lower the global reconcile
