@@ -12,14 +12,16 @@ Action markers: `[CREATE]` `[EDIT]` `[DELETE]` `[SKIP]`. Executed items gain `�
   `kube-apiserver macintel01` at `https://100.65.212.5:6443/readyz`. Preserve
   both existing availability and two-second response-time conditions; both are
   production checks and route to Discord after 12 failed intervals.
-  → done: commit `44b43d1`; deployment pending.
+  → done: commit `44b43d1`; validated YAML. Deployment blocked in this
+  environment because neither `nix` nor `deploy-rs` is installed; deploy from
+  the NixOS management environment with `deploy .#gatus`.
 - [EDIT] `k8s/charts/support-cluster/templates/monitoring/control-plane.yaml` —
   add `environment: production` to the existing two critical control-plane
   alerts so they match the VMAlertmanager Discord route. Add
   `KubeAPIServerSlow`: `probe_duration_seconds` for the existing authenticated
   control-plane Pod LIST probe exceeds two seconds for five minutes. It is an
   actionable symptom alert; its runbook is this incident PM.
-  → done: commit `b7552553`; ArgoCD sync pending.
+  → done: commit `b7552553`; applied by VMAlert at generation 2.
 - [CREATE] P3 bead to prove the slow-API alert evaluates and routes to Discord
   without disrupting the control plane.
   → done: **home-systems-cnm.1**.
