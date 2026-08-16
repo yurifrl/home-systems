@@ -235,6 +235,21 @@ dark-metrics gap is closed. It did NOT page during this incident's ~18h window
 because that window overlapped the metrics-dark period; detection is healthy
 now.
 
+> **2026-08-16 update (verification card `home-systems-cex.4`, read-only, no
+> Discord send):** the alert is again **unable to fire**. The single
+> `argocd.rules`/`ArgoCDClusterCacheDown` rule evaluates cleanly (vmalert
+> `state=inactive`, `lastError=NONE`, DNS to vmsingle resolved after vmalert
+> moved to rpi01) — but `count(argocd_cluster_connection_status)` and
+> `count(up)` both return **empty vectors** in vmsingle. Root cause:
+> `vmsingle-vmks` PVC `pvc-563d6aa3-15bd-4ffe-861a-899e4e19ec48` is 99% full
+> (10Gi longhorn-single, 94.6M free) → vmstorage read-only → vmagent
+> remote-write rejected. Because the series is *absent* (not `0`),
+> `min(...) < 1` is vacuous and the alert stays `inactive` — blind to exactly
+> the outage it should catch. Routing to Discord is config-proven
+> (`severity=critical`+`environment=production` → `discord` receiver, labels
+> match) but no real series exists to route. Unblock = resize the vmsingle PVC
+> (card `home-systems-0o7`), then re-run the synthetic-Alertmanager POST test.
+
 ### Timeline (2026-08-12/13, GMT-0300)
 - `08-12 15:16` First `ComparisonError` recorded on `argocd` app:
   `BucketIAMMember.storage.gcp.upbound.io` conversion webhook `connection
