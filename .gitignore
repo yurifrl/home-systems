@@ -40,3 +40,7 @@ hack/obs-srt/
 
 # CI stamps build version into function zips; not committed
 functions/*/VERSION
+
+# worktrees
+.worktrees/*
+.worktrees/.gitkeep
