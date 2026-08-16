@@ -26,6 +26,8 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      affinity:
+        {{- include "hermes-agent.workdirColocationAffinity" . | nindent 8 }}
       volumes:
         - name: state
           persistentVolumeClaim:
