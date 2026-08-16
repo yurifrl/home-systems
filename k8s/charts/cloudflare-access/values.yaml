@@ -35,6 +35,11 @@ policies: []
 #         include: [ { everyone: {} } ]
 applications: []
 
+# Public AI gateway edge rules. Real host, zone, and protection values remain in
+# the private overlay. These rules bypass Cloudflare Access; LiteLLM and
+# Omniroute authenticate every request at their own API layer.
+edgeRules: []
+
 # Crossplane-managed Cloudflare DNS records (provider-cloudflare-dns).
 # Shape (real values in the private overlay):
 #   - name: <mr-name>

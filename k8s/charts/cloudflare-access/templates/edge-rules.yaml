@@ -1,0 +1,54 @@
+{{- range .Values.edgeRules }}
+{{- $edge := . }}
+---
+apiVersion: cloudflare.upjet-cloudflare.upbound.io/v1alpha1
+kind: Ruleset
+metadata:
+  name: {{ .name }}-ratelimit
+spec:
+  deletionPolicy: {{ .deletionPolicy | default "Delete" }}
+  providerConfigRef:
+    name: default
+  forProvider:
+    zoneId: {{ .zoneId | quote }}
+    name: {{ printf "%s rate limits" .name | quote }}
+    kind: zone
+    phase: http_ratelimit
+    rules:
+    {{- range .rateLimits }}
+      - action: block
+        enabled: true
+        description: {{ .description | quote }}
+        expression: {{ .expression | default (printf "(http.host eq %q and starts_with(http.request.uri.path, %q))" $edge.host .pathPrefix) | quote }}
+        ratelimit:
+          characteristics:
+            - ip.src
+            - cf.colo.id
+          period: {{ .periodSeconds }}
+          requestsPerPeriod: {{ .requestsPerPeriod }}
+          mitigationTimeout: {{ .mitigationTimeoutSeconds }}
+    {{- end }}
+---
+apiVersion: cloudflare.upjet-cloudflare.upbound.io/v1alpha1
+kind: Ruleset
+metadata:
+  name: {{ .name }}-firewall
+spec:
+  deletionPolicy: {{ .deletionPolicy | default "Delete" }}
+  providerConfigRef:
+    name: default
+  forProvider:
+    zoneId: {{ .zoneId | quote }}
+    name: {{ printf "%s firewall" .name | quote }}
+    kind: zone
+    phase: http_request_firewall_custom
+    rules:
+      - action: block
+        enabled: true
+        description: {{ printf "allow only %s-%s" .country .subdivision | quote }}
+        expression: {{ printf "(http.host eq %q and (ip.geoip.country ne %q or ip.geoip.subdivision_1_iso_code ne %q))" .host .country .subdivision | quote }}
+      - action: block
+        enabled: true
+        description: block high threat score
+        expression: {{ printf "(http.host eq %q and cf.threat_score gt %v)" .host .threatScoreBlock | quote }}
+{{- end }}
