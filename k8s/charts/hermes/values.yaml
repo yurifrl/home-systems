@@ -73,8 +73,7 @@ env:
   # the self-hosted Firecrawl deployed by k8s/applications/firecrawl.yaml.
   # Hermes prefers FIRECRAWL_API_URL over FIRECRAWL_API_KEY when both are set.
   FIRECRAWL_API_URL: http://firecrawl-api.firecrawl.svc.cluster.local:3002
-  # Inference flows through the in-cluster LiteLLM proxy (OpenAI-compatible).
-  OPENAI_BASE_URL: http://litellm.litellm.svc.cluster.local:4000/v1
+
 
 extraEnv: []
 extraEnvFrom: []
