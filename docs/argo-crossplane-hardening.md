@@ -118,12 +118,16 @@ Ref: https://docs.crossplane.io/latest/guides/crossplane-with-argo-cd/
       for `*.upbound.io` / `*.crossplane.io`) so Provider/MR health is visible
       in Argo even where diffing is excluded.
 - [ ] B4. Exclude `ProviderConfigUsage` (all provider groups) per the guide.
-- [ ] B5. Decide the exclusions end-state. Upstream guidance: broad provider
-      exclusions defeat GitOps management of MRs. Counterpoint for this
-      cluster: MRs sync via ServerSideApply and Crossplane owns reconciliation,
-      so the cost is visibility, not correctness. Either keep the broad
-      exclusion **documented as a deliberate availability trade** or narrow to
-      webhook-converted groups only. Record the decision here.
+- [x] B5. **DECIDED 2026-08-16: keep the broad `*.upbound.io` exclusion
+      permanently.** This is the deliberate Argo cluster-cache availability
+      boundary (card home-systems-cex.1). Upstream guidance warns that broad
+      provider exclusions defeat GitOps management of MRs, but for this
+      cluster MRs sync via ServerSideApply and Crossplane owns
+      reconciliation — the cost is visibility only, not correctness, and
+      visibility is to be restored by B3 health customizations, not by
+      removing the exclusion. Removal or narrowing (to webhook-converted
+      groups only, explicit per-group list) requires a future incident-grade
+      re-evaluation and B3 landed first.
 - [ ] B6. Evaluate `ARGOCD_K8S_CLIENT_QPS` (default 50 → 300) for this
       CRD-heavy cluster; watch apiserver load after (single control plane).
 
@@ -216,7 +220,8 @@ etcd slow-apply warnings present. No nodes/workloads restarted or mutated.
   server (833666ea). Stale pc01 pin removed live + ProviderRevision recreated;
   storage provider stable on dell01. MRAP activations added as workaround
   (67124422, aea72ff1). Broad `*.upbound.io` exclusion live (aea72ff1) —
-  pending B1 verification and B5 decision. Starting A1 (rbac-manager).
+  verified under B1 and confirmed as permanent deliberate policy under B5
+  (2026-08-16). Starting A1 (rbac-manager).
 - 2026-08-15 (later): A1 shipped and verified — rbac-manager rolled to a new
   pod (dell01) with LEADER_ELECTION=false + direct apiserver env; 0 restarts
   after the 767-restart loop. crossplane app Synced/Healthy.
@@ -234,3 +239,13 @@ etcd slow-apply warnings present. No nodes/workloads restarted or mutated.
   **Recommendation: keep the broad exclusion (do not remove).** If `.1`
   still wants to narrow it, restrict to webhook-converted groups only and keep
   an explicit per-group list (globs do not list narrowly).
+- 2026-08-16 (`.1` closed): **The broad `*.upbound.io` exclusion is a
+  deliberate, permanent policy — it is the Argo cluster-cache availability
+  boundary, not an incident stopgap.** A single broken Crossplane conversion
+  webhook (e.g. provider-gcp-iam with zero ready endpoints, as observed
+  2026-08-12→16) would otherwise fail the whole cluster cache and take every
+  Application to Unknown/ComparisonError (argo-cd #20828, #4155). Verified
+  under B1: the exclusion is glob-matched in deployed Argo CD v3.5.1 and
+  filters before LIST/WATCH. Do not remove or narrow it unless the B5
+  end-state decision is formally revisited, with B3 health customizations in
+  place first to compensate for the visibility loss.
