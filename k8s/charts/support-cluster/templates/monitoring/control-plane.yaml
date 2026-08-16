@@ -56,6 +56,7 @@ spec:
           for: 5m
           labels:
             severity: critical
+            environment: production
             service: control-plane
           annotations:
             summary: "Control plane is down"
@@ -66,7 +67,19 @@ spec:
           for: 5m
           labels:
             severity: critical
+            environment: production
             service: control-plane
           annotations:
             summary: "Control plane API is unreachable"
-            description: "The Kubernetes API server has been unreachable for more than 5 minutes." 
+            description: "The Kubernetes API server has been unreachable for more than 5 minutes."
+
+        - alert: KubeAPIServerSlow
+          expr: probe_duration_seconds{job="probe/monitoring/control-plane-probe"} > 2
+          for: 5m
+          labels:
+            severity: critical
+            environment: production
+            service: control-plane
+          annotations:
+            summary: "Kubernetes API server is slow"
+            description: "The authenticated control-plane Pod LIST probe has taken more than 2 seconds for 5 minutes. Check kube-apiserver CPU, request timeouts, and Crossplane finalizers. Runbook: .agents/postmortems/2026-08-16-crossplane-finalizer-retry-storm/PM.md"
