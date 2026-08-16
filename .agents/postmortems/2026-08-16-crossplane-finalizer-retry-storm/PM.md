@@ -1,6 +1,6 @@
 ---
 date: 2026-08-16
-status: draft
+status: closed
 incident_status: mitigated
 sessions:
   - 01a008a2-112d-79d3-91bb-1fcc216e16a4
