@@ -32,12 +32,21 @@ fixing the first eliminates the class.
 
 ## Placement policy
 
-The control-plane node is the most reliable node in this stretched cluster
-(same machine as the apiserver, no cross-LAN hop, first up after power events).
-**Cluster-critical singletons get pinned there, and every pin must carry a
-comment saying why.** The existing "keep providers off the control-plane" rule
-still applies to heavy LIST/watch provider runtimes — it is about apiserver
-load, not a blanket ban. First applications: crossplane-rbac-manager.
+Control-plane placement is an **exception, never a default**. It is allowed
+only for a small, bounded singleton when all four conditions hold:
+
+1. It is necessary to recover or operate the control plane itself.
+2. It has explicit CPU/memory requests **and** limits.
+3. It does not run a heavy cluster-wide LIST/WATCH/reconcile loop.
+4. Its manifest documents why it needs the control plane and the capacity risk.
+
+The node's local API path can make such a component more reliable in this
+stretched cluster, but control-plane CPU, memory, disk I/O, and network are
+finite and shared with kube-apiserver, etcd, kubelet, and CNI. Providers,
+databases, telemetry, and normal workloads stay off it. First approved
+exception: crossplane-rbac-manager (100m/256Mi request, 500m/512Mi limit),
+because it supplies provider RBAC/SafeStart and formerly crashed through the
+cross-LAN Service VIP.
 
 ## Workstreams
 

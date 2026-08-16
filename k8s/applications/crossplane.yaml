@@ -47,14 +47,16 @@ spec:
         # provider whose MRDs are intentionally inactive (2026-08-15 incident).
         rbacManager:
           leaderElection: false
-          # Pin to the control-plane node. POLICY: the control-plane node is the
-          # most reliable node in this stretched two-LAN cluster — same machine
-          # as the apiserver (no cross-LAN hop at all), first up after a power
-          # event, never drained for workload churn. Cluster-critical singletons
-          # like rbac-manager belong there; when pinning something to it, always
-          # say why in a comment like this one. (The "keep providers off the
-          # control-plane" rule elsewhere is about heavy LIST/watch provider
-          # runtimes pegging the apiserver — rbac-manager is lightweight.)
+          # Exception: pin this small, bounded singleton to the control plane.
+          # It owns provider RBAC, and losing it disables SafeStart; its former
+          # rpi01 location also reached the apiserver through the flaky two-LAN
+          # VIP. It requests 100m CPU / 256Mi and is limited to 500m / 512Mi.
+          #
+          # POLICY: control-plane placement is NEVER the default. It requires
+          # all of: control-plane recovery dependency, bounded requests/limits,
+          # no heavy cluster-wide LIST/watch/reconcile loop, and an explicit
+          # reason here. Providers, databases, telemetry, and normal workloads
+          # stay off it because they can starve apiserver/etcd CPU or I/O.
           nodeSelector:
             node-role.kubernetes.io/control-plane: ""
           tolerations:
