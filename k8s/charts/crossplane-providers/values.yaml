@@ -49,6 +49,9 @@ providers:
   # crossplane-proxmox chart to replicate the proxmox/ VM configs.
   - name: provider-proxmox-bpg
     package: xpkg.upbound.io/valkiriaaquaticamendi/provider-proxmox-bpg:v1.15.0
+    # Its controller must bootstrap through the direct apiserver path after a
+    # provider-revision recovery; the Service VIP is unreliable across LANs.
+    runtimeConfig: gcp-storage-pinned
   # Cloudflare Zero Trust (Upjet, Cloudflare TF v5). Consumed by a private app
   # to manage Access App + Service Token + Policy.
   - name: provider-cloudflare-zero
