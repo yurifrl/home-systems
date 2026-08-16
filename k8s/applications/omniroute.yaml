@@ -124,40 +124,7 @@ spec:
               podSelector:
                 app: omniroute
               policyTypes:
-                - Ingress
                 - Egress
-              ingress:
-                # From istio ingress gateway
-                - from:
-                    - namespaceSelector:
-                        matchLabels:
-                          kubernetes.io/metadata.name: istio-system
-                  ports:
-                    - protocol: TCP
-                      port: 20128
-                # From LiteLLM proxy
-                - from:
-                    - namespaceSelector:
-                        matchLabels:
-                          kubernetes.io/metadata.name: litellm
-                  ports:
-                    - protocol: TCP
-                      port: 20128
-                # From Hermes agent
-                - from:
-                    - namespaceSelector:
-                        matchLabels:
-                          kubernetes.io/metadata.name: hermes
-                  ports:
-                    - protocol: TCP
-                      port: 20128
-                # Kubelet HTTP probes originate from node LAN addresses.
-                - from:
-                    - ipBlock:
-                        cidr: 192.168.68.0/24
-                  ports:
-                    - protocol: TCP
-                      port: 20128
               egress:
                 # DNS
                 - to:
