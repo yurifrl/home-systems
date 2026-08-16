@@ -97,6 +97,56 @@ tests:
                     port:
                       number: 4000
 
+  - it: should restrict an API gateway to explicit JSON API prefixes
+    set:
+      virtualServices:
+        - name: ai-gateway
+          hosts:
+            - ai.syscd.live
+          http:
+            - match:
+                - uri:
+                    prefix: /omni/v1
+              rewrite:
+                uri: /v1
+              route:
+                - destination:
+                    host: omniroute.omniroute.svc.cluster.local
+                    port:
+                      number: 20128
+            - match:
+                - uri:
+                    prefix: /lite/v1
+              rewrite:
+                uri: /v1
+              route:
+                - destination:
+                    host: litellm.litellm.svc.cluster.local
+                    port:
+                      number: 4000
+            - match:
+                - uri:
+                    prefix: /v1
+              route:
+                - destination:
+                    host: litellm.litellm.svc.cluster.local
+                    port:
+                      number: 4000
+            - directResponse:
+                status: 404
+                body:
+                  string: '{"error":"not_found"}'
+    asserts:
+      - isKind:
+          of: VirtualService
+      - equal:
+          path: spec.http[3]
+          value:
+            directResponse:
+              status: 404
+              body:
+                string: '{"error":"not_found"}'
+
   - it: should create virtualservice with tcp configuration
     set:
       virtualServices:
