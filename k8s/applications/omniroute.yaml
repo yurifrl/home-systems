@@ -119,6 +119,43 @@ spec:
           services:
             - name: omniroute
               port: 20128
+          networkPolicies:
+            - name: omniroute
+              podSelector:
+                app: omniroute
+              policyTypes:
+                - Ingress
+                - Egress
+              ingress:
+                # From istio ingress gateway
+                - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: istio-system
+                  ports:
+                    - protocol: TCP
+                      port: 20128
+                # From LiteLLM proxy
+                - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: litellm
+                  ports:
+                    - protocol: TCP
+                      port: 20128
+              egress:
+                # DNS
+                - to:
+                    - namespaceSelector: {}
+                  ports:
+                    - protocol: UDP
+                      port: 53
+                    - protocol: TCP
+                      port: 53
+                # HTTPS to upstream providers
+                - ports:
+                    - protocol: TCP
+                      port: 443
           virtualServices:
             - name: omniroute
               hosts:
