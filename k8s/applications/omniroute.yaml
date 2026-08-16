@@ -123,6 +123,8 @@ spec:
             - name: omniroute
               hosts:
                 - omniroute.syscd.tech
+                - omniroute.syscd.live
+                - omniroute.syscd.dev
               service:
                 name: omniroute
                 namespace: omniroute
