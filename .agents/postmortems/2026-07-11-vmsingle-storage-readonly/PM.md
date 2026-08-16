@@ -1,10 +1,11 @@
 ---
 date: 2026-07-11
-status: closed
-incident_status: resolved
+status: reopened
+incident_status: mitigated
 sessions:
   - 019f538f-6c29-7410-9dfb-b151ecb16eb1
   - 019f573d-9209-70e1-b670-a8c7df841f14
+  - 01a006c5-f21e-7533-b79c-6611dbc3cd85
 components:
   - victoria-metrics
   - vmsingle
@@ -14,6 +15,8 @@ symptoms:
   - vmsingle rejecting all /api/v1/write with "storage is in read-only mode"
   - no metrics ingestion; vmalert/vmagent remote_write failing
   - disk-full alert (KubePersistentVolumeCriticalFull) never fired
+  - vmsingle 10Gi PVC at 99% used / 94.6M free, read-only again ~5 weeks after the 3Gi->10Gi expansion
+  - victoriametrics-watchdog CronJob failing every run (DNS resolution flake + "awk: cmd. line:1: Unexpected token")
 failure_mode: storage-exhaustion-readonly-self-blinded-monitoring
 affected_urls:
   - https://prometheus.syscd.live (query API; historical data only, no fresh)
@@ -22,6 +25,7 @@ memories: [vmsingle-storage-readonly-self-blinded-2026-07-11]
 supersedes: []
 related:
   - 2026-07-05-cloudflare-tunnel-quic-edge-unreachable
+  - 2026-08-16-hermes-dashboard-affinity-and-gh-multi-account
 ---
 
 # Postmortem: vmsingle storage exhausted → read-only, ingestion dead, and the disk alert was blind to it
@@ -147,6 +151,48 @@ See `FP.md` for the live ledger.
   expression. Stabilization and routing verification are tracked by
   `home-systems-el5.4`.
 
+### Recurrence (2026-08-16) — per-bead effectiveness verdict
+
+vmsingle filled again and went read-only a second time, ~5 weeks after the
+3Gi→10Gi expansion, discovered as a side-investigation of an unrelated hermes
+incident (`2026-08-16-hermes-dashboard-affinity-and-gh-multi-account`) while
+checking why `KubePodNotReady`/`KubePodCrashLooping` hadn't fired. Per prior
+follow-up:
+
+- **`home-systems-el5.1` (restore ingestion, DONE) — closed-but-ineffective
+  long-term, effective short-term.** The fresh 10Gi volume did restore
+  ingestion in July and stayed healthy for ~5 weeks; it was never meant to be
+  a permanent size fix — the headroom simply ran out again under real growth
+  (retention, cardinality, or both). Not a wasted fix, just not sized for
+  long-run growth.
+- **`home-systems-el5.3` (gatus dead-man's-switch, DONE) — status unverified
+  this incident.** Could not confirm live status from this session (the gatus
+  host was not reachable from the exec context used); this is exactly what
+  `el5.2` was supposed to close out and never did.
+- **`home-systems-el5.2` (verify gatus fires on real ingestion loss, OPEN,
+  P3) — never-done, and this recurrence is precisely the real ingestion loss
+  it should have been verified against.** This is the sharpest finding: the
+  one open verification task from the prior incident is exactly the test this
+  recurrence provides, and nobody was watching to see if gatus paged.
+- **`home-systems-el5.4` (stabilize + verify watchdog, OPEN, P2) —
+  never-done.** Checked live: `victoriametrics-watchdog` CronJob (runs every
+  1m) is still failing most runs — one clean `Completed` job followed by a
+  string of `Failed` jobs, with two distinct causes observed live: (a)
+  `curl: (6) Could not resolve host: vmsingle-vmks` (a DNS resolution flake,
+  transient — a manual `nslookup vmsingle-vmks` from a throwaway pod resolved
+  fine on retry) and (b) the same unresolved `awk: cmd. line:1: Unexpected
+  token` from the original incident. The watchdog has never been stabilized in
+  the 5 weeks since it was flagged, so it provided **zero** detection value for
+  this recurrence.
+
+**This recurrence needs something stronger than "verify the two follow-ups
+that were never verified."** Both `el5.2` and `el5.4` are now proven,
+live-observed gaps, not theoretical ones — see `FP.md` for the escalated,
+more assertive follow-up plan (larger PVC + retention-based headroom margin
+instead of a fixed multiplier, and dropping the BusyBox-incompatible watchdog
+for a runtime that actually supports the script instead of re-patching awk a
+third time).
+
 ## Dead Ends
 
 - **Restarting the vmsingle pod to "trigger" the filesystem resize backfired.**
@@ -238,3 +284,36 @@ See `FP.md` for the live ledger.
   with another BusyBox awk `Unexpected token` error.
 - `20:16` Opened `home-systems-el5.4` to stabilize the watchdog and verify its
   warning, critical, resolved, and Discord-routing behavior.
+
+### 2026-08-16 — recurrence (UTC)
+- `~08:1x` While investigating why hermes alerts were dark during an unrelated
+  incident (`2026-08-16-hermes-dashboard-affinity-and-gh-multi-account`),
+  queried `vmsingle-vmks` directly: `api/v1/status/tsdb` returned
+  `totalSeries: 0`, `api/v1/label/job/values` returned an empty list — no
+  ingestion at all, not just a hermes-specific gap.
+- `~08:2x` `kubectl logs vmsingle-vmks-...` showed the same read-only rejection
+  message as the original incident: `cannot store metrics: the storage is in
+  read-only mode`. `df -h` inside the pod confirmed `/victoria-metrics-data`
+  9.7G / 9.6G used / 94.6M free / 99% — the same 10Gi PVC from the July fix,
+  full again.
+- `~08:2x` Checked `vmalert` rule state for `KubePodNotReady`/`KubePodCrashLooping`/
+  `HermesDown`: all `inactive`/`ok` — confirmed dark for lack of data, not
+  because thresholds weren't crossed (`kube_pod_container_status_restarts_total{namespace="hermes"}`
+  returns zero series).
+- `~08:3x` Checked the `victoriametrics-watchdog` CronJob (the direct-to-
+  Alertmanager bypass from `home-systems-el5.4`, left unstabilized in July):
+  live job list showed 1 `Completed` followed by repeated `Failed` runs.
+  `kubectl logs` on the failed jobs showed two causes: `curl: (6) Could not
+  resolve host: vmsingle-vmks` (transient — manual `nslookup` from a scratch
+  pod resolved cleanly moments later) and the unresolved `awk: cmd. line:1:
+  Unexpected token` first seen in July. `el5.4` was never actually stabilized
+  in the 5 weeks since.
+- Could not verify the external gatus `VictoriaMetrics Ingestion` check's live
+  status from this session (host unreachable from the exec context used) —
+  `el5.2` (verify gatus fires on a real loss) remains genuinely unverified,
+  and this recurrence is the real-loss event it should have been tested
+  against.
+- Reopened this postmortem rather than filing a new one (same component +
+  same failure_mode = recurrence per the postmortem skill). See the
+  Recurrence section under Follow-ups for the per-bead verdict and `FP.md`
+  for the escalated plan.

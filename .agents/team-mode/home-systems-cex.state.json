@@ -1,0 +1,40 @@
+{
+ "raised": {},
+ "accomplished": [
+  {
+   "id": "home-systems-cex.3",
+   "title": "Investigate control-plane CPU load",
+   "at": "2026-08-16T06:52:50Z"
+  },
+  {
+   "id": "home-systems-cex.2",
+   "title": "Verify Argo Crossplane protections",
+   "at": "2026-08-16T06:54:54Z"
+  },
+  {
+   "id": "home-systems-cex.1",
+   "title": "Preserve verified Upbound Argo exclusion",
+   "at": "2026-08-16T06:54:30Z"
+  },
+  {
+   "id": "home-systems-cex.5",
+   "title": "Assess webhook and rbac detection",
+   "at": "2026-08-16T07:06:49Z"
+  },
+  {
+   "id": "home-systems-cex.4",
+   "title": "Verify Argo cache alert delivery",
+   "at": "2026-08-16T07:17:44Z"
+  }
+ ],
+ "epic": "home-systems-cex",
+ "session": "01a006c5-f21e-7533-b79c-6611dbc3cd85",
+ "updated": "2026-08-16T07:19:17Z",
+ "counts": {
+  "active": 0,
+  "review": 0,
+  "clarify": 0,
+  "done": 5
+ },
+ "lastLlmCheck": "2026-08-16T07:13:03Z"
+}

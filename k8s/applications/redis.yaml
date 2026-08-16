@@ -1,0 +1,75 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redis
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: redis
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          # Single shared Redis instance for every app in the cluster that
+          # wants Redis (litellm router cache/rate-limits today, more later).
+          # No auth, no clustering, no Sentinel: cluster-internal only
+          # (ClusterIP, no VirtualService), so a password buys nothing here
+          # and would just be one more secret to rotate. Keep it simple.
+          #
+          # Persistence: --appendonly yes on a Longhorn-backed PVC (defaults
+          # to the longhorn-ha StorageClass, 2 replicas) so the data survives
+          # a pod restart AND a node loss - the StatefulSet has no
+          # nodeSelector/affinity, so it can be (re)scheduled on any node.
+          #
+          # Database index registry: Redis gives 16 logical DBs (0-15) per
+          # instance via SELECT/the URL path segment. Each consumer picks an
+          # unused index below so they don't collide on the same instance.
+          # Add a line here AND set that app's REDIS_URL to
+          # redis://redis.redis.svc.cluster.local:6379/<n> when it starts
+          # using Redis:
+          #   0 - litellm (router cache, rate limits, budgets)
+          statefulSets:
+            - name: redis
+              replicas: 1
+              containers:
+                - name: redis
+                  image: redis:7-alpine
+                  args:
+                    - redis-server
+                    - --appendonly
+                    - "yes"
+                  ports:
+                    - name: redis
+                      containerPort: 6379
+                      protocol: TCP
+                  volumeMounts:
+                    - name: data
+                      mountPath: /data
+                  resources:
+                    requests:
+                      cpu: 50m
+                      memory: 64Mi
+                    limits:
+                      cpu: 500m
+                      memory: 256Mi
+              volumeClaimTemplates:
+                - name: data
+                  accessModes:
+                    - ReadWriteOnce
+                  storage: 1Gi
+          services:
+            - name: redis
+              port: 6379
+              targetPort: 6379

@@ -28,6 +28,7 @@ related:
   - 2026-07-05-cross-family-vxlan-endpoint-mesh
   - 2026-07-18-cnpg-supabase-down-no-alert
   - 2026-08-10-longhorn-daemonsets-excluded-from-dell01
+  - 2026-08-16-hermes-dashboard-affinity-and-gh-multi-account
 ---
 
 # Postmortem: hermes RWX mount blocked by Longhorn share-manager on a cross-site node

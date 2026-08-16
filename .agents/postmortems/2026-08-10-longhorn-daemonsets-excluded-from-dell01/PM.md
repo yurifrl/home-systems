@@ -27,6 +27,7 @@ supersedes: []
 related:
   - 2026-07-05-hermes-rwx-sharemanager-cross-site
   - 2026-07-13-apiserver-crd-cache-oom
+  - 2026-08-16-hermes-dashboard-affinity-and-gh-multi-account
 ---
 
 # Postmortem: Longhorn DaemonSets excluded from dell01 by stale node-isolation affinity
