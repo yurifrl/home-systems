@@ -322,6 +322,9 @@ migration:
       storageClass: ""
       accessMode: ReadWriteMany
       size: 5Gi
+    copy:
+      enabled: false
+      sourceClaimName: ""
 
 repositorySync:
   enabled: false

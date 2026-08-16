@@ -1,6 +1,6 @@
 {{- if .Values.pages.enabled }}
-{{- if not .Values.sharedStorage.workdir.enabled }}
-{{- fail "pages.enabled=true requires sharedStorage.workdir.enabled=true" }}
+{{- if not .Values.auth.gitLogin.enabled }}
+{{- fail "pages.enabled=true requires auth.gitLogin.enabled=true" }}
 {{- end }}
 {{- $name := include "hermes-agent.pagesName" . -}}
 apiVersion: apps/v1
@@ -24,22 +24,55 @@ spec:
     spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      affinity:
-        {{- include "hermes-agent.workdirColocationAffinity" . | nindent 8 }}
       volumes:
         - name: workdir
-          persistentVolumeClaim:
-            claimName: {{ include "hermes-agent.workdirClaimName" . }}
+          emptyDir: {}
+        - name: auth
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
       initContainers:
-        - name: wait-for-content
-          image: {{ .Values.pages.image }}
-          command: ["sh", "-c", "until [ -d \"$CONTENT_ROOT\" ]; do sleep 5; done"]
+        - name: git-login
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["hctl", "auth", "login"]
           env:
-            - name: CONTENT_ROOT
-              value: {{ .Values.pages.root | quote }}
+            - name: HOME
+              value: /auth
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
           volumeMounts:
+            - name: auth
+              mountPath: /auth
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+        - name: repos-clone
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - hctl
+            - repos
+            - clone
+            - --user={{ .Values.gitRepos.user }}
+            - --repos=hermes-pages
+            - --branch={{ .Values.gitRepos.branch }}
+            - --dest={{ .Values.gitRepos.mountPath }}
+          env:
+            - name: HOME
+              value: /auth
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          volumeMounts:
+            - name: auth
+              mountPath: /auth
             - name: workdir
               mountPath: {{ .Values.gitRepos.mountPath }}
+            - name: tmp
+              mountPath: /tmp
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
       containers:

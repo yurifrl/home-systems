@@ -15,3 +15,50 @@ spec:
     requests:
       storage: {{ .Values.migration.state.target.size | quote }}
 {{- end }}
+{{- if .Values.migration.state.copy.enabled }}
+{{- $source := required "migration.state.copy.sourceClaimName is required when migration.state.copy.enabled=true" .Values.migration.state.copy.sourceClaimName }}
+{{- $target := required "migration.state.target.claimName is required when migration.state.copy.enabled=true" .Values.migration.state.target.claimName }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "hermes-agent.fullname" . }}-state-migration
+  labels:
+    {{- include "hermes-agent.labels" . | nindent 4 }}
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        {{- include "hermes-agent.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: copy
+          image: busybox:1.38
+          command: ["sh", "-ec"]
+          args:
+            - |
+              test -z "$(find /target -mindepth 1 -maxdepth 1 -print -quit)" || {
+                echo "migration target is not empty; refusing to overwrite" >&2
+                exit 1
+              }
+              cp -a /source/. /target/
+          volumeMounts:
+            - name: source
+              mountPath: /source
+              readOnly: true
+            - name: target
+              mountPath: /target
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+      volumes:
+        - name: source
+          persistentVolumeClaim:
+            claimName: {{ $source }}
+        - name: target
+          persistentVolumeClaim:
+            claimName: {{ $target }}
+{{- end }}
