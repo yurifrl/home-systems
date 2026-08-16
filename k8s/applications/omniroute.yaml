@@ -143,6 +143,14 @@ spec:
                   ports:
                     - protocol: TCP
                       port: 20128
+                # From Hermes agent
+                - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: hermes
+                  ports:
+                    - protocol: TCP
+                      port: 20128
               egress:
                 # DNS
                 - to:
