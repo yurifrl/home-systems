@@ -153,18 +153,49 @@ Ref: https://docs.crossplane.io/latest/guides/crossplane-with-argo-cd/
 
 ### E. Detection (alert before "everything is Unknown")
 
-- [ ] E1. Alert: any `provider-*` webhook Service in crossplane-system with
-      zero ready EndpointSlices for >5m.
-- [ ] E2. Alert: `Provider.pkg` Healthy=False for >10m.
-- [ ] E3. Alert: crossplane / rbac-manager restart storms (restarts > 5 in 1h).
-      rbac-manager restarted 700+ times over 3 days with zero signal.
-- [ ] E4. Alert: Argo application-controller cluster cache sync failures
-      (`argocd_app_reconcile` stalls / controller log error rate).
-- [ ] E5. Dashboard/alert on apiserver conversion webhook metrics
-      (`apiserver_crd_conversion_webhook_duration_seconds` errors/latency).
-- [ ] E6. Drift check: ProviderRevision pod template vs its
-      DeploymentRuntimeConfig (link 2 was silent drift; a periodic diff catches
-      it).
+**Card home-systems-cex.5 verdict (2026-08-16):** keep `ArgoCDClusterCacheDown`
+as the **sole paging alert** for the Argo cluster-cache symptom. Do **not** add
+a new provider-webhook or rbac-manager alert unless it has a distinct,
+immediate human action and does not duplicate the page. Item-by-item:
+
+- **E1 (provider webhook zero ready endpoints) — SKIP as a page.** The
+  user-facing symptom of a dead conversion webhook is exactly what
+  `ArgoCDClusterCacheDown` catches (cache sync fails → no app reconciles). A
+  second page for the same symptom is duplicate noise. The B1 evidence proves
+  the broad `*.upbound.io` exclusion already keeps the cache up during a
+  webhook outage, so the page now only fires when the cache *actually* dies —
+  the correct, de-duplicated signal. A non-paging (warning/info) variant could
+  be considered later purely as a triage hint, but it has no distinct
+  *immediate* action beyond what the cluster-cache page already drives, so it
+  is not justified now.
+- **E2 (`Provider.pkg` Healthy=False) — SKIP as a page.** A provider being
+  unhealthy only pages-worthy when it breaks GitOps, which is again the
+  cluster-cache symptom. Otherwise it is a capacity/scheduling issue (cf. A4's
+  amd64 capacity gap), not a new human action.
+- **E3 (restart storms) — already covered by the existing
+  `KubePodCrashLooping` VMRule** (`crashloop.yaml`), which fires on ≥3 restarts
+  in 15m per pod and is grouped into a single Discord notification. A
+  crossplane/rbac-manager-specific restart alert would duplicate that existing
+  rule for the same pods. (Caveat: a *slow-burn* leak at <3 restarts/15m — e.g.
+  700 restarts spread evenly over 3 days — sits under that threshold; that is a
+  tuning question for the generic crashloop rule, not a reason to add a second,
+  overlapping rule.)
+- **E4 (controller reconcile stall / log error rate) — SKIP.** This is the same
+  cluster-cache-dead symptom measured from the controller side; paging it too
+  duplicates `ArgoCDClusterCacheDown`.
+- **E5 (apiserver conversion-webhook metrics) — SKIP as a page.** Latency/error
+  on `apiserver_crd_conversion_webhook_*` is a *cause*-side metric; the only
+  user-visible impact is the cache failing, which is already the page. No
+  distinct immediate action. A dashboard panel (non-paging) is acceptable but is
+  out of scope for this card.
+- **E6 (ProviderRevision vs DeploymentRuntimeConfig drift) — out of scope for
+  alerting.** This is a periodic/drift reconciliation task, not a page; it has
+  no paging-worthy immediacy.
+
+Net: no new paging alert is added. `ArgoCDClusterCacheDown` remains the single
+page for "GitOps is silently dead"; `KubePodCrashLooping` already covers the
+rbac-manager restart-storm class. Detection workstream items E1–E6 are
+individually SKIP/keep-non-paging as recorded above.
 
 ## macintel01 host-level CPU attribution (card home-systems-cex.3, 2026-08-16)
 
