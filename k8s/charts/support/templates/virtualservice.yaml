@@ -17,7 +17,10 @@ spec:
     - istio-system/dev
     - istio-system/cloudflare
     - istio-system/tailscale
-  {{- if .tcp }}
+  {{- if .http }}
+  http:
+    {{- toYaml .http | nindent 4 }}
+  {{- else if .tcp }}
   tcp:
     {{- toYaml .tcp | nindent 4 }}
   {{- else }}

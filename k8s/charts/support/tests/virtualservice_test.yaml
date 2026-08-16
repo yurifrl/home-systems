@@ -53,6 +53,50 @@ tests:
             - test-service.syscd.live
             - test-service.syscd.xyz
 
+  - it: should render explicitly configured HTTP routes
+    set:
+      virtualServices:
+        - name: ai-gateway
+          hosts:
+            - ai.syscd.live
+          http:
+            - match:
+                - uri:
+                    prefix: /omni
+              rewrite:
+                uri: /
+              route:
+                - destination:
+                    host: omniroute.omniroute.svc.cluster.local
+                    port:
+                      number: 20128
+            - route:
+                - destination:
+                    host: litellm.litellm.svc.cluster.local
+                    port:
+                      number: 4000
+    asserts:
+      - isKind:
+          of: VirtualService
+      - equal:
+          path: spec.http
+          value:
+            - match:
+                - uri:
+                    prefix: /omni
+              rewrite:
+                uri: /
+              route:
+                - destination:
+                    host: omniroute.omniroute.svc.cluster.local
+                    port:
+                      number: 20128
+            - route:
+                - destination:
+                    host: litellm.litellm.svc.cluster.local
+                    port:
+                      number: 4000
+
   - it: should create virtualservice with tcp configuration
     set:
       virtualServices:
