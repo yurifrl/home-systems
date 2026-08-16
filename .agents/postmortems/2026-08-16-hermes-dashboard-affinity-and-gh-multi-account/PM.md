@@ -1,7 +1,7 @@
 ---
 date: 2026-08-16
-status: draft
-incident_status: mitigated
+status: resolved
+incident_status: resolved
 sessions:
   - 01a006c5-f21e-7533-b79c-6611dbc3cd85
 components:
@@ -26,8 +26,8 @@ related:
 
 # Postmortem: hermes-dashboard missing PVC affinity + gh multi-account active-account race + stuck ArgoCD sync
 
-- **Severity/Impact:** `hermes-dashboard` was stuck `ContainerCreating` for ~33h (Longhorn Multi-Attach on the shared RWO `state-hermes-0` PVC). `hermes-repository-sync` has been `CrashLoopBackOff` for ~10h+ on a GitHub auth failure that a token rotation did not fix. An ArgoCD sync operation for the `hermes` Application was stuck `Running` for 9h, silently blocking every subsequent sync attempt (including the dashboard fix) until it was manually terminated.
-- **Root cause (one line):** `rwo-affinity-missing-plus-gh-multi-account-active-flip` — three independent faults: (1) `dashboard-deployment.yaml` was the only hermes workload sharing the RWO `state-hermes-0` PVC without the `workdirColocationAffinity` pod-affinity the other three sidecars already carry, so the scheduler could place it on a different node than `hermes-0` and hit Longhorn's RWO single-attach limit; (2) `hctl auth login` runs independently in every sidecar's init container and writes to a shared `~/.config/gh/hosts.yml` on that same PVC — whichever pod's init ran last wins "active account," and a stale `mrag23` login from an earlier token generation was still on disk and became active, so `git` operations authenticate as the wrong GitHub identity even though the current `GH_TOKEN` in the secret is valid and belongs to `yurifrl`; (3) an ArgoCD sync operation for `hermes`, started ~22:12 the previous day, never reached a terminal phase and was not cleared by `selfHeal` or manual `operation: null`/merge-patch attempts — only `argocd app terminate-op` (via `kubectl exec` into `argocd-server`) actually cancelled it.
+- **Severity/Impact:** `hermes-dashboard` was stuck `ContainerCreating` for ~33h (Longhorn Multi-Attach on the shared RWO `state-hermes-0` PVC). `hermes-repository-sync` was `CrashLoopBackOff` for ~10h+ on a GitHub authentication failure. An ArgoCD sync operation for the `hermes` Application was stuck `Running` for 9h+, silently blocking subsequent syncs. The remediation rollout temporarily blocked the agent and Pages while the bot token and stale StatefulSet pod were corrected; it closed with all Hermes workloads Running and the ArgoCD Application Synced/Healthy.
+- **Root cause (one line):** `rwo-affinity-missing-plus-gh-multi-account-active-flip` — the shared RWO state/workdir design coupled independent Hermes workloads to one node and shared a mutable GitHub CLI credential cache; a dashboard without co-location affinity hit Longhorn Multi-Attach, and concurrent `gh auth login` calls could select the wrong account. A stuck ArgoCD operation then hid the intended rollout.
 
 ## What Happened
 
@@ -96,4 +96,12 @@ If the **active** account differs from the account that owns the target private 
 - `~07:5x` Force-annotated the `ExternalSecret` to resync early (`hermes-env` resourceVersion changed, confirming the fresh 1Password value landed), deleted the crashlooping `repos-sync` pod. New pod still failed identically: `remote: Invalid username or token`.
 - `~08:0x` Pulled `$GH_TOKEN` directly from a live `hermes-0` container and queried `https://api.github.com/user` — confirmed the current token is valid and belongs to `yurifrl`. `gh auth status` inside the `repos-sync` container showed active account `mrag23`, inactive `yurifrl` — the real fault is account selection, not the token value.
 - `~08:1x` Investigating alert dark spots for this incident led to discovering `vmsingle-vmks` is in read-only mode again (documented separately as a recurrence, `2026-08-16-vmsingle-storage-readonly-recurrence`).
-- Incident left in `mitigated` state: dashboard fully resolved; repository-sync still `CrashLoopBackOff` on the gh multi-account issue, follow-up pending user confirmation on whether the `mrag23` account should still exist in the auth chain at all.
+- Incident left in `resolved` state. The dashboard and agent run from the current chart revision; Pages has an isolated `emptyDir` checkout; the ArgoCD Application is `Synced`/`Healthy`; and the new `mrag23` bot token is used for both `GH_TOKEN` and `GITHUB_TOKEN`. The unresolved infrastructure concern is External Secrets: its cert-controller continues to crashloop on `rpi01`, even though the Hermes secret refreshed successfully during this recovery.
+
+## Close-out: RWX state and disposable workdirs
+
+The durable follow-up was started with `hermes-state-rwx`: a 5Gi Longhorn `ReadWriteMany` target PVC using the existing two-replica `longhorn-ha` class. It is intentionally staged rather than switched live: current Hermes state was measured at 736Mi, and a quiesced copy must precede changing `sharedStorage.state.claimName`.
+
+`/workdir` no longer depends on `workdir-hermes-0`. The agent uses the chart's `emptyDir` workdir and non-blocking `repos-sync` sidecar; Pages receives its own `emptyDir`, isolated `/auth` credential directory, `git-login`, and `hermes-pages` clone init container. This removes the RWO Multi-Attach and shared `gh` active-account race from the workdir path. The old repository-sync Deployment is removed.
+
+During the rollout, ArgoCD applied the current StatefulSet template but left `hermes-0` on an old controller revision containing the removed `repos-clone` init container. A normal user-approved deletion remained stuck past its 120-second grace period; the user then explicitly approved force deletion. The StatefulSet immediately recreated `hermes-0` at the current revision, without that init container. The bot's classic PAT initially lacked `read:org` and access to `hermes-pages`; after the user corrected the account access and secret fields, all workloads reached Running and ArgoCD reported `Synced` and `Healthy`.
