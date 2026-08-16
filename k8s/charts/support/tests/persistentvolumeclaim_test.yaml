@@ -17,7 +17,7 @@ tests:
           value: test-pvc
       - equal:
           path: spec.storageClassName
-          value: local-path
+          value: longhorn-ha
       - equal:
           path: spec.resources.requests.storage
           value: 10Gi

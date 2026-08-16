@@ -1,0 +1,129 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: omniroute
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: omniroute
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          persistentVolumeClaims:
+            - name: omniroute-data
+              accessModes:
+                - ReadWriteOnce
+              storage: 20Gi
+              storageClassName: longhorn-single
+          externalSecrets:
+            - name: omniroute
+              key: omniroute
+          deployments:
+            - name: omniroute
+              strategy:
+                type: Recreate
+              terminationGracePeriodSeconds: 40
+              securityContext:
+                fsGroup: 1000
+                fsGroupChangePolicy: OnRootMismatch
+                seccompProfile:
+                  type: RuntimeDefault
+              volumes:
+                - name: data
+                  persistentVolumeClaim:
+                    claimName: omniroute-data
+              containers:
+                - name: omniroute
+                  image: diegosouzapw/omniroute:3.8.49@sha256:92c768c56e2de32c51a0621ef182835018b00b288c9bb235c5c5e4514658c1a1
+                  imagePullPolicy: IfNotPresent
+                  ports:
+                    - name: http
+                      containerPort: 20128
+                      protocol: TCP
+                  env:
+                    - name: AUTH_COOKIE_SECURE
+                      value: "true"
+                    - name: REQUIRE_API_KEY
+                      value: "true"
+                    - name: NEXT_PUBLIC_BASE_URL
+                      value: https://omniroute.syscd.tech
+                    - name: LIVE_WS_ALLOWED_ORIGINS
+                      value: https://omniroute.syscd.tech
+                    - name: DISABLE_SQLITE_AUTO_BACKUP
+                      value: "true"
+                    - name: OMNIROUTE_MEMORY_MB
+                      value: "1024"
+                  envFrom:
+                    - secretRef:
+                        name: omniroute
+                  volumeMounts:
+                    - name: data
+                      mountPath: /app/data
+                  readinessProbe:
+                    httpGet:
+                      path: /api/monitoring/health
+                      port: http
+                    initialDelaySeconds: 15
+                    periodSeconds: 10
+                    timeoutSeconds: 5
+                    failureThreshold: 12
+                  livenessProbe:
+                    httpGet:
+                      path: /api/monitoring/health
+                      port: http
+                    initialDelaySeconds: 45
+                    periodSeconds: 30
+                    timeoutSeconds: 5
+                  startupProbe:
+                    httpGet:
+                      path: /api/monitoring/health
+                      port: http
+                    periodSeconds: 10
+                    timeoutSeconds: 5
+                    failureThreshold: 30
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    readOnlyRootFilesystem: false
+                    capabilities:
+                      drop:
+                        - ALL
+                    runAsNonRoot: true
+                    runAsUser: 1000
+                    runAsGroup: 1000
+                    seccompProfile:
+                      type: RuntimeDefault
+                  resources:
+                    requests:
+                      cpu: 250m
+                      memory: 1Gi
+                    limits:
+                      cpu: "2"
+                      memory: 2Gi
+          services:
+            - name: omniroute
+              port: 20128
+          virtualServices:
+            - name: omniroute
+              hosts:
+                - omniroute.syscd.tech
+              service:
+                name: omniroute
+                namespace: omniroute
+                port: 20128
