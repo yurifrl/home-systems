@@ -5,6 +5,7 @@ incident_status: mitigated
 sessions:
   - 019f3230-1736-7b7d-a71d-58b37aa4133c
   - 019ff7ef-8422-75c6-a0a8-fe79d96eb26e
+  - 01a006c5-f21e-7533-b79c-6611dbc3cd85
 components:
   - argocd
   - crossplane
@@ -257,4 +258,114 @@ now.
   chart-drift diff (9.5.17 → 10.1.3) — a red herring; the `argocd` app is
   self-managed from chart `10.3.2` + the values file, so the rendered file is
   a stale artifact and was reverted.
+
+---
+
+## Recurrence — 2026-08-15 (GMT-0300)
+
+**Same component + same failure_mode.** Reopened again. The user saw Argo CD's
+`ComparisonError` for `.submodules/home-systems-values`, but the live
+application-controller was simultaneously blocked by the same storage-provider
+conversion-webhook failure. This occurrence revealed a deeper recovery
+cascade: Crossplane's rbac-manager was independently crash-looping, so a
+ProviderRevision recreation could not receive its required RBAC.
+
+### What happened this time
+
+- `provider-gcp-storage` retained a stale `kubernetes.io/hostname: pc01`
+  selector in its live ProviderRevision even after git changed its
+  DeploymentRuntimeConfig to amd64/non-control-plane placement. With pc01
+  `NotReady`, the webhook Service had zero endpoints.
+- The storage conversion call failed (`BucketIAMMember.storage.gcp.upbound.io`)
+  and Argo CD's shared cache again failed, holding the self-managed Argo CD app
+  at `Unknown/Degraded` and preventing its own fix from reconciling.
+- Recreating the ProviderRevision moved the runtime to dell01, but it initially
+  crash-looped: its logs reported missing CRD-watch RBAC and disabled
+  **SafeStart**, then failed while enumerating inactive MRDs.
+- The real blocker was `crossplane-rbac-manager`: it had restarted more than
+  700 times over three days on rpi01. Its leader-election lease calls went via
+  the unreliable `10.96.0.1` Service VIP and timed out. Without rbac-manager,
+  fresh ProviderRevisions do not get their RBAC, so SafeStart is disabled.
+
+### Mitigation applied
+
+- Disabled repo-server recursive submodule checkout (`833666ea`), eliminating
+  the optional local submodule as a manifest-generation dependency.
+- Removed the stale live pc01 selector and recreated the storage
+  ProviderRevision; its webhook endpoint returned on dell01.
+- Kept the broad Upbound resource exclusion deployed (`aea72ff1`) so Argo CD's
+  cache is insulated while a provider conversion endpoint is unavailable.
+- Configured rbac-manager like Crossplane core (`38884ab6`): leader election
+  disabled for the single replica and direct apiserver host/port, bypassing the
+  cross-LAN Service VIP. It then ran with zero restarts.
+- Pinned rbac-manager to macintel01 (`f238267c`) as a bounded control-plane
+  exception: 100m CPU / 256Mi memory request; 500m CPU / 512Mi limit. The
+  placement rule was subsequently narrowed (`a1153824`): control-plane
+  placement is never the default and requires recovery-critical purpose,
+  bounded resources, no heavy cluster-wide LIST/WATCH loop, and an explicit
+  manifest comment.
+
+### Evidence after mitigation
+
+- `crossplane-rbac-manager` rolled onto macintel01 Ready with zero restarts.
+- The storage provider Service had a ready conversion endpoint after the
+  revision recreation.
+- The `reposerver.enable.git.submodule=false` parameter became live.
+- Crossplane returned `Synced/Healthy`; the fleet resumed reconciliation.
+
+### Detection gap (still open)
+
+The symptom alert already exists: `ArgoCDClusterCacheDown` in
+`k8s/charts/support-cluster/templates/monitoring/argocd.yaml` fires when
+`argocd_cluster_connection_status` is zero for ten minutes and routes as
+critical/production to Discord. The user still discovered this occurrence
+first, so the existing verification beads `home-systems-idb.2`,
+`home-systems-gqy`, and `home-systems-meb` remain open until the metric,
+VMRule evaluation, and Discord route are proved end-to-end. No new duplicate
+alert is proposed.
+
+### Additional follow-up facts
+
+- The live Argo exclusion now uses `apiGroups: ["*.upbound.io"]` while prior
+  repository comments asserted exact-only group matching. Its behavior must be
+  verified against the deployed Argo CD version before treating it as durable
+  protection.
+- `macintel01` reported 97% CPU during recovery. Visible pod usage was led by
+  kube-apiserver (~2.6 cores), local Cilium (~0.5), and controller-manager
+  (~0.37); rbac-manager used ~9m. The remaining host-level CPU is unassigned
+  by pod metrics and requires Talos/host-level investigation before any more
+  control-plane placements are approved.
+
+### Dead ends (this recurrence)
+
+- Adding storage MRDs one at a time (`ObjectAccessControl`, `BucketIAMPolicy`)
+  treated the provider crash loop as an MRAP problem. It was a symptom: once
+  rbac-manager granted CRD-watch RBAC, SafeStart enabled and the provider
+  could start with inactive MRDs.
+- Treating the control-plane node as a broadly reliable workload destination
+  was too permissive. It is reliable for this small recovery-critical
+  singleton, but its 97% CPU rules out adding heavy workloads there.
+- A direct merge patch initially preserved the obsolete `pc01` map key; the
+  exact JSON Patch removal was required before revision recreation could use
+  the corrected placement.
+
+### Timeline (2026-08-15, GMT-0300)
+
+- `15:55` User reports Argo CD target-state generation failure: recursive
+  submodule checkout cannot find the home-systems-values revision.
+- `~16:00` Git inspection confirms the optional SSH submodule; repo-server
+  submodule checkout is identified as unnecessary for Argo manifests.
+- `~16:20` Live Argo CD also reports the storage conversion webhook connection
+  refused; storage provider pod is Pending with zero Service endpoints because
+  its live revision still selects pc01.
+- `~16:30` Runtime config is corrected live; stale ProviderRevision is
+  recreated, moving storage webhook runtime to dell01.
+- `~16:45` Provider crash loop exposes missing SafeStart/RBAC; rbac-manager
+  is found crash-looping on Service-VIP leader-election timeouts.
+- `~17:00` Argo application-controller cache is rebuilt after the webhook
+  endpoint returns; repo-server submodule exclusion reaches live config.
+- `~18:00` rbac-manager is changed through GitOps to bypass the Service VIP
+  and disable needless single-replica leader election; it stabilizes.
+- `~18:30` rbac-manager is moved to macintel01 under the bounded
+  control-plane-exception policy; it is Ready with zero restarts.
 
