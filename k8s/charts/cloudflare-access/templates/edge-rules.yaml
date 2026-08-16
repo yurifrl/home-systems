@@ -45,8 +45,8 @@ spec:
     rules:
       - action: block
         enabled: true
-        description: {{ printf "allow only %s-%s" .country .subdivision | quote }}
-        expression: {{ printf "(http.host eq %q and (ip.geoip.country ne %q or ip.geoip.subdivision_1_iso_code ne %q))" .host .country .subdivision | quote }}
+        description: {{ if .subdivision }}{{ printf "allow only %s-%s" .country .subdivision | quote }}{{ else }}{{ printf "allow only %s" .country | quote }}{{ end }}
+        expression: {{ if .subdivision }}{{ printf "(http.host eq %q and (ip.geoip.country ne %q or ip.geoip.subdivision_1_iso_code ne %q))" .host .country .subdivision | quote }}{{ else }}{{ printf "(http.host eq %q and ip.geoip.country ne %q)" .host .country | quote }}{{ end }}
       - action: block
         enabled: true
         description: block high threat score
