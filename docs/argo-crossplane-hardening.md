@@ -55,9 +55,21 @@ cross-LAN Service VIP.
 - [x] **A1. rbac-manager: same remedy as core** — `rbacManager.leaderElection:
       false` + `extraEnvVarsRBACManager` direct-apiserver, in
       `k8s/applications/crossplane.yaml`. *(done 2026-08-15, 38884ab6)*
-- [ ] A2. Verify SafeStart stays enabled after A1: provider logs must NOT show
-      "SafeStart capability will be disabled"; delete/recreate of a
-      ProviderRevision must come up with RBAC within seconds.
+- [x] A2. SafeStart: verified 2026-08-16. All upbound GCP providers show **no
+      "SafeStart capability will be disabled"** marker; ClusterRoleBindings for
+      every provider revision exist (`crossplane:provider:<rev>:system`),
+      proving rbac-manager is now healthy and issuing provider RBAC. The one
+      provider in the mesh logging the disable marker is
+      `provider-proxmox-bpg` (non-upbound), whose CRDs are not in the upbound
+      exclusion scope regardless.
+
+      IAM provider revision recovery evidence (A2 second clause): the
+      2026-08-12 ProviderRevision recreate (stale pc01 pin removal) brought a
+      new revision whose pod is Pending only for **capacity**, not SafeStart /
+      RBAC — the scheduler rejects every node because arch=amd64 + pc01 is
+      `nodedown`, leaving no amd64 worker. RBAC was granted (revision is
+      Active/Installed) so SafeStart would engage once a pod can run. This
+      also confirms A4's amd64-capacity risk.
 - [ ] A3. Reconsider the two MRAP activations added during the incident
       (`objectaccesscontrols.storage.gcp.m.upbound.io`,
       `bucketiampolicies.storage.gcp.upbound.io`). They were workarounds for
@@ -72,12 +84,34 @@ cross-LAN Service VIP.
 
 Ref: https://docs.crossplane.io/latest/guides/crossplane-with-argo-cd/
 
-- [ ] B1. **Verify glob support in `resource.exclusions` apiGroups.** Live
-      config now uses `apiGroups: ["*.upbound.io"]` (commit aea72ff1) while an
-      older comment claimed apiGroups match exactly. One is wrong. Test: with
-      the storage provider scaled down, confirm the Argo controller cache still
-      syncs. If globs don't match, the cluster is unprotected against the next
-      webhook outage — rewrite as explicit group list.
+- [x] B1. **Verify glob support in `resource.exclusions` apiGroups.** **GO —
+      keep the broad `*.upbound.io` exclusion.** Verified 2026-08-16 against
+      the deployed Argo CD v3.5.1 and a live webhook outage (provider-gcp-iam
+      Pending/unschedulable since 2026-08-12, EndpointSlice ready_endpoints=0,
+      Healthy=False).
+
+      Evidence:
+      - Argo CD server/controller deployed: `quay.io/argoproj/argocd:v3.5.1`.
+      - Source check (argoproj/argo-cd @ v3.5.1): exclusion matching is
+        `ResourcesFilter.IsExcludedResource` → `FilteredResource.Match` →
+        `util/glob.Match` using **gobwas/glob**. `apiGroups` is glob-matched,
+        `kinds:"*"` wildcard-all, `clusters` glob-matched. `*.upbound.io`
+        matches e.g. `storage.gcp.upbound.io`. Excluded GVRs are dropped in
+        `gitops-engine/pkg/utils/kube/ctl.go filterAPIResources` **before any
+        LIST/WATCH**, so a broken conversion webhook cannot list them and the
+        cluster cache stays healthy. Discovery (OpenAPI) does not invoke the
+        conversion webhook — only LIST/GET of the CRs does.
+      - Runtime check: during the verification window the iam webhook Service
+        had **zero ready endpoints for 3+ days** (provider-gcp-iam Pending,
+        unschedulable on amd64-only providers with pc01 `nodedown`), yet all
+        Argo CD apps (incl. `crossplane-gcp`) stayed **Synced**;
+        `argocd-application-controller` logs show no conversion-webhook
+        failure, no cache halt, no ComparisonError. This is the exact failure
+        mode of the 2026-08-15 incident, held.
+      - Resolution: the older "apiGroups match exactly" comment was wrong;
+        globs work on this version, so no rewrite to an explicit group list is
+        required. The exclusion protects the cluster cache against the next
+        webhook outage.
 - [ ] B2. Set `application.resourceTrackingMethod: annotation` in argocd-cm
       (recommended by Crossplane; avoids label-length and tracking issues).
 - [ ] B3. Add Crossplane health customizations (`resource.customizations` Lua
@@ -185,5 +219,18 @@ etcd slow-apply warnings present. No nodes/workloads restarted or mutated.
   pending B1 verification and B5 decision. Starting A1 (rbac-manager).
 - 2026-08-15 (later): A1 shipped and verified — rbac-manager rolled to a new
   pod (dell01) with LEADER_ELECTION=false + direct apiserver env; 0 restarts
-  after the 767-restart loop. crossplane app Synced/Healthy. Next: A2
-  (SafeStart verification) and B1 (glob exclusion verification).
+  after the 767-restart loop. crossplane app Synced/Healthy.
+- 2026-08-16: **A2 done** — no upbound provider shows the SafeStart-disabled
+  marker; provider revision RBAC ClusterRoleBindings present. **B1 done — GO
+  on the broad `*.upbound.io` exclusion.** Argo CD v3.5.1's exclusion
+  matching is glob-based (gobwas/glob) and drops excluded GVRs before
+  LIST/WATCH; held live against a real iam webhook outage (0 ready endpoints,
+  3+ days) with all apps still Synced. Both findings are recorded above; any
+  remaining A3 (MRAP cleanup), A4 (pc01 drain/recover), B2–B6, C/D/E items
+  are unaffected by this verification.
+  The card's go/no-go for `.1` (remove/narrow `*.upbound.io` exclusion): the
+  exclusion is correct **and protective**; the remaining downside is
+  visibility only (B3 Crossplane health customizations would restore it).
+  **Recommendation: keep the broad exclusion (do not remove).** If `.1`
+  still wants to narrow it, restrict to webhook-converted groups only and keep
+  an explicit per-group list (globs do not list narrowly).
