@@ -34,9 +34,9 @@ fixing the first eliminates the class.
 
 ### A. Crossplane core reliability
 
-- [ ] **A1. rbac-manager: same remedy as core** — `rbacManager.leaderElection:
+- [x] **A1. rbac-manager: same remedy as core** — `rbacManager.leaderElection:
       false` + `extraEnvVarsRBACManager` direct-apiserver, in
-      `k8s/applications/crossplane.yaml`. *(in progress, this session)*
+      `k8s/applications/crossplane.yaml`. *(done 2026-08-15, 38884ab6)*
 - [ ] A2. Verify SafeStart stays enabled after A1: provider logs must NOT show
       "SafeStart capability will be disabled"; delete/recreate of a
       ProviderRevision must come up with RBAC within seconds.
@@ -117,3 +117,7 @@ Ref: https://docs.crossplane.io/latest/guides/crossplane-with-argo-cd/
   storage provider stable on dell01. MRAP activations added as workaround
   (67124422, aea72ff1). Broad `*.upbound.io` exclusion live (aea72ff1) —
   pending B1 verification and B5 decision. Starting A1 (rbac-manager).
+- 2026-08-15 (later): A1 shipped and verified — rbac-manager rolled to a new
+  pod (dell01) with LEADER_ELECTION=false + direct apiserver env; 0 restarts
+  after the 767-restart loop. crossplane app Synced/Healthy. Next: A2
+  (SafeStart verification) and B1 (glob exclusion verification).
