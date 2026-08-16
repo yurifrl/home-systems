@@ -82,7 +82,7 @@ spec:
                       port: http
                     initialDelaySeconds: 15
                     periodSeconds: 10
-                    timeoutSeconds: 5
+                    timeoutSeconds: 15
                     failureThreshold: 12
                   livenessProbe:
                     httpGet:
@@ -90,14 +90,14 @@ spec:
                       port: http
                     initialDelaySeconds: 45
                     periodSeconds: 30
-                    timeoutSeconds: 5
+                    timeoutSeconds: 15
                   startupProbe:
                     httpGet:
                       path: /api/monitoring/health
                       port: http
                     periodSeconds: 10
-                    timeoutSeconds: 5
-                    failureThreshold: 30
+                    timeoutSeconds: 15
+                    failureThreshold: 60
                   securityContext:
                     allowPrivilegeEscalation: false
                     readOnlyRootFilesystem: false
