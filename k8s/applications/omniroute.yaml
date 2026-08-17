@@ -26,11 +26,6 @@ spec:
       helm:
         valuesObject:
           persistentVolumeClaims:
-            - name: omniroute-data
-              accessModes:
-                - ReadWriteOnce
-              storage: 20Gi
-              storageClassName: longhorn-single
             - name: omniroute-data-v2
               accessModes:
                 - ReadWriteOnce
