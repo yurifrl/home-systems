@@ -52,7 +52,47 @@ spec:
               volumes:
                 - name: data
                   persistentVolumeClaim:
+                    claimName: omniroute-data-v2
+                - name: migration-source
+                  persistentVolumeClaim:
                     claimName: omniroute-data
+                    readOnly: true
+              initContainers:
+                - name: migrate-data-to-v2
+                  image: diegosouzapw/omniroute:3.8.49@sha256:92c768c56e2de32c51a0621ef182835018b00b288c9bb235c5c5e4514658c1a1
+                  imagePullPolicy: IfNotPresent
+                  command:
+                    - sh
+                    - -ec
+                    - |
+                      marker=/app/data/.omniroute-volume-migrated-v1
+                      if [ -e "$marker" ]; then
+                        exit 0
+                      fi
+                      test -f /source/storage.sqlite
+                      for path in /source/* /source/.[!.]* /source/..?*; do
+                        [ -e "$path" ] || continue
+                        [ "${path##*/}" = lost+found ] && continue
+                        cp -a "$path" /app/data/
+                      done
+                      touch "$marker"
+                  volumeMounts:
+                    - name: migration-source
+                      mountPath: /source
+                      readOnly: true
+                    - name: data
+                      mountPath: /app/data
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                        - ALL
+                    readOnlyRootFilesystem: false
+                    runAsNonRoot: true
+                    runAsUser: 1000
+                    runAsGroup: 1000
+                    seccompProfile:
+                      type: RuntimeDefault
               containers:
                 - name: omniroute
                   image: diegosouzapw/omniroute:3.8.49@sha256:92c768c56e2de32c51a0621ef182835018b00b288c9bb235c5c5e4514658c1a1
