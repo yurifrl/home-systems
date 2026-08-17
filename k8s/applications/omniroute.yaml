@@ -32,6 +32,11 @@ spec:
                 - ReadWriteOnce
               storage: 20Gi
               storageClassName: longhorn-single
+            - name: omniroute-data-v2
+              accessModes:
+                - ReadWriteOnce
+              storage: 3Gi
+              storageClassName: longhorn-single
           externalSecrets:
             - name: omniroute
               key: omniroute
