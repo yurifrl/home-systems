@@ -1,3 +1,4 @@
+# helm template
 {{- if .Values.pages.enabled }}
 {{- if not .Values.auth.gitLogin.enabled }}
 {{- fail "pages.enabled=true requires auth.gitLogin.enabled=true" }}
@@ -19,6 +20,8 @@ spec:
       app: {{ $name }}
   template:
     metadata:
+      annotations:
+        rollme: "1"
       labels:
         app: {{ $name }}
     spec:
