@@ -25,11 +25,6 @@ nostos/state/
 .beads/interactions.jsonl
 
 /.crew/
-/.crew
-!.crew/artifacts/
-!.crew/graphs/
-!.crew/artifacts/.gitkeep
-!.crew/graphs/.gitkeep
 # python bytecode
 __pycache__/
 *.pyc
