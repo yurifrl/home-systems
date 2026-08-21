@@ -280,9 +280,13 @@ def _sync_one(repo_dir: str) -> None:
 
 
 def _sync_pass(root: str) -> None:
-    """One full pass over every repo under <root>. Stops on first failure."""
+    """One full pass over every repo under <root>. Skips broken repos."""
     for name in _list_repos(root):
-        _sync_one(os.path.join(root, name))
+        repo_dir = os.path.join(root, name)
+        try:
+            _sync_one(repo_dir)
+        except (RuntimeError, subprocess.CalledProcessError) as e:
+            _err(f"repos sync: skipping {name}: {e}")
 
 
 def _clone_missing(root: str, user: str, repos_spec: str, default_branch: str) -> None:
@@ -309,7 +313,13 @@ def _clone_missing(root: str, user: str, repos_spec: str, default_branch: str) -
         name, branch, url = item
         target = os.path.join(root, name)
         _log(f"repos sync: cloning missing {url} -> {target} (branch: {branch})")
-        _run(["git", "clone", "--branch", branch, url, target])
+        try:
+            _run(["git", "clone", "--branch", branch, url, target])
+        except subprocess.CalledProcessError:
+            # Remove partial clone so it doesn't poison _sync_pass.
+            import shutil as _shutil
+            _shutil.rmtree(target, ignore_errors=True)
+            raise
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(missing)) as pool:
         futs = {pool.submit(_do_clone, m): m[0] for m in missing}
@@ -350,11 +360,7 @@ def cmd_repos_sync(args) -> int:
         # Clone any missing repos before syncing.
         if user and repos_spec:
             _clone_missing(root, user, repos_spec, default_branch)
-        try:
-            _sync_pass(root)
-        except RuntimeError as e:
-            _err(f"repos sync: {e}")
-            return 1
+        _sync_pass(root)
         # Sleep in 1s slices so SIGTERM is responsive.
         for _ in range(interval_s):
             if stop["flag"]:
@@ -363,11 +369,7 @@ def cmd_repos_sync(args) -> int:
 
     # Final pass on the way out.
     _log("repos sync: final pass before exit")
-    try:
-        _sync_pass(root)
-    except RuntimeError as e:
-        _err(f"repos sync: final pass failed: {e}")
-        return 1
+    _sync_pass(root)
     return 0
 
 
