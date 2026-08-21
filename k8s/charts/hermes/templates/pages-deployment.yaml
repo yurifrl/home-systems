@@ -19,6 +19,8 @@ spec:
       app: {{ $name }}
   template:
     metadata:
+      annotations:
+        rollme: {{ .Values.pages.restartChecksum | default "0" | quote }}
       labels:
         app: {{ $name }}
     spec:
