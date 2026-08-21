@@ -339,7 +339,7 @@ spec:
         {{- if .Values.pages.enabled }}
         - name: hermes-pages
           image: {{ .Values.pages.image }}
-          command: ["httpd", "-f", "-v", "-p", {{ .Values.pages.port | quote }}, "-h", {{ .Values.pages.root | quote }}]
+          command: ["/bin/sh", "-c", "while [ ! -d '{{ .Values.pages.root }}' ]; do echo 'waiting for {{ .Values.pages.root }}'; sleep 5; done; exec httpd -f -v -p {{ .Values.pages.port }} -h '{{ .Values.pages.root }}'"]
           ports:
             - name: pages
               containerPort: {{ .Values.pages.port }}
