@@ -352,6 +352,37 @@ spec:
           resources:
             {{- toYaml .Values.pages.resources | nindent 12 }}
         {{- end }}
+        {{- if .Values.memoryBackup.enabled }}
+        - name: memory-backup
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - hctl
+            - backup
+            - --user={{ .Values.memoryBackup.user }}
+            - --repo={{ .Values.memoryBackup.repo }}
+            - --branch={{ .Values.memoryBackup.branch }}
+            - --home={{ .Values.persistence.mountPath }}
+            - --dest={{ .Values.memoryBackup.dest }}
+            - --interval={{ .Values.memoryBackup.interval }}
+          env:
+            - name: HOME
+              value: {{ printf "%s/home" .Values.persistence.mountPath | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          volumeMounts:
+            - name: {{ $dataVolumeName }}
+              mountPath: {{ .Values.persistence.mountPath }}
+            - name: backup
+              mountPath: {{ .Values.memoryBackup.dest }}
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.memoryBackup.resources | nindent 12 }}
+        {{- end }}
         {{- if .Values.gitRepos.enabled }}
         - name: repos-sync
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -406,6 +437,10 @@ spec:
             name: {{ $bootstrapConfigMapName }}
         - name: tmp
           emptyDir: {}
+        {{- if .Values.memoryBackup.enabled }}
+        - name: backup
+          emptyDir: {}
+        {{- end }}
         {{- if .Values.browser.shm.enabled }}
         - name: dshm
           emptyDir:
