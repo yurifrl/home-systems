@@ -53,6 +53,7 @@ All subcommands are stdlib-only — the image base has python3, git, gh.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import datetime
 import json
 import os
@@ -285,8 +286,13 @@ def _sync_pass(root: str) -> None:
 
 
 def _clone_missing(root: str, user: str, repos_spec: str, default_branch: str) -> None:
-    """Clone any repos from the spec that don't yet exist under root."""
+    """Clone any repos from the spec that don't yet exist under root.
+
+    Clones run in parallel threads so a slow repo (e.g. large Obsidian vault)
+    does not block faster repos from becoming available.
+    """
     os.makedirs(root, exist_ok=True)
+    missing: list[tuple[str, str, str]] = []  # (name, branch, url)
     for spec in _parse_repos(repos_spec):
         name, branch = _parse_repo_spec(spec)
         branch = branch or default_branch
@@ -294,8 +300,26 @@ def _clone_missing(root: str, user: str, repos_spec: str, default_branch: str) -
         if os.path.isdir(os.path.join(target, ".git")):
             continue
         url = f"https://github.com/{user}/{name}.git"
+        missing.append((name, branch, url))
+
+    if not missing:
+        return
+
+    def _do_clone(item: tuple[str, str, str]) -> None:
+        name, branch, url = item
+        target = os.path.join(root, name)
         _log(f"repos sync: cloning missing {url} -> {target} (branch: {branch})")
         _run(["git", "clone", "--branch", branch, url, target])
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(missing)) as pool:
+        futs = {pool.submit(_do_clone, m): m[0] for m in missing}
+        for fut in concurrent.futures.as_completed(futs):
+            name = futs[fut]
+            try:
+                fut.result()
+                _log(f"repos sync: cloned {name}")
+            except Exception as e:
+                _err(f"repos sync: failed to clone {name}: {e}")
 
 
 def cmd_repos_sync(args) -> int:
