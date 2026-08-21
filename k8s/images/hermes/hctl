@@ -284,11 +284,34 @@ def _sync_pass(root: str) -> None:
         _sync_one(os.path.join(root, name))
 
 
+def _clone_missing(root: str, user: str, repos_spec: str, default_branch: str) -> None:
+    """Clone any repos from the spec that don't yet exist under root."""
+    os.makedirs(root, exist_ok=True)
+    for spec in _parse_repos(repos_spec):
+        name, branch = _parse_repo_spec(spec)
+        branch = branch or default_branch
+        target = os.path.join(root, name)
+        if os.path.isdir(os.path.join(target, ".git")):
+            continue
+        url = f"https://github.com/{user}/{name}.git"
+        _log(f"repos sync: cloning missing {url} -> {target} (branch: {branch})")
+        _run(["git", "clone", "--branch", branch, url, target])
+
+
 def cmd_repos_sync(args) -> int:
-    """Periodic + on-exit commit+push loop. SIGTERM/SIGINT runs final pass."""
+    """Periodic + on-exit commit+push loop. SIGTERM/SIGINT runs final pass.
+
+    When --user and --repos are given, each cycle begins by cloning any repos
+    not yet present under --dir (non-blocking, sequential per missing repo).
+    """
     root = args.dir
     interval_s = _parse_duration(args.interval)
+    user = getattr(args, 'user', None) or ""
+    repos_spec = getattr(args, 'repos', None) or ""
+    default_branch = getattr(args, 'branch', 'main') or 'main'
     _log(f"repos sync: dir={root} interval={interval_s}s")
+    if user and repos_spec:
+        _log(f"repos sync: will clone missing repos for {user}: {repos_spec}")
 
     stop = {"flag": False}
 
@@ -300,6 +323,9 @@ def cmd_repos_sync(args) -> int:
     signal.signal(signal.SIGINT, _handler)
 
     while not stop["flag"]:
+        # Clone any missing repos before syncing.
+        if user and repos_spec:
+            _clone_missing(root, user, repos_spec, default_branch)
         try:
             _sync_pass(root)
         except RuntimeError as e:
@@ -893,6 +919,9 @@ def _build_parser() -> argparse.ArgumentParser:
     rs = repos.add_parser("sync", help="periodic + on-exit pull/commit/push loop")
     rs.add_argument("--dir", default="/workdir", help="root containing one repo per child dir")
     rs.add_argument("--interval", default="1h", help="duration between cycles (e.g. 30s, 5m, 1h)")
+    rs.add_argument("--user", default="", help="github user/org for cloning missing repos")
+    rs.add_argument("--repos", default="", help="comma-separated repos to ensure are cloned each cycle")
+    rs.add_argument("--branch", default="main", help="default branch for cloning (default: main)")
     rs.set_defaults(func=cmd_repos_sync)
 
     # backup / restore
