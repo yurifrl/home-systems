@@ -1,0 +1,1117 @@
+{
+  "communities": {
+    "0": [
+      "argumentparser",
+      "completedprocess",
+      "exception",
+      "k8s_images_hermes_hctl",
+      "k8s_images_hermes_hctl_age",
+      "k8s_images_hermes_hctl_backup_pass",
+      "k8s_images_hermes_hctl_build_incident_prompt",
+      "k8s_images_hermes_hctl_build_parser",
+      "k8s_images_hermes_hctl_capture",
+      "k8s_images_hermes_hctl_cmd_auth_login",
+      "k8s_images_hermes_hctl_cmd_backup",
+      "k8s_images_hermes_hctl_cmd_backup_now",
+      "k8s_images_hermes_hctl_cmd_bash",
+      "k8s_images_hermes_hctl_cmd_doctor",
+      "k8s_images_hermes_hctl_cmd_exec",
+      "k8s_images_hermes_hctl_cmd_refresh",
+      "k8s_images_hermes_hctl_cmd_repos_clone",
+      "k8s_images_hermes_hctl_cmd_repos_sync",
+      "k8s_images_hermes_hctl_cmd_restore",
+      "k8s_images_hermes_hctl_cmd_status",
+      "k8s_images_hermes_hctl_diagnostics_text",
+      "k8s_images_hermes_hctl_env",
+      "k8s_images_hermes_hctl_err",
+      "k8s_images_hermes_hctl_failing_containers",
+      "k8s_images_hermes_hctl_git_recent",
+      "k8s_images_hermes_hctl_list_repos",
+      "k8s_images_hermes_hctl_log",
+      "k8s_images_hermes_hctl_main",
+      "k8s_images_hermes_hctl_mirror_allowlist",
+      "k8s_images_hermes_hctl_open_pi",
+      "k8s_images_hermes_hctl_parse_duration",
+      "k8s_images_hermes_hctl_parse_repo_spec",
+      "k8s_images_hermes_hctl_parse_repos",
+      "k8s_images_hermes_hctl_pod_logs",
+      "k8s_images_hermes_hctl_pod_summary",
+      "k8s_images_hermes_hctl_rationale_107",
+      "k8s_images_hermes_hctl_rationale_148",
+      "k8s_images_hermes_hctl_rationale_156",
+      "k8s_images_hermes_hctl_rationale_172",
+      "k8s_images_hermes_hctl_rationale_208",
+      "k8s_images_hermes_hctl_rationale_224",
+      "k8s_images_hermes_hctl_rationale_282",
+      "k8s_images_hermes_hctl_rationale_288",
+      "k8s_images_hermes_hctl_rationale_347",
+      "k8s_images_hermes_hctl_rationale_363",
+      "k8s_images_hermes_hctl_rationale_398",
+      "k8s_images_hermes_hctl_rationale_454",
+      "k8s_images_hermes_hctl_rationale_508",
+      "k8s_images_hermes_hctl_rationale_516",
+      "k8s_images_hermes_hctl_rationale_525",
+      "k8s_images_hermes_hctl_rationale_542",
+      "k8s_images_hermes_hctl_rationale_565",
+      "k8s_images_hermes_hctl_rationale_578",
+      "k8s_images_hermes_hctl_rationale_640",
+      "k8s_images_hermes_hctl_rationale_656",
+      "k8s_images_hermes_hctl_rationale_662",
+      "k8s_images_hermes_hctl_rationale_668",
+      "k8s_images_hermes_hctl_rationale_688",
+      "k8s_images_hermes_hctl_rationale_716",
+      "k8s_images_hermes_hctl_rationale_722",
+      "k8s_images_hermes_hctl_rationale_77",
+      "k8s_images_hermes_hctl_rationale_770",
+      "k8s_images_hermes_hctl_rationale_834",
+      "k8s_images_hermes_hctl_rationale_86",
+      "k8s_images_hermes_hctl_reconcile_branch",
+      "k8s_images_hermes_hctl_run",
+      "k8s_images_hermes_hctl_scan_pods",
+      "k8s_images_hermes_hctl_stopsignal",
+      "k8s_images_hermes_hctl_sync_one",
+      "k8s_images_hermes_hctl_sync_pass",
+      "k8s_images_hermes_hctl_write_backup_gitignore"
+    ],
+    "1": [
+      "k8s_charts_hermes_values_schema_annotations_type",
+      "k8s_charts_hermes_values_schema_creationpolicy_minlength",
+      "k8s_charts_hermes_values_schema_creationpolicy_type",
+      "k8s_charts_hermes_values_schema_data_items",
+      "k8s_charts_hermes_values_schema_data_type",
+      "k8s_charts_hermes_values_schema_datafrom_items",
+      "k8s_charts_hermes_values_schema_datafrom_type",
+      "k8s_charts_hermes_values_schema_deletionpolicy_minlength",
+      "k8s_charts_hermes_values_schema_deletionpolicy_type",
+      "k8s_charts_hermes_values_schema_externalsecret_properties",
+      "k8s_charts_hermes_values_schema_externalsecret_type",
+      "k8s_charts_hermes_values_schema_kind_minlength",
+      "k8s_charts_hermes_values_schema_kind_type",
+      "k8s_charts_hermes_values_schema_name_pattern",
+      "k8s_charts_hermes_values_schema_name_type",
+      "k8s_charts_hermes_values_schema_properties_annotations",
+      "k8s_charts_hermes_values_schema_properties_creationpolicy",
+      "k8s_charts_hermes_values_schema_properties_data",
+      "k8s_charts_hermes_values_schema_properties_datafrom",
+      "k8s_charts_hermes_values_schema_properties_deletionpolicy",
+      "k8s_charts_hermes_values_schema_properties_externalsecret",
+      "k8s_charts_hermes_values_schema_properties_kind",
+      "k8s_charts_hermes_values_schema_properties_name",
+      "k8s_charts_hermes_values_schema_properties_refreshinterval",
+      "k8s_charts_hermes_values_schema_properties_secretstoreref",
+      "k8s_charts_hermes_values_schema_properties_target",
+      "k8s_charts_hermes_values_schema_properties_template",
+      "k8s_charts_hermes_values_schema_refreshinterval_minlength",
+      "k8s_charts_hermes_values_schema_refreshinterval_type",
+      "k8s_charts_hermes_values_schema_secretstoreref_properties",
+      "k8s_charts_hermes_values_schema_secretstoreref_type",
+      "k8s_charts_hermes_values_schema_target_properties",
+      "k8s_charts_hermes_values_schema_target_type",
+      "k8s_charts_hermes_values_schema_template_properties",
+      "k8s_charts_hermes_values_schema_template_type"
+    ],
+    "2": [
+      "k8s_charts_hermes_values_schema",
+      "k8s_charts_hermes_values_schema_allof",
+      "k8s_charts_hermes_values_schema_appprotocol_minlength",
+      "k8s_charts_hermes_values_schema_appprotocol_type",
+      "k8s_charts_hermes_values_schema_containerport_ref",
+      "k8s_charts_hermes_values_schema_definitions",
+      "k8s_charts_hermes_values_schema_definitions_portnumber",
+      "k8s_charts_hermes_values_schema_definitions_serviceport",
+      "k8s_charts_hermes_values_schema_nodeport_maximum",
+      "k8s_charts_hermes_values_schema_nodeport_minimum",
+      "k8s_charts_hermes_values_schema_nodeport_type",
+      "k8s_charts_hermes_values_schema_portnumber_maximum",
+      "k8s_charts_hermes_values_schema_portnumber_minimum",
+      "k8s_charts_hermes_values_schema_portnumber_type",
+      "k8s_charts_hermes_values_schema_properties_appprotocol",
+      "k8s_charts_hermes_values_schema_properties_containerport",
+      "k8s_charts_hermes_values_schema_properties_nodeport",
+      "k8s_charts_hermes_values_schema_properties_protocol",
+      "k8s_charts_hermes_values_schema_properties_targetport",
+      "k8s_charts_hermes_values_schema_protocol_enum",
+      "k8s_charts_hermes_values_schema_protocol_type",
+      "k8s_charts_hermes_values_schema_schema",
+      "k8s_charts_hermes_values_schema_serviceport_properties",
+      "k8s_charts_hermes_values_schema_serviceport_required",
+      "k8s_charts_hermes_values_schema_serviceport_type",
+      "k8s_charts_hermes_values_schema_targetport_anyof",
+      "k8s_charts_hermes_values_schema_type",
+      "ref_port",
+      "ref_sctp",
+      "ref_tcp",
+      "ref_udp"
+    ],
+    "3": [
+      "k8s_charts_hermes_values_schema_controllerclass_minlength",
+      "k8s_charts_hermes_values_schema_controllerclass_type",
+      "k8s_charts_hermes_values_schema_defaultchartvalues_type",
+      "k8s_charts_hermes_values_schema_id_type",
+      "k8s_charts_hermes_values_schema_installcustomresources_type",
+      "k8s_charts_hermes_values_schema_items_properties",
+      "k8s_charts_hermes_values_schema_items_required",
+      "k8s_charts_hermes_values_schema_json_ref_name",
+      "k8s_charts_hermes_values_schema_labels_type",
+      "k8s_charts_hermes_values_schema_managementnamespace_type",
+      "k8s_charts_hermes_values_schema_operator_properties",
+      "k8s_charts_hermes_values_schema_operator_type",
+      "k8s_charts_hermes_values_schema_properties_chartvalues",
+      "k8s_charts_hermes_values_schema_properties_controllerclass",
+      "k8s_charts_hermes_values_schema_properties_defaultchartvalues",
+      "k8s_charts_hermes_values_schema_properties_id",
+      "k8s_charts_hermes_values_schema_properties_installcustomresources",
+      "k8s_charts_hermes_values_schema_properties_labels",
+      "k8s_charts_hermes_values_schema_properties_managementnamespace",
+      "k8s_charts_hermes_values_schema_properties_namespace",
+      "k8s_charts_hermes_values_schema_properties_operator",
+      "k8s_charts_hermes_values_schema_properties_releasename",
+      "k8s_charts_hermes_values_schema_properties_tenant",
+      "k8s_charts_hermes_values_schema_properties_tenantid",
+      "k8s_charts_hermes_values_schema_properties_tenants",
+      "k8s_charts_hermes_values_schema_tenant_properties",
+      "k8s_charts_hermes_values_schema_tenant_type",
+      "k8s_charts_hermes_values_schema_tenants_items",
+      "k8s_charts_hermes_values_schema_tenants_type"
+    ],
+    "4": [
+      "k8s_charts_crossplane_proxmox_values_schema_bucket_type",
+      "k8s_charts_crossplane_proxmox_values_schema_builderimage_minlength",
+      "k8s_charts_crossplane_proxmox_values_schema_builderimage_type",
+      "k8s_charts_crossplane_proxmox_values_schema_externalsecret_type",
+      "k8s_charts_crossplane_proxmox_values_schema_gcpproject_type",
+      "k8s_charts_crossplane_proxmox_values_schema_gcskeysecret_type",
+      "k8s_charts_crossplane_proxmox_values_schema_isopipeline_properties",
+      "k8s_charts_crossplane_proxmox_values_schema_objectname_type",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_bucket",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_builderimage",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_externalsecret",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_gcpproject",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_gcskeysecret",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_objectname",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_schedule",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_signttldays",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_uupid",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_virtiowinurl",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_win11downloadname",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_winadminsecret",
+      "k8s_charts_crossplane_proxmox_values_schema_schedule_type",
+      "k8s_charts_crossplane_proxmox_values_schema_signttldays_maximum",
+      "k8s_charts_crossplane_proxmox_values_schema_signttldays_minimum",
+      "k8s_charts_crossplane_proxmox_values_schema_signttldays_type",
+      "k8s_charts_crossplane_proxmox_values_schema_uupid_type",
+      "k8s_charts_crossplane_proxmox_values_schema_virtiowinurl_type",
+      "k8s_charts_crossplane_proxmox_values_schema_win11downloadname_type",
+      "k8s_charts_crossplane_proxmox_values_schema_winadminsecret_type"
+    ],
+    "5": [
+      "k8s_charts_hermes_values_schema_additionalegress_items",
+      "k8s_charts_hermes_values_schema_additionalegress_type",
+      "k8s_charts_hermes_values_schema_allowdns_type",
+      "k8s_charts_hermes_values_schema_allowsamenamespace_type",
+      "k8s_charts_hermes_values_schema_authorizednamespaces_items",
+      "k8s_charts_hermes_values_schema_authorizednamespaces_type",
+      "k8s_charts_hermes_values_schema_gateways_items",
+      "k8s_charts_hermes_values_schema_gateways_type",
+      "k8s_charts_hermes_values_schema_hosts_items",
+      "k8s_charts_hermes_values_schema_hosts_type",
+      "k8s_charts_hermes_values_schema_items_enum",
+      "k8s_charts_hermes_values_schema_items_minlength",
+      "k8s_charts_hermes_values_schema_items_type",
+      "k8s_charts_hermes_values_schema_loadbalancersourceranges_items",
+      "k8s_charts_hermes_values_schema_policytypes_items",
+      "k8s_charts_hermes_values_schema_policytypes_type",
+      "k8s_charts_hermes_values_schema_properties_additionalegress",
+      "k8s_charts_hermes_values_schema_properties_allowdns",
+      "k8s_charts_hermes_values_schema_properties_allowsamenamespace",
+      "k8s_charts_hermes_values_schema_properties_authorizednamespaces",
+      "k8s_charts_hermes_values_schema_properties_gateways",
+      "k8s_charts_hermes_values_schema_properties_hosts",
+      "k8s_charts_hermes_values_schema_properties_policytypes",
+      "k8s_charts_hermes_values_schema_properties_tenantisolation",
+      "k8s_charts_hermes_values_schema_tenantisolation_properties",
+      "k8s_charts_hermes_values_schema_tenantisolation_type",
+      "ref_egress",
+      "ref_ingress"
+    ],
+    "6": [
+      "k8s_charts_hermes_values_schema_externaltrafficpolicy_enum",
+      "k8s_charts_hermes_values_schema_externaltrafficpolicy_type",
+      "k8s_charts_hermes_values_schema_internaltrafficpolicy_enum",
+      "k8s_charts_hermes_values_schema_internaltrafficpolicy_type",
+      "k8s_charts_hermes_values_schema_items_ref",
+      "k8s_charts_hermes_values_schema_loadbalancersourceranges_type",
+      "k8s_charts_hermes_values_schema_ports_items",
+      "k8s_charts_hermes_values_schema_ports_type",
+      "k8s_charts_hermes_values_schema_properties_externaltrafficpolicy",
+      "k8s_charts_hermes_values_schema_properties_internaltrafficpolicy",
+      "k8s_charts_hermes_values_schema_properties_loadbalancersourceranges",
+      "k8s_charts_hermes_values_schema_properties_ports",
+      "k8s_charts_hermes_values_schema_properties_service",
+      "k8s_charts_hermes_values_schema_properties_sessionaffinity",
+      "k8s_charts_hermes_values_schema_service_properties",
+      "k8s_charts_hermes_values_schema_service_type",
+      "k8s_charts_hermes_values_schema_sessionaffinity_enum",
+      "k8s_charts_hermes_values_schema_sessionaffinity_type",
+      "ref_clientip",
+      "ref_cluster",
+      "ref_local",
+      "ref_none"
+    ],
+    "7": [
+      "google_auth_library",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_package",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_package_dependencies",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_package_dependencies_google_cloud_functions_framework",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_package_engines",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_package_engines_node",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_package_json_google_cloud_functions_framework",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_package_main",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_package_name",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_package_private",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_package_version",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_package",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_package_dependencies",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_package_dependencies_google_auth_library",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_package_dependencies_google_cloud_functions_framework",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_package_engines",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_package_engines_node",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_package_main",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_package_name",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_package_private",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_package_version"
+    ],
+    "8": [
+      "k8s_charts_hermes_values_schema_accessmode_enum",
+      "k8s_charts_hermes_values_schema_accessmode_type",
+      "k8s_charts_hermes_values_schema_existingclaim_type",
+      "k8s_charts_hermes_values_schema_mountpath_minlength",
+      "k8s_charts_hermes_values_schema_mountpath_type",
+      "k8s_charts_hermes_values_schema_persistence_properties",
+      "k8s_charts_hermes_values_schema_persistence_type",
+      "k8s_charts_hermes_values_schema_properties_accessmode",
+      "k8s_charts_hermes_values_schema_properties_existingclaim",
+      "k8s_charts_hermes_values_schema_properties_mountpath",
+      "k8s_charts_hermes_values_schema_properties_persistence",
+      "k8s_charts_hermes_values_schema_properties_size",
+      "k8s_charts_hermes_values_schema_properties_volumename",
+      "k8s_charts_hermes_values_schema_size_minlength",
+      "k8s_charts_hermes_values_schema_size_type",
+      "k8s_charts_hermes_values_schema_volumename_minlength",
+      "k8s_charts_hermes_values_schema_volumename_type",
+      "ref_readonlymany",
+      "ref_readwritemany",
+      "ref_readwriteonce",
+      "ref_readwriteoncepod"
+    ],
+    "9": [
+      "k8s_charts_hermes_values_schema_podantiaffinity_properties",
+      "k8s_charts_hermes_values_schema_podantiaffinity_type",
+      "k8s_charts_hermes_values_schema_properties_podantiaffinity",
+      "k8s_charts_hermes_values_schema_properties_topologykey",
+      "k8s_charts_hermes_values_schema_properties_type",
+      "k8s_charts_hermes_values_schema_properties_updatestrategy",
+      "k8s_charts_hermes_values_schema_topologykey_minlength",
+      "k8s_charts_hermes_values_schema_topologykey_type",
+      "k8s_charts_hermes_values_schema_type_enum",
+      "k8s_charts_hermes_values_schema_type_type",
+      "k8s_charts_hermes_values_schema_updatestrategy_properties",
+      "k8s_charts_hermes_values_schema_updatestrategy_type",
+      "ref_clusterip",
+      "ref_externalname",
+      "ref_loadbalancer",
+      "ref_nodeport",
+      "ref_ondelete",
+      "ref_preferredduringschedulingignoredduringexecution",
+      "ref_requiredduringschedulingignoredduringexecution",
+      "ref_rollingupdate"
+    ],
+    "10": [
+      "ref_argocd",
+      "ref_config_recommended",
+      "ref_custom_regex",
+      "ref_github_actions",
+      "ref_helm_values",
+      "ref_k8s_applications_yaml",
+      "renovate",
+      "renovate_argocd",
+      "renovate_argocd_managerfilepatterns",
+      "renovate_custommanagers",
+      "renovate_enabledmanagers",
+      "renovate_extends",
+      "renovate_packagerules",
+      "renovate_prconcurrentlimit",
+      "renovate_prhourlylimit",
+      "renovate_schema"
+    ],
+    "11": [
+      "agents_postmortems_2026_07_11_vmsingle_storage_readonly_pm",
+      "agents_postmortems_2026_07_13_apiserver_crd_cache_oom_pm",
+      "agents_postmortems_2026_08_10_longhorn_daemonsets_excluded_from_dell01_pm",
+      "agents_postmortems_2026_08_16_crossplane_finalizer_retry_storm_pm",
+      "agents_postmortems_2026_08_16_hermes_dashboard_affinity_and_gh_multi_account_pm",
+      "crossplane_provider_gcp_compute",
+      "dell01",
+      "gatus_dead_mans_switch",
+      "k8s_charts_support_cluster_templates_monitoring_victoriametrics_watchdog",
+      "kube_apiserver",
+      "longhorn",
+      "macintel01",
+      "vmsingle"
+    ],
+    "12": [
+      "k8s_charts_crossplane_proxmox_values_schema_credentials_properties",
+      "k8s_charts_crossplane_proxmox_values_schema_credentials_required",
+      "k8s_charts_crossplane_proxmox_values_schema_credentials_type",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_credentials",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_secretkey",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_secretname",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_secretnamespace",
+      "k8s_charts_crossplane_proxmox_values_schema_secretkey_type",
+      "k8s_charts_crossplane_proxmox_values_schema_secretname_type",
+      "k8s_charts_crossplane_proxmox_values_schema_secretnamespace_type",
+      "ref_secretkey",
+      "ref_secretname",
+      "ref_secretnamespace"
+    ],
+    "13": [
+      "k8s_charts_crossplane_proxmox_values_schema_enabled_type",
+      "k8s_charts_crossplane_proxmox_values_schema_image_type",
+      "k8s_charts_crossplane_proxmox_values_schema_preflight_properties",
+      "k8s_charts_crossplane_proxmox_values_schema_preflight_required",
+      "k8s_charts_crossplane_proxmox_values_schema_preflight_type",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_enabled",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_image",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_preflight",
+      "k8s_charts_crossplane_proxmox_values_schema_vm_required",
+      "ref_enabled",
+      "ref_vmid"
+    ],
+    "14": [
+      "k8s_charts_crossplane_proxmox_values_schema_endpoint_pattern",
+      "k8s_charts_crossplane_proxmox_values_schema_endpoint_type",
+      "k8s_charts_crossplane_proxmox_values_schema_insecure_type",
+      "k8s_charts_crossplane_proxmox_values_schema_name_minlength",
+      "k8s_charts_crossplane_proxmox_values_schema_name_type",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_endpoint",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_insecure",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_name",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_sshusername",
+      "k8s_charts_crossplane_proxmox_values_schema_providerconfig_properties",
+      "k8s_charts_crossplane_proxmox_values_schema_sshusername_type"
+    ],
+    "15": [
+      "k8s_charts_hermes_values_schema_bootstrap_properties",
+      "k8s_charts_hermes_values_schema_configkey_minlength",
+      "k8s_charts_hermes_values_schema_configkey_type",
+      "k8s_charts_hermes_values_schema_existingconfigmap_type",
+      "k8s_charts_hermes_values_schema_overwrite_type",
+      "k8s_charts_hermes_values_schema_properties_configkey",
+      "k8s_charts_hermes_values_schema_properties_existingconfigmap",
+      "k8s_charts_hermes_values_schema_properties_overwrite",
+      "k8s_charts_hermes_values_schema_properties_soulkey",
+      "k8s_charts_hermes_values_schema_soulkey_minlength",
+      "k8s_charts_hermes_values_schema_soulkey_type"
+    ],
+    "16": [
+      "scripts_workstation_seed_secrets",
+      "scripts_workstation_seed_secrets_main",
+      "scripts_workstation_seed_secrets_need",
+      "scripts_workstation_seed_secrets_note_op_token",
+      "scripts_workstation_seed_secrets_seed_docker",
+      "scripts_workstation_seed_secrets_seed_github",
+      "scripts_workstation_seed_secrets_seed_kubeconfig",
+      "scripts_workstation_seed_secrets_seed_passwords",
+      "scripts_workstation_seed_secrets_seed_tailscale",
+      "scripts_workstation_seed_secrets_set_field",
+      "scripts_workstation_seed_secrets_sh__entry"
+    ],
+    "17": [
+      "k8s_charts_crossplane_proxmox_values_schema_defaults_required",
+      "k8s_charts_crossplane_proxmox_values_schema_defaults_type",
+      "k8s_charts_crossplane_proxmox_values_schema_isos_additionalproperties",
+      "k8s_charts_crossplane_proxmox_values_schema_isos_required",
+      "k8s_charts_crossplane_proxmox_values_schema_isos_type",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_defaults",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_isos",
+      "ref_bridge",
+      "ref_datastoreid",
+      "ref_nodename"
+    ],
+    "18": [
+      "k8s_charts_crossplane_proxmox_values_schema_properties_talospc01",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_vms",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_windows",
+      "k8s_charts_crossplane_proxmox_values_schema_talospc01_ref",
+      "k8s_charts_crossplane_proxmox_values_schema_vms_properties",
+      "k8s_charts_crossplane_proxmox_values_schema_vms_required",
+      "k8s_charts_crossplane_proxmox_values_schema_vms_type",
+      "k8s_charts_crossplane_proxmox_values_schema_windows_ref",
+      "ref_talospc01",
+      "ref_windows"
+    ],
+    "19": [
+      "k8s_charts_hermes_values_schema_apiserver_type",
+      "k8s_charts_hermes_values_schema_bootstrap_type",
+      "k8s_charts_hermes_values_schema_properties",
+      "k8s_charts_hermes_values_schema_properties_apiserver",
+      "k8s_charts_hermes_values_schema_properties_bootstrap",
+      "k8s_charts_hermes_values_schema_properties_replicacount",
+      "k8s_charts_hermes_values_schema_properties_virtualservice",
+      "k8s_charts_hermes_values_schema_replicacount_minimum",
+      "k8s_charts_hermes_values_schema_replicacount_type",
+      "k8s_charts_hermes_values_schema_virtualservice_type"
+    ],
+    "20": [
+      "k8s_charts_hermes_values_schema_port_ref",
+      "k8s_charts_hermes_values_schema_properties_port",
+      "k8s_charts_hermes_values_schema_properties_telegramwebhook",
+      "k8s_charts_hermes_values_schema_properties_url",
+      "k8s_charts_hermes_values_schema_properties_webhook",
+      "k8s_charts_hermes_values_schema_telegramwebhook_properties",
+      "k8s_charts_hermes_values_schema_telegramwebhook_type",
+      "k8s_charts_hermes_values_schema_url_type",
+      "k8s_charts_hermes_values_schema_webhook_properties",
+      "k8s_charts_hermes_values_schema_webhook_type"
+    ],
+    "21": [
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_index",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_index_auth",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_index_discord",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_index_fs",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_index_functions",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_index_googleauth",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_index_kill_ratio",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_index_path",
+      "k8s_charts_crossplane_gcp_functions_billing_killswitch_index_version"
+    ],
+    "22": [
+      "k8s_charts_hermes_values_schema_api_server_key_type",
+      "k8s_charts_hermes_values_schema_existingsecret_type",
+      "k8s_charts_hermes_values_schema_properties_api_server_key",
+      "k8s_charts_hermes_values_schema_properties_existingsecret",
+      "k8s_charts_hermes_values_schema_properties_secrets",
+      "k8s_charts_hermes_values_schema_properties_telegram_bot_token",
+      "k8s_charts_hermes_values_schema_secrets_properties",
+      "k8s_charts_hermes_values_schema_secrets_type",
+      "k8s_charts_hermes_values_schema_telegram_bot_token_type"
+    ],
+    "23": [
+      "k8s_charts_hermes_values_schema_apiserver_properties",
+      "k8s_charts_hermes_values_schema_corsorigins_type",
+      "k8s_charts_hermes_values_schema_host_minlength",
+      "k8s_charts_hermes_values_schema_host_type",
+      "k8s_charts_hermes_values_schema_modelname_minlength",
+      "k8s_charts_hermes_values_schema_modelname_type",
+      "k8s_charts_hermes_values_schema_properties_corsorigins",
+      "k8s_charts_hermes_values_schema_properties_host",
+      "k8s_charts_hermes_values_schema_properties_modelname"
+    ],
+    "24": [
+      "k8s_charts_hermes_values_schema_enabled_type",
+      "k8s_charts_hermes_values_schema_ingress_items",
+      "k8s_charts_hermes_values_schema_ingress_properties",
+      "k8s_charts_hermes_values_schema_ingress_type",
+      "k8s_charts_hermes_values_schema_properties_enabled",
+      "k8s_charts_hermes_values_schema_properties_ingress",
+      "k8s_charts_hermes_values_schema_properties_serviceportnumber",
+      "k8s_charts_hermes_values_schema_serviceportnumber_anyof",
+      "k8s_charts_hermes_values_schema_virtualservice_properties"
+    ],
+    "25": [
+      "agent_gateway",
+      "agent_task_crd",
+      "beads_workstrator",
+      "openspec_changes_remote_agents_design",
+      "openspec_changes_remote_agents_specs_agent_gateway_spec",
+      "openspec_changes_remote_agents_specs_agent_task_controller_spec",
+      "openspec_changes_remote_agents_specs_beads_workstrator_spec",
+      "openspec_changes_remote_agents_specs_pi_remote_agents_spec"
+    ],
+    "26": [
+      "agents_postmortems_2026_07_05_pc01_vxlan_tx_checksum_offload_pm",
+      "agents_postmortems_2026_07_12_tailscale_cilium_endpoint_recursion_pm",
+      "agents_postmortems_2026_08_18_pc01_containerd_pleg_dead_pm",
+      "argocd_repo_server",
+      "cilium",
+      "k8s_charts_support_cluster_templates_nic_offload_fix",
+      "pc01",
+      "tailscale"
+    ],
+    "27": [
+      "k8s_charts_crossplane_proxmox_values_schema_passthrough_type",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_passthrough",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_started",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_vmid",
+      "k8s_charts_crossplane_proxmox_values_schema_started_type",
+      "k8s_charts_crossplane_proxmox_values_schema_vm_properties",
+      "k8s_charts_crossplane_proxmox_values_schema_vmid_minimum",
+      "k8s_charts_crossplane_proxmox_values_schema_vmid_type"
+    ],
+    "28": [
+      "k8s_charts_crossplane_proxmox_values_schema_required",
+      "ref_credentials",
+      "ref_defaults",
+      "ref_isopipeline",
+      "ref_isos",
+      "ref_preflight",
+      "ref_providerconfig",
+      "ref_vms"
+    ],
+    "29": [
+      "k8s_charts_crossplane_proxmox_values_schema",
+      "k8s_charts_crossplane_proxmox_values_schema_defs",
+      "k8s_charts_crossplane_proxmox_values_schema_defs_vm",
+      "k8s_charts_crossplane_proxmox_values_schema_schema",
+      "k8s_charts_crossplane_proxmox_values_schema_title",
+      "k8s_charts_crossplane_proxmox_values_schema_type",
+      "k8s_charts_crossplane_proxmox_values_schema_vm_type"
+    ],
+    "30": [
+      "k8s_charts_crossplane_proxmox_values_schema_bridge_type",
+      "k8s_charts_crossplane_proxmox_values_schema_datastoreid_type",
+      "k8s_charts_crossplane_proxmox_values_schema_defaults_properties",
+      "k8s_charts_crossplane_proxmox_values_schema_nodename_type",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_bridge",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_datastoreid",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_nodename"
+    ],
+    "31": [
+      "k8s_charts_crossplane_proxmox_values_schema_deletionpolicy_enum",
+      "k8s_charts_crossplane_proxmox_values_schema_isopipeline_type",
+      "k8s_charts_crossplane_proxmox_values_schema_properties",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_deletionpolicy",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_isopipeline",
+      "ref_delete",
+      "ref_orphan"
+    ],
+    "32": [
+      "k8s_charts_crossplane_proxmox_values_schema_isopipeline_required",
+      "ref_builderimage",
+      "ref_objectname",
+      "ref_schedule",
+      "ref_signttldays",
+      "ref_win11downloadname"
+    ],
+    "33": [
+      "k8s_charts_hermes_values_schema_egress_items",
+      "k8s_charts_hermes_values_schema_egress_type",
+      "k8s_charts_hermes_values_schema_networkpolicy_properties",
+      "k8s_charts_hermes_values_schema_networkpolicy_type",
+      "k8s_charts_hermes_values_schema_properties_egress",
+      "k8s_charts_hermes_values_schema_properties_networkpolicy"
+    ],
+    "34": [
+      "agents_md_cilium",
+      "agents_md_nostos",
+      "agents_md_onepassword",
+      "agents_md_tailscale",
+      "agents_md_talos_linux"
+    ],
+    "35": [
+      "hack_appdaemon_apps_device_listener",
+      "hack_appdaemon_apps_device_listener_devicelister",
+      "hack_appdaemon_apps_device_listener_devicelister_event_callback",
+      "hack_appdaemon_apps_device_listener_devicelister_initialize",
+      "hack_appdaemon_apps_device_listener_devicelister_state_callback"
+    ],
+    "36": [
+      "hack_appdaemon_apps_device_listener_mqtt",
+      "hack_appdaemon_apps_device_listener_mqtt_devicelister",
+      "hack_appdaemon_apps_device_listener_mqtt_devicelister_initialize",
+      "hack_appdaemon_apps_device_listener_mqtt_devicelister_mqtt_callback",
+      "hack_appdaemon_apps_device_listener_mqtt_rationale_16"
+    ],
+    "37": [
+      "k8s_charts_crossplane_gcp_functions_billing_discord_index",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_index_fs",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_index_functions",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_index_path",
+      "k8s_charts_crossplane_gcp_functions_billing_discord_index_version"
+    ],
+    "38": [
+      "k8s_charts_crossplane_proxmox_values_schema_json_ref_name",
+      "k8s_charts_crossplane_proxmox_values_schema_properties_providerconfig",
+      "k8s_charts_crossplane_proxmox_values_schema_providerconfig_required",
+      "k8s_charts_crossplane_proxmox_values_schema_providerconfig_type",
+      "ref_endpoint"
+    ],
+    "39": [
+      "k8s_charts_hermes_values_schema_podmanagementpolicy_enum",
+      "k8s_charts_hermes_values_schema_podmanagementpolicy_type",
+      "k8s_charts_hermes_values_schema_properties_podmanagementpolicy",
+      "ref_orderedready",
+      "ref_parallel"
+    ],
+    "40": [
+      "openspec_changes_nostos_v01_design",
+      "openspec_changes_nostos_v01_proposal",
+      "openspec_changes_nostos_v01_tasks",
+      "openspec_changes_nostos_v02_provisioners_proposal",
+      "openspec_changes_nostos_v03_dashboard_and_hygiene_proposal"
+    ],
+    "41": [
+      "pi_extensions_guardrails",
+      "pi_extensions_guardrails_features",
+      "pi_extensions_guardrails_features_permissiongate",
+      "pi_extensions_guardrails_schema",
+      "pi_extensions_guardrails_version"
+    ],
+    "42": [
+      "agents_postmortems_2026_07_18_cnpg_supabase_down_no_alert_pm",
+      "cnpg",
+      "csi_provisioner",
+      "kube_state_metrics"
+    ],
+    "43": [
+      "docs_nostos_guide",
+      "docs_proxmox_crossplane_implementation",
+      "k8s_crossplane_proxmox_values",
+      "nostos_config"
+    ],
+    "44": [
+      "hack_appdaemon_apps_button_lamp_control",
+      "hack_appdaemon_apps_button_lamp_control_buttonlampcontrol",
+      "hack_appdaemon_apps_button_lamp_control_buttonlampcontrol_button_pressed",
+      "hack_appdaemon_apps_button_lamp_control_buttonlampcontrol_initialize"
+    ],
+    "45": [
+      "hack_automations_mqtt_watch",
+      "hack_automations_mqtt_watch_main",
+      "hack_automations_mqtt_watch_on_connect",
+      "hack_automations_mqtt_watch_on_message"
+    ],
+    "46": [
+      "internal_cluster_orchestrate",
+      "internal_provisioner_provisioner",
+      "internal_provisioner_tpi_tpi",
+      "openspec_changes_nostos_v02_provisioners_design"
+    ],
+    "47": [
+      "k8s_images_billing_exporter_weekly",
+      "k8s_images_billing_exporter_weekly_main",
+      "k8s_images_billing_exporter_weekly_query",
+      "k8s_images_billing_exporter_weekly_total"
+    ],
+    "48": [
+      "agent_md",
+      "openspec_changes_remote_agents_specs_agent_definition_spec",
+      "openspec_changes_remote_agents_specs_remote_agent_runtime_spec"
+    ],
+    "49": [
+      "agents_skills_oom_check_oom_check",
+      "agents_skills_oom_check_oom_check_kc",
+      "agents_skills_oom_check_oom_check_sh__entry"
+    ],
+    "50": [
+      "claude_skills_postmortem_skill",
+      "claude_skills_postmortem_vocab",
+      "docs_argo_crossplane_hardening"
+    ],
+    "51": [
+      "hack_appdaemon_apps_hello",
+      "hack_appdaemon_apps_hello_helloworld",
+      "hack_appdaemon_apps_hello_helloworld_initialize"
+    ],
+    "52": [
+      "internal_config_config",
+      "internal_pxe_serve",
+      "openspec_changes_nostos_pxe_generic_iso_proposal"
+    ],
+    "53": [
+      "k8s_applications_argocd",
+      "k8s_applications_crossplane",
+      "k8s_applications_postgres"
+    ],
+    "54": [
+      "k8s_applications_cilium",
+      "k8s_applications_pyrra",
+      "k8s_applications_victoria_metrics_k8s_stack"
+    ],
+    "55": [
+      "k8s_images_billing_exporter_main",
+      "k8s_images_billing_exporter_main_handle",
+      "k8s_images_billing_exporter_main_main"
+    ],
+    "56": [
+      "nostos_dashboard",
+      "openspec_changes_nostos_v03_dashboard_and_hygiene_specs_dashboard_spec",
+      "taskfiles_readme"
+    ],
+    "57": [
+      "agents_md_argocd",
+      "agents_md_support_chart"
+    ],
+    "58": [
+      "agents_md_hermes",
+      "agents_md_longhorn"
+    ],
+    "59": [
+      "agents_postmortems_2026_08_09_argocd_appset_dual_manager_prune_pm",
+      "applications_applicationset"
+    ],
+    "60": [
+      "agents_postmortems_2026_08_11_tailscale_gateway_orphaned_device_pm",
+      "tailscale_operator"
+    ],
+    "61": [
+      "agents_postmortems_2026_08_13_herdr_protocol_version_skew_pm",
+      "herdr"
+    ],
+    "62": [
+      "beads_hooks_post_checkout",
+      "beads_hooks_post_checkout__entry"
+    ],
+    "63": [
+      "beads_hooks_post_merge",
+      "beads_hooks_post_merge__entry"
+    ],
+    "64": [
+      "beads_hooks_pre_commit",
+      "beads_hooks_pre_commit__entry"
+    ],
+    "65": [
+      "beads_hooks_pre_push",
+      "beads_hooks_pre_push__entry"
+    ],
+    "66": [
+      "beads_hooks_prepare_commit_msg",
+      "beads_hooks_prepare_commit_msg__entry"
+    ],
+    "67": [
+      "claude_skills_openspec_explore_skill",
+      "claude_skills_openspec_propose_skill"
+    ],
+    "68": [
+      "github_workflow_automerge",
+      "github_workflow_billing_fn"
+    ],
+    "69": [
+      "hack_appdaemon_apps_apps",
+      "hack_appdaemon_compose"
+    ],
+    "70": [
+      "hack_appdaemon_scripts_setu_git",
+      "hack_appdaemon_scripts_setu_git_sh__entry"
+    ],
+    "71": [
+      "hack_bind9_test_compose",
+      "k8s_charts_bind9_configmap"
+    ],
+    "72": [
+      "hack_bind9_test_test_dns",
+      "hack_bind9_test_test_dns_sh__entry"
+    ],
+    "73": [
+      "hack_reference_coredns_rule",
+      "hack_reference_slo_class"
+    ],
+    "74": [
+      "hack_webhook_test",
+      "hack_webhook_test_sh__entry"
+    ],
+    "75": [
+      "internal_cli_dashboard_model",
+      "openspec_changes_nostos_v03_dashboard_and_hygiene_design"
+    ],
+    "76": [
+      "k8s_applications_agents",
+      "k8s_charts_agents_crds_agenttasks"
+    ],
+    "77": [
+      "k8s_applications_hermes",
+      "k8s_charts_hermes"
+    ],
+    "78": [
+      "k8s_applications_istio_base",
+      "k8s_applications_istio_ztunnel"
+    ],
+    "79": [
+      "k8s_images_cnpg_pgsodium_getkey",
+      "k8s_images_cnpg_pgsodium_getkey__entry"
+    ],
+    "80": [
+      "agents_md_istio_ambient"
+    ],
+    "81": [
+      "claude_skills_ourtube_channels_skill"
+    ],
+    "82": [
+      "github_workflow_release_charts"
+    ],
+    "83": [
+      "hermes_memory_git_backup_design"
+    ],
+    "84": [
+      "nostos_templates_dell01"
+    ],
+    "85": [
+      "openspec_changes_nostos_pxe_generic_iso_specs_proxmox_release_resolver_spec"
+    ],
+    "86": [
+      "openspec_changes_nostos_pxe_generic_iso_specs_pxe_netboot_targets_spec"
+    ],
+    "87": [
+      "openspec_changes_nostos_pxe_generic_iso_tasks"
+    ],
+    "88": [
+      "openspec_changes_nostos_v01_specs_cluster_control_spec"
+    ],
+    "89": [
+      "openspec_changes_nostos_v01_specs_node_registry_spec"
+    ],
+    "90": [
+      "openspec_changes_nostos_v01_specs_nostos_cli_spec"
+    ],
+    "91": [
+      "openspec_changes_nostos_v01_specs_nostos_tui_spec"
+    ],
+    "92": [
+      "openspec_changes_nostos_v01_specs_pxe_provisioning_spec"
+    ],
+    "93": [
+      "openspec_changes_nostos_v01_specs_secrets_backend_spec"
+    ],
+    "94": [
+      "openspec_changes_nostos_v02_provisioners_specs_provisioner_spec"
+    ],
+    "95": [
+      "openspec_changes_nostos_v02_provisioners_specs_tpi_provisioning_spec"
+    ],
+    "96": [
+      "openspec_changes_nostos_v02_provisioners_tasks"
+    ],
+    "97": [
+      "openspec_changes_nostos_v03_dashboard_and_hygiene_specs_cli_machine_output_spec"
+    ],
+    "98": [
+      "openspec_changes_nostos_v03_dashboard_and_hygiene_tasks"
+    ],
+    "99": [
+      "openspec_changes_remote_agents_proposal"
+    ],
+    "100": [
+      "openspec_changes_remote_agents_tasks"
+    ],
+    "101": [
+      "pkg_automations"
+    ]
+  },
+  "cohesion": {
+    "0": 0.05714285714285714,
+    "1": 0.06050420168067227,
+    "2": 0.06451612903225806,
+    "3": 0.07142857142857142,
+    "4": 0.07142857142857142,
+    "5": 0.082010582010582,
+    "6": 0.09956709956709957,
+    "7": 0.09523809523809523,
+    "8": 0.09523809523809523,
+    "9": 0.1,
+    "10": 0.125,
+    "11": 0.15384615384615385,
+    "12": 0.15384615384615385,
+    "13": 0.18181818181818182,
+    "14": 0.18181818181818182,
+    "15": 0.18181818181818182,
+    "16": 0.509090909090909,
+    "17": 0.2,
+    "18": 0.2,
+    "19": 0.2,
+    "20": 0.2,
+    "21": 0.2222222222222222,
+    "22": 0.2222222222222222,
+    "23": 0.2222222222222222,
+    "24": 0.25,
+    "25": 0.2857142857142857,
+    "26": 0.25,
+    "27": 0.25,
+    "28": 0.25,
+    "29": 0.2857142857142857,
+    "30": 0.2857142857142857,
+    "31": 0.2857142857142857,
+    "32": 0.3333333333333333,
+    "33": 0.3333333333333333,
+    "34": 0.4,
+    "35": 0.4,
+    "36": 0.4,
+    "37": 0.4,
+    "38": 0.4,
+    "39": 0.4,
+    "40": 0.4,
+    "41": 0.4,
+    "42": 0.5,
+    "43": 0.5,
+    "44": 0.5,
+    "45": 0.8333333333333334,
+    "46": 0.8333333333333334,
+    "47": 1.0,
+    "48": 0.6666666666666666,
+    "49": 1.0,
+    "50": 0.6666666666666666,
+    "51": 0.6666666666666666,
+    "52": 0.6666666666666666,
+    "53": 0.6666666666666666,
+    "54": 0.6666666666666666,
+    "55": 1.0,
+    "56": 0.6666666666666666,
+    "57": 1.0,
+    "58": 1.0,
+    "59": 1.0,
+    "60": 1.0,
+    "61": 1.0,
+    "62": 1.0,
+    "63": 1.0,
+    "64": 1.0,
+    "65": 1.0,
+    "66": 1.0,
+    "67": 1.0,
+    "68": 1.0,
+    "69": 1.0,
+    "70": 1.0,
+    "71": 1.0,
+    "72": 1.0,
+    "73": 1.0,
+    "74": 1.0,
+    "75": 1.0,
+    "76": 1.0,
+    "77": 1.0,
+    "78": 1.0,
+    "79": 1.0,
+    "80": 1.0,
+    "81": 1.0,
+    "82": 1.0,
+    "83": 1.0,
+    "84": 1.0,
+    "85": 1.0,
+    "86": 1.0,
+    "87": 1.0,
+    "88": 1.0,
+    "89": 1.0,
+    "90": 1.0,
+    "91": 1.0,
+    "92": 1.0,
+    "93": 1.0,
+    "94": 1.0,
+    "95": 1.0,
+    "96": 1.0,
+    "97": 1.0,
+    "98": 1.0,
+    "99": 1.0,
+    "100": 1.0,
+    "101": 1.0
+  },
+  "gods": [
+    {
+      "id": "k8s_charts_hermes_values_schema_properties_enabled",
+      "label": "enabled",
+      "degree": 14
+    },
+    {
+      "id": "k8s_charts_hermes_values_schema_type_enum",
+      "label": "enum",
+      "degree": 9
+    },
+    {
+      "id": "scripts_workstation_seed_secrets_main",
+      "label": "main()",
+      "degree": 9
+    },
+    {
+      "id": "k8s_charts_crossplane_proxmox_values_schema_required",
+      "label": "required",
+      "degree": 8
+    },
+    {
+      "id": "k8s_charts_crossplane_proxmox_values_schema_isopipeline_required",
+      "label": "required",
+      "degree": 7
+    },
+    {
+      "id": "scripts_workstation_seed_secrets_need",
+      "label": "need()",
+      "degree": 7
+    },
+    {
+      "id": "scripts_workstation_seed_secrets_set_field",
+      "label": "set_field()",
+      "degree": 6
+    },
+    {
+      "id": "k8s_charts_hermes_values_schema_properties_port",
+      "label": "port",
+      "degree": 5
+    },
+    {
+      "id": "k8s_charts_hermes_values_schema_properties_ingress",
+      "label": "ingress",
+      "degree": 5
+    },
+    {
+      "id": "k8s_charts_hermes_values_schema_accessmode_enum",
+      "label": "enum",
+      "degree": 5
+    }
+  ],
+  "surprises": [
+    {
+      "source": "Bind9 ConfigMap",
+      "target": "Bind9 Test Compose",
+      "source_files": [
+        "k8s/charts/bind9/templates/configmap.yaml",
+        "hack/bind9-test/compose.yml"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; semantically similar concepts with no structural link"
+    },
+    {
+      "source": "Gatus Dead-Man's-Switch",
+      "target": "VictoriaMetrics Single (vmsingle)",
+      "source_files": [
+        "nixos/modules/gatus/config.yaml",
+        ".agents/postmortems/2026-07-11-vmsingle-storage-readonly/PM.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories"
+    },
+    {
+      "source": "Argo CD x Crossplane Hardening Plan",
+      "target": "Postmortem Skill",
+      "source_files": [
+        "docs/argo-crossplane-hardening.md",
+        ".claude/skills/postmortem/SKILL.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "conceptually_related_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories"
+    },
+    {
+      "source": "nic-offload-fix DaemonSet",
+      "target": "pc01",
+      "source_files": [
+        "k8s/charts/support-cluster/templates/nic-offload-fix.yaml",
+        ".agents/postmortems/2026-07-05-pc01-vxlan-tx-checksum-offload/PM.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "VictoriaMetrics Watchdog CronJob",
+      "target": "VictoriaMetrics Single (vmsingle)",
+      "source_files": [
+        "k8s/charts/support-cluster/templates/monitoring/victoriametrics-watchdog.yaml",
+        ".agents/postmortems/2026-07-11-vmsingle-storage-readonly/PM.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    }
+  ],
+  "tokens": {
+    "input": 367288,
+    "output": 14067
+  }
+}
