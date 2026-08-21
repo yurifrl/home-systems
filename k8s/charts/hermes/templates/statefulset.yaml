@@ -336,6 +336,22 @@ spec:
         {{- with .Values.extraContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+        {{- if .Values.pages.enabled }}
+        - name: hermes-pages
+          image: {{ .Values.pages.image }}
+          command: ["httpd", "-f", "-v", "-p", {{ .Values.pages.port | quote }}, "-h", {{ .Values.pages.root | quote }}]
+          ports:
+            - name: pages
+              containerPort: {{ .Values.pages.port }}
+          volumeMounts:
+            - name: {{ include "hermes-agent.workdirVolumeName" . }}
+              mountPath: {{ .Values.gitRepos.mountPath }}
+              readOnly: true
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.pages.resources | nindent 12 }}
+        {{- end }}
         {{- if .Values.gitRepos.enabled }}
         - name: repos-sync
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

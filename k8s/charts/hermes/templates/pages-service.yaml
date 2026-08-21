@@ -7,7 +7,7 @@ metadata:
     {{- include "hermes-agent.labels" . | nindent 4 }}
 spec:
   selector:
-    app: {{ include "hermes-agent.pagesName" . }}
+    {{- include "hermes-agent.selectorLabels" . | nindent 4 }}
   ports:
     - name: http
       port: 80
