@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-08-16 Hermes Independent LiteLLM and OmniRoute Providers
+- Session ID: 01a00a12-81fd-7ffb-b479-f45b955ac4ca
+- Checkpoint: `.agents/checkpoints/hermes-independent-gateway-providers.md`
+
+### Changed
+- Configured Hermes with independent named custom providers for LiteLLM and OmniRoute; removed the global `OPENAI_BASE_URL` funnel and added required Hermes network egress.
+- Added a reusable support-chart NetworkPolicy template and changed OmniRoute to egress-only isolation after ingress rules blocked kubelet health probes under ambient networking.
+- Created a dedicated, least-privilege OmniRoute client key for Hermes in 1Password; refreshed External Secrets and restarted Hermes to consume it.
+- Refreshed the Hermes dashboard model catalog: LiteLLM exposes 707 models and OmniRoute exposes 1,426 models.
+
+### Verified
+- OmniRoute ArgoCD Application is Synced/Healthy and its pod is Ready.
+- Hermes can authenticate to OmniRoute `/v1/models`; Hermes ArgoCD Application is Synced/Healthy.
+
+## 2026-08-16 Hermes RWX Target, Git Checkout Availability, and ESO Recovery
+- Session ID: 01a00999-2057-76c6-8618-9ddf5862d41c
+- Checkpoint: `.agents/checkpoints/hermes-rwx-emptydir-recovery.md`
+
+### Changed
+- Added GitOps-managed `hermes-state-rwx`: 5Gi, ReadWriteMany, `longhorn-ha`. Verified Bound; the old RWO state/workdir claims remain active and were not deleted or copied.
+- Changed Hermes repository cloning so Git checkout failure retries in the `repos-sync` sidecar rather than blocking gateway startup in an init container (`b9067352`).
+- Recovered the ESO-owned `hermes-env` Secret after duplicate `OPENROUTER_API_KEY` extraction failure was corrected and ESO moved off rpi01; final ArgoCD Hermes status: Synced/Healthy, agent 2/2 Running.
+
+### Next
+- Complete separately approved write-freeze/copy/cutover from `state-hermes-0` to the RWX target, then retire old RWO claims only after verification.
+
+# Changelog
+
 ## 2026-06-07 VictoriaMetrics GCS Backup Attempt and Storage-Model Course Correction
 - Session ID: 019e9f20-dabb-7712-8b92-e7145be43ada
 - Session File: /Users/yuri/.pi/agent/sessions/--Users-yuri-Workdir-Yuri-home-systems--/2026-06-06T22-49-51-036Z_019e9f20-dabb-7712-8b92-e7145be43ada.jsonl
