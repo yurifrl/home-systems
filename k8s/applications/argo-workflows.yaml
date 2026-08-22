@@ -56,7 +56,7 @@ spec:
               namespaced: false
     - chart: argo-workflows
       repoURL: https://argoproj.github.io/argo-helm
-      targetRevision: "2.0.0"
+      targetRevision: "2.0.2"
       helm:
         valuesObject:
           crds:
