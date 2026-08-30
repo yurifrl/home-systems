@@ -1,70 +1,86 @@
 {{- if eq .Values.monitoringProvider "victoriametrics" }}
-apiVersion: batch/v1
-kind: CronJob
+# External VM watchdog. Runs as a Deployment loop (NOT a CronJob): a CronJob
+# creating one pod per minute churns ~1440 pod-UID series/day in
+# kube-state-metrics, which grew VM storage ~250MB/day and filled the 10Gi
+# volume in 39 days (2026-08-29 incident). A single looping pod creates zero
+# per-minute series while preserving the same 60s check cadence.
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: victoriametrics-watchdog
   namespace: monitoring
+  labels:
+    app: victoriametrics-watchdog
 spec:
-  schedule: "* * * * *"
-  concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 1
-  failedJobsHistoryLimit: 3
-  jobTemplate:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: victoriametrics-watchdog
+  template:
+    metadata:
+      labels:
+        app: victoriametrics-watchdog
     spec:
-      activeDeadlineSeconds: 50
-      template:
-        spec:
-          restartPolicy: Never
-          containers:
-            - name: watchdog
-              image: curlimages/curl:8.12.1
-              env:
-                - name: STORAGE_CAPACITY_BYTES
-                  value: "10737418240"
-              command: [sh, -c]
-              args:
-                - |
-                  set -eu
-                  alertmanager=http://vmalertmanager-vmks:9093/api/v2/alerts
-                  now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-                  expires=$(date -u -d "@$(($(date +%s) + 180))" +%Y-%m-%dT%H:%M:%SZ)
+      priorityClassName: platform-critical
+      containers:
+        - name: watchdog
+          image: curlimages/curl:8.12.1
+          env:
+            - name: STORAGE_CAPACITY_BYTES
+              value: "21474836480"
+          command: [sh, -c]
+          args:
+            - |
+              set -u
+              alertmanager=http://vmalertmanager-vmks:9093/api/v2/alerts
 
-                  alert() {
-                    ends=$now
-                    [ "$4" = true ] && ends=$expires
-                    curl -fsS --max-time 10 -H 'Content-Type: application/json' \
-                      -d "[{\"labels\":{\"alertname\":\"$1\",\"severity\":\"$2\",\"environment\":\"production\",\"service\":\"victoriametrics-watchdog\"},\"annotations\":{\"summary\":\"$3\"},\"endsAt\":\"$ends\"}]" \
-                      "$alertmanager" >/dev/null
-                  }
+              alert() {
+                ends=$(date -u -d "@$(($(date +%s) + 180))" +%Y-%m-%dT%H:%M:%SZ)
+                [ "$4" = true ] || ends=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+                curl -fsS --max-time 10 -H 'Content-Type: application/json' \
+                  -d "[{\"labels\":{\"alertname\":\"$1\",\"severity\":\"$2\",\"environment\":\"production\",\"service\":\"victoriametrics-watchdog\"},\"annotations\":{\"summary\":\"$3\"},\"startsAt\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"endsAt\":\"$ends\"}]" \
+                  "$alertmanager" >/dev/null
+              }
 
-                  if curl -fsS --max-time 10 http://vmsingle-vmks:8428/metrics -o /tmp/vmsingle; then
-                    free=$(awk '$1 ~ /^vm_free_disk_space_bytes/ { print $NF; exit }' /tmp/vmsingle)
-                    readonly=$(awk '$1 ~ /^vm_storage_is_read_only/ { print $NF; exit }' /tmp/vmsingle)
-                    if [ -n "$free" ] && [ -n "$readonly" ]; then
-                      alert VictoriaMetricsUnavailable critical 'VictoriaMetrics is unavailable' false
-                      percent=$(awk -v free="$free" -v total="$STORAGE_CAPACITY_BYTES" 'BEGIN { print free * 100 / total }')
-                      low=$(awk -v value="$percent" 'BEGIN { print value < 15 && value >= 5 ? "true" : "false" }')
-                      critical=$(awk -v value="$percent" 'BEGIN { print value < 5 ? "true" : "false" }')
-                      read_only=$(awk -v value="$readonly" 'BEGIN { print value == 1 ? "true" : "false" }')
-                      alert VictoriaMetricsStorageLow warning 'VictoriaMetrics has less than 15% free storage' "$low"
-                      alert VictoriaMetricsStorageCritical critical 'VictoriaMetrics has less than 5% free storage' "$critical"
-                      alert VictoriaMetricsReadOnly critical 'VictoriaMetrics storage is read-only' "$read_only"
-                    else
-                      alert VictoriaMetricsUnavailable critical 'VictoriaMetrics metrics are invalid' true
-                    fi
+              while true; do
+                if curl -fsS --max-time 10 http://vmsingle-vmks:8428/metrics -o /tmp/vmsingle; then
+                  free=$(awk '$1 ~ /^vm_free_disk_space_bytes/ { print $NF; exit }' /tmp/vmsingle)
+                  readonly=$(awk '$1 ~ /^vm_storage_is_read_only/ { print $NF; exit }' /tmp/vmsingle)
+                  if [ -n "$free" ] && [ -n "$readonly" ]; then
+                    alert VictoriaMetricsUnavailable critical 'VictoriaMetrics is unavailable' false
+                    percent=$(awk -v free="$free" -v total="$STORAGE_CAPACITY_BYTES" 'BEGIN { print free * 100 / total }')
+                    low=$(awk -v value="$percent" 'BEGIN { print value < 15 && value >= 5 ? "true" : "false" }')
+                    critical=$(awk -v value="$percent" 'BEGIN { print value < 5 ? "true" : "false" }')
+                    read_only=$(awk -v value="$readonly" 'BEGIN { print value == 1 ? "true" : "false" }')
+                    alert VictoriaMetricsStorageLow warning 'VictoriaMetrics has less than 15% free storage' "$low"
+                    alert VictoriaMetricsStorageCritical critical 'VictoriaMetrics has less than 5% free storage' "$critical"
+                    alert VictoriaMetricsReadOnly critical 'VictoriaMetrics storage is read-only' "$read_only"
                   else
-                    alert VictoriaMetricsUnavailable critical 'VictoriaMetrics is unavailable' true
+                    alert VictoriaMetricsUnavailable critical 'VictoriaMetrics metrics are invalid' true
                   fi
+                else
+                  alert VictoriaMetricsUnavailable critical 'VictoriaMetrics is unavailable' true
+                fi
 
-                  remote_write=false
-                  if curl -fsS --max-time 10 http://vmagent-vmks:8429/metrics -o /tmp/vmagent; then
-                    remote_write=$(awk '
-                      /^vmagent_remotewrite_queue_blocked/ && $NF == 1 { failed=1 }
-                      /^vmagent_remotewrite_pending_data_bytes/ { pending += $NF }
-                      END { print (failed || pending >= 104857600) ? "true" : "false" }
-                    ' /tmp/vmagent)
-                  else
-                    remote_write=true
-                  fi
-                  alert VictoriaMetricsRemoteWriteDown critical 'VictoriaMetrics remote-write is failing' "$remote_write"
+                remote_write=false
+                if curl -fsS --max-time 10 http://vmagent-vmks:8429/metrics -o /tmp/vmagent; then
+                  remote_write=$(awk '
+                    /^vmagent_remotewrite_queue_blocked/ && $NF == 1 { failed=1 }
+                    /^vmagent_remotewrite_pending_data_bytes/ { pending += $NF }
+                    END { print (failed || pending >= 104857600) ? "true" : "false" }
+                  ' /tmp/vmagent)
+                else
+                  remote_write=true
+                fi
+                alert VictoriaMetricsRemoteWriteDown critical 'VictoriaMetrics remote-write is failing' "$remote_write"
+
+                sleep 60
+              done
+          resources:
+            limits:
+              cpu: 100m
+              memory: 64Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
 {{- end }}

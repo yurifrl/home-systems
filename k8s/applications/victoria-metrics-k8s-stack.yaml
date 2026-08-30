@@ -82,7 +82,7 @@ spec:
             spec:
               priorityClassName: platform-critical
               port: "8428"
-              retentionPeriod: "30d"
+              retentionPeriod: "14d"
               replicaCount: 1
               # No nodeSelector: let the scheduler place vmsingle on any healthy
               # node. Longhorn attaches the RWO volume wherever the pod lands and
@@ -101,7 +101,10 @@ spec:
                   - ReadWriteOnce
                 resources:
                   requests:
-                    storage: 10Gi
+                    # 2026-08-29: expanded 10Gi -> 20Gi in-place after the volume
+                    # filled (99%) and VM went read-only. PVC expansion is
+                    # irreversible; keep this in sync with the live volume.
+                    storage: 20Gi
               resources:
                 limits:
                   cpu: 750m
