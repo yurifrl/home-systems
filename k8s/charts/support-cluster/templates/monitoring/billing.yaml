@@ -95,7 +95,16 @@ spec:
         - alert: GCPBudgetThresholdExceeded
           # Exclude leftover synthetic/test budgets (e.g. "SYNTHETIC TEST budget"
           # sits permanently at ratio 1.0 and would page forever). Real budgets only.
-          expr: gcp_billing_cost{budget!~"(?i).*(synthetic|test).*"} / gcp_billing_amount >= {{ $e.alertThreshold }}
+          # `unless gcp_billing_attached == 0` silences the alert the moment the
+          # kill switch detaches billing: spend stays at the month-to-date peak
+          # until the calendar month resets, so cost alone would page forever
+          # post-detach. `unless` (not `and == 1`) keeps alerting while the gauge
+          # is absent — a dead exporter never suppresses a spend alert.
+          expr: >-
+            gcp_billing_cost{budget!~"(?i).*(synthetic|test).*"}
+            / gcp_billing_amount
+            >= {{ $e.alertThreshold }}
+            unless on() gcp_billing_attached == 0
           for: 5m
           labels:
             severity: critical
@@ -105,9 +114,14 @@ spec:
             summary: "GCP budget {{ `{{ $labels.budget }}` }} over {{ $e.alertThreshold }}x"
             description: "Budget {{ `{{ $labels.budget }}` }} spend {{ `{{ $value | humanize }}` }} of its limit ({{ `{{ $labels.currency }}` }})."
         # Fires at 100% — the same condition that trips the kill switch (billing
-        # detach). Persists after detach since spend stays >= limit.
+        # detach). Same `unless` gating as above: silences once detachment is
+        # *positively observed*, keeps firing if the gauge is absent.
         - alert: GCPBudgetKillSwitch
-          expr: gcp_billing_cost{budget!~"(?i).*(synthetic|test).*"} / gcp_billing_amount >= 1
+          expr: >-
+            gcp_billing_cost{budget!~"(?i).*(synthetic|test).*"}
+            / gcp_billing_amount
+            >= 1
+            unless on() gcp_billing_attached == 0
           for: 1m
           labels:
             severity: critical

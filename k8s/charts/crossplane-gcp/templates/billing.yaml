@@ -302,6 +302,27 @@ spec:
       name: {{ $b.exporter.subscription }}
     role: roles/pubsub.subscriber
     member: "serviceAccount:{{ . }}"
+{{- with $b.exporter.subscriberServiceAccount }}
+---
+# Lets the exporter read the project's billing attachment state
+# (cloudbilling billingInfo -> gcp_billing_attached gauge). projectManager is
+# the narrowest project-grantable role carrying billing.projects.get and stays
+# effective while billing is detached — exactly the state the exporter reports.
+apiVersion: cloudplatform.gcp.upbound.io/v1beta2
+kind: ProjectIAMMember
+metadata:
+  name: billing-exporter-project-manager
+spec:
+  deletionPolicy: {{ $dp }}
+  providerConfigRef:
+    name: {{ $pc }}
+  forProvider:
+    project: {{ $.Values.providerConfig.projectID | quote }}
+    role: roles/billing.projectManager
+    member: "serviceAccount:{{ . }}"
+{{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
