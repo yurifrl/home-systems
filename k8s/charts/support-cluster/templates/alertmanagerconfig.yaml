@@ -36,9 +36,10 @@ spec:
         - webhook_url_secret:
             name: alertmanager-discord
             key: webhook-url
-          message: |
-            {{`{{ .CommonLabels.alertname }}`}} {{`{{ .CommonLabels.severity }}`}} {{`{{ .CommonLabels.slo }}`}}
           title: "{{`{{ .CommonLabels.alertname }}`}}"
+          message: |
+            {{`{{ range .Alerts }}`}}{{`{{ .Annotations.summary }}`}}{{`{{ if .Annotations.description }}`}} — {{`{{ .Annotations.description }}`}}{{`{{ end }}`}}
+            {{`{{ end }}`}}
           send_resolved: true
     - name: "null"
 {{- end }}

@@ -27,7 +27,9 @@ spec:
       rules:
         - alert: KubeNodeNotReady
           expr: |
-            kube_node_status_condition{condition="Ready",status="true"} == 0
+            max by (node) (
+              max_over_time(kube_node_status_condition{condition="Ready",status="true"}[10m])
+            ) == 0
           for: 5m
           labels:
             severity: critical
@@ -39,8 +41,9 @@ spec:
 
         - alert: KubeNodeUnreachable
           expr: |
-            kube_node_status_condition{condition="Ready",status="unknown"} == 1
-          for: 5m
+            max by (node) (
+              max_over_time(kube_node_status_condition{condition="Ready",status="unknown"}[10m])
+            ) == 1
           labels:
             severity: critical
             environment: production
