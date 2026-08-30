@@ -34,8 +34,16 @@ machine:
       kubeReserved:
         cpu: 150m
         memory: 512Mi
+      # 2026-08-30 wedge postmortem: 1202 leaked containerd shims (~7.7GiB RSS)
+      # thrashed this 8GB node into D-state; kubelet could not evict (PLEG dead)
+      # and Talos could not reboot (stopAllPods hung). Three guards now:
+      # 1) evict workloads early instead of letting reclaim thrash (250Mi headroom)
+      # 2) kill the biggest process (oom_kill_allocating_task) instead of full
+      #    OOM scan that itself wedges under memory pressure
+      # 3) kernel self-reboots 60s after OOM kill if memory does not recover —
+      #    survives even when userspace (kubelet/containerd) is wedged
       evictionHard:
-        memory.available: "500Mi"
+        memory.available: "250Mi"
         nodefs.available: "10%"
         imagefs.available: "10%"
     nodeIP:
@@ -60,6 +68,15 @@ machine:
     wipe: true
     extraKernelArgs:
       - talos.dashboard.disabled=0
+      # 2026-08-30 wedge postmortem: 1202 leaked containerd shims (~7.7GiB RSS)
+      # thrashed this 8GB node into D-state; kubelet could not evict (PLEG dead)
+      # and Talos could not reboot (stopAllPods hung). Kernel guards:
+      #   oom_kill_allocating_task — kill the allocating/biggest task, skip the
+      #     full OOM scan that itself wedges under extreme memory pressure
+      #   panic=60 — reboot 60s after kernel panic; escape hatch that works
+      #     even when all of userspace is D-state wedged
+      - panic=60
+      - oom_kill_allocating_task=1
   features:
     rbac: true
     stableHostname: true
