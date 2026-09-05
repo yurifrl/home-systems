@@ -45,7 +45,7 @@ spec:
                 port: 12000
     - chart: argo-events
       repoURL: https://argoproj.github.io/argo-helm
-      targetRevision: "2.4.24"
+      targetRevision: "2.4.26"
       helm:
         valuesObject:
           # Cluster-scoped controller so it reconciles EventBus/EventSource/
