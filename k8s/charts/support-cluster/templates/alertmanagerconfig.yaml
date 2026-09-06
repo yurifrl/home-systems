@@ -30,6 +30,17 @@ spec:
           - 'severity="critical"'
           - 'environment="production"'
         continue: false
+  inhibit_rules:
+    # A node that goes Unreachable (kubelet heartbeats lost) almost always also
+    # turns NotReady — page the NotReady alert, not both. Field shape verified
+    # against the live CRD (vmalertmanagerconfigs.operator.victoriametrics.com
+    # v1beta1): spec.inhibit_rules[].source_matchers/target_matchers/equal.
+    - source_matchers:
+        - 'alertname="KubeNodeNotReady"'
+      target_matchers:
+        - 'alertname="KubeNodeUnreachable"'
+      equal:
+        - node
   receivers:
     - name: discord
       discord_configs:

@@ -29,10 +29,10 @@ spec:
       rules:
         - alert: Zigbee2MQTTDown
           expr: probe_success{job="probe/monitoring/zigbee2mqtt"} == 0
-          for: 5m
+          for: 15m
           labels:
             severity: critical
             service: zigbee2mqtt
           annotations:
             summary: "Zigbee2MQTT is down"
-            description: "Zigbee2MQTT has been unreachable for more than 5 minutes." 
+            description: "Zigbee2MQTT has been unreachable for more than 15 minutes."

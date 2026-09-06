@@ -20,7 +20,16 @@ spec:
       rules:
         - alert: NicOffloadFixNotRunning
           expr: |
+            # Suppressed while any node is NotReady: when a node is down, the
+            # KubeNodeNotReady alert is the actionable signal, and the DS pods
+            # on it count as unavailable — that paging is pure fallout. The
+            # tradeoff is a real DS regression on an UP node stays silent until
+            # every node is Ready again.
+            # on() is load-bearing: count() returns a zero-label vector and
+            # unless matches on exact label sets, so plain `unless count(...)`
+            # never suppresses anything (verified against vmsingle).
             kube_daemonset_status_number_unavailable{daemonset="nic-offload-fix", namespace="support-cluster"} > 0
+            unless on() count(kube_node_status_condition{condition="Ready",status!="true"}) > 0
           for: 15m
           labels:
             severity: critical
