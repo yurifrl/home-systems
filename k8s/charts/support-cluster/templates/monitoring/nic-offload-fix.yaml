@@ -25,11 +25,19 @@ spec:
             # on it count as unavailable — that paging is pure fallout. The
             # tradeoff is a real DS regression on an UP node stays silent until
             # every node is Ready again.
-            # on() is load-bearing: count() returns a zero-label vector and
-            # unless matches on exact label sets, so plain `unless count(...)`
-            # never suppresses anything (verified against vmsingle).
+            # The unless-clause is a value-filtered count of NotReady nodes:
+            # kube-state-metrics emits one Ready series per node and `== 0`
+            # keeps only nodes whose Ready series reads 0. A bare
+            # status!="true" label filter is WRONG here: it matches series
+            # existence, and KSM emits true/false/unknown per condition over
+            # two scrape paths — 14-28 non-true series even when every node is
+            # healthy — so that form suppresses invariantly and the alert is
+            # dead (this exact bug shipped once; do not "simplify" it back).
+            # on() is also load-bearing: count() returns a zero-label vector
+            # and unless matches on exact label sets, so a plain
+            # `unless count(...)` never suppresses anything.
             kube_daemonset_status_number_unavailable{daemonset="nic-offload-fix", namespace="support-cluster"} > 0
-            unless on() count(kube_node_status_condition{condition="Ready",status!="true"}) > 0
+            unless on() count(kube_node_status_condition{condition="Ready",status="true"} == 0) > 0
           for: 15m
           labels:
             severity: critical

@@ -57,7 +57,7 @@ tests:
           of: VMRule
       - matchRegex:
           path: spec.groups[0].rules[0].expr
-          pattern: 'unless on\(\) count\(kube_node_status_condition\{condition="Ready",status!="true"\}\) > 0'
+          pattern: 'unless on\(\) count\(kube_node_status_condition\{condition="Ready",status="true"\} == 0\) > 0'
       - equal:
           path: spec.groups[0].rules[0].for
           value: 15m
