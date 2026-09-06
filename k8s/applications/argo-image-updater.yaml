@@ -22,7 +22,7 @@ spec:
   sources:
     - repoURL: https://argoproj.github.io/argo-helm
       chart: argocd-image-updater
-      # Latest chart 1.2.2 -> appVersion v1.2.1 (CRD/ImageUpdater model).
+      # Chart 1.2.4 -> appVersion v1.2.2 (CRD/ImageUpdater model).
       targetRevision: "1.2.4"
       helm:
         releaseName: argocd-image-updater
@@ -30,3 +30,9 @@ spec:
           crds:
             install: true
             keep: true
+          # Chart hardcodes --metrics-bind-address=:{{ containerPorts.metrics }} before
+          # run (the flag is supported by the image). Leader election, however, exits the
+          # process ("Error: leader election lost" -> usage dump -> restart) whenever lease
+          # renewal to the API server blips; with a single replica it adds no value.
+          extraArgs:
+            - "--leader-election=false"
