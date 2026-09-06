@@ -103,6 +103,16 @@ spec:
                 -c user.email=obsidian-sync@local \
                 commit -m "auto: $(date -Iseconds)"
             fi
+            # The tree can be left in detached HEAD (manual checkout, plugin
+            # behavior). pull/push both fail forever there, so reattach: point
+            # main at the current tip (keeping any auto-commits made while
+            # detached) and replay them onto origin/main.
+            BRANCH=$(git -C "$VAULT" rev-parse --abbrev-ref HEAD)
+            if [ "$BRANCH" = "HEAD" ]; then
+              echo "detached HEAD detected; reattaching to origin/main"
+              git -C "$VAULT" checkout -B main
+              git -C "$VAULT" rebase origin/main
+            fi
             git -C "$VAULT" pull --rebase --autostash
             git -C "$VAULT" push
             AFTER=$(git -C "$VAULT" rev-parse HEAD)
