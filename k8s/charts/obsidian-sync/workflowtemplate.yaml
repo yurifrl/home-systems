@@ -23,6 +23,7 @@ spec:
     # on this Workflow. Downstream consumers (e.g. board-games) watch these
     # annotations and decide for themselves whether a change concerns them —
     # this template stays generic and knows nothing about them.
+# NOTE: cluster object is synced by ArgoCD; manual kubectl edits will drift.
     - name: main
       steps:
         - - name: git-sync
@@ -81,16 +82,29 @@ spec:
               git -C "$VAULT" -c core.quotePath=false ls-files | tr '\n' ';' > /tmp/changed
               exit 0
             fi
+            # A run killed mid-git (or the obsidian-git plugin, which also
+            # touches this tree hourly) can leave a stale index.lock that
+            # wedges every future run. Remove it only when it is older than
+            # 15 min: a live git operation never holds the lock that long.
+            LOCK="$VAULT/.git/index.lock"
+            if [ -f "$LOCK" ] && [ -z "$(find "$LOCK" -mmin -15)" ]; then
+              echo "removing stale git lock: $LOCK"
+              rm -f "$LOCK"
+            fi
+            # Commit local edits FIRST, then rebase onto the remote. The old
+            # pull-first order failed permanently once untracked local files
+            # collided with incoming changes (--autostash only covers tracked
+            # files), leaving the vault drifted for weeks.
             BEFORE=$(git -C "$VAULT" rev-parse HEAD)
-            git -C "$VAULT" pull --rebase --autostash
             git -C "$VAULT" add -A
             if ! git -C "$VAULT" diff --cached --quiet; then
               git -C "$VAULT" \
                 -c user.name=obsidian-sync \
                 -c user.email=obsidian-sync@local \
                 commit -m "auto: $(date -Iseconds)"
-              git -C "$VAULT" push
             fi
+            git -C "$VAULT" pull --rebase --autostash
+            git -C "$VAULT" push
             AFTER=$(git -C "$VAULT" rev-parse HEAD)
             CHANGED=$(git -C "$VAULT" -c core.quotePath=false diff --name-only "$BEFORE" "$AFTER")
             echo '== files changed this sync =='
