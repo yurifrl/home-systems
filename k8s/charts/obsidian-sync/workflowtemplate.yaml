@@ -88,25 +88,26 @@ spec:
               git -C "$VAULT" -c core.quotePath=false ls-files | tr '\n' ';' > /tmp/changed
               exit 0
             fi
-            # A run killed mid-git (or the obsidian-git plugin, which also
-            # touches this tree hourly) can leave a stale index.lock that
-            # wedges every future run. Remove it only when it is older than
-            # 15 min: a live git operation never holds the lock that long.
+            # The obsidian-git plugin (which also drives git in this tree)
+            # or a killed run can leave a stale index.lock wedging every
+            # future run. Remove it only when older than 15 min: a live git
+            # operation never holds the lock that long.
             LOCK="$VAULT/.git/index.lock"
             if [ -f "$LOCK" ] && [ -z "$(find "$LOCK" -mmin -15)" ]; then
               echo "removing stale git lock: $LOCK"
               rm -f "$LOCK"
             fi
-            # A run killed mid-`pull --rebase` (pod evicted between cron
-            # ticks) leaves .git/rebase-merge behind, which makes every
-            # later rebase abort with "already a rebase-merge directory".
-            # Recover one older than 5 min: with the Forbid-concurrency
-            # 5-min cron no live rebase can be that old. --abort restores
-            # the pre-rebase tip (local auto-commits survive); if git no
-            # longer recognizes the leftover, remove it outright.
+            # A killed pull --rebase (or the plugin, which leaves
+            # conflict-files-obsidian-git.md when ITS rebase dies) leaves
+            # .git/rebase-merge behind; every later rebase then aborts with
+            # "already a rebase-merge directory". The 5-min cron + Forbid
+            # concurrency mean no rebase of OURS can be alive at run start,
+            # so recover anything older than ~1 min. `rebase --abort`
+            # restores the pre-rebase tip (local auto-commits survive); rm
+            # only if git no longer recognizes the leftover.
             for D in rebase-merge rebase-apply; do
               R="$VAULT/.git/$D"
-              if [ -d "$R" ] && [ -n "$(find "$R" -mmin +5)" ]; then
+              if [ -d "$R" ] && [ -n "$(find "$R" -mmin +1)" ]; then
                 echo "recovering stale rebase state: $R"
                 git -C "$VAULT" rebase --abort >/dev/null 2>&1 || rm -fr "$R"
               fi
@@ -131,15 +132,14 @@ spec:
             if [ "$BRANCH" = "HEAD" ]; then
               echo "detached HEAD detected; reattaching to origin/main"
               git -C "$VAULT" checkout -B main
-              git -C "$VAULT" rebase origin/main
+              git -C "$VAULT" rebase -X theirs origin/main
             fi
-            git -C "$VAULT" pull --rebase --autostash
+            # -X theirs: on conflict favor the replayed LOCAL commits (the
+            # PVC is the working truth; origin is the backup). Without this
+            # a single conflicting edit wedged the sync forever.
+            git -C "$VAULT" pull --rebase -X theirs --autostash
             git -C "$VAULT" push
             AFTER=$(git -C "$VAULT" rev-parse HEAD)
-            CHANGED=$(git -C "$VAULT" -c core.quotePath=false diff --name-only "$BEFORE" "$AFTER")
-            echo '== files changed this sync =='
-            echo "$CHANGED"
-            # Semicolon-joined so consumers can substring/regex-match paths.
             printf '%s' "$(echo "$CHANGED" | tr '\n' ';')" > /tmp/changed
 
     - name: mark
