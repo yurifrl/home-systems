@@ -91,6 +91,20 @@ spec:
               echo "removing stale git lock: $LOCK"
               rm -f "$LOCK"
             fi
+            # A run killed mid-`pull --rebase` (pod evicted between cron
+            # ticks) leaves .git/rebase-merge behind, which makes every
+            # later rebase abort with "already a rebase-merge directory".
+            # Recover one older than 5 min: with the Forbid-concurrency
+            # 5-min cron no live rebase can be that old. --abort restores
+            # the pre-rebase tip (local auto-commits survive); if git no
+            # longer recognizes the leftover, remove it outright.
+            for D in rebase-merge rebase-apply; do
+              R="$VAULT/.git/$D"
+              if [ -d "$R" ] && [ -n "$(find "$R" -mmin +5)" ]; then
+                echo "recovering stale rebase state: $R"
+                git -C "$VAULT" rebase --abort >/dev/null 2>&1 || rm -fr "$R"
+              fi
+            done
             # Commit local edits FIRST, then rebase onto the remote. The old
             # pull-first order failed permanently once untracked local files
             # collided with incoming changes (--autostash only covers tracked
