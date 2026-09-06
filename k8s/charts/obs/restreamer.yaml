@@ -34,6 +34,10 @@ spec:
         - key: node.kubernetes.io/unschedulable
           operator: Exists
           effect: NoSchedule
+        # macintel01 also carries the control-plane taint now; without this
+        # toleration the pod stays Pending there even with the cordon one above.
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
       containers:
         - name: restreamer
           image: datarhei/restreamer:latest
