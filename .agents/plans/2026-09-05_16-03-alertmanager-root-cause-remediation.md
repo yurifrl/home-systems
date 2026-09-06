@@ -57,16 +57,19 @@ evicts pods and stops scheduling — the node stays Ready.
 - Verify: next resource squeeze (or forced stress test) produces pod evictions + `KubeEvicted`-style
   signal, not `KubeNodeNotReady`; pc01 survives where it previously hung.
 
-### 3. argocd-image-updater crashloop — 5,897 restarts, one-line fix
+### 3. argocd-image-updater crashloop — restarts amplifier, fix + root-cause note
 
-- [ ] 3.1 Root cause: pod args `["--metrics-bind-address=:8443","run"]` → container prints usage
-      and exits (flag unsupported by image v1.2.1; chart 1.2.4 from
-      `k8s/applications/argo-image-updater.yaml`). Find the value that renders that arg via
-      `helm template` (render-only).
-- [ ] 3.2 Fix `k8s/applications/argo-image-updater.yaml` valuesObject (drop the flag or use one
-      this version supports), commit + push, wait for ArgoCD sync, check
-      `operationState.message` for errors.
-- Verify: pod 1/1 with stable RESTARTS; `KubePodCrashLooping(argocd)` clears.
+**Premise corrected during execution (worker tk-xxl):** the flag IS supported — images v1.2.1
+and v1.2.2 both accept `--metrics-bind-address` (docker-run proven). Real cause: leader-election
+lease renewals time out against the slow API ~88s into each run → `Error: leader election lost`
+→ exit → restart loop. Same signature as the CNPG operator's month-long crashloop; fixing step 5
+fixes the disease, this fix removes the amplification.
+
+- [x] 3.1 `k8s/applications/argo-image-updater.yaml` valuesObject: `extraArgs:
+      ["--leader-election=false"]` (deployment is replicas:1 + Recreate — election is pure
+      liability) + corrected stale appVersion comment.
+- [ ] 3.2 Merge via hunk review → ArgoCD sync → check `operationState.message` for errors.
+- Verify: pod 1/1 with stable RESTARTS (restarts flatline); `KubePodCrashLooping(argocd)` clears.
 
 ### 4. hermes memory-backup — verify the token chain before rotating anything
 
