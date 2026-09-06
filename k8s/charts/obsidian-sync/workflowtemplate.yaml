@@ -75,6 +75,12 @@ spec:
             set -e
             VAULT=/config/vaults/Obsidian
             git config --global --add safe.directory "$VAULT"
+            # Identity must live in repo config, not per-command -c flags:
+            # `pull --rebase` internally re-commits replayed history and
+            # ignores -c, which killed rebases with "Committer identity
+            # unknown" (live 2026-09-06 15:05Z).
+            git config --global user.name "obsidian-sync"
+            git config --global user.email "obsidian-sync@local"
             if [ ! -d "$VAULT/.git" ]; then
               mkdir -p "$VAULT"
               git clone "https://oauth2:${GITHUB_TOKEN}@github.com/yurifrl/Obsidian.git" "$VAULT"
