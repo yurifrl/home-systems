@@ -30,6 +30,37 @@ machine:
     nodeIP:
       validSubnets:
         - 100.64.0.0/10
+    # Node-protection (postmortem 2026-08-18-pc01-containerd-pleg-dead): pc01
+    # died under memory pressure (containerd hang -> PLEG death -> NotReady).
+    # Reserve compute for system daemons and kube components, and make kubelet
+    # shed pod pressure BEFORE anything else starves. VM: 4 vCPU / 12GiB / 30GiB.
+    extraConfig:
+      # OS daemons (tailscaled, hostDNS, apid, kernel): tp1/tp4/dell01 precedent.
+      systemReserved:
+        cpu: 150m
+        memory: 512Mi
+        ephemeral-storage: 1Gi
+      # kubelet + containerd (+ spare for the containerd that wedged last time);
+      # caps the kubepods cgroup ~1.5GiB below capacity.
+      kubeReserved:
+        cpu: 200m
+        memory: 1Gi
+        ephemeral-storage: 2Gi
+      # Soft thresholds sit ABOVE hard so soft fires first: pods get a graceful
+      # eviction (grace periods below) while there is still slack, and hard is
+      # the last-resort kill. memory 10% ~ 1.2GiB, fs 15% ~ 4.5GiB on 30GiB.
+      evictionSoft:
+        memory.available: "15%"
+        nodefs.available: "20%"
+        imagefs.available: "20%"
+      evictionSoftGracePeriod:
+        memory.available: "1m30s"
+        nodefs.available: "2m"
+        imagefs.available: "2m"
+      evictionHard:
+        memory.available: "10%"
+        nodefs.available: "15%"
+        imagefs.available: "15%"
   network:
     hostname: pc01
     interfaces:
