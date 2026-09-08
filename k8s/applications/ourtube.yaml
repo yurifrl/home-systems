@@ -121,6 +121,8 @@ spec:
               channelId: UCL14t3D_hreM5WnorC3VJ5g
             - name: Better Stack
               channelId: UCkVfrGwV-iG9bSsgCbrNPxQ
+            - name: Anunnaki Dreams
+              channelId: UC0x-FvghZKnLXUHW05xjiWw
 
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
