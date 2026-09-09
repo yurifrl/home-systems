@@ -51,3 +51,15 @@ spec:
                 name: board-games
                 namespace: board-games
                 port: 8080
+            # bg-admin: cover-studio control plane. Same pod, admin sidecar
+            # (chart service `bg-admin`, port 8081). Gated by Cloudflare Zero
+            # Trust Access (bg-admin apps in cloudflare-access private values).
+            - name: bg-admin
+              hosts:
+                - bg-admin.syscd.live
+                - bg-admin.syscd.tech
+                - bg-admin.syscd.dev
+              service:
+                name: bg-admin
+                namespace: board-games
+                port: 8081
