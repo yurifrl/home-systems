@@ -62,9 +62,9 @@ spec:
             method: kubernetes
             tokenName: teleport-agent-token
           kubeClusterName: syscd.xyz
-          # In-cluster address so the reverse tunnel (app sessions) doesn't hairpin
-          # through Cloudflare, which breaks the tunnel protocol
-          proxyAddr: teleport-proxy.teleport.svc.cluster.local:443
+          # In-cluster path to the proxy (LB svc, same listener cloudflared uses)
+          # so the reverse tunnel doesn't hairpin through the cloudflare edge
+          proxyAddr: teleport.teleport.svc.cluster.local:443
           # Proxy serves a self-signed cert without the svc DNS SAN
           insecureSkipProxyTLSVerify: true
           resources:
