@@ -62,10 +62,10 @@ spec:
             method: kubernetes
             tokenName: teleport-agent-token
           kubeClusterName: syscd.xyz
-          # MetalLB IP of the proxy (svc/teleport). In-cluster + no Host redirect;
-          # the svc DNS name triggers the proxy's HTML launch redirect instead of JSON
-          proxyAddr: 192.168.68.202:443
-          # Self-signed cert, not issued for this IP
+          # In-cluster path to the proxy (LB svc, same listener cloudflared uses)
+          # so the reverse tunnel doesn't hairpin through the cloudflare edge
+          proxyAddr: teleport.teleport.svc.cluster.local:443
+          # Proxy serves a self-signed cert without the svc DNS SAN
           insecureSkipProxyTLSVerify: true
           resources:
             limits:
