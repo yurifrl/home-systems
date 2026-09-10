@@ -33,7 +33,6 @@ spec:
           persistence:
             enabled: true
             existingClaimName: teleport-tp1-data
-            storageClassName: local-path
           #
           chartMode: standalone
           #
@@ -128,10 +127,8 @@ spec:
           persistentVolumeClaims:
             - name: teleport-tp1-data
               storage: 10Gi
-              storageClassName: local-path
               accessModes:
                 - ReadWriteOnce
-              volumeName: teleport-tp1-data
           externalSecrets:
             - name: teleport-agent-token
               namespace: teleport
