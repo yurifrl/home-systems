@@ -94,7 +94,7 @@ nicOffloadFix:
 # kubectl + jq (alpine/k8s bundles both).
 nodeReaper:
   enabled: true
-  image: alpine/k8s:1.36.2
+  image: alpine/k8s:1.37.0
   schedule: "*/5 * * * *"
   notReadySeconds: 900
 
