@@ -31,10 +31,16 @@ providers:
   # Compute provider for the assets CDN (LB + Cloud CDN + Cloud Armor). Its MRDs
   # install INACTIVE (default MRAP no longer activates '*'); only the ~8 CRDs in
   # the computeCdnActivations MRAP below become CRDs, avoiding the apiserver
-  # overload that forced this provider's earlier removal. Unpinned — runs on any
-  # healthy worker.
+  # overload that forced this provider's earlier removal.
+  # Pinned to the direct-apiserver path like iam/storage: its crd-gate watch
+  # bootstrap through the kube-proxy Service VIP flaps when the worker's proxy
+  # layer degrades (dell01 kube-proxy/cilium churn, 2026-09-15), the provider
+  # crashloops (`timed out waiting for cache to be synced for Kind
+  # *v1.CustomResourceDefinition`) and its /convert endpoint goes down, jamming
+  # every ArgoCD app with `conversion webhook ... connection refused`.
   - name: provider-gcp-compute
     package: xpkg.upbound.io/upbound/provider-gcp-compute:v2.5.4
+    runtimeConfig: gcp-storage-pinned
   # Cloudflare DNS + Rulesets (WAF/rate-limit/geo) for the assets CDN, so the
   # DNS record + rate-limit/geo rules reconcile from git once the API token is
   # present. Same wildbitca family as provider-cloudflare-zero. MRD-scoped by
