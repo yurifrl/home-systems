@@ -91,12 +91,15 @@ spec:
                 # PromQL/MetricsQL exemplar-style features are on by default in VM.
                 search.maxUniqueTimeseries: "1000000"
               storage:
-                # longhorn-single = best-effort data locality + 1 replica. NOTE:
-                # true node-failure tolerance for the DATA needs >=2 healthy
-                # Longhorn storage nodes + longhorn-ha (2 replicas). Today tp1 is
-                # the only working storage node, so this stays single-replica
-                # until a second node's disk is fixed.
-                storageClassName: longhorn-single
+                # longhorn-ha = 2 replicas across >=2 healthy Longhorn storage
+                # nodes (rpi01, tp1, tp4 as of 2026-09). The volume attaches over
+                # the network wherever the pod schedules, so vmsingle can spawn
+                # on any node; losing one node (or one disk) self-heals via
+                # Longhorn replica rebuild instead of taking metrics down.
+                # longhorn-single (1 replica) was dropped 2026-09-16 after a
+                # single-replica part on tp4 corrupted (zeroed zstd block) and
+                # crashlooped vmsingle for 4 days.
+                storageClassName: longhorn-ha
                 accessModes:
                   - ReadWriteOnce
                 resources:
