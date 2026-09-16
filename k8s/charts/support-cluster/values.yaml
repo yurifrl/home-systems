@@ -98,6 +98,17 @@ nodeReaper:
   schedule: "*/5 * * * *"
   notReadySeconds: 900
 
+# longhorn-node-scheduling: re-asserts allowScheduling=true on every
+# nodes.longhorn.io (see templates/longhorn-node-scheduling.yaml for the
+# 2026-09-16 incident rationale). Nodes without disks are unaffected.
+# skipNodes: intentional exclusions, e.g. ["dell01"] to keep replicas off the
+# sole control plane if its Longhorn disk is ever mounted.
+longhornNodeScheduling:
+  enabled: true
+  image: alpine/k8s:1.36.2
+  schedule: "*/30 * * * *"
+  skipNodes: []
+
 # Tailscale
 tailscale:
   connectors:

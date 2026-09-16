@@ -1,0 +1,114 @@
+{{- if .Values.longhornNodeScheduling.enabled }}
+# longhorn-node-scheduling: every Longhorn node must accept replica scheduling.
+#
+# WHY: (2026-09-16 incident) rpi01 and macintel01 shipped with
+# allowScheduling=false, leaving tp1+tp4 as the only replica-capable disks.
+# When the vmsingle 20Gi volume needed its 2nd longhorn-ha replica after the
+# tp4 storage-corruption wipe, Longhorn logged "replica scheduling failed" and
+# the volume stayed single-replica (degraded) — the exact condition that made
+# the original corruption take metrics down for 4 days.
+#
+# This CronJob re-asserts the invariant: allowScheduling=true on EVERY
+# nodes.longhorn.io. Nodes without disks are ignored by Longhorn for replica
+# placement, so flipping them is harmless; nodes with disks gain replica homes.
+# Intentional exceptions go in skipNodes (a values change, visible in git —
+# not a silent toggle in the Longhorn UI that nobody remembers making).
+#
+# NOTE: control-plane dell01 currently has a Longhorn disk configured but
+# NotReady, so this has no effect there today. If that disk is ever mounted,
+# replicas CAN land on the control plane — move the node to skipNodes if that
+# is not wanted.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: longhorn-node-scheduling
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: longhorn-node-scheduling
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: longhorn-node-scheduling
+  namespace: longhorn-system
+  labels:
+    app: longhorn-node-scheduling
+rules:
+  - apiGroups: ["longhorn.io"]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: longhorn-node-scheduling
+  namespace: longhorn-system
+  labels:
+    app: longhorn-node-scheduling
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: longhorn-node-scheduling
+subjects:
+  - kind: ServiceAccount
+    name: longhorn-node-scheduling
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: longhorn-node-scheduling
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: longhorn-node-scheduling
+spec:
+  schedule: {{ .Values.longhornNodeScheduling.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 300
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 120
+      template:
+        metadata:
+          labels:
+            app: longhorn-node-scheduling
+        spec:
+          serviceAccountName: longhorn-node-scheduling
+          restartPolicy: Never
+          priorityClassName: platform-critical
+          # No broad tolerations on purpose: run on a healthy node only.
+          containers:
+            - name: enforcer
+              image: {{ .Values.longhornNodeScheduling.image }}
+              env:
+                - name: SKIP_NODES
+                  value: {{ .Values.longhornNodeScheduling.skipNodes | toJson | quote }}
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  # Enable allowScheduling on every Longhorn node except SKIP_NODES.
+                  # jq emits one node name per line for anything that drifted.
+                  kubectl -n longhorn-system get nodes.longhorn.io -o json \
+                    | jq -r --argjson skip "$SKIP_NODES" '
+                        .items[]
+                        | select(.metadata.name as $n | $skip | index($n) | not)
+                        | select(.spec.allowScheduling != true)
+                        | .metadata.name' \
+                    | while read -r node; do
+                        echo "scheduling: enabling allowScheduling on $node"
+                        kubectl -n longhorn-system patch nodes.longhorn.io "$node" \
+                          --type merge -p '{"spec":{"allowScheduling":true}}'
+                      done
+                  echo "scheduling: invariant holds (all nodes allowScheduling=true)"
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 64Mi
+{{- end }}

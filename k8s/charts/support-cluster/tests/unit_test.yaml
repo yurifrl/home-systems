@@ -3,6 +3,7 @@ templates:
   - tailscale/connector.yaml
   - monitoring/cloudflare-tunnel.yaml
   - monitoring/victoriametrics-watchdog.yaml
+  - longhorn-node-scheduling.yaml
 tests:
   - it: should render connector correctly
     template: tailscale/connector.yaml
@@ -32,17 +33,32 @@ tests:
   - it: should render the independent VictoriaMetrics watchdog
     template: monitoring/victoriametrics-watchdog.yaml
     asserts:
+      # Deployment, NOT CronJob: a CronJob churning one pod/min grew VM storage
+      # ~250MB/day via kube-state-metrics pod-UID series (2026-08-29 incident).
+      - isKind:
+          of: Deployment
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: "vmalertmanager-vmks:9093/api/v2/alerts"
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: 'vm_free_disk_space_bytes/'
+
+  - it: should enforce replica scheduling on every longhorn node
+    template: longhorn-node-scheduling.yaml
+    documentIndex: 3
+    asserts:
       - isKind:
           of: CronJob
       - equal:
           path: spec.schedule
-          value: "* * * * *"
+          value: "*/30 * * * *"
       - equal:
           path: spec.concurrencyPolicy
           value: Forbid
       - matchRegex:
-          path: spec.jobTemplate.spec.template.spec.containers[0].args[0]
-          pattern: "vmalertmanager-vmks:9093/api/v2/alerts"
-      - matchRegex:
-          path: spec.jobTemplate.spec.template.spec.containers[0].args[0]
-          pattern: 'vm_free_disk_space_bytes/'
+          path: spec.jobTemplate.spec.template.spec.containers[0].command[2]
+          pattern: 'allowScheduling'
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[0].value
+          value: "[]"
