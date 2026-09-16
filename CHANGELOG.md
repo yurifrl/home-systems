@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-16 Edge And Crossplane Webhook Recovery
+
+### Fixed
+- Every ArgoCD application stopped erroring with 'conversion webhook ... connection refused' because provider-gcp-compute is pinned to the direct-apiserver runtime path instead of the flapping kube-proxy VIP.
+- The edge application renders again after its expired GitHub repo token in 1Password was replaced and re-synced into ArgoCD.
+- The edge-blackbox probe pod starts again because its missing web basic-auth secret is now declaratively synced from 1Password instead of hand-created.
+
 ## 2026-08-16 Hermes Independent LiteLLM and OmniRoute Providers
 - Session ID: 01a00a12-81fd-7ffb-b479-f45b955ac4ca
 - Checkpoint: `.agents/checkpoints/hermes-independent-gateway-providers.md`
