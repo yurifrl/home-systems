@@ -36,6 +36,10 @@ spec:
         valuesObject:
           config:
             issuer: https://dex.syscd.dev
+            # Required for ${DEX_ADMIN_PASSWORD_BCRYPT} expansion. Without it
+            # the literal placeholder hits dex's bcrypt parser and the pod
+            # crashloops (hashedSecret too short).
+            expandEnv: true
             web:
               http: 0.0.0.0:5556
             staticClients:
