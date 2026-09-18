@@ -70,3 +70,13 @@ records:
     target: 192.168.68.201
     proxied: false
     ttl: 300
+
+  # mecak8s API + login metadata for mecatui. Same shape as dex: direct A to
+  # the gateway LB, unproxied, so it works from the LAN, the tailnet (via the
+  # public path), and in-cluster pods (OIDC resource URL checks).
+  - name: mecatl-syscd-dev
+    dnsName: mecatl.syscd.dev
+    recordType: A
+    target: 192.168.68.201
+    proxied: false
+    ttl: 300
