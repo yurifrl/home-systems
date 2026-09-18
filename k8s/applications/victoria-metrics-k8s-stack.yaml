@@ -311,11 +311,11 @@ spec:
                 access: proxy
                 jsonData:
                   authenticationType: jwt
+                  defaultProject: syscd-443112
                   projectName: syscd-443112
                   clientEmail: grafana-billing@syscd-443112.iam.gserviceaccount.com
                   tokenUri: https://oauth2.googleapis.com/token
-                secureJsonData:
-                  privateKey: '$__env{GRAFANA_BILLING_SA_KEY}'
+                  privateKeyPath: /etc/secrets/billing-sa/privateKey
 
           # ----------------------------------------------------------------
           # Grafana (bundled)
@@ -338,13 +338,14 @@ spec:
               - grafana-mqtt-datasource
               - victoriametrics-metrics-datasource
               - grafana-bigquery-datasource
-            # SA private key injected as env var for the BigQuery datasource
-            # provisioning ($__env interpolation). ESO secret grafana-billing-sa.
-            envValueFrom:
-              GRAFANA_BILLING_SA_KEY:
-                secretKeyRef:
-                  name: grafana-billing-sa
-                  key: privateKey
+            # SA key file mounted for the BigQuery datasource privateKeyPath.
+            # ESO secret grafana-billing-sa (1Password item grafana-billing-sa).
+            extraSecretMounts:
+              - name: billing-sa
+                secretName: grafana-billing-sa
+                defaultMode: 0400
+                mountPath: /etc/secrets/billing-sa
+                readOnly: true
             resources:
               limits:
                 cpu: 1000m
