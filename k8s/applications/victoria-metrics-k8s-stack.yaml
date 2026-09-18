@@ -315,7 +315,7 @@ spec:
                   clientEmail: grafana-billing@syscd-443112.iam.gserviceaccount.com
                   tokenUri: https://oauth2.googleapis.com/token
                 secureJsonData:
-                  privateKey: '$__file{/etc/secrets/billing-sa/privateKey}'
+                  privateKey: '$__env{GRAFANA_BILLING_SA_KEY}'
 
           # ----------------------------------------------------------------
           # Grafana (bundled)
@@ -338,13 +338,13 @@ spec:
               - grafana-mqtt-datasource
               - victoriametrics-metrics-datasource
               - grafana-bigquery-datasource
-            # SA key mounted for the BigQuery billing datasource ($__file in provisioning).
-            extraSecretMounts:
-              - name: billing-sa
-                secretName: grafana-billing-sa
-                defaultMode: 0400
-                mountPath: /etc/secrets/billing-sa
-                readOnly: true
+            # SA private key injected as env var for the BigQuery datasource
+            # provisioning ($__env interpolation). ESO secret grafana-billing-sa.
+            envValueFrom:
+              GRAFANA_BILLING_SA_KEY:
+                secretKeyRef:
+                  name: grafana-billing-sa
+                  key: privateKey
             resources:
               limits:
                 cpu: 1000m
