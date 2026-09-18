@@ -47,6 +47,13 @@ spec:
           externalSecrets:
             - name: alertmanager-discord
             - name: blackbox-exporter
+            # SA private key for the Grafana BigQuery billing datasource.
+            # 1Password item grafana-billing-sa (vault Kubernetes), field privateKey.
+            - name: grafana-billing-sa
+              data:
+                - secretKey: privateKey
+                  key: grafana-billing-sa
+                  property: privateKey
     - repoURL: https://victoriametrics.github.io/helm-charts/
       chart: victoria-metrics-k8s-stack
       targetRevision: "0.90.2"
@@ -298,6 +305,17 @@ spec:
                   organization: home-systems
                   defaultBucket: default
                   tlsSkipVerify: true
+              - name: BigQuery
+                uid: bigquery
+                type: grafana-bigquery-datasource
+                access: proxy
+                jsonData:
+                  authenticationType: jwt
+                  projectName: syscd-443112
+                  clientEmail: grafana-billing@syscd-443112.iam.gserviceaccount.com
+                  tokenUri: https://oauth2.googleapis.com/token
+                secureJsonData:
+                  privateKey: '$__file{/etc/secrets/billing-sa/privateKey}'
 
           # ----------------------------------------------------------------
           # Grafana (bundled)
@@ -319,6 +337,14 @@ spec:
               - quickwit-quickwit-datasource
               - grafana-mqtt-datasource
               - victoriametrics-metrics-datasource
+              - grafana-bigquery-datasource
+            # SA key mounted for the BigQuery billing datasource ($__file in provisioning).
+            extraSecretMounts:
+              - name: billing-sa
+                secretName: grafana-billing-sa
+                defaultMode: 0400
+                mountPath: /etc/secrets/billing-sa
+                readOnly: true
             resources:
               limits:
                 cpu: 1000m

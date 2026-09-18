@@ -1,0 +1,362 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 300 },
+              { "color": "red", "value": 400 }
+            ]
+          },
+          "unit": "currencyBRL"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^cost$/", "values": false },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(SUM(cost + IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0)), 2) AS cost\nFROM `syscd-443112.billing_export.gcp_billing_export_resource_v1_000600_2E9369_0C8480`\nWHERE DATE(usage_start_time, 'America/Sao_Paulo') >= DATE_TRUNC(CURRENT_DATE('America/Sao_Paulo'), MONTH)",
+          "refId": "A"
+        }
+      ],
+      "title": "Month to date",
+      "description": "Net cost (credits included) for the current calendar month, America/Sao_Paulo",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "orange", "value": 300 },
+              { "color": "red", "value": 400 }
+            ]
+          },
+          "unit": "currencyBRL"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 0 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^cost$/", "values": false },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(SUM(cost + IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0)), 2) AS cost\nFROM `syscd-443112.billing_export.gcp_billing_export_resource_v1_000600_2E9369_0C8480`\nWHERE DATE(usage_start_time, 'America/Sao_Paulo') >= DATE_SUB(DATE_TRUNC(CURRENT_DATE('America/Sao_Paulo'), MONTH), INTERVAL 1 MONTH)\n  AND DATE(usage_start_time, 'America/Sao_Paulo') < DATE_TRUNC(CURRENT_DATE('America/Sao_Paulo'), MONTH)",
+          "refId": "A"
+        }
+      ],
+      "title": "Last month",
+      "description": "Net cost for the previous calendar month",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 300 },
+              { "color": "red", "value": 400 }
+            ]
+          },
+          "unit": "currencyBRL"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 0 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^cost$/", "values": false },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(\n  SUM(cost + IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0))\n    * EXTRACT(DAY FROM LAST_DAY(CURRENT_DATE('America/Sao_Paulo')))\n    / EXTRACT(DAY FROM CURRENT_DATE('America/Sao_Paulo'))\n, 2) AS cost\nFROM `syscd-443112.billing_export.gcp_billing_export_resource_v1_000600_2E9369_0C8480`\nWHERE DATE(usage_start_time, 'America/Sao_Paulo') >= DATE_TRUNC(CURRENT_DATE('America/Sao_Paulo'), MONTH)",
+          "refId": "A"
+        }
+      ],
+      "title": "Projected month",
+      "description": "Month-to-date cost extrapolated linearly to the full month",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "unit": "currencyBRL"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 4 },
+      "id": 4,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  TIMESTAMP(day) AS time,\n  service AS metric,\n  cost AS value\nFROM (\n  SELECT\n    DATE(usage_start_time, 'America/Sao_Paulo') AS day,\n    service.description AS service,\n    ROUND(SUM(cost + IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0)), 2) AS cost\n  FROM `syscd-443112.billing_export.gcp_billing_export_resource_v1_000600_2E9369_0C8480`\n  WHERE $__timeFilter(usage_start_time)\n  GROUP BY day, service\n)\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily cost by service",
+      "description": "Stacked daily net cost per GCP service",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "decimals": 2,
+          "mappings": [],
+          "unit": "currencyBRL"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 10, "w": 10, "x": 0, "y": 13 },
+      "id": 5,
+      "options": {
+        "displayLabels": ["percent", "value"],
+        "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "values": ["value", "percent"] },
+        "pieType": "donut",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": true },
+        "sort": "desc",
+        "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  service.description AS service,\n  ROUND(SUM(cost + IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0)), 2) AS cost\nFROM `syscd-443112.billing_export.gcp_billing_export_resource_v1_000600_2E9369_0C8480`\nWHERE $__timeFilter(usage_start_time)\nGROUP BY service\nHAVING cost > 0\nORDER BY cost DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost by service",
+      "type": "piechart"
+    },
+    {
+      "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          },
+          "unit": "currencyBRL"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "cost" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-background", "mode": "gradient" }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 14, "x": 10, "y": 13 },
+      "id": 6,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": true },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "cost" }]
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  sku.description AS sku,\n  ROUND(SUM(cost + IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0)), 2) AS cost\nFROM `syscd-443112.billing_export.gcp_billing_export_resource_v1_000600_2E9369_0C8480`\nWHERE $__timeFilter(usage_start_time)\nGROUP BY sku\nHAVING cost > 0\nORDER BY cost DESC\nLIMIT 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 10 SKUs",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 20 },
+              { "color": "red", "value": 50 }
+            ]
+          },
+          "unit": "currencyBRL"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "cost" },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-background", "mode": "gradient" }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 23 },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": true },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "cost" }]
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-bigquery-datasource", "uid": "bigquery" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  IFNULL((SELECT l.value FROM UNNEST(labels) l WHERE l.key = 'storage.googleapis.com/bucket-name'), '(none)') AS bucket,\n  ROUND(SUM(cost + IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0)), 2) AS cost\nFROM `syscd-443112.billing_export.gcp_billing_export_resource_v1_000600_2E9369_0C8480`\nWHERE service.description = 'Cloud Storage'\n  AND $__timeFilter(usage_start_time)\nGROUP BY bucket\nHAVING cost > 0\nORDER BY cost DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Cloud Storage cost by bucket",
+      "description": "Watch syscd-workdir here — the OMP sessions sync bucket grows forever",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "1h",
+  "schemaVersion": 39,
+  "tags": ["gcp", "billing"],
+  "templating": { "list": [] },
+  "time": { "from": "now-30d", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "GCP Billing — syscd-443112",
+  "uid": "gcp-billing",
+  "version": 1,
+  "weekStart": ""
+}
