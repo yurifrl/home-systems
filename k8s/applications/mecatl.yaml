@@ -1,0 +1,201 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mecatl
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mecatl
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    # ------------------------------------------------------------------
+    # Mecatl agent harness (Stacklok) - mecak8s mode: stateless agent pods,
+    # session state in Redis, single-writer per session via k8s Leases.
+    # Remote coding-agent "workers": `mecatui login mecatl.syscd.tech` then
+    # `mecatui connect mecatl.syscd.tech --tls` from the laptop; sessions are
+    # spawned on connect and survive pod restarts via Redis.
+    #
+    # Secure posture required by the chart for a real LLM provider:
+    #   - TLS-verified Redis (dedicated instance below; the shared cluster
+    #     redis is plaintext and is rejected by mecak8s)
+    #   - OIDC caller identity via dex (issuer compared byte-exact)
+    #   - security.tlsTerminatedUpstream: istio gateways terminate TLS with
+    #     the letsencrypt wildcard (syscd-tls); ambient mesh mTLS protects
+    #     the bearer inside the cluster
+    # Docs: https://mecatl.dev/docs/building/deployment/mecak8s
+    # ------------------------------------------------------------------
+    - repoURL: oci://ghcr.io/stacklok/mecatl/charts
+      chart: mecak8s
+      targetRevision: "0.0.38"
+      helm:
+        releaseName: mecatl
+        valuesObject:
+          # Fixed short names: deployment/service `mecak8s` in ns mecatl.
+          fullnameOverride: mecak8s
+          # RWO workspace volume -> single replica (sessions still survive pod
+          # loss: state lives in Redis, ownership in k8s Leases).
+          replicaCount: 1
+          # Server-assigned agent filesystem root (clients cannot pick another).
+          workspace: /workspace
+          extraVolumes:
+            - name: workspace
+              persistentVolumeClaim:
+                claimName: mecatl-workspace
+          extraVolumeMounts:
+            - name: workspace
+              mountPath: /workspace
+          redis:
+            # Dedicated TLS-redis in this namespace (statefulSet below).
+            # Hostname verification runs against this exact name -> the cert's
+            # first SAN must be redis.mecatl.svc.cluster.local.
+            endpoint: redis.mecatl.svc.cluster.local:6379
+            credentialsSecret: redis-tls
+            caKey: ca.crt
+          security:
+            # TLS terminated by the istio gateway (real LE wildcard cert);
+            # OIDC still enforced here. In-pod TLS not needed with ambient.
+            tlsTerminatedUpstream: true
+          oidc:
+            enabled: true
+            # Byte-exact issuer; dex.syscd.dev resolves from pods via public
+            # DNS -> gateway LB (see dns-records).
+            issuer: https://dex.syscd.dev
+            audience: mecatui
+            # RFC 9728 login metadata -> enables `mecatui login`.
+            resource: https://mecatl.syscd.tech
+            clientID: mecatui
+            scopes: [openid, profile, offline_access]
+          # Pinned for GitOps (offline renders cannot generate a stable UUID).
+          telemetry:
+            installationID: 18f26f57-1e55-4eeb-9301-d049e7a7d5a7
+          defaultProvider: openrouter
+          # No model pinned: mecatl's provider default applies. Tune later.
+          extraEnv:
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mecatl-openrouter
+                  key: OPENROUTER_API_KEY
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          statefulSets:
+            # Dedicated TLS redis for mecak8s session state (snapshots + event
+            # streams). Server-side TLS only -- mecak8s cannot do client certs
+            # (upstream ADR 0233) -- so --tls-auth-clients no. ClusterIP only,
+            # ambient mTLS on the wire; not exposed via VirtualService.
+            - name: redis
+              replicas: 1
+              containers:
+                - name: redis
+                  image: redis:7-alpine
+                  args:
+                    - redis-server
+                    - --port
+                    - "0"
+                    - --tls-port
+                    - "6379"
+                    - --tls-cert-file
+                    - /tls/tls.crt
+                    - --tls-key-file
+                    - /tls/tls.key
+                    - --tls-ca-cert-file
+                    - /tls/ca.crt
+                    - --tls-auth-clients
+                    - "no"
+                    - --appendonly
+                    - "yes"
+                  ports:
+                    - name: redis
+                      containerPort: 6379
+                      protocol: TCP
+                  volumeMounts:
+                    - name: data
+                      mountPath: /data
+                    - name: tls
+                      mountPath: /tls
+                  resources:
+                    requests:
+                      cpu: 50m
+                      memory: 64Mi
+                    limits:
+                      cpu: 500m
+                      memory: 256Mi
+              volumes:
+                - name: tls
+                  secret:
+                    secretName: redis-tls
+              volumeClaimTemplates:
+                - name: data
+                  accessModes:
+                    - ReadWriteOnce
+                  storage: 5Gi
+          services:
+            - name: redis
+              port: 6379
+              targetPort: 6379
+          certificates:
+            - name: redis-tls
+              selfSignedCA: true
+              dnsNames:
+                # First SAN must match redis.endpoint (hostname verification).
+                - redis.mecatl.svc.cluster.local
+                - redis.mecatl.svc
+                - redis.mecatl
+          persistentVolumeClaims:
+            # Agent workspace: real filesystem + shell for sessions, survives
+            # pod/node loss (longhorn-ha = 2 replicas) and is backed up weekly.
+            - name: mecatl-workspace
+              accessModes:
+                - ReadWriteOnce
+              storage: 10Gi
+          longhornBackups:
+            - pvc: mecatl-workspace
+          externalSecrets:
+            - name: mecatl-openrouter
+              data:
+                - secretKey: OPENROUTER_API_KEY
+                  key: mecatl
+                  property: OPENROUTER_API_KEY
+          virtualServices:
+            - name: mecatl
+              service:
+                name: mecak8s
+                namespace: mecatl
+                port: 8080
+              domains:
+                live: false   # never publish the agent publicly
+                xyz: false
+                tech: true    # tailnet-only
+                dev: false
+              http:
+                # Login metadata discovery (RFC 9728) rides the HTTP listener;
+                # everything else is gRPC. /healthz /readyz /drain stay
+                # unrouted on purpose (mecak8s docs forbid publishing them).
+                - match:
+                    - uri:
+                        prefix: /.well-known/
+                  route:
+                    - destination:
+                        host: mecak8s.mecatl.svc.cluster.local
+                        port:
+                          number: 8081
+                - route:
+                    - destination:
+                        host: mecak8s.mecatl.svc.cluster.local
+                        port:
+                          number: 8080
