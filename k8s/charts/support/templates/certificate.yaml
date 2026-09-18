@@ -1,0 +1,71 @@
+{{- range .Values.certificates | default (list) }}
+{{- $ns := .namespace | default $.Release.Namespace }}
+{{- $issuerRef := .issuerRef | default (dict "name" .name) }}
+{{- if .selfSignedCA }}
+---
+# Self-signed bootstrap issuer -> CA Certificate (isCA) -> CA Issuer, all
+# namespaced. The CA Issuer is named <name> and signs the leaf below.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ .name }}-selfsigned
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .name }}-ca
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  secretName: {{ .name }}-ca
+  commonName: {{ .name }}-ca
+  isCA: true
+  duration: {{ .duration | default "43800h" }} # 5y default for the CA
+  issuerRef:
+    name: {{ .name }}-selfsigned
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ .name }}
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  ca:
+    secretName: {{ .name }}-ca
+{{- end }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .name }}
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  secretName: {{ .secretName | default .name }}
+  {{- with .dnsNames }}
+  dnsNames:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  issuerRef:
+    name: {{ $issuerRef.name }}
+    kind: {{ $issuerRef.kind | default (ternary "ClusterIssuer" "Issuer" (not .selfSignedCA)) }}
+    {{- with $issuerRef.group }}
+    group: {{ . }}
+    {{- end }}
+  {{- with .duration }}
+  duration: {{ . }}
+  {{- end }}
+  {{- with .renewBefore }}
+  renewBefore: {{ . }}
+  {{- end }}
+{{- end }}

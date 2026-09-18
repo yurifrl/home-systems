@@ -31,6 +31,24 @@ persistentVolumes: []
   #   path: /mnt/data                 # Local path on the node
   #   nodeName: worker-node-1         # Kubernetes node name where volume exists
 
+# cert-manager Certificates (requires cert-manager in the cluster).
+# Each entry creates one Certificate; with selfSignedCA: true it also creates
+# (namespaced) a self-signed bootstrap Issuer, a CA Certificate (isCA) and a
+# CA Issuer named <name> that signs the leaf. Alternatively pass issuerRef to
+# use an existing issuer (e.g. the letsencrypt ClusterIssuer).
+certificates: []
+  # - name: redis-tls
+  #   namespace: ""                  # optional, defaults to release namespace
+  #   selfSignedCA: true             # create a private CA for this certificate
+  #   secretName: ""                 # defaults to <name>
+  #   dnsNames:                      # SANs; keep the full service FQDN first
+  #     - redis.mecatl.svc.cluster.local
+  #   duration: 2160h                # optional (CA defaults to 5y)
+  #   renewBefore: 360h              # optional
+  #   issuerRef:                     # explicit issuer (ignored with selfSignedCA)
+  #     name: letsencrypt
+  #     kind: ClusterIssuer
+
 # Virtual Services configuration
 virtualServices: []
   # - name: grafana                    # Name of the virtual service
