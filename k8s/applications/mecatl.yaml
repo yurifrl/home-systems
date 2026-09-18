@@ -71,6 +71,10 @@ spec:
             # TLS terminated by the istio gateway (real LE wildcard cert);
             # OIDC still enforced here. In-pod TLS not needed with ambient.
             tlsTerminatedUpstream: true
+          # RWO workspace PVC: a surge pod deadlocks on volume attach; Recreate
+          # retires the old pod fully before starting the new one.
+          strategy:
+            type: Recreate
           oidc:
             enabled: true
             # Byte-exact issuer; dex.syscd.dev resolves from pods via public

@@ -240,3 +240,8 @@ service:
   nodePorts: {}
 
 podAnnotations: {}
+
+# -- Deployment strategy override. The RWO workspace PVC forces Recreate:
+# a surge pod cannot attach the volume held by the old pod and the rollout
+# deadlocks (observed 2026-09-18).
+strategy: {}

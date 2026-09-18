@@ -4,4 +4,4 @@ description: Storage-free mecak8s agent backed by externally managed Redis and K
   Leases.
 name: mecak8s
 type: application
-version: 0.0.38-vendored.1
+version: 0.0.38-vendored.2
