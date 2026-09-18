@@ -42,6 +42,13 @@ spec:
             issuer: https://dex.syscd.dev
             web:
               http: 0.0.0.0:5556
+            # sqlite3 on an emptyDir: refresh tokens reset when the pod
+            # restarts; users just log in again. Static passwords + local
+            # clients live in config, so there is nothing else to persist.
+            storage:
+              type: sqlite3
+              config:
+                file: /var/dex/dex.db
             staticClients:
               # mecatui's OIDC login (Authorization Code + PKCE, public client).
               # 18473 is mecatui's fixed loopback callback port
@@ -68,6 +75,14 @@ spec:
                 secretKeyRef:
                   name: mecatl-dex-password
                   key: DEX_ADMIN_PASSWORD_BCRYPT
+          # Writable dir for the sqlite3 db (distroless image FS is read-only
+          # for the nonroot user; the image's /var/dex is not writable either).
+          volumes:
+            - name: storage
+              emptyDir: {}
+          volumeMounts:
+            - name: storage
+              mountPath: /var/dex
           resources:
             limits:
               cpu: 250m
