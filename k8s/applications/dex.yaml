@@ -23,11 +23,16 @@ spec:
     # OIDC provider for services that need real caller identity (mecatl today).
     # Stateless: static clients + a single static password (bcrypt) from
     # 1Password, no database. TLS terminates at the istio gateways:
-    #   - dex.syscd.dev  -> cluster pods (kube API clients, JWKS fetches)
-    #   - dex.syscd.tech -> tailnet browsers (mecatui login from the laptop)
-    # The issuer string MUST stay https://dex.syscd.dev (byte-exact compare by
-    # clients); dex.syscd.dev resolves via public Cloudflare DNS to the gateway
-    # LB (dns-records chart) so in-cluster pods can fetch JWKS/discovery.
+    #   - dex.syscd.live -> Cloudflare edge -> tunnel -> gateway (global;
+    #     Access bypassed by the crossplane-managed per-host app, dex does its
+    #     own authz). THE issuer: globally reachable, so mecatui logins work
+    #     from anywhere, and in-cluster pods fetch discovery/JWKS through the
+    #     CF hairpin (public anycast IPs -> system-trusted edge cert).
+    #   - dex.syscd.tech -> tailnet alias published by the syscd-tailscale
+    #     external-dns instance (CNAME -> syscd-gateway tailnet name); fast
+    #     direct path for on-tailnet browsers.
+    # The issuer string MUST stay https://dex.syscd.live (byte-exact compare
+    # by clients). The old dex.syscd.dev LAN-only host was retired.
     # Vendored upstream chart (k8s/charts/dex) with expandEnv: an initContainer
     # substitutes ${DEX_ADMIN_PASSWORD_BCRYPT} from the env, because dex v2.44
     # has no native env expansion and the stock chart has no hook for it.
@@ -39,7 +44,7 @@ spec:
         valuesObject:
           expandEnv: true
           config:
-            issuer: https://dex.syscd.dev
+            issuer: https://dex.syscd.live
             web:
               http: 0.0.0.0:5556
             # sqlite3 on an emptyDir: refresh tokens reset when the pod
@@ -108,7 +113,16 @@ spec:
                 namespace: dex
                 port: 5556
               domains:
-                live: false
+                # live: the *.syscd.live proxied wildcard already fronts every
+                # host in the zone; the per-host Access bypass app (private
+                # cloudflare-access values) keeps CF from walling the OIDC
+                # flows. This is THE issuer hostname.
+                live: true
                 xyz: false
+                # tech: tailnet-only alias (syscd-tailscale external-dns
+                # publishes the VS host as a CNAME to the gateway tailnet
+                # name). Keep: fast direct path for on-tailnet browsers.
                 tech: true
-                dev: true
+                # dev: retired -- was an unproxied A to the LB (LAN only), the
+                # exact gap that forced the move to .live.
+                dev: false

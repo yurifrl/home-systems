@@ -32,6 +32,16 @@ spec:
             secretName: cloudflare-tunnel-secret
             tunnelName: nixos-1
             ingress:
+              # mecatl.syscd.live: gRPC origin. cloudflared speaks HTTP/1.1 to
+              # plain-http services, and gRPC needs HTTP/2 end to end, so this
+              # entry rides h2 over TLS to the gateway (noTLSVerify: the
+              # gateway cert lists syscd names, not this svc hostname). Must
+              # precede the *.syscd.live wildcard (first-match ingress).
+              - hostname: "mecatl.syscd.live"
+                service: https://istio-gateway.istio-system.svc.cluster.local:443
+                originRequest:
+                  noTLSVerify: true
+                  http2Origin: true
               - hostname: "syscd.xyz"
                 service: https://teleport.teleport.svc.cluster.local
                 originRequest:

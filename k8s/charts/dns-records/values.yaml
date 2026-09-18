@@ -60,23 +60,7 @@ records:
     target: b31e4822-8b42-44fa-b6ca-7feb86a56ec8.cfargotunnel.com
     proxied: true
 
-  # Direct A record to the istio gateway LB so CLUSTER PODS can reach
-  # dex.syscd.dev (mecak8s fetches OIDC discovery/JWKS from it) and laptops on
-  # the home LAN hit the gateway for browser logins. Not proxied: it must
-  # resolve to the RFC1918 address verbatim, and unproxied CF serves it as-is.
-  - name: dex-syscd-dev
-    dnsName: dex.syscd.dev
-    recordType: A
-    target: 192.168.68.201
-    proxied: false
-    ttl: 300
-
-  # mecak8s API + login metadata for mecatui. Same shape as dex: direct A to
-  # the gateway LB, unproxied, so it works from the LAN, the tailnet (via the
-  # public path), and in-cluster pods (OIDC resource URL checks).
-  - name: mecatl-syscd-dev
-    dnsName: mecatl.syscd.dev
-    recordType: A
-    target: 192.168.68.201
-    proxied: false
-    ttl: 300
+  # dex.syscd.dev / mecatl.syscd.dev: RETIRED. They were unproxied A records
+  # to the gateway LB, reachable from the LAN only -- the gap that forced the
+  # dex/mecatl move to the CF-fronted *.syscd.live routes. external-dns
+  # prunes the A + heritage TXT records on sync (owner match).
