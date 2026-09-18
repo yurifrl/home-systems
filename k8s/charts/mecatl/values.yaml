@@ -1,0 +1,242 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: ghcr.io/stacklok/mecatl/mecak8s
+  # Release PRs keep this signed tag aligned with Chart.yaml. A digest overrides
+  # it; clearing both selectors falls back to v<chart-version>.
+  digest: ""
+  tag: "v0.0.38"
+  pullPolicy: IfNotPresent
+
+# imagePullSecrets projects Secret(s) of type kubernetes.io/dockerconfigjson
+# onto the pod for pulling a private image (e.g. a private GHCR repository).
+# Empty by default: a public image needs none.
+imagePullSecrets: []
+
+# extraEnv appends raw Kubernetes EnvVar entries to the agent container.
+# Without mockProvider or a real LLM provider credential, the binary
+# hard-fails at startup (no provider configured) — this is how a real
+# deployment supplies one: project a Secret holding e.g. OPENROUTER_API_KEY /
+# ANTHROPIC_API_KEY / OPENAI_API_KEY via valueFrom.secretKeyRef. cliconfig
+# (the same provider-resolution path mecated uses) detects the env var
+# directly and, with only one key present, selects that provider as the
+# default automatically — no --default-provider flag needed. The Secret
+# itself can come from anywhere (a `kubectl create secret` in Kind, an
+# ExternalSecret in a real cluster, ...); this values shape is identical
+# either way. MECATL_INSTALLATION_ID and chart-generated authentication
+# environment names are reserved; rendering fails if extraEnv collides with one.
+extraEnv: []
+
+# logging controls the process-wide slog threshold. Empty preserves the binary's
+# INFO default; set to debug temporarily to inspect embedded ToolHive/authserver/vMCP
+# logs. Metrics and OTLP remain separate opt-in settings.
+logging:
+  level: ""
+
+# extraArgs appends command-line arguments to the mecak8s agent container. It remains
+# the escape hatch for flags not modeled by the chart; when it contains --log-level,
+# it is appended after logging.level and therefore takes precedence.
+extraArgs: []
+
+# First-class remote Streamable HTTP MCP connections. Authentication is an
+# explicit union: none, staticBearer, or oauth. OAuth selects the session MCP
+# broker and requires its public callback URL below. Secret values are always
+# read from same-namespace Kubernetes Secrets; they are never Helm values.
+#
+# An oauth server's `upstream` is optional and defaults to OIDC discovery
+# against `issuer`. Set `upstream: {mode: oauth2, oauth2: {authorizationEndpoint,
+# tokenEndpoint}}` for a provider with no OIDC discovery endpoint (e.g. GitHub's
+# OAuth Apps) — `issuer` is then omitted. An oauth server's `tools` optionally
+# declares its protected tool catalogue statically (name/description/
+# inputSchema/readOnly per entry): declared tools are admitted into the
+# session's catalogue immediately, with the credential itself deferred to the
+# model's first attempt to call one — see user-docs/building/deployment/mecak8s.md for a worked
+# GitHub example of both.
+mcp:
+  broker:
+    # Public HTTPS URL where the browser returns after OAuth. This exact URL
+    # must route to this service's HTTP listener through your ingress/gateway.
+    callbackURL: ""
+  servers: []
+
+# Optional remote learning driver. A bearer token is optional; when both tokenSecret
+# and tokenKey are set, the chart projects it only as MECATL_DRIVER_AUTH_TOKEN. TLS
+# verifies the driver with the supplied CA, and mTLS is optional.
+learning:
+  store:
+    endpoint: ""
+    tokenSecret: ""
+    tokenKey: ""
+    tls:
+      enabled: false
+      caSecret: ""
+      caKey: ""
+      mtlsSecret: ""
+      certKey: ""
+      keyKey: ""
+
+# extraVolumes and extraVolumeMounts append restricted Kubernetes Volume and
+# VolumeMount entries. Keep configuration content read-only and immutable; XDG-
+# based skills/agents/rules can be projected from a ConfigMap, or a ToolHive OCI
+# skill can use a Kubernetes 1.36+ image volume mounted at
+# <XDG_CONFIG_HOME>/mecatl/skills/<skill-name>.
+extraVolumes: []
+extraVolumeMounts: []
+
+# Automatically discover skills from the standard XDG and trusted workspace locations.
+# XDG and user skills are operator-trusted model-steering instructions; project
+# skill locations remain gated on explicit project trust.
+skills:
+  autoDiscover: false
+
+# Run one pod for lower resource usage and simpler session routing, at the cost of
+# high availability. The PDB is omitted at this value, so voluntary eviction can
+# interrupt service. The default of two keeps the HA-oriented PDB protection.
+# REQUIRED to be 1 (schema-enforced) whenever mcp.broker.callbackURL is set: broker
+# sessions, OAuth grants, and in-flight authorization transactions are process-local
+# and unreplicated, so a second replica cannot serve a request bound to the first —
+# see mcp.broker.callbackURL above. The Deployment also renders strategy.type:
+# Recreate instead of RollingUpdate in that mode, so a rollout fully retires the
+# old incarnation before starting the new one (planned downtime, not zero-downtime
+# — see user-docs/building/deployment/mecak8s.md).
+replicaCount: 2
+mockProvider: false
+
+# Runtime provider selection and spend ceilings. Empty/null means that the chart
+# does not pass the corresponding flag; the runtime/provider default applies.
+defaultProvider: ""
+model: ""
+maxRunTokens: null
+maxTeamTokens: null
+
+# Stable, non-secret identity exported on mecak8s OTel resources. Empty is safe
+# only for live Helm install/upgrade: Helm creates a UUID on install and preserves
+# the live ConfigMap value on ordinary upgrades. Offline/template-based GitOps must
+# set a canonical UUID because lookup is unavailable and uuidv4 changes each render.
+# Set an explicit value for identity continuity across uninstall/reinstall too.
+telemetry:
+  installationID: ""
+
+# A real provider (mockProvider: false) requires OIDC and either pod TLS or an
+# explicitly asserted gateway TLS boundary. The unsafe bypass remains for local
+# development or a trusted mesh that supplies both controls outside the pod.
+security:
+  allowUnsafeRealProvider: false
+  # For the real-provider secure profile, permits TLS upstream only with OIDC;
+  # operator owns gateway TLS, forwarding the original Authorization bearer, and
+  # gateway/mesh-only plaintext backend reachability.
+  tlsTerminatedUpstream: false
+
+# Full pod shutdown budget. The schema minimum of 44s is the first whole second
+# above preStop (3s) plus the default mecak8s drain, gRPC, HTTP, resource-close,
+# and telemetry bounds (43s total). Increase this when extraArgs raises any
+# runtime shutdown bound.
+terminationGracePeriodSeconds: 60
+
+# Prefer replicas on separate nodes without making single-node clusters
+# unschedulable. Each constraint without an explicit labelSelector is scoped to
+# this release's agent pods by the Deployment template. Production deployments
+# can replace this soft default with DoNotSchedule and add zone-level spreading.
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+affinity: {}
+nodeSelector: {}
+tolerations: []
+
+# Omitted for a single replica. maxUnavailable accepts a non-negative integer or
+# a percentage; the default ensures voluntary disruptions remove at most one
+# replica as the Deployment scales.
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+# workspace is the operator-mounted agent filesystem root (e.g. a PVC mount
+# path). Empty (the default) is a FILE-LESS deployment: every session is no-FS.
+# A non-empty ABSOLUTE path makes the deployment server-assigned filesystem
+# authority rooted there — clients cannot select another root (ADR 0237). Mount
+# the volume yourself; the chart only passes the flag.
+workspace: ""
+
+redis:
+  # A production release never creates Redis. Supply the managed endpoint and,
+  # when the service needs a private CA or ACL credentials, a Secret holding
+  # them. Client-certificate (mTLS) authentication is not supported (ADR 0233).
+  endpoint: ""
+  credentialsSecret: ""
+  passwordKey: ""
+  # caKey names a PEM CA bundle key in credentialsSecret. Leave it EMPTY for a
+  # managed Redis whose certificate chains to a public CA: the agent then
+  # verifies against the system trust store (--redis-tls) and mounts no Secret
+  # unless an ACL key is also set. Verification is never disabled either way.
+  caKey: ca.pem
+  usernameKey: ""
+  # Dedicated bounds for blocking event followers. maxFollowers must not
+  # exceed poolSize.
+  follow:
+    poolSize: 32
+    maxFollowers: 32
+  filesystem:
+    # Principal-scoped persistent virtual files. Shell and filesystem forks stay disabled.
+    enabled: false
+  readLedger:
+    # Persist each session's read-before-write evidence independently of file storage.
+    enabled: false
+  local:
+    enabled: false
+
+oidc:
+  # Caller identity (ADR 0204/0205). Off for mock and explicit unsafe-bypass
+  # profiles; required for a real provider under the secure default.
+  enabled: false
+  issuer: ""
+  audience: ""
+  # jwksURI is optional: pins the signing-key endpoint and skips OIDC
+  # discovery (air-gapped / pinned-key deployment). Leave empty to derive it
+  # from the issuer's discovery document.
+  jwksURI: ""
+  maxJWKSStaleness: 1h
+  # allowPrivateHTTPSIssuer admits a private issuer address while retaining HTTPS
+  # and hardened default-client protections. It requires an HTTPS issuer and CA.
+  allowPrivateHTTPSIssuer: false
+  # caSecret and caKey optionally project a private OIDC CA directly to the
+  # OIDC validator; they do not change process-wide TLS trust.
+  caSecret: ""
+  caKey: ""
+  # Optional RFC 9728 protected-resource profile for OAuth clients. Both
+  # resource and clientID are required together and imply oidc.enabled.
+  resource: ""
+  clientID: ""
+  # These entries are joined into the same comma-separated syntax accepted by
+  # --oidc-scopes and validated by cliconfig.ParseOIDCScopes.
+  scopes: []
+
+tls:
+  # Server TLS is optional for mock and explicit unsafe-bypass profiles, but
+  # required for a real provider under the secure default. To enable it, create
+  # the named Secret in this release namespace; the chart projects only certKey
+  # and keyKey read-only (0440). Those keys default to tls.crt and tls.key. Both
+  # gRPC and HTTP/SSE use the pair and reload valid rotations in process; an
+  # invalid replacement retains the last valid certificate.
+  enabled: false
+  secretName: ""
+  certKey: tls.crt
+  keyKey: tls.key
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+service:
+  type: ClusterIP
+  grpcPort: 8080
+  httpPort: 8081
+  nodePorts: {}
+
+podAnnotations: {}

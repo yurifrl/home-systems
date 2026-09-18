@@ -36,9 +36,13 @@ spec:
     #     the bearer inside the cluster
     # Docs: https://mecatl.dev/docs/building/deployment/mecak8s
     # ------------------------------------------------------------------
-    - repoURL: oci://ghcr.io/stacklok/mecatl/charts
-      chart: mecak8s
-      targetRevision: "0.0.38"
+    # Vendored from oci://ghcr.io/stacklok/mecatl/charts (mecak8s 0.0.38,
+    # digest 63046697...). The OCI chart is PRIVATE on ghcr (anonymous pull
+    # denied even with the repo registered in ArgoCD), so it ships in-tree;
+    # the mecak8s container image it deploys is public, so cluster pulls work.
+    - path: k8s/charts/mecatl
+      repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
       helm:
         releaseName: mecatl
         valuesObject:

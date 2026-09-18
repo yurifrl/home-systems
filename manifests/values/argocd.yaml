@@ -124,14 +124,6 @@ notifications:
       enabled: true
 
 configs:
-  # OCI helm registry for the mecatl chart. Without registration ArgoCD's
-  # anonymous token request to ghcr.io is denied (403) and the mecatl app
-  # fails to generate manifests.
-  repositories:
-    mecatl:
-      type: helm
-      url: oci://ghcr.io/stacklok/mecatl/charts
-      enableOCI: "true"
   params:
     # Private/local-only submodules are not manifest sources. Disabling recursive
     # checkout prevents them from blocking repository generation.

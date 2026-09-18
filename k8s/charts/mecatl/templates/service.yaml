@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mecak8s.fullname" . }}
+  labels: {{- include "mecak8s.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  selector: {{- include "mecak8s.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: grpc
+      {{- if not .Values.tls.enabled }}
+      appProtocol: kubernetes.io/h2c
+      {{- end }}
+      port: {{ .Values.service.grpcPort }}
+      targetPort: grpc
+      {{- with .Values.service.nodePorts.grpc }}
+      nodePort: {{ . }}
+      {{- end }}
+    - name: http
+      port: {{ .Values.service.httpPort }}
+      targetPort: http
+      {{- with .Values.service.nodePorts.http }}
+      nodePort: {{ . }}
+      {{- end }}

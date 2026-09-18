@@ -1,0 +1,27 @@
+# Disposable Kind/offline qualification only. This is the sole profile allowed
+# to use a loaded ko.local image and an in-chart plaintext Redis fixture.
+#
+# Kept minimal and secret-free on purpose: e2e/k8s's Ginkgo suite installs the
+# chart with exactly this file and --wait, and creates no Secrets/ConfigMaps
+# beyond the namespace. Any override here that requires a Secret to exist
+# (oidc.caSecret, tls.secretName, ...) leaves that suite's pod stuck mounting a
+# missing volume until the --wait --timeout=4m install times out. The
+# mecak8s-vmcp fixture's own Dex/TLS overrides belong in values-kind-vmcp.yaml,
+# layered on top only by deploy/mecak8s-vmcp/Taskfile.yml.
+image:
+  repository: ko.local/mecak8s
+  digest: ""
+  tag: dev
+  pullPolicy: IfNotPresent
+
+mockProvider: true
+
+redis:
+  endpoint: redis:6379
+  credentialsSecret: ""
+  local:
+    enabled: true
+
+# The e2e exercises the mounted-workspace (server-assigned FS) path: /tmp is a
+# writable emptyDir in the pod, so sessions get a real filesystem root.
+workspace: /tmp
