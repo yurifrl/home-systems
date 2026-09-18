@@ -28,18 +28,18 @@ spec:
     # The issuer string MUST stay https://dex.syscd.dev (byte-exact compare by
     # clients); dex.syscd.dev resolves via public Cloudflare DNS to the gateway
     # LB (dns-records chart) so in-cluster pods can fetch JWKS/discovery.
-    - repoURL: https://charts.dexidp.io
-      chart: dex
-      targetRevision: "0.24.1"
+    # Vendored upstream chart (k8s/charts/dex) with expandEnv: an initContainer
+    # substitutes ${DEX_ADMIN_PASSWORD_BCRYPT} from the env, because dex v2.44
+    # has no native env expansion and the stock chart has no hook for it.
+    - path: k8s/charts/dex
+      repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
       helm:
         releaseName: dex
         valuesObject:
+          expandEnv: true
           config:
             issuer: https://dex.syscd.dev
-            # Required for ${DEX_ADMIN_PASSWORD_BCRYPT} expansion. Without it
-            # the literal placeholder hits dex's bcrypt parser and the pod
-            # crashloops (hashedSecret too short).
-            expandEnv: true
             web:
               http: 0.0.0.0:5556
             staticClients:

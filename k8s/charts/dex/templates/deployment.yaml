@@ -1,0 +1,185 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dex.fullname" . }}
+  namespace: {{ include "dex.namespace" . }}
+  labels:
+    {{- include "dex.labels" . | nindent 4 }}
+    {{ with .Values.deploymentLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{ with .Values.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  {{- with .Values.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "dex.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{ if .Values.configSecret.create }}
+        checksum/config: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      {{- end }}
+      labels:
+        {{- include "dex.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "dex.serviceAccountName" . }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . | quote }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- if .Values.image.digest }}
+          image: "{{ tpl .Values.image.repository . }}@{{ tpl .Values.image.digest . }}"
+          {{- else }}
+          image: "{{ tpl .Values.image.repository . }}:{{ tpl .Values.image.tag . | default (printf "v%s" .Chart.AppVersion) }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - dex
+            - serve
+            - --web-http-addr
+            - 0.0.0.0:5556
+            {{- if .Values.https.enabled }}
+            - --web-https-addr
+            - 0.0.0.0:5554
+            {{- end }}
+            {{- if .Values.grpc.enabled }}
+            - --grpc-addr
+            - 0.0.0.0:5557
+            {{- end }}
+            - --telemetry-addr
+            - 0.0.0.0:5558
+            - /etc/dex/config.yaml
+          env:
+{{- include "dex.envBlock" . | nindent 12 }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 5556
+              protocol: TCP
+            {{- if .Values.https.enabled }}
+            - name: https
+              containerPort: 5554
+              protocol: TCP
+            {{- end }}
+            {{- if .Values.grpc.enabled }}
+            - name: grpc
+              containerPort: 5557
+              protocol: TCP
+            {{- end }}
+            - name: telemetry
+              containerPort: 5558
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz/live
+              port: telemetry
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: telemetry
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: {{ if .Values.expandEnv }}/etc/dex-source{{ else }}/etc/dex{{ end }}
+              readOnly: true
+          {{- if .Values.expandEnv }}
+            - name: workdir
+              mountPath: /etc/dex
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- if .Values.expandEnv }}
+      initContainers:
+        # Dex (v2.44) has no environment-variable expansion in its config. Copy
+        # the rendered config into a writable emptyDir and substitute ${VAR}
+        # placeholders from the container env before the main container starts.
+        - name: expand-env
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eu
+              cp /etc/dex-source/config.yaml /etc/dex/config.yaml
+              # Substitute every ${VAR} with the matching env value. awk with
+              # bracketed {,} keeps the braces literal in the regex; bcrypt
+              # hashes (./A-Za-z0-9) contain no awk replacement specials.
+              for VAR in $(env | sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p'); do
+                VAL=$(printenv "$VAR")
+                awk -v name="$VAR" -v val="$VAL" \
+                  '{ gsub("\\$[{]" name "[}]", val); print }' \
+                  /etc/dex/config.yaml > /etc/dex/config.yaml.new
+                mv /etc/dex/config.yaml.new /etc/dex/config.yaml
+              done
+              echo "expand-env: rewrote /etc/dex/config.yaml"
+          env:
+{{- include "dex.envBlock" . | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/dex-source
+              readOnly: true
+            - name: workdir
+              mountPath: /etc/dex
+      {{- end }}
+      volumes:
+        - name: config
+          secret:
+            secretName: {{ include "dex.configSecretName" . }}
+      {{- if .Values.expandEnv }}
+        - name: workdir
+          emptyDir: {}
+      {{- end }}
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
