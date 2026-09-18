@@ -1,0 +1,95 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dex
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dex
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    # OIDC provider for services that need real caller identity (mecatl today).
+    # Stateless: static clients + a single static password (bcrypt) from
+    # 1Password, no database. TLS terminates at the istio gateways:
+    #   - dex.syscd.dev  -> cluster pods (kube API clients, JWKS fetches)
+    #   - dex.syscd.tech -> tailnet browsers (mecatui login from the laptop)
+    # The issuer string MUST stay https://dex.syscd.dev (byte-exact compare by
+    # clients); dex.syscd.dev resolves via public Cloudflare DNS to the gateway
+    # LB (dns-records chart) so in-cluster pods can fetch JWKS/discovery.
+    - repoURL: https://charts.dexidp.io
+      chart: dex
+      targetRevision: "0.24.1"
+      helm:
+        releaseName: dex
+        valuesObject:
+          config:
+            issuer: https://dex.syscd.dev
+            web:
+              http: 0.0.0.0:5556
+            staticClients:
+              # mecatui's OIDC login (Authorization Code + PKCE, public client).
+              # 18473 is mecatui's fixed loopback callback port
+              # (http://127.0.0.1:18473/oauth/callback).
+              - id: mecatui
+                name: Mecatl TUI
+                public: true
+                redirectURIs:
+                  - http://127.0.0.1:18473/oauth/callback
+                  - http://localhost:18473/oauth/callback
+            enablePasswordDB: true
+            staticPasswords:
+              # Single local user. The bcrypt hash comes from 1Password via
+              # ExternalSecret -> env var expansion (dex expands $VARS in its
+              # config). Password lives in the `mecatl` 1Password item
+              # (kubernetes vault) for interactive logins.
+              - email: yuri@syscd.tech
+                hash: ${DEX_ADMIN_PASSWORD_BCRYPT}
+                username: yuri
+                userID: cde94197-eeae-480d-8ecc-a9580ea8cfa9
+          envVars:
+            - name: DEX_ADMIN_PASSWORD_BCRYPT
+              valueFrom:
+                secretKeyRef:
+                  name: mecatl-dex-password
+                  key: DEX_ADMIN_PASSWORD_BCRYPT
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          externalSecrets:
+            - name: mecatl-dex-password
+              data:
+                - secretKey: DEX_ADMIN_PASSWORD_BCRYPT
+                  key: mecatl
+                  property: DEX_ADMIN_PASSWORD_BCRYPT
+          virtualServices:
+            - name: dex
+              service:
+                name: dex
+                namespace: dex
+                port: 5556
+              domains:
+                live: false
+                xyz: false
+                tech: true
+                dev: true
