@@ -162,6 +162,16 @@ externalSecrets: []
   #   namespace: teleport             # Kubernetes namespace
   #   decodingStrategy: None          # Decoding strategy (default: None)
 
+# Plain Secrets configuration. Only for NON-sensitive payloads that don't
+# belong in 1Password (e.g. public CA roots); real secrets go through
+# externalSecrets above.
+secrets: []
+  # - name: my-secret
+  #   namespace: ""                   # Defaults to the release namespace
+  #   type: Opaque
+  #   stringData:
+  #     key: value
+
 # ConfigMaps configuration
 configMaps: []
   # - name: config-name
