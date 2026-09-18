@@ -145,6 +145,36 @@ spec:
     #         secretName: pihole-secret
     #         tlsSkipVerify: false
 
+    # syscd.dev (.dev) — CRD-only publisher for the static DNSEndpoint records
+    # in that zone (dex.syscd.dev today). The old rfc2136/bind9 publisher
+    # stayed disabled; this restores .dev DNS through the same Cloudflare zone
+    # with minimal blast radius: sources=[crd] means it never touches
+    # gateway/virtualservice annotations (e.g. it will NOT publish a wildcard
+    # for the dev gateway), it only syncs what dns-records declares.
+    - repoURL: registry-1.docker.io/bitnamicharts
+      chart: external-dns
+      targetRevision: "9.0.3"
+      helm:
+        releaseName: syscd-dev
+        valuesObject:
+          global:
+            security:
+              allowInsecureImages: true
+          image:
+            registry: registry.k8s.io
+            repository: external-dns/external-dns
+            tag: v0.18.0
+          txtOwnerId: syscd-cloudflare-dev
+          policy: sync
+          interval: 1m
+          domainFilters:
+            - syscd.dev
+          sources:
+            - crd
+          provider: cloudflare
+          cloudflare:
+            secretName: cloudflare-api-token-secret
+            proxied: false
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
       path: k8s/charts/support

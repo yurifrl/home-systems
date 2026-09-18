@@ -3,6 +3,7 @@
 # has crd.create=true and is covered by the bitnami chart already).
 dnsEndpointReaders:
   - tailscale-external-dns
+  - syscd-dev-external-dns
 
 # Static Cloudflare DNS records, managed by external-dns via DNSEndpoint CRs.
 # Migrated from terraform/cloudflare/dns.tf. Not secret -- public on purpose.
@@ -58,3 +59,14 @@ records:
     dnsName: jogosdetabuleirodoyuri.com.br
     target: b31e4822-8b42-44fa-b6ca-7feb86a56ec8.cfargotunnel.com
     proxied: true
+
+  # Direct A record to the istio gateway LB so CLUSTER PODS can reach
+  # dex.syscd.dev (mecak8s fetches OIDC discovery/JWKS from it) and laptops on
+  # the home LAN hit the gateway for browser logins. Not proxied: it must
+  # resolve to the RFC1918 address verbatim, and unproxied CF serves it as-is.
+  - name: dex-syscd-dev
+    dnsName: dex.syscd.dev
+    recordType: A
+    target: 192.168.68.201
+    proxied: false
+    ttl: 300
