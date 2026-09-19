@@ -56,7 +56,7 @@ spec:
                   property: privateKey
     - repoURL: https://victoriametrics.github.io/helm-charts/
       chart: victoria-metrics-k8s-stack
-      targetRevision: "0.90.2"
+      targetRevision: "0.92.1"
       helm:
         # Pin the Helm release name so resource names are short and
         # deterministic (vmks-*, vmsingle-vmks, vmalertmanager-vmks, ...),
