@@ -20,6 +20,31 @@ spec:
           dnsZones:
             - "syscd.tech"
             - "syscd.dev"
+            - "syscd.live"
+            - "syscd.xyz"
+            - "monaddaydream.com"
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gateway-public-tls
+  namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  secretName: gateway-public-tls
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.syscd.live"
+    - "*.syscd.xyz"
+    - "*.monaddaydream.com"
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  privateKey:
+    algorithm: RSA
+    size: 2048 
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
