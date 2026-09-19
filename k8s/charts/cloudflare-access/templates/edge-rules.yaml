@@ -21,7 +21,11 @@ spec:
     name: default
   forProvider:
     zoneId: {{ .zoneId | quote }}
-    name: {{ printf "%s rate limits" .name | quote }}
+    {{/* terraform-provider-cloudflare v5 types ruleset `name` as ForceNew:
+        a name change plans destroy+recreate of the phase entrypoint, which
+        upjet's injected prevent_destroy always blocks. Keep the name equal
+        to the adopted entrypoint's live name so the plan stays in-place. */}}
+    name: {{ .entrypointName | default (printf "%s rate limits" .name) | quote }}
     kind: zone
     phase: http_ratelimit
     rules:
@@ -55,7 +59,8 @@ spec:
     name: default
   forProvider:
     zoneId: {{ .zoneId | quote }}
-    name: {{ printf "%s firewall" .name | quote }}
+    {{/* Same ForceNew constraint as the ratelimit name above. */}}
+    name: {{ .entrypointName | default (printf "%s firewall" .name) | quote }}
     kind: zone
     phase: http_request_firewall_custom
     rules:
