@@ -21,10 +21,12 @@ spec:
     {{- end }}
 {{- if $wi.providerId }}
 ---
-{{- /* v1beta2 only: v1beta1's schema types oidc as array, so the
-       apiserver rejects the map render ("expected list, got &{}")
-       and the MR never creates. v1beta2 types oidc as object. */ -}}
-apiVersion: iam.gcp.upbound.io/v1beta2
+{{- /* Storage version is v1beta1, whose schema types `oidc` as an array.
+       The upbound conversion webhook cannot reshape the v1beta2 map into
+       that array, so any v1beta2 render is rejected on dry-run apply
+       ("expected list, got &{}"). Render v1beta1 with oidc as a one-element
+       list instead. */ -}}
+apiVersion: iam.gcp.upbound.io/v1beta1
 kind: WorkloadIdentityPoolProvider
 metadata:
   name: {{ $wi.providerId }}
@@ -46,7 +48,7 @@ spec:
     {{- end }}
     {{- with $wi.oidc }}
     oidc:
-      {{- toYaml . | nindent 6 }}
+      {{- toYaml (list .) | nindent 6 }}
     {{- end }}
 {{- end }}
 {{- end }}
