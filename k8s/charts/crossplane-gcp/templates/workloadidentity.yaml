@@ -21,7 +21,10 @@ spec:
     {{- end }}
 {{- if $wi.providerId }}
 ---
-apiVersion: iam.gcp.upbound.io/v1beta1
+{{- /* v1beta2 only: v1beta1's schema types oidc as array, so the
+       apiserver rejects the map render ("expected list, got &{}")
+       and the MR never creates. v1beta2 types oidc as object. */ -}}
+apiVersion: iam.gcp.upbound.io/v1beta2
 kind: WorkloadIdentityPoolProvider
 metadata:
   name: {{ $wi.providerId }}
