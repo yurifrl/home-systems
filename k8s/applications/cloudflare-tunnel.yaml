@@ -42,6 +42,10 @@ spec:
                 originRequest:
                   noTLSVerify: true
                   http2Origin: true
+                  # SNI the gateway routes on: envoy picks the mecatl VS by
+                  # SNI on :443; without this cloudflared sends the svc
+                  # hostname, no VS matches, and CF surfaces a 502.
+                  originServerName: mecatl.syscd.live
               - hostname: "syscd.xyz"
                 service: https://teleport.teleport.svc.cluster.local
                 originRequest:
