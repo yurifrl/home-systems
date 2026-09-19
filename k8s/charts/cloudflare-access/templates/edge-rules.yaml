@@ -28,6 +28,7 @@ spec:
           requestsPerPeriod: {{ .requestsPerPeriod }}
           mitigationTimeout: {{ .mitigationTimeoutSeconds }}
     {{- end }}
+{{- if .country }}
 ---
 apiVersion: cloudflare.upjet-cloudflare.upbound.io/v1alpha1
 kind: Ruleset
@@ -51,4 +52,5 @@ spec:
         enabled: true
         description: block high threat score
         expression: {{ printf "(http.host eq %q and cf.threat_score gt %v)" .host .threatScoreBlock | quote }}
+{{- end }}
 {{- end }}
