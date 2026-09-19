@@ -1,10 +1,20 @@
 {{- range .Values.edgeRules }}
 {{- $edge := . }}
+{{- /* Free plan: 1 rate-limit rule per zone. No rateLimits -> render no
+       ratelimit Ruleset at all (an empty-rules entrypoint PUT would evict
+       every other rule in the phase). ratelimitExternalName adopts an
+       existing phase entrypoint (upjet POST on an existing phase returns
+       "already exists" and would otherwise wedge the MR). */ -}}
+{{- if .rateLimits }}
 ---
 apiVersion: cloudflare.upjet-cloudflare.upbound.io/v1alpha1
 kind: Ruleset
 metadata:
   name: {{ .name }}-ratelimit
+  {{- if .ratelimitExternalName }}
+  annotations:
+    crossplane.io/external-name: {{ .ratelimitExternalName | quote }}
+  {{- end }}
 spec:
   deletionPolicy: {{ .deletionPolicy | default "Delete" }}
   providerConfigRef:
@@ -28,12 +38,17 @@ spec:
           requestsPerPeriod: {{ .requestsPerPeriod }}
           mitigationTimeout: {{ .mitigationTimeoutSeconds }}
     {{- end }}
+{{- end }}
 {{- if .country }}
 ---
 apiVersion: cloudflare.upjet-cloudflare.upbound.io/v1alpha1
 kind: Ruleset
 metadata:
   name: {{ .name }}-firewall
+  {{- if .firewallExternalName }}
+  annotations:
+    crossplane.io/external-name: {{ .firewallExternalName | quote }}
+  {{- end }}
 spec:
   deletionPolicy: {{ .deletionPolicy | default "Delete" }}
   providerConfigRef:
@@ -52,5 +67,11 @@ spec:
         enabled: true
         description: block high threat score
         expression: {{ printf "(http.host eq %q and cf.threat_score gt %v)" .host .threatScoreBlock | quote }}
+{{- range .extraFirewallRules }}
+      - action: block
+        enabled: true
+        description: {{ .description | quote }}
+        expression: {{ .expression | quote }}
+{{- end }}
 {{- end }}
 {{- end }}

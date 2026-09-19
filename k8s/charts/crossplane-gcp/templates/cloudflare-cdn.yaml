@@ -65,10 +65,16 @@ spec:
 {{- end }}
 {{- if .manageCloudflareRules }}
 {{- /*
-  Edge protection rulesets, each scoped to `domain` so the rest of the zone is
-  untouched. Every phase's zone entrypoint is otherwise empty (only Cloudflare's
-  default managed WAF/DDoS rulesets exist). Requires the cloudflare-creds token
-  to hold Cache Settings / Zone WAF / Config Settings edit scopes.
+  Cache ruleset, scoped to `domain` so the rest of the zone is untouched.
+  Requires the cloudflare-creds token to hold Cache Settings / Config Settings
+  edit scopes.
+
+  Edge PROTECTION rulesets (rate limit / custom firewall) default off via
+  manageEdgeProtectionRules: every phase entrypoint is single-owner per zone,
+  and syscd.live's ratelimit + firewall entrypoints are owned by the
+  cloudflare-access chart's edgeRules (Free plan allows exactly 1 rate-limit
+  rule per zone -- the slot goes to dex). Set it true only for zones no other
+  chart manages rules for.
 */ -}}
 {{- $host := printf "(http.host eq \"%s\")" .domain }}
 {{- $countries := list }}{{- range .geoAllowCountries }}{{ $countries = append $countries (printf "\"%s\"" .) }}{{- end }}
@@ -102,6 +108,13 @@ spec:
             default: {{ .cacheEdgeTtlSeconds }}
 ---
 # Per-IP rate limit (flood protection). cf.colo.id is required for zone rules.
+{{- /* Helm's `default` treats false as empty, so default true would ignore
+       an explicit false. Unset -> true, explicit false -> off. */ -}}
+{{- $protect := true }}
+{{- if hasKey . "manageEdgeProtectionRules" }}
+{{- $protect = .manageEdgeProtectionRules }}
+{{- end }}
+{{- if $protect }}
 apiVersion: cloudflare.upjet-cloudflare.upbound.io/v1alpha1
 kind: Ruleset
 metadata:
@@ -151,6 +164,7 @@ spec:
         enabled: true
         description: block high threat score for assets
         expression: {{ printf "%s and cf.threat_score gt %v" $host .threatScoreBlock | quote }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

@@ -107,6 +107,9 @@ assetsCdn:
 #  # Declarative Cloudflare edge protection for the assets host (scoped to
 #  # `domain`; needs the API token to hold Cache/WAF/Config scopes).
 #  manageCloudflareRules: true
+#  # Keep false when another chart (cloudflare-access edgeRules) owns the
+#  # zone's ratelimit/firewall entrypoints: one owner per phase entrypoint.
+#  manageEdgeProtectionRules: false
 #  cacheEdgeTtlSeconds: 86400              # cache covers at edge, override origin private
 #  rateLimit:                             # free plan: period must be 10
 #    requestsPerPeriod: 300
