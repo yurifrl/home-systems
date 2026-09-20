@@ -18,6 +18,20 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: crossplane-system
+  # Upjet writes provider-resolved fields back onto the Certificate MR after
+  # observe (the DNS-authorization self-link, the expanded project, plus the
+  # crossplane initProvider/managementPolicies bookkeeping). None are
+  # representable in the git template, so ignore them or selfHeal fights the
+  # provider forever and the app stays OutOfSync/Degraded.
+  ignoreDifferences:
+    - group: certificatemanager.gcp.upbound.io
+      kind: Certificate
+      name: board-games-assets-cdn
+      jsonPointers:
+        - /spec/forProvider/managed/0/dnsAuthorizations
+        - /spec/forProvider/project
+        - /spec/initProvider
+        - /spec/managementPolicies
   syncPolicy:
     automated:
       prune: true
