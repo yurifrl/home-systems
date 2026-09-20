@@ -46,3 +46,12 @@ spec:
               env:
                 - name: HOME
                   value: /tmp
+              # Memory request makes the pod BURSTABLE. Without any requests the
+              # provider is BestEffort, and Talos's OOMController sweeps every
+              # besteffort cgroup on the node when a single kernel OOM fires --
+              # all 12 providers restart together, replay their watch caches,
+              # spike memory again, and the node enters an OOM death spiral
+              # (91 OOM kills in minutes on pc01, 5.4GB node).
+              resources:
+                requests:
+                  memory: 256Mi

@@ -53,4 +53,10 @@ spec:
                   value: {{ .apiserverHost | quote }}
                 - name: KUBERNETES_SERVICE_PORT
                   value: {{ .apiserverPort | quote }}
+              # Burstable not BestEffort -- same reasoning as amd64-only
+              # runtime config. gcp-compute/storage spike highest during big
+              # reconciles, so request more here.
+              resources:
+                requests:
+                  memory: 512Mi
 {{- end }}
