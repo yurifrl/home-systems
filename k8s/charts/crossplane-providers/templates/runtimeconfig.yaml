@@ -15,17 +15,15 @@ spec:
         spec:
           nodeSelector:
             kubernetes.io/arch: {{ .Values.runtimeArch }}
-          # Keep provider runtime pods OFF the control-plane node. The provider
-          # LIST/watch load is heavy (they pegged the sole 8-CPU CP macintel01 at
-          # ~104%, starving kube-apiserver and firing ControlPlaneAPIUnreachable +
-          # NodeCPUCritical). Schedule them on amd64 WORKERS (pc01/dell01) instead.
-          affinity:
-            nodeAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                nodeSelectorTerms:
-                  - matchExpressions:
-                      - key: node-role.kubernetes.io/control-plane
-                        operator: DoesNotExist
+          # No affinity beyond the arch selector: pods float across ALL healthy
+          # amd64 nodes (pc01 + macintel01), wherever the scheduler finds room.
+          # 2026-09-20: dell01 went NotReady/cordoned, leaving 5.9GB pc01 as the
+          # only schedulable amd64 worker; the Talos 1.13.3 userspace OOM
+          # handler kill-spree there took every conversion webhook down and
+          # jammed every ArgoCD app. macintel01 runs workloads by design (no
+          # taint; kubelet reservations protect system pods) with ~25GB free.
+          # The old control-plane exclusion dates from the pre-throttle
+          # LIST/watch pegging; the args throttle below bounds that load now.
           # containers is a required field on the DeploymentRuntimeConfig pod
           # template; the name is the strategic-merge key. nodeSelector pins arch;
           # HOME=/tmp gives the uid-2000 runtime a writable home so providers that
@@ -52,6 +50,12 @@ spec:
               # all 12 providers restart together, replay their watch caches,
               # spike memory again, and the node enters an OOM death spiral
               # (91 OOM kills in minutes on pc01, 5.4GB node).
+              # Limit caps runaway memory AND exempts the pod from Talos's
+              # userspace OOM ranking: cgroups with memory.max set score 0 and
+              # are skipped by the handler (the kernel memcg OOM still applies
+              # at hard pressure). 1Gi is ~5x observed provider usage.
               resources:
                 requests:
                   memory: 256Mi
+                limits:
+                  memory: 1Gi

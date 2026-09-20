@@ -12,11 +12,11 @@
   of them.
 
   Do NOT hostname-pin these providers. These images are amd64-only, so pin to
-  arch and keep them off the control-plane, but let the pod float across healthy
-  amd64 workers. A hostname pin (e.g. pc01) is a single point of failure: when
+  arch only and let the pods float across ALL healthy amd64 nodes (pc01 +
+  macintel01). A hostname pin (e.g. pc01) is a single point of failure: when
   that node's containerd breaks the conversion webhook loses its endpoint and
   every ArgoCD app jams with ComparisonError. Arch-pin lets the scheduler
-  reschedule the webhook onto a surviving amd64 worker.
+  reschedule the webhook onto a surviving amd64 node.
 */ -}}
 {{- with .Values.pinnedRuntimeConfig }}
 apiVersion: pkg.crossplane.io/v1beta1
@@ -31,15 +31,13 @@ spec:
         spec:
           nodeSelector:
             kubernetes.io/arch: amd64
-          # Keep webhook providers off the control-plane (same as the shared
-          # amd64-only config): their LIST/watch load pegs the apiserver.
-          affinity:
-            nodeAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                nodeSelectorTerms:
-                  - matchExpressions:
-                      - key: node-role.kubernetes.io/control-plane
-                        operator: DoesNotExist
+          # No affinity beyond the arch selector: pods float across ALL healthy
+          # amd64 nodes (pc01 + macintel01). 2026-09-20: with dell01
+          # NotReady/cordoned, excluding the control-plane left 5.9GB pc01 as
+          # the only schedulable amd64 worker, where the Talos 1.13.3 userspace
+          # OOM handler kill-spree took every conversion webhook down. The
+          # webhook must survive any single amd64 node failing -- let the
+          # scheduler place it wherever there is room.
           containers:
             - name: package-runtime
               # Same apiserver-load throttle as the shared runtime config.
@@ -53,10 +51,12 @@ spec:
                   value: {{ .apiserverHost | quote }}
                 - name: KUBERNETES_SERVICE_PORT
                   value: {{ .apiserverPort | quote }}
-              # Burstable not BestEffort -- same reasoning as amd64-only
-              # runtime config. gcp-compute/storage spike highest during big
-              # reconciles, so request more here.
+              # Limit exempts the pod from Talos's userspace OOM ranking
+              # (memory.max set -> score 0, handler skips it) and caps balloons
+              # during big reconciles. Same rationale as amd64-only config.
               resources:
                 requests:
                   memory: 512Mi
+                limits:
+                  memory: 1Gi
 {{- end }}
