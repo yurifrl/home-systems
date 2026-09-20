@@ -95,6 +95,7 @@ assetsCdn:
 #  #     "https://api.cloudflare.com/client/v4/zones/$ZONE/dns_records?name=$DOMAIN"
 #  aRecordExternalName: REAL_RECORD_ID    # A record -> lbIp
 #  dnsAuthExternalName: REAL_RECORD_ID    # _acme-challenge CNAME -> dnsAuthCname
+#  cacheRulesetExternalName: REAL_RULESET_ID  # zone cache-ruleset entrypoint
 #  cloudflareIpRanges:                    # https://www.cloudflare.com/ips-v4
 #    - 173.245.48.0/20
 #    - 103.21.244.0/22

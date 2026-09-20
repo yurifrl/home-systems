@@ -102,6 +102,10 @@ apiVersion: cloudflare.upjet-cloudflare.upbound.io/v1alpha1
 kind: Ruleset
 metadata:
   name: {{ .name }}-cache
+  {{- with .cacheRulesetExternalName }}
+  annotations:
+    crossplane.io/external-name: {{ . | quote }}
+  {{- end }}
 spec:
   deletionPolicy: {{ $dp }}
   providerConfigRef: { name: default }
