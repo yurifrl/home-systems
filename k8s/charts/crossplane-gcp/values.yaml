@@ -88,6 +88,13 @@ assetsCdn:
 #  name: board-games-assets-cdn
 #  domain: assets.syscd.live
 #  bucketExternalName: REAL_BUCKET        # same as buckets[].externalName
+#  # Cloudflare record IDs the MRs adopt instead of trying to create. Required
+#  # when the records pre-date Crossplane ownership (else the provider loops on
+#  # Cloudflare 81053 "record already exists" forever). Grab with:
+#  #   curl -H "Authorization: Bearer $TOKEN" \
+#  #     "https://api.cloudflare.com/client/v4/zones/$ZONE/dns_records?name=$DOMAIN"
+#  aRecordExternalName: REAL_RECORD_ID    # A record -> lbIp
+#  dnsAuthExternalName: REAL_RECORD_ID    # _acme-challenge CNAME -> dnsAuthCname
 #  cloudflareIpRanges:                    # https://www.cloudflare.com/ips-v4
 #    - 173.245.48.0/20
 #    - 103.21.244.0/22

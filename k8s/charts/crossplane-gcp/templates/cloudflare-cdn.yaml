@@ -7,10 +7,23 @@
 {{- with .Values.assetsCdn }}
 {{- if and .enabled .cloudflareZoneId .lbIp }}
 {{- $dp := $.Values.deletionPolicy }}
+{{- /*
+  externalName pins the MR to the pre-existing Cloudflare record IDs. Both
+  records were created manually during the original CDN bootstrap (2026-08-02),
+  before Crossplane managed them; without the pin the provider defaults
+  external-name to the MR name, tries to CREATE, and loops forever on
+  Cloudflare error 81053 (record already exists) — churning annotations every
+  minute and spamming ArgoCD with refreshes.
+*/ -}}
+---
 apiVersion: dns.upjet-cloudflare.upbound.io/v1alpha1
 kind: Record
 metadata:
   name: {{ .name }}
+  {{- with .aRecordExternalName }}
+  annotations:
+    crossplane.io/external-name: {{ . | quote }}
+  {{- end }}
 spec:
   deletionPolicy: {{ $dp }}
   providerConfigRef: { name: default }
@@ -52,6 +65,10 @@ apiVersion: dns.upjet-cloudflare.upbound.io/v1alpha1
 kind: Record
 metadata:
   name: {{ .name }}-dns-auth
+  {{- with .dnsAuthExternalName }}
+  annotations:
+    crossplane.io/external-name: {{ . | quote }}
+  {{- end }}
 spec:
   deletionPolicy: {{ $dp }}
   providerConfigRef: { name: default }
