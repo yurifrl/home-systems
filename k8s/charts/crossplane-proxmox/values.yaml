@@ -95,11 +95,15 @@ vms:
     smbiosUuid: ce1486a7-768b-4012-bfb9-debba1aac475
     bootOrder: [scsi0, ide2, net0]     # boot: order=scsi0;ide2;net0
     cpu:
-      cores: 4                         # cores: 4
+      cores: 8                         # all 8 SMT threads (Ryzen 5 3400G 4C/8T); workstation VM retired 2026-09-20
       sockets: 1                       # sockets: 1
       type: x86-64-v2-AES              # cpu: x86-64-v2-AES
-    memoryMiB: 12288                   # memory: 12288 (dedicated/max)
-    floatingMiB: 6144                  # balloon floor: coexist w/ workstation on the 15.6GiB host
+    memoryMiB: 14336                   # 14GiB fixed: host has 15.6GiB, ~1.6GiB left for PVE itself
+    # floatingMiB removed (2026-09-20): ballooning disabled so the guest sees the
+    # full 14GiB. Previously 6144 floor / 12288 max, which auto-ballooned the
+    # node down to ~5.9GiB under host pressure and drove the provider-pod OOM
+    # kill-spree. NOTE: the Talos kernel has no memory hotplug -- a memory
+    # change only takes effect on the next VM boot.
     netMac: BC:24:11:45:72:B6          # net0 virtio mac
     disk:
       interface: scsi0                 # scsi0: local-lvm:...,size=30G
@@ -177,8 +181,8 @@ vms:
     enabled: false                     # flip true once the qcow2 is published + image.url set
     name: workstation
     vmId: 102
-    onBoot: true
-    started: true
+    onBoot: false                      # retired 2026-09-20: no auto-start on host reboot
+    started: false                     # stopped 2026-09-20; CPU/RAM reallocated to talos-pc01
     machine: q35
     scsiHardware: virtio-scsi-single
     osType: l26
