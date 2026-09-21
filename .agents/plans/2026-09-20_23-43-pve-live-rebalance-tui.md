@@ -107,6 +107,100 @@ Every other idea re-implements one of these. The three options below are exactly
 - TUI proof: on pc01, +1 core to one VM offers −1 from the other; GPU radio refuses two owners; running-VM memory change shows reboot badge; audit log records each apply.
 - Multi-host proof: second PVE node appears with its own budget bars from a single endpoint.
 
+## Deep dive (2026-09-21): C vs A for this cluster
+
+Facts gathered from the live repo/cluster that reshape the comparison:
+
+- Crossplane is **v2.3.4**, XFN already enabled (`xfn.enabled: true`) — composition functions are the *only* composition mode in v2, so C aligns with the installed world.
+- **Decisive structural fact:** today the chart renders raw `EnvironmentVM` MRs and the ArgoCD app tracks them directly with `selfHeal: true`. Any in-cluster spec mutation on those MRs is therefore option B (ArgoCD reverts it). The XR layer is not a nicety — **it is the only mechanism that moves the MRs out of ArgoCD's diff** (composed children are shown in the resource tree and health-checked, but not spec-diffed against git). A tiny controller patching raw MRs (C′) hits the same ArgoCD fight and collapses into B. C stands or falls with the XR refactor.
+- The repo already uses the B mechanism twice, narrowly: iso-pipeline rotates the download URL, cloud-init-render patches EnvironmentFile — both resolved via `ignoreDifferences` on single leaf fields. B for allocation would mean permanently blinding `cpu/memory/started/onBoot/hostpci` on every VM — the most safety-critical fields. B is now doubly dead.
+- **Control-plane fragility is a design input:** core runs `--max-reconcile-rate=1 --sync-interval=30m` with pods pinned to `192.168.68.91:6443` to dodge the flaky two-LAN ClusterIP VIP; documented lease-flap incidents (2026-08-15). Implications:
+  - In C, a delta ConfigMap edit does **not** wake the XR — the TUI must also bump the XR to force recompose, and end-to-end latency is gated on control-plane health and the provider queue. Expect seconds-to-minutes, not sub-second.
+  - During a cluster outage, C cannot act at all. A can act on PVE but the tool must **refuse** when it cannot set the pause annotation (an unpauseable change gets reverted on recovery — Crossplane and the providers are equally dead without the apiserver, but they resume on recovery and would revert). Graceful-degradation rule for the A driver: no kube, no write.
+- Migration risk of C is the Orphan dance, runbook-ordered: install XRD+composition → flip existing VM MRs to `deletionPolicy: Orphan` → delete raw VM MRs (PVE untouched; vmid adoption via `crossplane.io/external-name` is already proven machinery) → sync chart with XR instances → new MRs adopt the running VMs. One careful maintenance window; rollback by reversing (git history keeps the raw templates).
+- Blast radius: one composition serves all VM XRs; a bad function/patch stalls every VM's reconcile at once. Mitigation: pin function image versions; v2 `CompositionRevision` + per-XR `compositionRevisionRef` lets composition changes themselves be canaried per-VM.
+- Security inversion: the C driver needs only a kubeconfig (PVE `root@pam` creds never leave the cluster; ProviderConfig is ESO→1Password). A needs PVE write creds on the laptop plus kube for the pause. Multi-admin future favors C; single-operator + fragile-cluster present favors A.
+- "Contributors must speak Crossplane": in C, every VM-shape change (even in git) flows through XRD schema + composition + functions. This team is already deep-Crossplane (gcp/cloudflare/proxmox providers, ESO), so the marginal concept cost is modest — but the VM-shape knob is touched *frequently* (the 2026-09-20 dance) and the substrate is *variable*; frequent knob on fragile substrate is the coupling to avoid.
+
+### Verdict (sharpened)
+
+**Ship A (standalone `pvedial`, `pve-direct` driver) now; treat C as an upgrade path, not a fork.** Trigger C only on a concrete need: multi-admin RBAC'd access, in-cluster policy/admission for budgets+GPU, or in-cluster audit. The driver interface and the delta-object design (ConfigMap now → CRD later) carry over unchanged, so the A investment is not throwaway. B stays dead; C′ (controller over raw MRs) is B with extra code.
+
+## Standalone product (2026-09-21): the TUI is the product
+
+**Pitch (one line):** "A beautiful TUI to allocate resources to your Proxmox VMs. See every host, move cores and gigabytes with keys, land changes in seconds."
+
+Crossplane is a detail under the fold — an optional backend that keeps the tool from fighting GitOps. It appears in marketing as one footnote line: "Plays nice with GitOps — promote changes back to git, abort anytime." Never in the demo.
+
+### The slides
+
+1. **Main screen (the GIF):** full-screen charm-stack TUI. Left: hosts with live capacity bars (CPU threads, RAM) — allocated vs used, sparklines. Right: VMs grouped by host, status dots, current cores/RAM. All keyboard, vim keys, works over SSH.
+2. **The move:** select VM → allocation panel (cores stepper, RAM slider with live headroom — "+4 GiB → pve1 has 5.2 free ✓", GPU radio) → confirm → progress → toast. The 2026-09-20 "give everything to talos" dance becomes 30 seconds: stop workstation, bars free up, slide allocation to talos, done.
+3. **Footnote:** GitOps line above. Nothing else.
+
+### Down the stack (layers)
+
+- **L0 — PVE API client:** full read, VM config writes, start/stop/migrate.
+- **L1 — Planner:** the guards live here — host budgets (+2 needs −2 donor logic), GPU exclusivity, reboot-required predicates, disk growth-only.
+- **L2 — Write backends:** `pve-direct` (default, zero prerequisites — this is the demo path) / gitops-aware backend (pause-or-override + promote; crossplane adapter lives HERE and only here).
+- **L3 — Modules:** resource domains as plugins. v0: cpu/mem + start/stop. Next: disk resize, VM migrate-between-hosts (budget bars make this gorgeous), PCI/GPU, network, snapshots.
+
+### Module seam (so disk resizing plugs in without touching anything)
+
+```
+Read(node, vm) → ModuleState          // current, capacity, live usage
+Fields()      → form schema           // TUI auto-renders the huh form
+Plan(from,to) → [Action], warnings    // reboot? donor needed? guard trips?
+Apply(actions) → progress events
+```
+
+Host bars aggregate ModuleStates (disk module adds storage bars). Forms render from schema — a new module registers and the TUI renders it with zero TUI changes. Config enables/disables modules.
+
+### Distribution + wedge
+
+- GIF on top of the README (vhs over the real TUI, built early — if the GIF isn't undeniable, nothing else matters). r/homelab + r/selfhosted + Proxmox forum; "k9s/btop for Proxmox allocation" is the one-line orientation.
+- nix flake, homebrew, goreleaser binaries, single static binary, `pvedial --profile home` one-command start; PVE API token auth (least-priv token, not root@pam password).
+- MVP: cpu/mem module + host bars + pve-direct backend. The crossplane backend ships later, behind a flag, invisible unless you have GitOps.
+- Dogfood loop = this lab: every real allocation change goes through the TUI from day one.
+
+### N machines, zero clutter (2026-09-21)
+
+Model: **connections → nodes** (a PVE cluster exposes all its nodes through any member's API — so "N machines" is usually one endpoint, N nodes; standalone nodes are separate connections). Chrome adapts to what exists:
+
+- **1 node:** no switcher, no tabs — the VM list IS the screen. Host line = one full-width header ("pve1 · Ryzen 3400G · 12.3/15.6 GiB ▓▓▓░"). A single-machine user never learns the word "cluster."
+- **2–9 nodes:** one-line tab strip (or slim sidebar), per-node mini bars; switch with `[`/`]`, `1-9`. Selected node's VMs fill the screen; others exist only in the strip.
+- **Many / multi-cluster:** fuzzy switcher (`s`), plus an "all" aggregate view for cross-node rebalance. Unreachable node = dim dot in the strip, never an error screen.
+
+Rules: one goroutine per connection, async — connecting never blocks the UI, sparklines keep ticking on the live ones. Switching = pointer flip, no reconnect. Cross-node donor logic: same-node allocation only; cross-node = the migrate module's path (target picker shows which node has room — that's the stunning demo). Config: `[[hosts]]` TOML entries; zero-config first run prompts and writes the profile; one host → never asked again.
+
+### Self-containment: one CLI, components inside (2026-09-21)
+
+No editions, no modes-as-products. One binary, componentized:
+
+```
+pvedial
+├── TUI        the product — allocation across N nodes, modules render here
+├── backend    pluggable write path behind one interface
+│   ├── pve-direct   default — writes PVE API directly; zero prerequisites
+│   └── crossplane   active once `pvedial install` ran — writes DialOverride + XR bump
+├── install    ships OUR crossplane side (Go embed → applied to cluster):
+│               provider-proxmox + ProviderConfig (secret = the token minted at
+│               login, no ESO), XRD, Composition (refs our function OCI image),
+│               function-dial, DialOverride CRD, RBAC — then adopts existing VMs
+│               (external-name = vmid). User authors zero YAML.
+├── discover / login / adopt   zero-config plumbing (LAN probe :8006, mint
+│               least-priv token from root creds once, KUBECONFIG detection)
+└── modules    cpu/mem (v0), disk, migrate, gpu… — the plugin seam
+```
+
+Backend activation is automatic, not a user choice: no install → pve-direct; install present (marked by a small state file + CRD existence check) → crossplane. Same TUI, same modules, same discovery either way — reads always come live from PVE; only the write path swaps. Existing-XR shops with their own compositions: `install --function-only` (add our function step, keep their shapes).
+
+Minimum denominators, restated as requirements not editions: pve-direct needs Proxmox. crossplane backend needs a cluster with Crossplane v2 — everything above that is shipped by `install`.
+
+Zero-config ladder: 1) LAN probe finds PVE hosts, one [Y/n]. 2) `pvedial login`: root@pam pasted once → we mint `pvedial@pve` + least-priv token, discard root creds; config written by us. 3) kubeconfig found + install run → done. 4) New VMs/nodes = live reads, `pvedial adopt` repeatable for gitops mode.
+
+Guard: install must detect foreign ownership (VM claimed by another composition/XR) and refuse adoption rather than fight — detach is an explicit guided step.
+
 ## Out of Scope
 
 - VM provisioning/deletion, disk resize, ISO handling (Crossplane chart stays owner).

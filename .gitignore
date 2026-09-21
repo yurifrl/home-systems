@@ -39,3 +39,6 @@ functions/*/VERSION
 # worktrees
 .worktrees/*
 .worktrees/.gitkeep
+
+# pvedial lives in its own repo (not a submodule)
+/.submodules/pvedial/
