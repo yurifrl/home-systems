@@ -1,0 +1,8 @@
+# tk-lyf render repro (stubbed op, dummy secret VALUES) — 2026-09-06T01:57:40Z
+template sha256 (git 294e2a3f == worktree == render copy): 0e8daccd5c904f044f047ff8546691f57ae17b694cca546d6d6d7d31bd5458c0
+$ PATH=/tmp/tklyf-bin:$PATH go run ./cmd/nostos --config ~/.nostos-tklyf/config.yaml render talos-pc01
+Rendered /Users/yuri/.local/share/nostos/configs/bc-24-11-45-72-b6.yaml
+$ talosctl validate --config /Users/yuri/.local/share/nostos/configs/bc-24-11-45-72-b6.yaml --mode metal
+/Users/yuri/.local/share/nostos/configs/bc-24-11-45-72-b6.yaml is valid for metal mode
+$ go run ./cmd/nostos --config ~/.nostos-tklyf/config.yaml render pc01
+proxmox installs no machineconfig; nothing to render for pc01  (node-key correction confirmed)

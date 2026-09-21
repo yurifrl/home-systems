@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "_type": "issue",
+  "id": "tk-oks",
+  "title": "obs-control-plane-tolerations",
+  "description": "restreamer + cloudflared-obs have been Pending 26d.\nRoot cause: k8s/charts/obs/restreamer.yaml and k8s/charts/obs/cloudflared.yaml pin to macintel01 (intentional - only node on the OBS LAN, comments explain why) and tolerate node.kubernetes.io/unschedulable + node.cilium.io/agent-not-ready, but macintel01 now also carries the node-role.kubernetes.io/control-plane taint which they do not tolerate.\nAdd to BOTH files' tolerations lists: `- key: node-role.kubernetes.io/control-plane` with `operator: Exists`, preserving existing tolerations and the targeted-toleration comment style (extend comments, don't delete).\nDo NOT apply to the cluster.\nACCEPTANCE: Rendered/manifest tolerations on both workloads include node-role.kubernetes.io/control-plane Exists; existing tolerations untouched; comments preserved in same style. Diff committed; evidence in tk comment.",
+  "status": "approved",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": null,
+  "assignee": null,
+  "created_by": "yuri",
+  "created_at": "2026-09-06T00:05:00.932Z",
+  "updated_at": "2026-09-06T00:13:31.838Z",
+  "started_at": null,
+  "closed_at": null,
+  "due_at": null,
+  "defer_until": null,
+  "parent": null,
+  "labels": [],
+  "notes": null,
+  "design": null,
+  "acceptance_criteria": null,
+  "estimated_minutes": null,
+  "spec_id": null,
+  "external_ref": null,
+  "branch": "obs-control-plane-tolerations",
+  "metadata": {},
+  "attachments": [],
+  "dependencies": [],
+  "dependency_count": 0,
+  "dependent_count": 0,
+  "comments": [
+    {
+      "id": "comment-46cd28c0-0e81-4836-a566-76d79ec4bbd2",
+      "issue_id": "tk-oks",
+      "author": "yuri",
+      "text": "DONE: Added node-role.kubernetes.io/control-plane operator:Exists toleration to both k8s/charts/obs/restreamer.yaml and k8s/charts/obs/cloudflared.yaml (commit 3389cabd in worktree obs-control-plane-tolerations). Existing tolerations (cilium agent-not-ready, unschedulable+NoSchedule) and all comments untouched; added a 2-line comment in the same style explaining the new toleration. Verified: python yaml parse of both files asserts each Deployment's tolerations are exactly [cilium agent-not-ready, unschedulable, control-plane] with correct operators/effects — both pass. Not applied to cluster (git/ArgoCD only, per repo rules).",
+      "created_at": "2026-09-06T00:09:24.547Z"
+    },
+    {
+      "id": "comment-64c6d729-7bc9-4121-b8e2-dcb6f597b495",
+      "issue_id": "tk-oks",
+      "author": "yuri",
+      "text": "APPROVED: Verified independently at commit 3389cabd (branch obs-control-plane-tolerations, worktree clean, single commit on branch). Evidence per acceptance criterion: (1) Diff main...HEAD = exactly 2 files (k8s/charts/obs/restreamer.yaml, cloudflared.yaml), 8 insertions, 0 deletions — pure addition, so all pre-existing tolerations and comments are byte-identical; no scope creep (name-only confirms the 2 files, nothing else). (2) New toleration present in BOTH Deployments as '- key: node-role.kubernetes.io/control-plane' + 'operator: Exists', appended last. (3) My own python3 yaml.safe_load_all parse of both manifests: restreamer.yaml = 1 doc (Deployment/restreamer) OK; cloudflared.yaml = 2 docs (ConfigMap/cloudflared-obs + Deployment/cloudflared-obs) OK; asserted each Deployment's tolerations EXACTLY equal [node.cilium.io/agent-not-ready Exists, node.kubernetes.io/unschedulable Exists+NoSchedule, node-role.kubernetes.io/control-plane Exists] — both pass, exit 0. (4) Comments preserved and extended in the existing targeted-toleration style: a 2-line explanatory comment above the new entry, same voice as the cordon-toleration comment; no comment lines removed. (5) Cluster untouched: change is manifest-only, no apply performed (per task + repo rules). Browser step N/A: raw non-templated manifests, YAML render-level validation per constraints. Criteria → evidence: control-plane Exists on both workloads ✓ (assertion output), existing tolerations untouched ✓ (0 deletions + exact-list assert), comments preserved ✓ (file read + 0 deletions), diff committed ✓ (3389cabd).",
+      "created_at": "2026-09-06T00:13:25.553Z"
+    }
+  ],
+  "comment_count": 2
+}

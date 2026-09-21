@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "_type": "issue",
+  "id": "tk-xxl",
+  "title": "image-updater-args-fix",
+  "description": "argocd-image-updater crashloops with 5,897 restarts: live args are [\"--metrics-bind-address=:8443\",\"run\"] on image v1.2.1 (helm chart argocd-image-updater 1.2.4 from https://argoproj.github.io/argo-helm) - the binary does not know that flag, prints usage, exits.\n1. Locate which key in k8s/applications/argo-image-updater.yaml helm.valuesObject renders that arg: render with `helm template <release> argocd-image-updater --repo https://argoproj.github.io/argo-helm --version 1.2.4 -f <values>`.\n2. Remove the flag or replace with the metrics config this version/chart supports (check the chart's values.yaml/README for the CRD/ImageUpdater model).\n3. Prove the fixed args are accepted: `docker run --rm <image> --help` to list supported flags, or cite the upstream chart values docs.\nDo NOT apply to the cluster. Commit in worktree only.\nACCEPTANCE: helm template render with patched values shows container args that image v1.2.1 accepts (proof in tk comment: --help output or upstream doc citation). Diff committed on branch.",
+  "status": "approved",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": null,
+  "assignee": null,
+  "created_by": "yuri",
+  "created_at": "2026-09-06T00:05:00.833Z",
+  "updated_at": "2026-09-06T01:47:43.275Z",
+  "started_at": null,
+  "closed_at": null,
+  "due_at": null,
+  "defer_until": null,
+  "parent": null,
+  "labels": [],
+  "notes": null,
+  "design": null,
+  "acceptance_criteria": null,
+  "estimated_minutes": null,
+  "spec_id": null,
+  "external_ref": null,
+  "branch": "image-updater-args-fix",
+  "metadata": {},
+  "attachments": [],
+  "dependencies": [],
+  "dependency_count": 0,
+  "dependent_count": 0,
+  "comments": [
+    {
+      "id": "comment-d7885636-7c8f-4c30-81d5-407b9d283f1f",
+      "issue_id": "tk-xxl",
+      "author": "yuri",
+      "text": "DONE: valuesObject never rendered the flag — chart-hardcoded arg misdiagnosed; real crashloop cause is leader election. Fixed via extraArgs [ ], commit 54bb7cef on branch image-updater-args-fix.\n\nLOCATE (step 1): No key in k8s/applications/argo-image-updater.yaml valuesObject renders --metrics-bind-address. The manifest only set crds.install/keep. Chart 1.2.4 templates/deployment.yaml hardcodes it: args: [--metrics-bind-address=:{{ .Values.containerPorts.metrics }}, run] (default containerPorts.metrics=8443). Reproduced: helm template argocd-image-updater --repo https://argoproj.github.io/argo-helm --version 1.2.4 -f values-with-only-crds.yaml renders exactly [ , run ].\n\nFLAG SUPPORT (step 3 proof): docker run --rm quay.io/argoprojlabs/argocd-image-updater:v1.2.1 run --help AND :v1.2.2 run --help both list --metrics-bind-address string (default  0 ) and --leader-election (default true). Task premise (flag unsupported) refuted: docker run v1.2.1 --metrics-bind-address=:8443 run starts the controller fine locally (fails only on missing kubeconfig, expected outside a cluster).\n\nREAL ROOT CAUSE (live evidence, context admin@talos-default): pod argocd-image-updater-controller-5d8b7bf575-txvvw (image v1.2.2, NOT v1.2.1 as reported), 5,946 restarts/26d. Previous-run logs: container runs ~88s of real work, then leaderelection.go: failed to renew lease argocd/c21b75f2.argoproj.io: context deadline exceeded (API server 10.96.0.1:443 timeouts) -> error= leader election lost  -> cobra prints 'Error: leader election lost' + full usage dump -> exit 1. The usage dump is cobra's response to a RUNTIME error, not an unknown-flag error. Fits the plan's known chronic API slowness (cert-manager 253 / external-dns 432 restarts cluster-wide).\n\nFIX (step 2): chart appends valuesObject.extraArgs AFTER the run subcommand. Added extraArgs: [ ]. With replicaCount=1 + Recreate strategy, leader election adds zero HA value but turned every API blip into a crashloop exit. Also corrected stale comment (chart 1.2.4 -> appVersion v1.2.2, not v1.2.1).\n\nVERIFY: helm template 1.2.4 with patched values renders container args [--metrics-bind-address=:8443, run, --leader-election=false]; docker run with that exact arg list starts cleanly on BOTH v1.2.1 and v1.2.2 (controller initialized, no flag errors). Committed on branch image-updater-args-fix (54bb7cef), no cluster changes, not pushed/merged.\n\nRESIDUAL RISK: if API-server slowness persists, the updater may log reconcile errors but will no longer exit — restarts should flatline after ArgoCD syncs this. Post-sync check: kubectl get pod restarts stable + KubePodCrashLooping(argocd) clears.",
+      "created_at": "2026-09-06T00:20:15.498Z"
+    },
+    {
+      "id": "comment-324357f4-e83f-4fa2-baa0-7694dfdcae1f",
+      "issue_id": "tk-xxl",
+      "author": "yuri",
+      "text": "APPROVED: Premise correction is sound and the fix is correct.\n\n(1) PREMISE REFUTED — independently confirmed: docker run --help on BOTH quay.io/argoprojlabs/argocd-image-updater:v1.2.1 and :v1.2.2 lists --metrics-bind-address (default \\0\\) and --leader-election (default true). Task's original 'flag unsupported' premise was factually wrong; cobra's usage dump comes from the RUNTIME 'leader election lost' error. Live: pod txvvw (v1.2.2) does ~88s of real work then leaderelection.go lease renewal times out (chronic API slowness) -> exit 1 -> 5,958 restarts and climbing (checked admin@talos-default, read-only). Premise-correction validity: rendered Deployment has replicas: 1 + strategy: Recreate — with one replica there is nothing to fail over, so leader election is pure liability (each API blip becomes a crashloop exit). Default-true flag explains why it runs at all.\n\n(2) DIFF SCOPE — clean: 1 file (k8s/applications/argo-image-updater.yaml), 7+/1-: stale comment corrected (Chart 1.2.4 -> appVersion v1.2.2) + extraArgs [--leader-election=false] + explanatory comment. No scope creep, no cluster mutations, not pushed/merged.\n\n(3) RENDER PROOF — independently reproduced: helm template argocd-image-updater --repo https://argoproj.github.io/argo-helm --version 1.2.4 -f <valuesObject extracted from committed manifest> renders container args EXACTLY [--metrics-bind-address=:8443, run, --leader-election=false], image v1.2.2, replicas 1, Recreate. extraArgs appends after run so the flag binds to the subcommand; worker's docker run with that exact arg list started cleanly on both images.\n\n(4) RISK — acceptable: this treats the updater's amplification (API blip -> process exit), not the API slowness itself; root cause stays tracked in plan section 5 (KubeAPIServerSlow/ControlPlaneAPIUnreachable, kube-apiserver handler timeouts, CRD finalizers) with its own verify criteria. Post-sync expectation: restarts flatline, KubePodCrashLooping(argocd) clears.\n\nNon-blocking notes for Coach: (a) plan 3.1 still carries the refuted premise ('flag unsupported') — consider a one-line plan amendment when archiving; worker rightly left the plan untouched to keep diff scope clean. (b) Two stale v1.2.1 pods from old rs 7764b9b594 (552/151 restarts, since June/July) exist on the cluster — pre-existing cruft, unrelated to this diff. Browser validation N/A: headless controller Helm-values change, no web surface; evidence is helm render + read-only kubectl + docker --help outputs quoted here.",
+      "created_at": "2026-09-06T01:47:38.630Z"
+    }
+  ],
+  "comment_count": 2
+}

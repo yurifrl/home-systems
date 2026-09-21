@@ -87,6 +87,7 @@ vms:
     enabled: true
     name: talos-pc01
     vmId: 100
+    agentEnabled: false                # no qemu-guest-agent in Talos metal image; bpg refresh waits on it otherwise
     onBoot: true                       # onboot: 1
     started: true                      # GPU owner by default (cluster worker)
     machine: q35                       # machine: q35

@@ -1,0 +1,21 @@
+diff --git a/k8s/applications/buzz.yaml b/k8s/applications/buzz.yaml
+index 7d670c76..853aec20 100644
+--- a/k8s/applications/buzz.yaml
++++ b/k8s/applications/buzz.yaml
+@@ -87,6 +87,16 @@ spec:
+             git:
+               enabled: false
+ 
++          # Disable the A3 git conformance probe: unsatisfiable on GCS
++          # S3-interop (429 mutation limiter + no If-Match CAS, upstream
++          # block/buzz#2470). Set via relay.extraEnv because chart 0.1.7 has
++          # no git.conformanceProbe knob; re-enable when the chart with that
++          # knob (upstream PR #2511) lands.
++          relay:
++            extraEnv:
++              - name: BUZZ_GIT_CONFORMANCE_PROBE
++                value: "false"
++
+           # Networking is handled by the Istio VirtualService (support chart
+           # below) + Cloudflare tunnel, not the chart's own ingress/HTTPRoute.
+           ingress:

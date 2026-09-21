@@ -1,0 +1,34 @@
+# tk-zxx validation evidence (Validator-zxx, 2026-09-06T02:15Z, ctx admin@talos-default — tailscale ctx absent as documented)
+
+## step1 cluster pg
+phase='Cluster in healthy state' readyInstances=3 instances=3 currentPrimary=pg-1 instancesStatus={healthy:[pg-1,pg-2,pg-3]}
+
+## step2 instances
+pg-1 1/1 Running (primary, pg_is_in_recovery=f, PG 16.14)
+pg-2 1/1 Running 0 restarts age 77m (fresh reclone)
+pg-3 1/1 Running 0 restarts age 73m (fresh reclone)
+pg_stat_replication: pg-2|streaming|async|0 lag bytes; pg-3|streaming|async|0 lag bytes
+
+## step3 operator+lease
+cnpg-operator-cloudnative-pg-64f87c64f6-vfk4t 1/1 Running 12 restarts age 112m (caveat verified, reconciles between flaps)
+lease db9c8771.cnpg.io held by operator pod identity; renewTime advanced 02:14:53Z -> 02:15:01Z -> 02:15:07Z (duration 15s = actively renewing)
+
+## step4 buzz DB on pg-1
+databases: budget,buzz,litellm,postgres,supabase,template0,template1
+buzz DB public schema: 42 relations = 18 base tables + 24 partitions; 38 buzz-owned; 4 postgres-owned (events/delivery_log_2026_07+_08, manually created — benign, relay runtime partitions 2026_09..12 buzz-owned)
+_sqlx_migrations absent (0) as stated for 0.1.0 no-migration path
+relay_members owner row: c0d50085f361f163afcd9551969c5aa6aa0f5c2fbb5fa504d7822baae0c4f862|owner created 02:02:46Z updated 02:10:26Z (matches boot logs; updated_at proves old-RS pod boot also passed DB path)
+
+## step5 buzz ns
+pods: buzz-b57844d5c-rswxn (new RS, rollout restart) 0/1 CrashLoopBackOff — log trace: Postgres connected -> Relay owner bootstrapped -> Audit service ready -> Redis pub/sub connected (reconnect errs non-fatal) -> Typesense setup failed (non-fatal) -> Media storage connected -> 'running git object-store conformance probe (A3 gate)' -> FATAL 'git conformance probe failed: s3 backend error: Got HTTP 404 ... <Code>NoSuchBucket</Code>'
+buzz-5ccfc9584b-k54m2 (prev RS, standard RollingUpdate hold) — identical failure mode (A3 gate only)
+zombie 24d pod of buzz-8c8564b85 GONE (RS scaled to 0)
+kubelet events: startup probe fails only because container exits at A3 gate
+
+## blocker MR verification
+Bucket MR buzz-media: SYNCED=False ReconcileError 'cannot determine creation result - remove the crossplane.io/external-create-pending annotation...'
+LastAsyncOperation: 'async create failed: ... googleapi: Error 403: The billing account for the owning project is disabled ... accountDisabled'
+external-name <bucket-redacted> == bucket in 404
+
+## browser validation
+N/A: no serving web surface (relay exits at A3 gate before serving; health port transient only). Cluster-side live-ops validation; command outputs above are the evidence.

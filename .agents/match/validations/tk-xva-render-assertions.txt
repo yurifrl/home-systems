@@ -1,0 +1,27 @@
+# tk-xva validator render evidence — 2026-09-06T00:21:15Z
+# helm v4.2.4, chart cloudnative-pg/cluster@0.8.1, valuesObject from worktree k8s/applications/postgres.yaml @ bb631d99
+# helm template pg-test cloudnative-pg/cluster --version 0.8.1 -f /tmp/pg-values-xva-worktree.yaml -n databases
+
+## diff stat (main...HEAD)
+ k8s/applications/postgres.yaml | 16 +---------------
+ 1 file changed, 1 insertion(+), 15 deletions(-)
+
+## exclusion assertions (expect 0)
+NotIn:               0
+nodeAffinity:        0
+nodeSelectorTerms:   0
+macarm01:            0
+macintel01:          0
+rpi01:               0
+flaky roaming:       0
+
+## rendered Cluster spec.affinity (lines 136-139 of 366-line render)
+  affinity:
+    enablePodAntiAffinity: true
+    podAntiAffinityType: preferred
+    topologyKey: kubernetes.io/hostname
+
+## anti-affinity assertions (expect 1 each)
+enablePodAntiAffinity: true:                  1
+podAntiAffinityType: preferred:               1
+topologyKey: kubernetes.io/hostname:          1

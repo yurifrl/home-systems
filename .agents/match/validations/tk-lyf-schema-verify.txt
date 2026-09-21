@@ -1,0 +1,36 @@
+# schema ground truth (Go module cache, exact versions)
+## k8s.io/kubelet@v0.32.1 config/v1beta1/types.go
+520:	EvictionHard map[string]string `json:"evictionHard,omitempty"`
+521-	// evictionSoft is a map of signal names to quantities that defines soft eviction thresholds.
+525:	EvictionSoft map[string]string `json:"evictionSoft,omitempty"`
+526-	// evictionSoftGracePeriod is a map of signal names to quantities that defines grace
+530:	EvictionSoftGracePeriod map[string]string `json:"evictionSoftGracePeriod,omitempty"`
+531-	// evictionPressureTransitionPeriod is the duration for which the kubelet has to wait
+644:	SystemReserved map[string]string `json:"systemReserved,omitempty"`
+645-	// kubeReserved is a set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G) pairs
+652:	KubeReserved map[string]string `json:"kubeReserved,omitempty"`
+653-	// The reservedSystemCPUs option specifies the CPU list reserved for the host
+
+## siderolabs/talos pkg/machinery@v1.13.3
+731:	KubeletExtraConfig Unstructured `yaml:"extraConfig,omitempty"`
+// ProtectedConfigurationFields is a list of kubelet config fields that can't be overridden
+// with the machine configuration.
+var ProtectedConfigurationFields = []string{
+	"apiVersion",
+	"authentication",
+	"authorization",
+	"cgroupRoot",
+	"kind",
+	"kubeletCgroups",
+	"port",
+	"protectKernelDefaults",
+	"resolvConf",
+	"rotateCertificates",
+	"systemCgroups",
+	"staticPodPath",
+	"seccompDefault",
+}
+
+## branch scope vs main
+ nostos/templates/talos-pc01.yaml | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)

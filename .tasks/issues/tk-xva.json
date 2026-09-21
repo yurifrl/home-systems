@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "_type": "issue",
+  "id": "tk-xva",
+  "title": "cnpg-drop-node-exclusions",
+  "description": "Remove node favorites from Postgres scheduling.\nFile: k8s/applications/postgres.yaml (~lines 56-69, inside spec.instances cluster affinity).\nDELETE the nodeAffinity requiredDuringSchedulingIgnoredDuringExecution block (NotIn [macarm01, macintel01, rpi01]) and its comment (\"Keep instances OFF the flaky roaming VMs...\").\nKEEP enablePodAntiAffinity: true, podAntiAffinityType: preferred, topologyKey: kubernetes.io/hostname (that is spread, not exclusion).\nRationale: repo rule - no node favorites or exclusions; a flaky replica on a node is fixed at the node, not banned from scheduling.\nDo NOT apply anything to the cluster. Render-only validation.\nACCEPTANCE: Rendered manifest shows cluster.affinity with enablePodAntiAffinity=true + hostname topologyKey retained; zero hostname NotIn nodeSelectorTerms remain. Diff committed on branch. Evidence (render snippet) in tk comment.",
+  "status": "approved",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": null,
+  "assignee": null,
+  "created_by": "yuri",
+  "created_at": "2026-09-06T00:05:00.677Z",
+  "updated_at": "2026-09-06T00:21:37.737Z",
+  "started_at": null,
+  "closed_at": null,
+  "due_at": null,
+  "defer_until": null,
+  "parent": null,
+  "labels": [],
+  "notes": null,
+  "design": null,
+  "acceptance_criteria": null,
+  "estimated_minutes": null,
+  "spec_id": null,
+  "external_ref": null,
+  "branch": "cnpg-drop-node-exclusions",
+  "metadata": {},
+  "attachments": [],
+  "dependencies": [],
+  "dependency_count": 0,
+  "dependent_count": 1,
+  "comments": [
+    {
+      "id": "comment-3bec36f0-3f09-475b-b513-8ae04e6dafa4",
+      "issue_id": "tk-xva",
+      "author": "yuri",
+      "text": "Coach note: previous worker (Worker-CnpgExclusions) completed the change and committed bb631d99 but exited before handoff. Fresh worker finishing: verify + evidence + status.",
+      "created_at": "2026-09-06T00:12:42.735Z"
+    },
+    {
+      "id": "comment-0543c9a3-72fc-42a1-b036-38e5bbd6c933",
+      "issue_id": "tk-xva",
+      "author": "yuri",
+      "text": "DONE: Verified existing commit bb631d99 on branch cnpg-drop-node-exclusions - handoff completed, not redone.\n\nDIFF SCOPE (git diff main...HEAD, commit bb631d99): exactly one file, k8s/applications/postgres.yaml, +1/-15, worktree clean.\nREMOVED (old lines 56-69): the 4-line comment (Keep instances OFF the flaky roaming / cross-site VMs / macarm01 macintel01 rpi01 - a Postgres replica there cannot keep its local server up, readiness 500 perpetual 0/1, and degrades the cluster; leaves tp1/tp4/pc01 for the 3 instances) plus the whole nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution block (nodeSelectorTerms -> matchExpressions -> key: kubernetes.io/hostname, operator: NotIn, values: macarm01 macintel01 rpi01).\nKEPT INTACT (now lines 52-55): affinity with enablePodAntiAffinity: true, podAntiAffinityType: preferred, topologyKey: kubernetes.io/hostname.\nNOTE: the diff also trims the parenthetical (keep them off the flaky roaming VMs) from the adjacent instances comment at line 44 - comment-only, same logical removal (stale reference to the now-permitted nodes); no functional lines touched beyond the block.\n\nRENDER EVIDENCE (render-only, no cluster mutation): extracted spec.sources[0].helm.valuesObject via yq and ran helm template pg-test cloudnative-pg/cluster --version 0.8.1 -f /tmp/pg-values.yaml -n databases against the upstream chart pinned in the Application. Rendered Cluster CR (name: pg, 366 lines total) spec.affinity:\n  enablePodAntiAffinity: true\n  podAntiAffinityType: preferred\n  topologyKey: kubernetes.io/hostname\nAssertions over the full rendered output: NotIn count = 0, nodeAffinity count = 0, macarm01/macintel01/rpi01 count = 0. Acceptance met: anti-affinity hostname spread retained, zero hostname NotIn nodeSelectorTerms remain.",
+      "created_at": "2026-09-06T00:17:11.053Z"
+    },
+    {
+      "id": "comment-f322cde9-1d56-4c21-bc2f-d58574b3c354",
+      "issue_id": "tk-xva",
+      "author": "yuri",
+      "text": "APPROVED: Validator pass (fresh render, independent of worker evidence).\n\nCRITERION -> EVIDENCE:\n1. nodeAffinity NotIn block + its 4-line comment removed: diff main...HEAD (commit bb631d99) shows exactly the block (key kubernetes.io/hostname, operator NotIn, values macarm01/macintel01/rpi01) and its comment deleted; only file touched is k8s/applications/postgres.yaml, +1/-15, worktree clean.\n2. Pod anti-affinity kept: independent render (helm v4.2.4, cloudnative-pg/cluster@0.8.1, valuesObject extracted from the WORKTREE Application yaml — not main) -> rendered Cluster CR (366 lines) spec.affinity = enablePodAntiAffinity: true / podAntiAffinityType: preferred / topologyKey: kubernetes.io/hostname (lines 136-139), each asserted count=1.\n3. Zero exclusion remnants in full rendered output: NotIn=0, nodeAffinity=0, nodeSelectorTerms=0, macarm01=0, macintel01=0, rpi01=0, 'flaky roaming'=0.\n4. Parenthetical trim '(keep them off the flaky roaming VMs)' from the instances comment (line 44): judged CORRECT — it described exactly the scheduling exclusion being deleted, so it is stale without it; comment-only, no functional lines.\n5. Render-only, no cluster mutation; diff committed on branch cnpg-drop-node-exclusions.\n\nEvidence file: .agents/match/validations/tk-xva-render-assertions.txt (render command, diff stat, all assertions).",
+      "created_at": "2026-09-06T00:21:33.255Z"
+    }
+  ],
+  "comment_count": 3
+}

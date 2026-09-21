@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "_type": "issue",
+  "id": "tk-npc",
+  "title": "buzz-disable-conformance-probe",
+  "description": "Git change (user-approved remedy for structural blocker on tk-xfv): set BUZZ_GIT_CONFORMANCE_PROBE=false in the buzz deployment env so the relay can serve on GCS S3-interop (no CAS; upstream block/buzz#2470, fix pending in PR #2511).\\nLocate the env block: k8s/charts/buzz/ templates (deployment/statefulset) or the buzz Application values in k8s/applications/buzz.yaml / .submodules/home-systems-values. Add the env var alongside the existing BUZZ_* vars with a comment citing: 'A3 git conformance probe is unsatisfiable on GCS S3-interop (429 mutation limiter + no If-Match CAS, upstream block/buzz#2470); re-enable when chart with git.conformanceProbe knob (upstream PR #2511) lands'.\\nKeep the probe name/style consistent with how other BUZZ_* env vars are declared in that file.\\nDo NOT apply to the cluster; commit in worktree only.\\nACCEPTANCE: render (helm template or manifest parse) shows the env var on the buzz workload; no other changes; diff committed on branch; evidence comment.",
+  "status": "approved",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": null,
+  "assignee": null,
+  "created_by": "yuri",
+  "created_at": "2026-09-06T11:51:36.625Z",
+  "updated_at": "2026-09-06T12:09:48.290Z",
+  "started_at": null,
+  "closed_at": null,
+  "due_at": null,
+  "defer_until": null,
+  "parent": null,
+  "labels": [],
+  "notes": null,
+  "design": null,
+  "acceptance_criteria": null,
+  "estimated_minutes": null,
+  "spec_id": null,
+  "external_ref": null,
+  "branch": "buzz-disable-conformance-probe",
+  "metadata": {},
+  "attachments": [],
+  "dependencies": [],
+  "dependency_count": 0,
+  "dependent_count": 0,
+  "comments": [
+    {
+      "id": "comment-80300850-f485-4483-ad4a-a60cfb66e98a",
+      "issue_id": "tk-npc",
+      "author": "yuri",
+      "text": "DONE: Disabled buzz A3 git conformance probe in k8s/applications/buzz.yaml (commit 77e64d4b, branch buzz-disable-conformance-probe).\n\nChange: added relay.extraEnv: [{name: BUZZ_GIT_CONFORMANCE_PROBE, value: \\false\\}] to the chart 0.1.7 valuesObject, placed after persistence.git with the requested citation (GCS S3-interop: 429 mutation limiter + no If-Match CAS, upstream block/buzz#2470; re-enable when git.conformanceProbe knob lands in upstream PR #2511).\n\nWhy relay.extraEnv: pulled oci://ghcr.io/block/buzz/charts/buzz 0.1.7 and verified it has no git.conformanceProbe values knob and never sets BUZZ_GIT_CONFORMANCE_PROBE itself; relay.extraEnv is the chart's sanctioned passthrough appended into the relay container env block (templates/deployment.yaml), so the var lands without duplicate-key collision. Chart schema validated strict-render OK.\n\nVerification (render-only, per repo GitOps rules — no kubectl apply): helm template buzz oci://ghcr.io/block/buzz/charts/buzz --version 0.1.7 with the full valuesObject + private s3.bucket renders cleanly; yq confirms exactly one env entry name: BUZZ_GIT_CONFORMANCE_PROBE / value: \\false\\ in the rendered Deployment, positioned after the chart-owned BUZZ_* vars; buzz.yaml parses as valid YAML with the values intact. No push/merge — branch awaits review.",
+      "created_at": "2026-09-06T12:02:13.653Z"
+    },
+    {
+      "id": "comment-7284ff3c-18b7-4cb2-97f2-db6b85047828",
+      "issue_id": "tk-npc",
+      "author": "yuri",
+      "text": "APPROVED (independent validation, Validator-npc): all criteria verified against worktree @ 77e64d4b, branch buzz-disable-conformance-probe.\n\n1) Scope + content — git diff main...HEAD touches ONLY k8s/applications/buzz.yaml (+10/-0): one comment block citing upstream block/buzz#2470 (429 mutation limiter + no If-Match CAS on GCS S3-interop) and re-enable path PR #2511, plus relay.extraEnv with exactly one entry {name: BUZZ_GIT_CONFORMANCE_PROBE, value: \\false\\} placed in the buzz chart 0.1.7 valuesObject as sibling of s3/persistence. yq confirms valuesObject.relay.extraEnv is that single-entry list; exactly 1 occurrence of the var name in the whole file. Evidence: .agents/match/validations/tk-npc-4-git-diff.txt.\n\n2) Independent render — pulled oci://ghcr.io/block/buzz/charts/buzz 0.1.7 (digest sha256:2cfedd09f20902c84afdefadf838f2975c19de5b15eea6c63e7d0d5f666171a3) and ran helm template with the valuesObject extracted from buzz.yaml merged over the private  s3.bucket (bucket referred to by key only). Rendered Deployment container 'relay' has 33 env entries, 0 duplicate env names, exactly ONE BUZZ_GIT_CONFORMANCE_PROBE, string value \\false\\, appended after the chart-owned BUZZ_* vars — all chart-owned vars (BIND/HEALTH/METRICS, RELAY_URL, GIT_*, S3_ENDPOINT/BUCKET, secretKeyRefs) intact. Baseline render with relay.extraEnv deleted differs from the patched render by exactly the 2 added lines — zero other drift in the render. Evidence: tk-npc-1-merged-values.json, tk-npc-2-rendered-relay-env.txt, tk-npc-3-baseline-vs-patched-diff.txt (bucket name redacted in saved copies; raws in /tmp).\n\n3) Validity — buzz.yaml and rendered manifest both parse clean under yq; valuesObject top-level keys unchanged (relayUrl, ownerPubkey, replicaCount, secrets, externalPostgresql, s3, persistence, relay, ingress, httproute). Single commit on the branch; render-only verification, no cluster mutations. Browser validation N/A: GitOps manifest change with render-only scope; artifacts above are the proof.",
+      "created_at": "2026-09-06T12:09:47.979Z"
+    }
+  ],
+  "comment_count": 2
+}

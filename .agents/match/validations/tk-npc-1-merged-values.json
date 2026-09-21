@@ -1,0 +1,34 @@
+{
+  "relayUrl": "wss://buzz.syscd.live",
+  "ownerPubkey": "c0d50085f361f163afcd9551969c5aa6aa0f5c2fbb5fa504d7822baae0c4f862",
+  "replicaCount": 1,
+  "secrets": {
+    "existingSecret": "buzz-secrets"
+  },
+  "externalPostgresql": {
+    "url": ""
+  },
+  "s3": {
+    "endpoint": "https://storage.googleapis.com",
+    "bucket": "<REDACTED-private-bucket>"
+  },
+  "persistence": {
+    "git": {
+      "enabled": false
+    }
+  },
+  "relay": {
+    "extraEnv": [
+      {
+        "name": "BUZZ_GIT_CONFORMANCE_PROBE",
+        "value": "false"
+      }
+    ]
+  },
+  "ingress": {
+    "enabled": false
+  },
+  "httproute": {
+    "enabled": false
+  }
+}

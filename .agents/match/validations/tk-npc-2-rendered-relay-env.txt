@@ -1,0 +1,86 @@
+          env:
+            # ── Networking ───────────────────────────────────────────
+            - { name: BUZZ_BIND_ADDR,     value: "0.0.0.0:3000" }
+            - { name: BUZZ_HEALTH_PORT,   value: "8080" }
+            - { name: BUZZ_METRICS_PORT,  value: "9102" }
+            - { name: RELAY_URL,          value: "wss://buzz.syscd.live" }
+            - { name: BUZZ_MEDIA_BASE_URL, value: "https://buzz.syscd.live/media" }
+
+            # ── Behavior ─────────────────────────────────────────────
+            - { name: BUZZ_MAX_CONNECTIONS,        value: "10000" }
+            - { name: BUZZ_MAX_CONCURRENT_HANDLERS, value: "1024" }
+            - { name: BUZZ_SEND_BUFFER,            value: "1000" }
+            - { name: BUZZ_REQUIRE_AUTH_TOKEN,     value: "true" }
+            - { name: BUZZ_REQUIRE_RELAY_MEMBERSHIP, value: "true" }
+            - { name: BUZZ_REQUIRE_MEDIA_GET_AUTH, value: "true" }
+            - { name: BUZZ_ALLOW_NIP_OA_AUTH,      value: "true" }
+            - { name: BUZZ_PUBKEY_ALLOWLIST,       value: "false" }
+
+            # ── Owner ────────────────────────────────────────────────
+            - { name: RELAY_OWNER_PUBKEY, value: "c0d50085f361f163afcd9551969c5aa6aa0f5c2fbb5fa504d7822baae0c4f862" }
+
+            # ── Migrations ───────────────────────────────────────────
+            - { name: BUZZ_AUTO_MIGRATE, value: "true" }
+
+            # ── Git ──────────────────────────────────────────────────
+            - { name: BUZZ_GIT_REPO_PATH,         value: "/var/lib/buzz/git" }
+            - { name: BUZZ_GIT_MAX_PACK_BYTES,    value: "5.24288e+08" }
+            - { name: BUZZ_GIT_PACK_CACHE_PATH,   value: "/var/cache/buzz/git-packs" }
+            - { name: BUZZ_GIT_PACK_CACHE_MAX_BYTES, value: "5.36870912e+09" }
+            - { name: BUZZ_GIT_PACK_CACHE_MAX_CONCURRENT_POPULATIONS, value: "2" }
+            - { name: BUZZ_GIT_MAX_REPOS_PER_PUBKEY, value: "100" }
+            - { name: BUZZ_GIT_MAX_CONCURRENT_OPS, value: "20" }
+
+            # ── S3 (non-secret) ──────────────────────────────────────
+            - { name: BUZZ_S3_ENDPOINT, value: "https://storage.googleapis.com" }
+            - { name: BUZZ_S3_BUCKET, value: "<REDACTED-private-bucket>" }
+
+            # ── Secrets (from chart-managed or existing) ─────────────
+            - name: BUZZ_RELAY_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: buzz-secrets
+                  key: BUZZ_RELAY_PRIVATE_KEY
+                  optional: true
+            - name: BUZZ_GIT_HOOK_HMAC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: buzz-secrets
+                  key: BUZZ_GIT_HOOK_HMAC_SECRET
+                  optional: true
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: buzz-secrets
+                  key: DATABASE_URL
+            - name: READ_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: buzz-secrets
+                  key: READ_DATABASE_URL
+                  optional: true
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: buzz-secrets
+                  key: REDIS_URL
+                  optional: true
+            - name: BUZZ_S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: buzz-secrets
+                  key: BUZZ_S3_ACCESS_KEY
+                  optional: true
+            - name: BUZZ_S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: buzz-secrets
+                  key: BUZZ_S3_SECRET_KEY
+                  optional: true
+
+            - name: BUZZ_HUDDLE_AUDIO_AVAILABLE
+              value: "true"
+            - name: BUZZ_GIT_CONFORMANCE_PROBE
+              value: "false"
+
+          livenessProbe:

@@ -25,7 +25,10 @@ spec:
       - {{ . }}
       {{- end }}
     agent:
-      - enabled: true
+      # qemu-guest-agent disabled (2026-09-20): Talos metal image ships no agent
+      # extension, and bpg >=0.109 blocks refresh waiting for agent-published
+      # network interfaces -> ReconcileError "refresh failed" on every poll.
+      - enabled: {{ $v.agentEnabled | default true }}
     operatingSystem:
       - type: {{ $v.osType }}
     cpu:
