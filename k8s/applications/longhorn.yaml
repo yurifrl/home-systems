@@ -78,8 +78,13 @@ spec:
             # WARNING: No redundancy at replica=1
             defaultReplicaCount: 1
 
-            # Disable strict node affinity for small clusters
-            replicaZoneSoftAntiAffinity: false
+            # Zone/node/disk anti-affinity all SOFT (true): with one failure
+            # domain (no zone labels -> single "default" zone), hard zone
+            # anti-affinity (false) makes FindDiskCandidates return zero
+            # candidates for any 2nd replica -> degraded volumes never rebuild
+            # ("precheck new replica failed: disks are unavailable", seen
+            # 2026-09-26 on pg-2/pg-3/bind9/mecatl-redis).
+            replicaZoneSoftAntiAffinity: true
             replicaSoftAntiAffinity: true
             replicaDiskSoftAntiAffinity: true
 
