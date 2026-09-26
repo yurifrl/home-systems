@@ -31,6 +31,13 @@ spec:
         valuesObject:
           # Single small home-lab control loop; one replica is plenty.
           replicaCount: 1
+          # API-server round-trips to the control plane ride Tailscale and
+          # regularly stall >10s; the defaults (lease 15s / renew 10s) make the
+          # operator drop leadership and exit ~20x/hour (2324 restarts in 14d,
+          # seen 2026-09-26). Failover speed is irrelevant with one replica.
+          additionalArgs:
+            - --leader-lease-duration=60
+            - --leader-renew-deadline=45
           resources:
             limits:
               cpu: 200m
