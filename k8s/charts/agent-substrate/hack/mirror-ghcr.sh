@@ -49,7 +49,7 @@ if crane digest "$KINDREG/ate/ateom-gvisor-715889664656de67e44382a8d6ab981d:a0b6
        "$GHCR/ate/ateom-gvisor:a0b680d"
 else
   # Kind registry unavailable: rebuild from source.
-  SUBSTRATE_SRC=${SUBSTRATE_SRC:-$PWD/../../../substrate-src}
+  SUBSTRATE_SRC=${SUBSTRATE_SRC:-$(cd "$(dirname "$0")/../../../../substrate-src" && pwd)}
   (cd "$SUBSTRATE_SRC" && DOCKER_CONFIG="$DOCKER_CONFIG" \
     KO_DOCKER_REPO="$GHCR/ate" ko build --sbom=none -t a0b680d ./cmd/ateom-gvisor)
 fi
