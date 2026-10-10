@@ -60,12 +60,14 @@ nodes:
     mac: "d0:94:66:d9:eb:a5"
     ip: 192.168.68.100
     tailscale_ip: 100.82.148.37
+    type: metal # bare-metal cluster member
     role: worker
     arch: amd64
     install_disk: /dev/nvme0n1
     template: dell01.yaml
   tp1:
     ip: 192.168.68.107
+    type: metal # bare-metal cluster member
     role: worker
     arch: arm64
     install_disk: /dev/mmcblk0
@@ -81,6 +83,7 @@ nodes:
         password_ref: op://kubernetes/home-systems/TURING_BMC_PASSWORD
   tp4:
     ip: 192.168.68.114
+    type: metal # bare-metal cluster member
     role: worker
     arch: arm64
     install_disk: /dev/mmcblk0
@@ -98,6 +101,7 @@ nodes:
     mac: "e4:5f:01:3c:68:fa"
     ip: 192.168.9.170
     tailscale_ip: 100.102.238.43
+    type: metal # bare-metal cluster member
     role: worker
     arch: arm64
     install_disk: /dev/sda
@@ -118,6 +122,7 @@ nodes:
     # filename); the node is reached by IP, not PXE.
     mac: "00:0c:29:b0:c0:b0"
     ip: 192.168.68.90
+    type: vm # UTM/QEMU guest
     role: worker
     arch: arm64
     install_disk: /dev/nvme0n1
@@ -143,6 +148,7 @@ nodes:
     mac: "00:0c:29:ac:01:01"
     ip: 192.168.68.91
     tailscale_ip: 100.65.212.5
+    type: vm # UTM guest
     role: controlplane
     arch: amd64
     install_disk: /dev/sda
@@ -158,7 +164,7 @@ nodes:
     # time. Once Proxmox is on disk it hosts a Talos worker VM + a Windows VM.
     mac: "fc:3c:d7:27:66:17"
     ip: 192.168.68.101
-    role: worker
+    type: host # Proxmox hypervisor — infrastructure, not a cluster member
     arch: amd64
     install_disk: /dev/nvme0n1
     os:
@@ -175,6 +181,7 @@ nodes:
     # mac/boot.method only satisfy validation; render ignores boot.method.
     mac: "bc:24:11:45:72:b6"
     ip: 192.168.68.104
+    type: vm # Proxmox guest (VM 100 on pc01)
     role: worker
     arch: amd64
     install_disk: /dev/sda

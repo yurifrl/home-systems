@@ -85,7 +85,6 @@ Notes:
 - If the controlplane is already installed and only needs etcd bootstrap, use
   `nostos bootstrap <node>`.
 
-#### `task talos:pc01-install`
 #### `task talostroobleshooting:pc01-install`
 
 Downloads a Talos raw disk image, writes it to `/dev/disk5` with `dd`, then
@@ -140,24 +139,6 @@ Notes:
 - Nostos owns the image cache/build flow and install flow.
 
 ### Secret injection and rendered configs
-
-#### `task talos:op:inject`
-
-Runs `op inject` for worker Talos YAML files into `talos/op/nodes/`.
-
-Use instead:
-
-```bash
-nostos render <node>
-```
-
-Status: **replace with nostos**.
-
-Notes:
-
-- Run once per node.
-- Nostos renders from the canonical templates and resolves secrets through the
-  configured secret backend.
 
 #### `task talostroobleshooting:onepassword`
 

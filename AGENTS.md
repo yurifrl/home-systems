@@ -1,20 +1,25 @@
 # Agent Instructions
 
 
-This is a home lab infrastructure repository managing a Kubernetes cluster running on Talos Linux with bare metal nodes (Dell OptiPlex, Turing Pi, and x86 machines). The infrastructure uses GitOps principles with ArgoCD for application deployment, Istio service mesh in ambient mode, and various home automation services.
+This is a home lab infrastructure repository managing a Kubernetes cluster running on Talos Linux with bare metal and VM nodes (Dell OptiPlex, Turing Pi RK1, Raspberry Pi, UTM guests, and a Proxmox host + guest). The infrastructure uses GitOps principles with ArgoCD for application deployment, Istio service mesh in ambient mode, and various home automation services.
 
 ## Architecture
 
 ### Infrastructure Layers
 
-1. **Talos Linux**: Bare metal Kubernetes OS running on:
-   - Control plane: Dell OptiPlex 3080M (192.168.68.100, formerly RPi — decommissioned 2026-05)
-   - Workers: Turing Pi RK1 nodes (192.168.68.107, 192.168.68.114)
-   - GPU worker: x86 PC (192.168.68.104) with NVIDIA GPU support
+1. **Talos Linux**: Kubernetes OS running on bare metal and VMs:
+   - Control plane: macintel01 (192.168.68.91) — UTM VM
+   - Workers:
+     - dell01 (192.168.68.100): Dell OptiPlex — hosted the control plane until 2026-06, now a worker
+     - tp1 (192.168.68.107), tp4 (192.168.68.114): Turing Pi RK1
+     - rpi01 (192.168.9.170): Raspberry Pi, offsite — reaches the cluster over Tailscale
+     - macarm01 (192.168.68.90): UTM VM (currently NotReady)
+     - talos-pc01 (192.168.68.104): Proxmox VM (VM 100 on pc01)
 
    Provisioning, machineconfig rendering, and secret injection are owned by
-   **`nostos`** (`.submodules/nostos/`). Direct `talosctl` is still used for
-   ad-hoc dashboard / log inspection.
+   **`nostos`** (`.submodules/nostos/`); `nostos/config.yaml` is the source of
+   truth for every node (`type: metal | vm | host`). Direct `talosctl` is still
+   used for ad-hoc dashboard / log inspection.
 
 2. **Kubernetes**: Multi-node cluster managed by Talos
    - Service mesh: Istio Ambient mode with ztunnel
@@ -62,8 +67,9 @@ sources:
 
 - **1Password** is the primary secret store; **External Secrets Operator**
   syncs runtime secrets into Kubernetes.
-- **Bare-metal secrets** (Talos machineconfig, Tailscale auth keys, talosconfig)
-  are owned by **`nostos`**:
+- Bare-metal secrets (Talos machineconfig, Tailscale auth keys, talosconfig)
+  are owned by **`nostos`**; every node is declared in `nostos/config.yaml`
+  (`type: metal | vm | host`, `role` only for cluster members).
   - Templates in `nostos/templates/<node>.yaml` carry `op://...` and
     `tailscale://authkey` references.
   - `nostos render <node>` resolves them
@@ -71,11 +77,9 @@ sources:
     (gitignored).
   - `nostos apply <node>` applies the
     rendered machineconfig to that node.
-- Legacy worker configs (tp1, tp4, vm-pc01) still live under `talos/nodes/`
-  with `op://` references; `task talos:op:inject` writes injected copies to
-  `talos/op/nodes/`. These workers are slated for nostos onboarding.
-- Never commit `nostos/state/configs/` or `talos/op/` — they contain real
-  secrets.
+- The legacy `talos/` configs directory and `task talos:op:inject` have been
+  removed — nostos is the only path.
+- Never commit `nostos/state/configs/` — it contains real secrets.
 
 ### Service Mesh & Networking
 
@@ -113,11 +117,10 @@ Full subcommand list: `nostos --help`. See
 `.submodules/nostos/README.md` for the contract and `nostos/README.md` for
 this lab's data layout.
 
-**Talos Operations** (legacy / direct `talosctl` against non-nostos workers):
-- `task talos:dashboard` — talosctl dashboard against every node
-- `task talos:op:inject` — inject 1Password into legacy worker YAML (tp1/tp4/vm-pc01)
-- `task talos:op:talosconfig` / `task talos:op:kubeconfig` — fetch `~/.talos/*` from 1Password
-- `task talos:apply` — **deprecated**, errors out and points to nostos
+**Talos Operations** (ad-hoc `talosctl` only — provisioning/rendering/secrets
+live in nostos):
+- `task talos:dashboard` — talosctl dashboard across all LAN Talos nodes
+- `task talos:apply` — **deprecated**, errors out and points to `nostos apply <node>`
 
 **ArgoCD Operations** (`task argo:*`):
 - `task argo:repo-add` - Add ArgoCD Helm repo
@@ -143,10 +146,7 @@ nostos upgrade dell01
 **Talos** (direct `talosctl` — still useful for dashboard, logs, manifests):
 ```bash
 # Dashboard for all nodes
-talosctl -n 192.168.68.100,192.168.68.114,192.168.68.107,192.168.68.115 dashboard
-
-# Apply a hand-built config to a legacy worker (nostos handles dell01)
-talosctl -n <node-ip> apply-config -f talos/op/nodes/<config-file>
+talosctl -n 192.168.68.100,192.168.68.90,192.168.68.91,192.168.68.104,192.168.68.107,192.168.68.114 dashboard
 
 # Inspect manifests / logs
 talosctl -n <node-ip> get manifests
@@ -232,18 +232,14 @@ This reduces duplication and standardizes resource definitions.
 
 ### 1Password Secret Injection
 
-For **nostos-managed nodes** (dell01) machineconfigs use `op://` and
-`tailscale://authkey` references that nostos resolves at render time:
+All node machineconfigs use `op://` and `tailscale://authkey` references that
+nostos resolves at render time:
 ```bash
-nostos render dell01   # resolves into nostos/state/configs/ (gitignored)
-nostos apply  dell01
+nostos render <node>   # resolves into nostos/state/configs/ (gitignored)
+nostos apply  <node>
 ```
 
-For **legacy workers** (tp1, tp4, vm-pc01), Talos configs in `talos/nodes/`
-use `op://` references that `task talos:op:inject` resolves into
-`talos/op/nodes/`. Apply with `talosctl -n <ip> apply-config -f <file>`.
-
-Never commit `nostos/state/configs/` or `talos/op/` — they contain real secrets.
+Never commit `nostos/state/configs/` — it contains real secrets.
 
 ### Istio Ambient Mode
 
@@ -256,20 +252,26 @@ kubectl -n istio-system logs -l app=ztunnel -f | grep -E "inbound|outbound"
 
 ## Node-Specific Details
 
-**Control Plane — dell01** (192.168.68.100):
+**Worker — dell01** (192.168.68.100):
 - Dell OptiPlex 3080M, amd64, NVMe
-- Managed by **`nostos`** (see `nostos/README.md` + `.submodules/nostos/README.md`)
-- Templated from `nostos/templates/dell01.yaml`; rendered machineconfig lives in `nostos/state/configs/` (gitignored)
-- Replaced the original Raspberry Pi controlplane via `nostos up dell01`
+- Managed by **`nostos`**; template `nostos/templates/dell01.yaml`, rendered
+  machineconfig in `nostos/state/configs/` (gitignored)
+- Hosted the control plane until 2026-06 (moved to macintel01)
 
-**Worker Nodes** (legacy — not yet on nostos):
-- tp1 (192.168.68.107): Turing Pi RK1, ARM64
-- tp4 (192.168.68.114): Turing Pi RK1, ARM64
-- pc01 (192.168.68.104): x86 with NVIDIA GPU
-- Configs: `talos/nodes/*.yaml`; render via `task talos:op:inject`, apply with
-  `talosctl -n <ip> apply-config -f talos/op/nodes/<file>`
-- Pending Tailscale-key refresh + reinstall to migrate them into
-  `nostos/config.yaml`
+**Hypervisor host — pc01** (192.168.68.101):
+- Bare metal (Gigabyte B450 Aorus Elite V2) running Proxmox VE, PXE-installed
+  via nostos (`type: host` — infrastructure, not a cluster member, no role)
+- Guests are managed by Crossplane (`k8s/charts/crossplane-proxmox`)
+
+**talos-pc01** (192.168.68.104):
+- Talos worker running as a Proxmox VM (VM 100) on pc01, created by Crossplane
+- Not PXE-bootable: Crossplane boots it from the Talos ISO into maintenance,
+  then `nostos apply talos-pc01 --insecure`
+
+**Other workers** — declared in `nostos/config.yaml`:
+- tp1 (192.168.68.107), tp4 (192.168.68.114): Turing Pi RK1, ARM64, TPI boot
+- rpi01 (192.168.9.170): offsite Raspberry Pi, reaches the cluster via Tailscale
+- macarm01 (192.168.68.90): UTM VM (currently NotReady)
 
 Talos factory images include platform-specific extensions (NVIDIA drivers, QEMU guest agent, Tailscale).
 
