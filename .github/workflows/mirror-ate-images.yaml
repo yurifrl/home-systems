@@ -1,0 +1,128 @@
+name: Mirror ATE images to ghcr
+
+# Build the agent-substrate + ax component images from pinned source commits
+# (public repos, no ECR access needed) and crane-copy the bundled upstream
+# infra images, pushing everything to public ghcr for the home talos cluster.
+# The workflow's own GITHUB_TOKEN (packages: write) is the only credential.
+#
+# Charts reference the results:
+#   ghcr.io/yurifrl/ate/<name>:<short-sha>   (agent-substrate)
+#   ghcr.io/yurifrl/ax/<name>:<short-sha>    (ax)
+# ko's default namer publishes intermediates as <base>/<name>-<md5(import
+# path)>:<tag> (see hack/mirror-images.sh); crane copy renames them to the
+# canonical tags. First push creates each package PRIVATE — flip to public
+# once (UI) or the cluster needs a pull secret.
+
+on:
+  workflow_dispatch:
+    inputs:
+      substrate_version:
+        description: agent-substrate/substrate commit (full SHA; short tag derived)
+        required: true
+        default: a0b680d72e10e38c55657d9809a1998dfcf6500c
+      ax_version:
+        description: google/ax commit (full SHA; short tag derived)
+        required: true
+        default: c5c1ac5b3d66f4b4747825fa4ddb5880b5e1177b
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    env:
+      GHCR: ghcr.io/${{ github.repository_owner }}
+    steps:
+      - name: Checkout substrate
+        uses: actions/checkout@v7
+        with:
+          repository: agent-substrate/substrate
+          ref: ${{ inputs.substrate_version }}
+          path: substrate
+
+      - name: Checkout ax
+        uses: actions/checkout@v7
+        with:
+          repository: google/ax
+          ref: ${{ inputs.ax_version }}
+          path: ax
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: substrate/go.mod
+
+      - name: Install crane
+        run: go install github.com/google/go-containerregistry/cmd/crane@latest
+
+      - name: Install ko
+        uses: ko-build/setup-ko@v0.9
+
+      - name: Log in to ghcr
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build substrate images
+        env:
+          SUBSTRATE_REF: ${{ inputs.substrate_version }}
+        run: |
+          set -euo pipefail
+          ATE="${GHCR}/ate"
+          MOD=github.com/agent-substrate/substrate
+          TAG="${SUBSTRATE_REF:0:7}"
+          for name in ateapi atecontroller atelet podcertcontroller ateom-gvisor; do
+            (cd substrate && KO_DOCKER_REPO="$ATE" ko build --sbom=none -t "$TAG" "./cmd/$name")
+            crane copy "$ATE/$name-$(printf '%s' "$MOD/cmd/$name" | md5sum | cut -d' ' -f1):$TAG" "$ATE/$name:$TAG"
+          done
+
+      - name: Build ax images
+        env:
+          AX_REF: ${{ inputs.ax_version }}
+        run: |
+          set -euo pipefail
+          AX="${GHCR}/ax"
+          MOD=github.com/google/ax
+          TAG="${AX_REF:0:7}"
+          for name in ax-server ax-controller ax-task-runner; do
+            (cd ax && KO_DOCKER_REPO="$AX" ko build --sbom=none -t "$TAG" "./cmd/$name")
+            crane copy "$AX/$name-$(printf '%s' "$MOD/cmd/$name" | md5sum | cut -d' ' -f1):$TAG" "$AX/$name:$TAG"
+          done
+
+      - name: Copy bundled infra images
+        run: |
+          set -euo pipefail
+          ATE="${GHCR}/ate"
+          AX="${GHCR}/ax"
+          crane copy "ghcr.io/agentgateway/agentgateway:v0.0.0-alpha.9f9744cf" \
+            "$ATE/agentgateway:v0.0.0-alpha.9f9744cf"
+          crane copy docker.io/library/redis:7-alpine "$AX/redis:7-alpine"
+          crane copy "postgres:18-alpine@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15" \
+            "$ATE/postgres:18-alpine"
+          crane copy "rustfs/rustfs:1.0.0-beta.3@sha256:378642b05b7dcb4849fb77ebe6aca4ced1c3f66e7e504247df95a5c9018d3358" \
+            "$ATE/rustfs:1.0.0-beta.3"
+          crane copy "amazon/aws-cli:2.17.0@sha256:643507c10ada7964ca6157b3d799f030b90577643da9955d319a77399ed80d73" \
+            "$ATE/aws-cli:2.17.0"
+          crane copy "otel/opentelemetry-collector-contrib:0.157.0@sha256:f2f01157055a9b2aab9df7118e1f1c9abf345e99b23bc7a2bc791db374a7d0f6" \
+            "$ATE/otel-collector-contrib:0.157.0"
+          crane copy "jaegertracing/all-in-one:1.55@sha256:f6b5d09073f14f76873d300f565a6691d815e81bea8e07e1dc3ff67e0596dd4e" \
+            "$ATE/jaeger:1.55"
+
+      - name: Verify published images
+        run: |
+          set -euo pipefail
+          fail=0
+          for ref in \
+            ate/ateapi ate/atecontroller ate/atelet ate/podcertcontroller ate/ateom-gvisor \
+            ate/agentgateway ate/postgres ate/rustfs ate/aws-cli ate/otel-collector-contrib ate/jaeger \
+            ax/ax-server ax/ax-controller ax/ax-task-runner ax/redis; do
+            img="$GHCR/$ref"
+            archs=$(crane manifest "$img" | jq -r '.platforms[]?.architecture // .architecture // "unknown"' | sort -u | paste -sd,)
+            case "$archs" in *amd64*) : ;; *) echo "MISSING amd64: $img (archs=$archs)"; fail=1 ;; esac
+            echo "ok $img ($archs)"
+          done
+          exit $fail
