@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: ate-system
+spec:
+  clusterIP: None
+  ipFamilyPolicy: PreferDualStack
+  ports:
+  - name: grpc
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    app: ate-api-server
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ate-controller
+  name: ate-controller
+  namespace: ate-system
+spec:
+  ports:
+  - name: metrics
+    port: 8080
+    protocol: TCP
+    targetPort: metrics
+  selector:
+    app: ate-controller
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: atenet-router
+  namespace: ate-system
+spec:
+  ipFamilyPolicy: PreferDualStack
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 8443
+  - name: connect
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  - name: connect-tls
+    port: 8444
+    protocol: TCP
+    targetPort: 8444
+  - name: status
+    port: 4040
+    protocol: TCP
+    targetPort: status
+  - name: stats
+    port: 15020
+    protocol: TCP
+    targetPort: stats
+  selector:
+    app: atenet-router
+  type: ClusterIP

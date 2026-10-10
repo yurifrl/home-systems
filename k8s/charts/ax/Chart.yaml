@@ -1,0 +1,19 @@
+apiVersion: v2
+name: ax
+description: >
+  Deploys google/ax on EKS (ax-system): ax-server, ax-controller and Redis.
+  The controller talks to the agent-substrate control plane (api.ate-system.svc),
+  so this chart must deploy after agent-substrate.
+type: application
+version: 0.1.0
+appVersion: "c5c1ac5"
+home: https://github.com/nsxbet/helm-charts
+sources:
+  - https://github.com/nsxbet/helm-charts/tree/main/charts/ax
+maintainers:
+  - name: yurifrlcw
+keywords:
+  - ax
+  - agent-substrate
+  - agents
+  - atesystems

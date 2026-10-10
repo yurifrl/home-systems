@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: atenet-router
+  name: atenet-router
+  namespace: ate-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: atenet-router
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "15020"
+        prometheus.io/scrape: "true"
+      labels:
+        app: atenet-router
+    spec:
+      containers:
+      - args:
+        - -f
+        - /etc/agentgateway/config.yaml
+        env:
+        - name: AGENTGATEWAY_OTLP_ADDRESS
+          value: {{ .Values.otel.exporterOtlpAddress | quote }}
+        image: {{ .Values.images.agentgateway.repository }}:{{ .Values.images.agentgateway.tag }}
+        name: agentgateway
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 8443
+          name: https
+        - containerPort: 8081
+          name: connect
+        - containerPort: 8444
+          name: connect-tls
+        - containerPort: 15021
+          name: readiness
+        - containerPort: 15020
+          name: stats
+        volumeMounts:
+        - mountPath: /etc/agentgateway
+          name: envoy-config
+        - mountPath: /run/servicedns.podcert.ate.dev
+          name: servicedns
+        - mountPath: /run/podidentity.podcert.ate.dev
+          name: podidentity
+        - mountPath: /run/servicedns-ca
+          name: servicedns-ca
+      serviceAccountName: atenet-router
+      nodeSelector:
+        {{- include "agent-substrate.nodeSelector" . | nindent 8 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - configMap:
+          name: atenet-router-agentgateway-config
+        name: envoy-config
+      - emptyDir: {}
+        name: drain-signal
+      - name: servicedns
+        projected:
+          sources:
+          - podCertificate:
+              credentialBundlePath: credential-bundle.pem
+              keyType: ECDSAP256
+              signerName: servicedns.podcert.ate.dev/identity
+      - name: podidentity
+        projected:
+          sources:
+          - podCertificate:
+              credentialBundlePath: credential-bundle.pem
+              keyType: ECDSAP256
+              signerName: podidentity.podcert.ate.dev/identity
+          - clusterTrustBundle:
+              labelSelector:
+                matchLabels:
+                  podcert.ate.dev/canarying: live
+              path: trust-bundle.pem
+              signerName: podidentity.podcert.ate.dev/identity
+      - name: servicedns-ca
+        projected:
+          sources:
+          - clusterTrustBundle:
+              labelSelector:
+                matchLabels:
+                  podcert.ate.dev/canarying: live
+              path: trust-bundle.pem
+              signerName: servicedns.podcert.ate.dev/identity

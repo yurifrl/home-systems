@@ -1,0 +1,71 @@
+# Default values for ax.
+# Deploys google/ax on EKS: ax-server, ax-controller, ax-redis in ax-system.
+# ax-controller requires a running agent-substrate (api.ate-system.svc) and
+# its podcert cluster trust bundles; deploy agent-substrate first (sync-wave 0).
+
+ax:
+  # -- The ax build version. Stamps the controller/server image tags and
+  # appVersion expectations. The ECR mirror script (ko build) pushes exactly
+  # this tag; it must exist in the registry or pods stay ImagePullBackOff.
+  version: "c5c1ac5"
+
+replicas:
+  server: 1
+  controller: 1
+
+images:
+  # -- ko-built images, mirrored into ECR (there are no upstream ax images;
+  # upstream manifests reference ko://github.com/google/ax/cmd/ax-{server,controller}).
+  server:
+    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ax/ax-server
+    tag: "c5c1ac5"
+  controller:
+    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ax/ax-controller
+    tag: "c5c1ac5"
+  redis:
+    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ax/redis
+    tag: "7-alpine"
+
+substrate:
+  # -- Control-plane endpoint the controller connects to (gRPC over TLS).
+  endpoint: api.ate-system.svc.cluster.local:443
+  # -- TLS server name (SNI/hostname verification) and the ServiceAccount
+  # token audience for the controller's substrate connection.
+  authority: api.ate-system.svc
+  # -- Path of the cluster trust bundle mounted for verifying the substrate
+  # control plane. Served by agent-substrate's podcert servicedns signer.
+  caFile: /run/servicedns-ca/trust-bundle.pem
+
+template:
+  # -- ActorTemplate the controller fetches from substrate for each task.
+  name: default-template
+  atespace: ax-system
+
+snapshots:
+  # -- REQUIRED. Bucket the controller records task snapshots into, forwarded
+  # to substrate ActorTemplates. On EKS use s3:// (substrate's ategcs parses
+  # any scheme and ATE_STORAGE_BACKEND=s3 serves it); a trailing slash keeps
+  # name concatenation unambiguous. Render fails when unset because the
+  # upstream default (a Google dev gs:// bucket) is meaningless off-GKE.
+  bucket: ""
+
+env:
+  # -- atenet-router ingress for task sockets.
+  atenetRouterAddr: atenet-router.ate-system.svc.cluster.local:80
+
+# -- dockerconfigjson Secret (created when registry.password is set) so kind
+# nodes without node IAM can pull the mirrored private images. EKS ignores
+# this: node IAM authenticates and imagePullSecrets is [].
+registry:
+  server: 710045723375.dkr.ecr.us-east-1.amazonaws.com
+  username: AWS
+  password: ""
+
+# -- imagePullSecrets attached to every ax pod spec (kind profile sets
+# [{name: ax-registry}]).
+imagePullSecrets: []
+
+# -- Pod nodeSelector for all ax workloads. Images are linux/amd64-only
+# (ko single-arch builds); the home talos cluster is mixed-arch.
+nodeSelector:
+  kubernetes.io/arch: amd64

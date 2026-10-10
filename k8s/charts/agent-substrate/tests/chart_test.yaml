@@ -1,0 +1,23 @@
+suite: agent-substrate
+templates:
+  - daemonsets-atelet.yaml
+  - sandboxconfig-gvisor.yaml
+tests:
+  - it: names the atelet DaemonSet with the version suffix
+    template: daemonsets-atelet.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: atelet-a0b680d
+      - equal:
+          path: metadata.labels["ate.dev/substrate-version"]
+          value: a0b680d
+  - it: renders the gvisor SandboxConfig with gs:// assets
+    template: sandboxconfig-gvisor.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: gvisor-default
+      - equal:
+          path: spec.assets.amd64.gvisor.url
+          value: gs://gvisor/releases/nightly/2026-09-02/x86_64/gvisor.tar.zstd

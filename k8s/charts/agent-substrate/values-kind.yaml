@@ -1,0 +1,43 @@
+# Local kind-cluster profile. Mirrors manifests/ate-install/kind (the
+# kustomize overlay ate-setup applies on kind): small PostgreSQL footprint,
+# rustfs object store with static creds instead of IRSA-backed S3, and atelet
+# at debug with the kind-registry replacement for actor image pulls.
+postgres:
+  storage: 1Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+storage:
+  backend: s3
+  rustfs:
+    enabled: true
+    storage: 1Gi
+
+imagePullSecrets:
+  - name: ate-registry
+registry:
+  server: 710045723375.dkr.ecr.us-east-1.amazonaws.com
+  username: AWS
+
+atelet:
+  gcpAuthForImagePulls: false
+  extraArgs:
+    - --log-level=debug
+    - --localhost-registry-replacement=kind-registry:5000
+
+# kind overlay ships its own collector + jaeger in otel-system and points the
+# workloads at it (kind/ate-otel-config.yaml, kind/otel-collector.yaml).
+otel:
+  exporterOtlpEndpoint: "http://opentelemetry-collector.otel-system.svc:4317"
+  exporterOtlpAddress: "http://opentelemetry-collector.otel-system.svc:4317"
+  collector:
+    enabled: true
+  extraEnv:
+    OTEL_METRIC_EXPORT_INTERVAL: "10000"
+    OTEL_METRIC_EXPORT_TIMEOUT: "10000"
+    OTEL_LOGS_EXPORTER: otlp

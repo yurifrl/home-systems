@@ -1,0 +1,23 @@
+{{- if .Values.sandbox.microvm.enabled }}
+# Opt-in cluster-wide SandboxConfig for the micro-VM (kata + cloud-hypervisor)
+# sandbox class. Requires the kata asset set staged under kata-assets/ in the
+# cluster object-store bucket BEFORE enabling: atelet fetches the binaries at
+# runtime and every microvm ActorTemplate names this config explicitly.
+apiVersion: ate.dev/v1alpha1
+kind: SandboxConfig
+metadata:
+  name: microvm
+  namespace: ate-system
+spec:
+  sandboxClass: microvm
+  pauseImage: {{ .Values.sandbox.microvm.pauseImage | quote }}
+  assets:
+  {{- range $arch, $assets := .Values.sandbox.microvm.assets }}
+    {{ $arch }}:
+    {{- range $name, $asset := $assets }}
+      {{ $name }}:
+        url: "gs://{{ $.Values.sandbox.microvm.bucket }}/{{ $asset.url }}"
+        sha256: {{ $asset.sha256 | quote }}
+    {{- end }}
+  {{- end }}
+{{- end }}

@@ -1,0 +1,16 @@
+{{- if .Values.sandbox.gvisor.enabled }}
+# Cluster-wide SandboxConfig for the gVisor (runsc) sandbox class so gVisor
+# ActorTemplates can name it via sandboxConfig.configName. atelet fetches the
+# gVisor release tarball matching the worker node's architecture and extracts
+# it locally (anonymous fetch of the public gs:// bucket).
+apiVersion: ate.dev/v1alpha1
+kind: SandboxConfig
+metadata:
+  name: gvisor-default
+  namespace: ate-system
+spec:
+  sandboxClass: gvisor
+  pauseImage: {{ .Values.sandbox.gvisor.pauseImage | quote }}
+  assets:
+{{ toYaml .Values.sandbox.gvisor.assets | indent 4 }}
+{{- end }}

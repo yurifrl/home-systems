@@ -1,0 +1,44 @@
+{{- if .Values.validatingAdmissionPolicy.enabled }}
+# Per-sandbox-class asset requirements for SandboxConfig, fail-closed at apply
+# time (requires k8s >= 1.30). The CRD schema is generic (any arch -> any asset
+# name); this policy enforces what each sandbox class actually needs.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: sandboxconfig-assets
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:   ["ate.dev"]
+      apiVersions: ["v1alpha1"]
+      operations:  ["CREATE", "UPDATE"]
+      resources:   ["sandboxconfigs"]
+  validations:
+  # gVisor needs a "gvisor" release-tarball asset (runsc plus its gvisor-bin/
+  # helpers) for every architecture it advertises. A legacy bare-binary "runsc"
+  # asset is still accepted for releases that predate the tarball.
+  - expression: >-
+      object.spec.sandboxClass != 'gvisor' ||
+      (has(object.spec.assets) && size(object.spec.assets) > 0 &&
+       object.spec.assets.all(arch,
+         'gvisor' in object.spec.assets[arch] || 'runsc' in object.spec.assets[arch]))
+    message: "a gvisor SandboxConfig must define a 'gvisor' (release tarball) or legacy 'runsc' asset for every architecture under spec.assets"
+  # The micro-VM (cloud-hypervisor) runtime needs its asset set for every
+  # architecture it advertises.
+  - expression: >-
+      object.spec.sandboxClass != 'microvm' ||
+      (has(object.spec.assets) && size(object.spec.assets) > 0 &&
+       object.spec.assets.all(arch,
+         ['cloud-hypervisor', 'virtiofsd', 'kata-kernel', 'kata-image']
+           .all(name, name in object.spec.assets[arch])))
+    message: "a microvm SandboxConfig must define cloud-hypervisor, virtiofsd, kata-kernel, and kata-image assets for every architecture under spec.assets"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: sandboxconfig-assets
+spec:
+  policyName: sandboxconfig-assets
+  validationActions: ["Deny"]
+{{- end }}

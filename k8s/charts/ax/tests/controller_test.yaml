@@ -1,0 +1,28 @@
+suite: ax
+templates:
+  - deployment-ax-controller.yaml
+tests:
+  - it: fails closed when snapshots.bucket is unset
+    asserts:
+      - failedTemplate:
+          errorPattern: "snapshots.bucket must be set"
+  - it: couples ax-controller to the substrate control plane
+    set:
+      snapshots.bucket: s3://ate-snapshots/ax-env/
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--substrate-endpoint=api.ate-system.svc.cluster.local:443"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--substrate-authority=api.ate-system.svc"
+      - contains:
+          path: spec.template.spec.volumes[0].projected.sources
+          content:
+            serviceAccountToken:
+              audience: api.ate-system.svc
+              expirationSeconds: 7200
+              path: token
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ax/ax-controller:c5c1ac5

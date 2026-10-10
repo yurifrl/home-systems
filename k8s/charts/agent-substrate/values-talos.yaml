@@ -1,0 +1,65 @@
+# home talos-default profile (k8s 1.32, Longhorn storage, mixed amd64/arm64).
+# Mirrors the kind profile shape: rustfs object store with static creds
+# (no cloud IAM), in-chart OTLP collector + jaeger (the repo's `monitoring`
+# namespace stack is Prometheus, no OTLP receiver), small PostgreSQL sizing.
+# Image distribution: ghcr.io/yurifrl/ate/<name> (public), mirrored from the
+# ECR build registry; no pull secret needed.
+
+images:
+  ateapi:
+    repository: ghcr.io/yurifrl/ate/ateapi
+  atecontroller:
+    repository: ghcr.io/yurifrl/ate/atecontroller
+  atelet:
+    repository: ghcr.io/yurifrl/ate/atelet
+  podcert:
+    repository: ghcr.io/yurifrl/ate/podcertcontroller
+  agentgateway:
+    repository: ghcr.io/yurifrl/ate/agentgateway
+  postgres:
+    repository: ghcr.io/yurifrl/ate/postgres
+  rustfs:
+    repository: ghcr.io/yurifrl/ate/rustfs
+  awscli:
+    repository: ghcr.io/yurifrl/ate/aws-cli
+  otelcollector:
+    repository: ghcr.io/yurifrl/ate/otel-collector-contrib
+  jaeger:
+    repository: ghcr.io/yurifrl/ate/jaeger
+
+# ghcr.io/yurifrl/ate/* is public: no pull Secret, no imagePullSecrets.
+imagePullSecrets: []
+
+postgres:
+  storage: 10Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+storage:
+  backend: s3
+  rustfs:
+    enabled: true
+    storage: 5Gi
+
+otel:
+  # In-chart collector + jaeger: the home cluster's monitoring stack has no
+  # OTLP receiver, and `observability` namespace does not exist on talos.
+  exporterOtlpEndpoint: "http://opentelemetry-collector.otel-system.svc:4317"
+  exporterOtlpAddress: "http://opentelemetry-collector.otel-system.svc:4317"
+  collector:
+    enabled: true
+  extraEnv:
+    OTEL_METRIC_EXPORT_INTERVAL: "10000"
+    OTEL_METRIC_EXPORT_TIMEOUT: "10000"
+    OTEL_LOGS_EXPORTER: otlp
+
+atelet:
+  # Actor images pull from public ghcr.io anonymously — no GCP auth, no
+  # localhost registry replacement (talos has no sidecar registry).
+  gcpAuthForImagePulls: false
+  extraArgs: []

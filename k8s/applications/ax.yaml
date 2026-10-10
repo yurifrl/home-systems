@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ax
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ax-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  # ax-controller requires agent-substrate running (api.ate-system.svc) and
+  # its ClusterTrustBundles; sync order is enforced by the substrate
+  # application landing first (controller retries until the API answers).
+  info:
+    - name: prerequisite
+      value: agent-substrate application must be healthy first
+  sources:
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/ax
+      helm:
+        valueFiles:
+          - values-talos.yaml

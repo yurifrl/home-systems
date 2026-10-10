@@ -1,0 +1,24 @@
+# home talos-default profile. Images mirrored to public ghcr.io/yurifrl/ax/*;
+# no pull secret. Everything stays on amd64 (ko single-arch builds) via the
+# chart's default nodeSelector.
+
+images:
+  controller:
+    repository: ghcr.io/yurifrl/ax/ax-controller
+  server:
+    repository: ghcr.io/yurifrl/ax/ax-server
+  redis:
+    repository: ghcr.io/yurifrl/ax/redis
+
+snapshots:
+  # rustfs (agent-substrate) hosts the bucket; ateom workers read/write
+  # snapshots with its static credentials.
+  bucket: "s3://ate-snapshots/"
+
+env:
+  substrateEndpoint: "http://api.ate-system.svc.cluster.local:80"
+
+# Public images: no registry Secret.
+registry:
+  password: ""
+imagePullSecrets: []
