@@ -25,7 +25,7 @@ machine:
     - 192.168.68.91
     - 100.65.212.5
   kubelet:
-    image: ghcr.io/siderolabs/kubelet:v1.33.13
+    image: ghcr.io/siderolabs/kubelet:v1.37.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
     # Node-protection for a combined control-plane + workload node. Reserve OS +
@@ -122,7 +122,7 @@ cluster:
   serviceAccount:
     key: "op://kubernetes/talos/CLUSTER_SERVICEACCOUNT_KEY"
   apiServer:
-    image: registry.k8s.io/kube-apiserver:v1.33.13
+    image: registry.k8s.io/kube-apiserver:v1.37.1
     certSANs:
       - 192.168.68.91
       - 100.65.212.5
@@ -152,11 +152,11 @@ cluster:
       rules:
         - level: Metadata
   controllerManager:
-    image: registry.k8s.io/kube-controller-manager:v1.33.13
+    image: registry.k8s.io/kube-controller-manager:v1.37.1
   proxy:
-    image: registry.k8s.io/kube-proxy:v1.33.13
+    image: registry.k8s.io/kube-proxy:v1.37.1
   scheduler:
-    image: registry.k8s.io/kube-scheduler:v1.33.13
+    image: registry.k8s.io/kube-scheduler:v1.37.1
   discovery:
     enabled: true
     registries:

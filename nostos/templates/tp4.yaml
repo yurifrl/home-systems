@@ -17,7 +17,7 @@ machine:
     - 192.168.68.114
     - 100.112.10.120
   kubelet:
-    image: ghcr.io/siderolabs/kubelet:v1.33.13
+    image: ghcr.io/siderolabs/kubelet:v1.37.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
     # Register on the Tailscale IP so every cilium VXLAN endpoint is a 100.x

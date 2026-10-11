@@ -15,7 +15,7 @@ machine:
     - 192.168.9.170
     - 100.102.238.43
   kubelet:
-    image: ghcr.io/siderolabs/kubelet:v1.33.13
+    image: ghcr.io/siderolabs/kubelet:v1.37.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
     # Register with the LAN IP, never the Tailscale IP — otherwise pod->Service
