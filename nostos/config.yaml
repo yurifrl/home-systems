@@ -1,7 +1,7 @@
 cluster:
   name: talos-default
   endpoint: https://api.k8s.lan:6443
-  talos_version: v1.13.3
+  talos_version: v1.14.2
   # Tailscale operator hostname running the API server proxy. When set,
   # `nostos kubeconfig` also adds a remote context reaching the cluster over
   # the tailnet (alongside the LAN context). Empty disables it.
