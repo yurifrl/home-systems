@@ -34,8 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GHCR: ghcr.io/${{ github.repository_owner }}
-      # ax/go.mod requires go >= 1.27.1; the runner-pinned setup-go is older
-      # and GOTOOLCHAIN=local would hard-fail the ax ko build.
+      # ax/go.mod requires go >= 1.27.1; setup-ko exports GOTOOLCHAIN=local
+      # (overriding this), so the ax build step re-exports auto itself.
       GOTOOLCHAIN: auto
     steps:
       - name: Checkout substrate
@@ -88,6 +88,9 @@ jobs:
           AX_REF: ${{ inputs.ax_version }}
         run: |
           set -euo pipefail
+          # setup-ko exports GOTOOLCHAIN=local via GITHUB_ENV, which breaks ax
+          # (go.mod requires go >= 1.27.1). A script-level export overrides it.
+          export GOTOOLCHAIN=auto
           AX="${GHCR}/ax"
           MOD=github.com/google/ax
           TAG="${AX_REF:0:7}"
