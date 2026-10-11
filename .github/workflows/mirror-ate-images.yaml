@@ -34,6 +34,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GHCR: ghcr.io/${{ github.repository_owner }}
+      # ax/go.mod requires go >= 1.27.1; the runner-pinned setup-go is older
+      # and GOTOOLCHAIN=local would hard-fail the ax ko build.
+      GOTOOLCHAIN: auto
     steps:
       - name: Checkout substrate
         uses: actions/checkout@v7
