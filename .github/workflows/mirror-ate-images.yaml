@@ -119,13 +119,21 @@ jobs:
             "$ATE/jaeger:1.55"
 
       - name: Verify published images
+        env:
+          SUBSTRATE_REF: ${{ inputs.substrate_version }}
+          AX_REF: ${{ inputs.ax_version }}
         run: |
           set -euo pipefail
           fail=0
           for ref in \
-            ate/ateapi ate/atecontroller ate/atelet ate/podcertcontroller ate/ateom-gvisor \
-            ate/agentgateway ate/postgres ate/rustfs ate/aws-cli ate/otel-collector-contrib ate/jaeger \
-            ax/ax-server ax/ax-controller ax/ax-task-runner ax/redis; do
+            "ate/ateapi:${SUBSTRATE_REF:0:7}" "ate/atecontroller:${SUBSTRATE_REF:0:7}" \
+            "ate/atelet:${SUBSTRATE_REF:0:7}" "ate/podcertcontroller:${SUBSTRATE_REF:0:7}" \
+            "ate/ateom-gvisor:${SUBSTRATE_REF:0:7}" \
+            "ate/agentgateway:v0.0.0-alpha.9f9744cf" "ate/postgres:18-alpine" \
+            "ate/rustfs:1.0.0-beta.3" "ate/aws-cli:2.17.0" \
+            "ate/otel-collector-contrib:0.157.0" "ate/jaeger:1.55" \
+            "ax/ax-server:${AX_REF:0:7}" "ax/ax-controller:${AX_REF:0:7}" \
+            "ax/ax-task-runner:${AX_REF:0:7}" "ax/redis:7-alpine"; do
             img="$GHCR/$ref"
             archs=$(crane manifest "$img" | jq -r '.platforms[]?.architecture // .architecture // "unknown"' | sort -u | paste -sd,)
             case "$archs" in *amd64*) : ;; *) echo "MISSING amd64: $img (archs=$archs)"; fail=1 ;; esac
