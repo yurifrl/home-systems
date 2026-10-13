@@ -135,7 +135,10 @@ jobs:
             "ax/ax-server:${AX_REF:0:7}" "ax/ax-controller:${AX_REF:0:7}" \
             "ax/ax-task-runner:${AX_REF:0:7}" "ax/redis:7-alpine"; do
             img="$GHCR/$ref"
-            archs=$(crane manifest "$img" | jq -r '.platforms[]?.architecture // .architecture // "unknown"' | sort -u | paste -sd,)
+            # Index manifests: arch per entry in .manifests[].platform.
+            # Single manifests (ko output): arch lives in the config blob.
+            archs=$(crane manifest "$img" | jq -r 'if .manifests then [.manifests[].platform.architecture] | unique | join(",") else "" end')
+            if [ -z "$archs" ]; then archs=$(crane config "$img" | jq -r .architecture); fi
             case "$archs" in *amd64*) : ;; *) echo "MISSING amd64: $img (archs=$archs)"; fail=1 ;; esac
             echo "ok $img ($archs)"
           done

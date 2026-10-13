@@ -5,15 +5,25 @@
 # Image distribution: ghcr.io/yurifrl/ate/<name> (public), mirrored from the
 # ECR build registry; no pull secret needed.
 
+# 16ccb13: main-HEAD substrate. a0b680d's podcertcontroller writes
+# ClusterTrustBundles via certificates.k8s.io/v1beta1, which k8s 1.37
+# no longer serves (v1 only) — every bundle create 404s.
+substrate:
+  version: "16ccb13"
+
 images:
   ateapi:
     repository: ghcr.io/yurifrl/ate/ateapi
+    tag: "16ccb13"
   atecontroller:
     repository: ghcr.io/yurifrl/ate/atecontroller
+    tag: "16ccb13"
   atelet:
     repository: ghcr.io/yurifrl/ate/atelet
+    tag: "16ccb13"
   podcert:
     repository: ghcr.io/yurifrl/ate/podcertcontroller
+    tag: "16ccb13"
   agentgateway:
     repository: ghcr.io/yurifrl/ate/agentgateway
   postgres:
