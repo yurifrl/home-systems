@@ -1,6 +1,6 @@
 # agent-substrate
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: a0b680d](https://img.shields.io/badge/AppVersion-a0b680d-informational?style=flat-square)
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 16ccb13](https://img.shields.io/badge/AppVersion-16ccb13-informational?style=flat-square)
 
 Deploys the agent-substrate (ate-system) platform on EKS: ate-api-server, ate-controller, atelet DaemonSet, atenet-router, agentgateway, CRDs, SandboxConfigs and RBAC. Replaces `ate-setup deploy ate-system`.
 
@@ -27,11 +27,11 @@ Deploys the agent-substrate (ate-system) platform on EKS: ate-api-server, ate-co
 | images.agentgateway | object | `{"repository":"710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/agentgateway","tag":"v0.0.0-alpha.9f9744cf"}` | atenet-router runs the agentgateway image (see values.images.agentgateway); there is no separate atenet server image in the cluster manifests. |
 | images.agentgateway.repository | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/agentgateway"` | Upstream agentgateway (egress proxy), mirrored into ECR. Pinned by substrate's ate-install manifests (the image atenet-router runs). |
 | images.ateapi.repository | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/ateapi"` | ate-api-server image (ko build of substrate/cmd/ateapi). Mirrored to ECR by the ko mirror script (see scripts in the PR). |
-| images.ateapi.tag | string | `"a0b680d"` |  |
+| images.ateapi.tag | string | `"16ccb13"` |  |
 | images.atecontroller.repository | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/atecontroller"` |  |
-| images.atecontroller.tag | string | `"a0b680d"` |  |
+| images.atecontroller.tag | string | `"16ccb13"` |  |
 | images.atelet.repository | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/atelet"` |  |
-| images.atelet.tag | string | `"a0b680d"` |  |
+| images.atelet.tag | string | `"16ccb13"` |  |
 | images.awscli.repository | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/aws-cli"` | Bucket-bootstrap Job image (rustfs.yaml). |
 | images.awscli.tag | string | `"2.17.0"` |  |
 | images.jaeger.repository | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/jaeger"` | Jaeger all-in-one trace store + UI (otel.collector.enabled). |
@@ -39,21 +39,24 @@ Deploys the agent-substrate (ate-system) platform on EKS: ate-api-server, ate-co
 | images.otelcollector.repository | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/otel-collector-contrib"` | In-cluster OTLP collector (otel.collector.enabled), digest-pinned upstream kind overlay (kind/otel-collector.yaml). |
 | images.otelcollector.tag | string | `"0.157.0"` |  |
 | images.podcert.repository | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/podcertcontroller"` | podcertificate-controller (publishes the podidentity/servicedns ClusterTrustBundles the atelet/ate-controller projected volumes use). |
-| images.podcert.tag | string | `"a0b680d"` |  |
+| images.podcert.tag | string | `"16ccb13"` |  |
 | images.postgres.repository | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/postgres"` | Bundled PostgreSQL (see postgres.bundled), digest-pinned upstream. |
 | images.postgres.tag | string | `"18-alpine"` |  |
 | images.rustfs.repository | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/rustfs"` | S3-compatible object store for local clusters (storage.rustfs.enabled). |
 | images.rustfs.tag | string | `"1.0.0-beta.3"` |  |
 | otel.collector | object | `{"enabled":false}` | Deploy the in-cluster collector + jaeger (kind profile, see templates/otel-collector.yaml). EKS keeps false: the pre-existing observability-namespace collector receives exports. |
 | otel.exporterOtlpAddress | string | `"http://opentelemetry-collector.observability.svc.cluster.local:4317"` | OTLP exporter address used by atenet-router directly. |
+| ateapi.actorJwtIssuer | string | `"https://idp.ate-system.svc"` | iss claim of minted actor JWTs (ATE_API_ACTOR_JWT_ISSUER). Upstream default is the in-cluster ate-idp-server URL; that server is not part of this chart, so MintActorJWT still works (api-server signs from its local pool) but relying parties cannot resolve the issuer. |
 | otel.exporterOtlpEndpoint | string | `"http://opentelemetry-collector.observability.svc.cluster.local:4317"` | OTLP endpoint for ate-otel-config (ate-api-server, ate-controller, atelet). Point at the cluster collector; empty string disables export only if the collector isn't deployed. |
 | otel.extraEnv | object | `{}` | Additional data keys merged into the ate-otel-config ConfigMap. The kind profile sets OTEL_METRIC_EXPORT_INTERVAL, OTEL_METRIC_EXPORT_TIMEOUT (both 10000) and OTEL_LOGS_EXPORTER=otlp, mirroring the upstream overlay. |
 | podMonitoring.enabled | bool | `false` | Deploy PodMonitoring CR (Google-managed K8s operator CRD) for atenet-router /stats/prometheus scraping. Enable only if the gke-managed-prometheus operator runs on the cluster. |
 | postgres.bundled | bool | `true` | Deploy the bundled PostgreSQL StatefulSet. ate-setup's default deploy does the same for ate-system; set false when pointing the DSN at RDS or an external server. |
 | postgres.connectionString | string | `""` | Full DSN override; empty uses the bundled server's default. Rendered into the ate-api-server-secret-envvars Secret (optional envFrom source). |
 | postgres.resources | object | `{"limits":{"cpu":"16","memory":"2Gi"},"requests":{"cpu":"2","memory":"1Gi"}}` | Upstream sizing sustains control-plane activation load. Local clusters override (kind overlay: 250m/1Gi requests, 2cpu limits). |
-| postgres.schema | string | `"public"` | ate-api-server rejects an empty schema (ate-setup default: public). |
+| postgres.schema | string | `"substrate"` | ate-api-server rejects an empty schema. 16ccb13's postgressetup creates the substrate schema; only change when the setup.sql in postgres.yaml was adapted. |
 | postgres.storage | string | `"500Gi"` | Headroom so WAL churn cannot fill the volume (full pg_wal = PANIC). Substrate base is 500Gi; local clusters override to 1Gi. |
+| postgres.ownerRole | string | `"substrate_owner"` | Required PostgreSQL role assumed by owner connections (ATE_API_POSTGRES_OWNER_ROLE). |
+| postgres.readWriteRole | string | `"substrate_readwrite"` | Required PostgreSQL role assumed by read/write connections (ATE_API_POSTGRES_READ_WRITE_ROLE). |
 | registry.password | string | `""` | ECR token. Empty creates no Secret (EKS: node IAM authenticates). |
 | registry.server | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com"` | Private registry backing every image. Only used to build the ate-registry pull Secret (see imagePullSecrets); never persisted. |
 | registry.username | string | `"AWS"` |  |
@@ -89,7 +92,7 @@ Deploys the agent-substrate (ate-system) platform on EKS: ate-api-server, ate-co
 | storage.rustfs.region | string | `"us-east-1"` |  |
 | storage.rustfs.secretKey | string | `"rustfsadmin"` |  |
 | storage.rustfs.storage | string | `"1Gi"` |  |
-| substrate | object | `{"version":"a0b680d"}` | The substrate build version. Stamps the ate.dev/substrate-version label, names the atelet DaemonSet (atelet-<suffix>, see versionSuffix helper) and is the default image tag. Bumping this value triggers an atelet DS rollout. |
+| substrate | object | `{"version":"16ccb13"}` | The substrate build version. Stamps the ate.dev/substrate-version label, names the atelet DaemonSet (atelet-<suffix>, see versionSuffix helper) and is the default image tag. Bumping this value triggers an atelet DS rollout. |
 | validatingAdmissionPolicy.enabled | bool | `true` |  |
 
 ----------------------------------------------

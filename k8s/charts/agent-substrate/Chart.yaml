@@ -6,7 +6,7 @@ description: >
   SandboxConfigs and RBAC. Replaces `ate-setup deploy ate-system`.
 type: application
 version: 0.1.0
-appVersion: "a0b680d"
+appVersion: "16ccb13"
 home: https://github.com/agent-substrate/substrate
 sources:
   - https://github.com/nsxbet/helm-charts/tree/main/charts/agent-substrate

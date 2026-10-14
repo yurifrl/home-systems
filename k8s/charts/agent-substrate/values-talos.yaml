@@ -48,9 +48,9 @@ postgres:
   resources:
     requests:
       cpu: 250m
-      # dell01 (sole amd64 node) has ~6Gi allocatable and is near-full;
-      # 1Gi request cannot schedule. Limit stays 2Gi.
-      memory: 256Mi
+      # dell01 (sole amd64 worker, 6Gi allocatable) runs crossplane + istio
+      # at ~97% of allocatable; a 256Mi request cannot schedule. Limit stays 2Gi.
+      memory: 128Mi
     limits:
       cpu: "2"
       memory: 2Gi
