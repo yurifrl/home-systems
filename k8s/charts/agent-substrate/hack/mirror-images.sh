@@ -58,7 +58,7 @@ build_and_copy() { # build_and_copy <dir> <module> <name> <tag> <final-repo>
 
 SUBSTRATE_SRC=${SUBSTRATE_SRC:-$PWD/substrate}
 AX_SRC=${AX_SRC:-$PWD/ax}
-SUB_TAG=${SUBSTRATE_VERSION:-a0b680d}
+SUB_TAG=${SUBSTRATE_VERSION:-16ccb13}
 AX_TAG=${AX_VERSION:-c5c1ac5}
 
 for name in ateapi atecontroller atelet podcertcontroller; do
