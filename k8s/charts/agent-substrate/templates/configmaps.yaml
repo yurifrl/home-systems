@@ -175,6 +175,23 @@ metadata:
   namespace: ate-system
 
 ---
+# ate-api-server non-secret env, injected via the optional
+# ate-api-server-envvars envFrom source (matches ate-setup's
+# steps/apienv.go: ATE_API_POSTGRES_READ_WRITE_ROLE, ATE_API_POSTGRES_OWNER_ROLE,
+# ATE_API_ACTOR_JWT_ISSUER). Actor JWTs are minted by MintActorJWT and signed
+# from the actor-id-jwt-pool secret; the issuer is the iss claim that relying
+# parties discover via <issuer>/.well-known/openid-configuration.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ate-api-server-envvars
+  namespace: ate-system
+data:
+  ATE_API_POSTGRES_READ_WRITE_ROLE: {{ .Values.postgres.readWriteRole | quote }}
+  ATE_API_POSTGRES_OWNER_ROLE: {{ .Values.postgres.ownerRole | quote }}
+  ATE_API_ACTOR_JWT_ISSUER: {{ .Values.ateapi.actorJwtIssuer | quote }}
+
+---
 # ate-api-server OIDC authentication config (ate-setup's
 # `create api-authentication-config` step, ported to the chart).
 # In-cluster issuer (talos, kind, self-hosted): not publicly discoverable, so

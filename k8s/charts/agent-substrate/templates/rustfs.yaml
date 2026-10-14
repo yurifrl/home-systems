@@ -37,6 +37,10 @@ metadata:
   name: rustfs
   namespace: ate-system
 spec:
+  # RWO PVC: a surge pod cannot attach while the old pod still holds the
+  # volume, so any template change wedges the rollout. Replace in place.
+  strategy:
+    type: Recreate
   replicas: 1
   selector:
     matchLabels:

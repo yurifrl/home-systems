@@ -8,10 +8,10 @@ tests:
     asserts:
       - equal:
           path: metadata.name
-          value: atelet-a0b680d
+          value: atelet-16ccb13
       - equal:
           path: metadata.labels["ate.dev/substrate-version"]
-          value: a0b680d
+          value: 16ccb13
   - it: renders the gvisor SandboxConfig with gs:// assets
     template: sandboxconfig-gvisor.yaml
     asserts:
