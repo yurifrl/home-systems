@@ -99,7 +99,7 @@ vms:
       cores: 8                         # all 8 SMT threads (Ryzen 5 3400G 4C/8T); workstation VM retired 2026-09-20
       sockets: 1                       # sockets: 1
       type: x86-64-v2-AES              # cpu: x86-64-v2-AES
-    memoryMiB: 14336                   # 14GiB fixed: host has 15.6GiB, ~1.6GiB left for PVE itself
+    memoryMiB: 12288                   # 12GiB fixed: 14GiB did NOT fit a 15.6GiB host — QEMU alloc + PVE (~2.5GiB) over-commit and wedged the host on start (2026-10-14)
     # floatingMiB removed (2026-09-20): ballooning disabled so the guest sees the
     # full 14GiB. Previously 6144 floor / 12288 max, which auto-ballooned the
     # node down to ~5.9GiB under host pressure and drove the provider-pod OOM
