@@ -51,7 +51,7 @@ spec:
         runAsGroup: 10001
         fsGroup: 10001
       nodeSelector:
-        {{- include "agent-substrate.nodeSelector" . | nindent 8 }}
+        {{- include "agent-substrate.nodeSelector" (dict "root" $ "overrides" .Values.storage.rustfs.nodeSelector) | nindent 8 }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

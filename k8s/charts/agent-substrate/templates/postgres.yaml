@@ -76,7 +76,7 @@ spec:
         fsGroup: 70
         fsGroupChangePolicy: OnRootMismatch
       nodeSelector:
-        {{- include "agent-substrate.nodeSelector" . | nindent 8 }}
+        {{- include "agent-substrate.nodeSelector" (dict "root" $ "overrides" .Values.postgres.nodeSelector) | nindent 8 }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

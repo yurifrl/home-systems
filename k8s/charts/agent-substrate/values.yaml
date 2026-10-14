@@ -87,6 +87,10 @@ postgres:
   # -- Headroom so WAL churn cannot fill the volume (full pg_wal = PANIC).
   # Substrate base is 500Gi; local clusters override to 1Gi.
   storage: 500Gi
+  # -- Pod nodeSelector override. Upstream postgres is multi-arch; default
+  # `{}` lets it schedule on any untainted node (amd64-only pin can strand it
+  # when ko-built workloads fill the only amd64 node).
+  nodeSelector: {}
   # -- Upstream sizing sustains control-plane activation load. Local clusters
   # override (kind overlay: 250m/1Gi requests, 2cpu limits).
   resources:
@@ -119,6 +123,8 @@ storage:
     accessKey: "rustfsadmin"
     secretKey: "rustfsadmin"
     region: "us-east-1"
+    # -- Pod nodeSelector override; upstream rustfs is multi-arch.
+    nodeSelector: {}
     storage: 1Gi
 
 otel:
