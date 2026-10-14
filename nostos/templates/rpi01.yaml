@@ -121,7 +121,7 @@ cluster:
   secret: "op://kubernetes/talos/CLUSTER_SECRET"
   # Worker: runs no etcd/apiserver/controller-manager/scheduler. Only needs the
   # cluster CA cert (not the key), token, and network. controlPlane.endpoint +
-  # extraHostEntries are injected by nostos. Mirrors talos-pc01.yaml.
+  # extraHostEntries are injected by nostos. Mirrors pc01.yaml.
   clusterName: talos-default
   network:
     cni:

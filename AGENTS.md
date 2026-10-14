@@ -14,7 +14,7 @@ This is a home lab infrastructure repository managing a Kubernetes cluster runni
      - tp1 (192.168.68.107), tp4 (192.168.68.114): Turing Pi RK1
      - rpi01 (192.168.9.170): Raspberry Pi, offsite — reaches the cluster over Tailscale
      - macarm01 (192.168.68.90): UTM VM (currently NotReady)
-     - talos-pc01 (192.168.68.104): Proxmox VM (VM 100 on pc01)
+     - pc01 (192.168.68.104): Proxmox VM (VM 100 on proxmox-pc01)
 
    Provisioning, machineconfig rendering, and secret injection are owned by
    **`nostos`** (`.submodules/nostos/`); `nostos/config.yaml` is the source of
@@ -258,15 +258,18 @@ kubectl -n istio-system logs -l app=ztunnel -f | grep -E "inbound|outbound"
   machineconfig in `nostos/state/configs/` (gitignored)
 - Hosted the control plane until 2026-06 (moved to macintel01)
 
-**Hypervisor host — pc01** (192.168.68.101):
+**Hypervisor host — proxmox-pc01** (192.168.68.112):
 - Bare metal (Gigabyte B450 Aorus Elite V2) running Proxmox VE, PXE-installed
-  via nostos (`type: host` — infrastructure, not a cluster member, no role)
+  via nostos (`type: host` — infrastructure, not a cluster member, no role).
+  PXE install DHCPs its address — if the IP drifts again, check the router's
+  DHCP leases and update `nostos/config.yaml`.
 - Guests are managed by Crossplane (`k8s/charts/crossplane-proxmox`)
 
-**talos-pc01** (192.168.68.104):
-- Talos worker running as a Proxmox VM (VM 100) on pc01, created by Crossplane
+**pc01** (192.168.68.104):
+- Talos worker running as a Proxmox VM (VM 100) on proxmox-pc01, created by
+  Crossplane
 - Not PXE-bootable: Crossplane boots it from the Talos ISO into maintenance,
-  then `nostos apply talos-pc01 --insecure`
+  then `nostos apply pc01 --insecure`
 
 **Other workers** — declared in `nostos/config.yaml`:
 - tp1 (192.168.68.107), tp4 (192.168.68.114): Turing Pi RK1, ARM64, TPI boot

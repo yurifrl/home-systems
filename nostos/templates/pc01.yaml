@@ -1,8 +1,8 @@
-# Talos machineconfig for talos-pc01 (Proxmox VM 100, provisioned by Crossplane
+# Talos machineconfig for pc01 (Proxmox VM 100, provisioned by Crossplane
 # via k8s/charts/crossplane-proxmox). Role: worker, amd64, virtio-scsi disk
 # (/dev/sda). Crossplane creates/boots the VM; this applies the OS install:
-#   op inject -i nostos/templates/talos-pc01.yaml -o /tmp/talos-pc01.final.yaml
-#   talosctl apply-config --insecure -n <vm-ip> -f /tmp/talos-pc01.final.yaml
+#   op inject -i nostos/templates/pc01.yaml -o /tmp/pc01.final.yaml
+#   talosctl apply-config --insecure -n <vm-ip> -f /tmp/pc01.final.yaml
 version: v1alpha1
 debug: false
 persist: true

@@ -2,7 +2,7 @@
 # Role: worker at 192.168.68.107 (demoted from controlplane 2026-07-04 - the
 # 3-member etcd meshed over Tailscale kept losing quorum on any reboot; the
 # control plane is now dell01-only. tp1 was removed as an etcd member and
-# stripped to worker-minimal, mirroring talos-pc01.yaml / rpi01.yaml).
+# stripped to worker-minimal, mirroring pc01.yaml / rpi01.yaml).
 version: v1alpha1
 debug: false
 persist: true
@@ -94,7 +94,7 @@ cluster:
   secret: op://kubernetes/talos/CLUSTER_SECRET
   # Worker: runs no etcd/apiserver/controller-manager/scheduler. Only needs the
   # cluster CA cert (not the key), token, and network. controlPlane.endpoint +
-  # extraHostEntries are injected by nostos. Mirrors talos-pc01.yaml.
+  # extraHostEntries are injected by nostos. Mirrors pc01.yaml.
   clusterName: talos-default
   network:
     cni:

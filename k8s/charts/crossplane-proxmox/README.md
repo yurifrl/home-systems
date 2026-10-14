@@ -1,6 +1,6 @@
 # crossplane-proxmox
 
-One self-contained chart that provisions and operates the VMs on the `pc01`
+One self-contained chart that provisions and operates the VMs on the `proxmox-pc01`
 Proxmox host **declaratively and self-healingly** — no laptop scripts, no
 `hack/`, no `Dockerfile`. Everything is a Crossplane resource or a native
 Kubernetes Job/CronJob, deployed by ArgoCD.
@@ -11,7 +11,7 @@ ArgoCD ─(PreSync)→ preflight Job ──(fail-fast if deps missing)
                                   │                                   │
        CronJob (iso-pipeline): build-if-missing → upload → sign → patch URL
                                   ▼                                   ▼
-                         GCS (private bucket)                Proxmox host pc01
+                         GCS (private bucket)                Proxmox host proxmox-pc01
                                                           VM 100 talos · VM 101 windows
 ```
 
@@ -98,7 +98,7 @@ kubectl -n crossplane-system create job --from=cronjob/crossplane-proxmox-iso-pi
 ## Self-healing properties
 
 - **Host wiped / VM deleted** → ArgoCD + Crossplane recreate the VMs and re-pull
-  ISOs from git. Talos auto-installs via nostos (`nostos/templates/talos-pc01.yaml`).
+  ISOs from git. Talos auto-installs via nostos (`nostos/templates/pc01.yaml`).
 - **Signed URL near expiry** → the weekly CronJob re-signs (TTL ≤ 7d) and patches
   the download MR; ArgoCD `ignoreDifferences` lets the cron own that URL field.
 - **Bucket object missing** → the CronJob rebuilds and re-uploads it (nixery
@@ -122,5 +122,5 @@ templates/
 ```
 
 The Talos OS layer for VM 100 lives with the rest of the Talos nodes in
-`nostos/` (`nostos/config.yaml` + `nostos/templates/talos-pc01.yaml`), applied
+`nostos/` (`nostos/config.yaml` + `nostos/templates/pc01.yaml`), applied
 by `nostos`, not this chart.
