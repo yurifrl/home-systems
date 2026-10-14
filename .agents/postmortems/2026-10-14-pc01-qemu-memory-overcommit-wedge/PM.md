@@ -18,8 +18,7 @@ failure_mode: qemu-memory-overcommit-host-wedge
 affected_urls:
   - https://192.168.68.112:8006
 beads: []
-memories:
-  - pc01-qemu-memory-overcommit-wedge-2026-10-14
+memories: []
 supersedes: []
 related:
   - 2026-08-16-crossplane-finalizer-retry-storm

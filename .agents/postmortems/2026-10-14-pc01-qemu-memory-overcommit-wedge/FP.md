@@ -14,12 +14,16 @@ Action markers:
 
 2026-10-14. The PVE host `pc01` has **zero** monitoring: no
 node_exporter, no API probe, no memory-pressure signal, and its VMs can
-sit in a start-fail loop for days unnoticed. Two probes close the gap
-using existing patterns — a Gatus external check for the host's API
-(needs a tailnet substrate first, see caveat) and an in-cluster VMRule
-for guest-visible memory pressure — plus beads for the durable work.
-Alert hygiene rule from 2026-08-16 applies: production-critical only or
-a dashboard panel — nothing intermediate.
+sit in a start-fail loop for days unnoticed. One new probe closes the
+host gap — a Gatus external check for the host's API (needs a tailnet
+substrate first, see caveat) — plus one label fix, one routing fix, and
+beads for the durable work. No new VMRule: k8s-node memory pressure is
+already covered by `NodeMemoryCritical` (<8% available, 5m, critical,
+→ Discord) in node-resources.yaml, and the wedge itself happens on the
+host, before any guest exporter exists to see it. Phase-1 coverage (the
+2-day silent start loop → vanished worker) rides the existing
+`node-down` alert; a bead below verifies it actually fired during
+2026-10-12→14.
 
 ## Probes
 
@@ -29,14 +33,15 @@ New endpoint in group `Tech`, next to the existing tailnet checks:
 
 ```yaml
   # Proxmox host pc01 API liveness. The host is NOT a k8s node and has no
-  # node_exporter; 401 on the unauthenticated ticket endpoint is the
-  # cheapest possible "pveproxy is answering" signal. ICMP stays green
+  # node_exporter; 401 on an unauthenticated /api2/json/* call is the
+  # cheapest possible "pveproxy is answering" signal (the UI root / is
+  # 200 for everyone, so the check must hit an API path). ICMP stays green
   # through a TCP-accepts-but-unresponsive wedge (see
   # .agents/postmortems/2026-10-14-pc01-qemu-memory-overcommit-wedge/PM.md),
   # so this must be an HTTPS check, not icmp.
   - name: Proxmox pc01 API
     group: Tech
-    url: https://192.168.68.112:8006
+    url: https://192.168.68.112:8006/api2/json/version
     interval: 10s
     client:
       insecure: true
@@ -69,38 +74,15 @@ Re-evaluated: this file is the off-load fix, not a monitoring template.
 Do not touch it. The in-cluster VMRule for memory pressure belongs in the
 existing pattern file:
 
-### [EDIT] `k8s/charts/support-cluster/templates/monitoring/node-resources.yaml`
+### [EDIT] `k8s/charts/support-cluster/templates/monitoring/node-resources.yaml` — **NO**
 
-Append a VMRule warning-level alert for the guest's view of the host:
-not actionable as production-critical per the 2026-08-16 hygiene rule
-(windows/workstation VMs are not production), so severity stays
-`warning` and routes to Discord per the existing VMRule convention:
-
-```yaml
-        - alert: NodeMemoryPressureWarning
-          expr: |
-            (
-              1 - (
-                avg_over_time(node_memory_MemAvailable_bytes[5m]) /
-                node_memory_MemTotal_bytes
-              )
-            ) * 100 > 90
-          for: 10m
-          labels:
-            severity: warning
-            environment: production
-            service: node-memory
-          annotations:
-            summary: "Node memory pressure >90% used for 10m"
-            description: "Node {{ `{{ $labels.instance }}` }} is above 90% memory pressure ({{ `{{ printf \"%.1f\" $value }}` }}% used) for 10m; QEMU-style overcommit wedges live here."
-```
-
-This watches every node_exporter-scraped node (dell01, tp1, tp4, …) and
-would have caught **phase 2** on any Linux node with 90%+ pressure for
-10m. It does **not** cover the PVE host (no exporter) — that is the
-Gatus probe's job above. (The VM guest itself runs the same exporter
-family via Talos, so once the guest boots it also reports; the wedge
-happens *before* the guest boots, hence the Gatus probe on the host API.)
+Cut from the plan (was: a `NodeMemoryPressureWarning` rule): redundant
+with the existing `NodeMemoryCritical` in the same file (<8% available
+for 5m = >92% used, critical, → Discord) and outside this incident's
+failure mode — the wedge lives on the PVE host, which has no
+node_exporter, and the guest is powered off exactly when the wedge
+happens, so no in-cluster rule can observe it. The Gatus probe above is
+the only new signal this incident justifies.
 
 ### [DELETE] Gatus `Tailnet pc01` ICMP endpoint — **NOT APPROVED, KEEP**
 
@@ -131,12 +113,24 @@ the guest node it actually probes.
   - [CREATE] task: `PVE host pc01 has no monitoring: Gatus API probe + rename guest ICMP check`
     (P1 — after the substrate task lands: the two Gatus edits above,
     plus nixos apply; catch phase 2 in ~2 min instead of ~40)
+  - [CREATE] task: `Verify node-down alert fired for the vanished pc01 worker (2026-10-12→14)` (P2 —
+    the VM was off for 2 days; node-down.yaml should have paged on
+    kube_node_status_condition Ready!=true. Check Discord delivery; if it
+    stayed silent (e.g. the node object vanished from kube-state-metrics
+    instead of going NotReady), extend the expr with an
+    absent()/kube_node_info clause so a missing production worker pages)
   - [CREATE] task: `Harvest pc01 host journal for 2-day start-loop stderr` (P2 —
     verify the insta-fail cause recorded in PM.md Open Ends; needs LAN or
     console access)
   - [CREATE] task: `Never size fixed guest RAM > host RAM minus QEMU+PVE overhead (~2.5G)` (P3 —
     comment-only doc change in `k8s/charts/crossplane-proxmox/values.yaml`
     near `memoryMiB`; prevents re-committing the 2026-09-20 assumption)
+  - [CREATE] task (P3): `Make warning-severity alert delivery explicit in the VMAlertmanagerConfig`
+    (only severity=critical + environment=production has a matching
+    sub-route today; disk.yaml/longhorn-backup.yaml fire severity=warning
+    rules whose delivery is not established. Add an explicit
+    severity=warning → discord sub-route, then confirm delivery with a
+    synthetic warning alert)
   - [CREATE] task (P3): verify each created alert actually fires and routes
     (Gatus: pause pveproxy or drop 8006 for >2 min; VMRule: mem-stress a
     non-prod node or synth the series, then confirm Discord delivery)
@@ -146,3 +140,6 @@ the guest node it actually probes.
 - [DELETE] none — no noisy/standing alert targets this failure mode
   today; the mislabeled `Tailnet pc01` entry is renamed, not deleted
   (it still probes the guest's tailnet reachability).
+- [FIX via bead, P3] warning-severity delivery in the
+  VMAlertmanagerConfig — see Beads; disk.yaml/longhorn-backup.yaml
+  warning alerts may be firing into the void today.
