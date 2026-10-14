@@ -209,7 +209,7 @@ data:
     - name: kubernetes
       issuer: {{ .Values.ateapi.authentication.issuer }}
       audiences: [api.ate-system.svc]
-      {{- if eq .Values.ateapi.authentication.issuer "https://kubernetes.default.svc" }}
+      {{- if or (eq .Values.ateapi.authentication.issuer "https://kubernetes.default.svc") .Values.ateapi.authentication.inClusterDiscovery }}
       certificateAuthorityFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
       discoveryTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
       {{- end }}

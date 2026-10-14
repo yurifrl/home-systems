@@ -65,6 +65,14 @@ ateapi:
     # (ate-api-authentication ConfigMap). In-cluster default; on GKE set
     # https://container.googleapis.com/v1/projects/<p>/locations/<l>/clusters/<c>.
     issuer: https://kubernetes.default.svc
+    # -- Inject the pod's own projected service-account CA+token into the OIDC
+    # discovery client even for a non-default issuer, when that issuer is
+    # kube-apiserver itself but not publicly resolvable (talos, self-hosted).
+    inClusterDiscovery: false
+  # -- hostAliases entries for the ate-api-server pod, needed when the trusted
+  # issuer hostname only resolves from outside the cluster (e.g. a LAN DNS
+  # name like api.k8s.lan that cluster CoreDNS upstreams don't serve).
+  hostAliases: []
   # -- iss claim of minted actor JWTs (ATE_API_ACTOR_JWT_ISSUER). 16ccb13's
   # default is the in-cluster ate-idp-server URL; that server is not part of
   # this chart, so MintActorJWT still works (api-server signs from its local

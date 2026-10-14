@@ -20,6 +20,10 @@ spec:
       labels:
         app: ate-api-server
     spec:
+      {{- with .Values.ateapi.hostAliases }}
+      hostAliases:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
       initContainers:
       # 16ccb13: the control snapshot plugin deletes and copies external
       # snapshots for ate-api-server over a Unix socket in a pod-local

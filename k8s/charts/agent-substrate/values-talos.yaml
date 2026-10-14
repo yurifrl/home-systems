@@ -79,6 +79,15 @@ ateapi:
     # its LB endpoint, not the in-cluster default the chart assumes); ax's
     # controller is the only client authenticating with SA JWTs.
     issuer: https://api.k8s.lan:6443
+    # The issuer is kube-apiserver itself, reachable only via the LAN DNS name
+    # (no cluster-internal resolution), so discovery uses the pod's own
+    # projected service-account CA + token.
+    inClusterDiscovery: true
+  # api.k8s.lan resolves only via LAN /etc/hosts on the host; pods get DNS from
+  # CoreDNS, whose upstreams don't serve the .lan zone. Pin the LB VIP.
+  hostAliases:
+  - ip: 192.168.68.91
+    hostnames: [api.k8s.lan]
 
 atelet:
   # Actor images pull from public ghcr.io anonymously — no GCP auth, no
