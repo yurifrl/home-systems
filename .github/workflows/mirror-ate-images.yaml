@@ -78,7 +78,7 @@ jobs:
           ATE="${GHCR}/ate"
           MOD=github.com/agent-substrate/substrate
           TAG="${SUBSTRATE_REF:0:7}"
-          for name in ateapi atecontroller atelet podcertcontroller ateom-gvisor; do
+          for name in ateapi atecontroller atelet podcertcontroller ateom-gvisor snapshot-plugin; do
             (cd substrate && KO_DOCKER_REPO="$ATE" ko build --sbom=none -t "$TAG" "./cmd/$name")
             crane copy "$ATE/$name-$(printf '%s' "$MOD/cmd/$name" | md5sum | cut -d' ' -f1):$TAG" "$ATE/$name:$TAG"
           done
@@ -129,6 +129,7 @@ jobs:
             "ate/ateapi:${SUBSTRATE_REF:0:7}" "ate/atecontroller:${SUBSTRATE_REF:0:7}" \
             "ate/atelet:${SUBSTRATE_REF:0:7}" "ate/podcertcontroller:${SUBSTRATE_REF:0:7}" \
             "ate/ateom-gvisor:${SUBSTRATE_REF:0:7}" \
+            "ate/snapshot-plugin:${SUBSTRATE_REF:0:7}" \
             "ate/agentgateway:v0.0.0-alpha.9f9744cf" "ate/postgres:18-alpine" \
             "ate/rustfs:1.0.0-beta.3" "ate/aws-cli:2.17.0" \
             "ate/otel-collector-contrib:0.157.0" "ate/jaeger:1.55" \

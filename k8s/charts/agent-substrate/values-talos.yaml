@@ -24,6 +24,9 @@ images:
   podcert:
     repository: ghcr.io/yurifrl/ate/podcertcontroller
     tag: "16ccb13"
+  snapshotPlugin:
+    repository: ghcr.io/yurifrl/ate/snapshot-plugin
+    tag: "16ccb13"
   agentgateway:
     repository: ghcr.io/yurifrl/ate/agentgateway
   postgres:
@@ -74,3 +77,7 @@ atelet:
   # Actor images pull from public ghcr.io anonymously — no GCP auth, no
   # localhost registry replacement (talos has no sidecar registry).
   extraArgs: []
+  # 16ccb13: storage/snapshot handling moved to the node snapshot-plugin
+  # sidecar; both containers share the /var/lib/ate hostPath and atecontroller
+  # hardcodes that path for worker pod volumes (nodepath.BasePath).
+  snapshotPlugin: true

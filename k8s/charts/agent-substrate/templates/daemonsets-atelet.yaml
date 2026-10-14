@@ -20,6 +20,70 @@ spec:
         app: atelet
         ate.dev/substrate-version: {{ .Values.substrate.version }}
     spec:
+      {{- if .Values.atelet.snapshotPlugin }}
+      # Node snapshot plugin (native sidecar): moves snapshots and sandbox
+      # assets between this node and object storage over a pod-local Unix
+      # socket. Starts before atelet so the socket exists when it connects.
+      # Mirrors manifests/ate-install/kind/atelet at 16ccb13.
+      initContainers:
+      - name: snapshot-plugin
+        image: {{ .Values.images.snapshotPlugin.repository }}:{{ .Values.images.snapshotPlugin.tag }}
+        restartPolicy: Always
+        args:
+        - node
+        - --socket=/run/snapshot-plugin/node.sock
+        - --root=/var/lib/ate
+        - --asset-staging-dir=/var/lib/snapshot-plugin/asset-staging
+        - --asset-staging-capacity=8Gi
+        # The plugin listens on a Unix socket; the image has no shell, so the
+        # binary checks itself.
+        startupProbe:
+          exec:
+            command:
+            - /ko-app/snapshot-plugin
+            - healthcheck
+            - --socket=/run/snapshot-plugin/node.sock
+          periodSeconds: 2
+          failureThreshold: 30
+        # Reads/writes under the /var/lib/ate hostPath as root, like atelet.
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+        env:
+        # Object storage for snapshot transfers and sandbox assets. atelet
+        # itself no longer reads these and exits if ATE_STORAGE_BACKEND is set.
+        - name: ATE_STORAGE_BACKEND
+          value: {{ .Values.storage.backend }}
+        {{- if .Values.storage.rustfs.enabled }}
+        - name: AWS_ACCESS_KEY_ID
+          value: {{ .Values.storage.rustfs.accessKey | quote }}
+        - name: AWS_SECRET_ACCESS_KEY
+          value: {{ .Values.storage.rustfs.secretKey | quote }}
+        - name: AWS_REGION
+          value: {{ .Values.storage.rustfs.region | quote }}
+        - name: AWS_ENDPOINT_URL
+          value: {{ .Values.storage.rustfs.endpoint | quote }}
+        - name: AWS_S3_USE_PATH_STYLE
+          value: "true"
+        {{- end }}
+        envFrom:
+        - configMapRef:
+            name: ate-otel-config
+        volumeMounts:
+        - name: run-ateom
+          mountPath: /var/lib/ate
+        - name: snapshot-plugin
+          mountPath: /run/snapshot-plugin
+        - name: asset-staging
+          mountPath: /var/lib/snapshot-plugin/asset-staging
+      {{- end }}
       containers:
       - args:
         - --grpc-server-cred-bundle=/run/podidentity.podcert.ate.dev/credential-bundle.pem
@@ -27,6 +91,10 @@ spec:
         - --ateapi-ca-file=/run/servicedns.podcert.ate.dev/trust-bundle.pem
         - --drain-delay=0s
         - --drain-timeout=5m
+        {{- if .Values.atelet.snapshotPlugin }}
+        # 16ccb13 moved snapshot/object-store work into the node plugin sidecar.
+        - --snapshot-plugin-socket=/run/snapshot-plugin/node.sock
+        {{- end }}
         {{- range .Values.atelet.extraArgs }}
         - {{ . | quote }}
         {{- end }}
@@ -49,6 +117,7 @@ spec:
               fieldPath: metadata.uid
         - name: OTEL_RESOURCE_ATTRIBUTES
           value: k8s.namespace.name=$(POD_NAMESPACE),k8s.pod.name=$(POD_NAME),k8s.pod.uid=$(POD_UID),k8s.node.name=$(NODE_NAME),service.instance.id=$(POD_UID)
+        {{- if not .Values.atelet.snapshotPlugin }}
         - name: ATE_STORAGE_BACKEND
           value: {{ .Values.storage.backend }}
         {{- if .Values.storage.rustfs.enabled }}
@@ -63,6 +132,7 @@ spec:
           value: {{ .Values.storage.rustfs.endpoint | quote }}
         - name: AWS_S3_USE_PATH_STYLE
           value: "true"
+        {{- end }}
         {{- end }}
         envFrom:
         - configMapRef:
@@ -101,8 +171,12 @@ spec:
           runAsGroup: 0
           runAsUser: 0
         volumeMounts:
-        - mountPath: /var/lib/ateom-gvisor
+        - mountPath: /var/lib/ate
           name: run-ateom
+        {{- if .Values.atelet.snapshotPlugin }}
+        - mountPath: /run/snapshot-plugin
+          name: snapshot-plugin
+        {{- end }}
         - mountPath: /run/podidentity.podcert.ate.dev
           name: podidentity
         - mountPath: /run/servicedns.podcert.ate.dev
@@ -131,9 +205,18 @@ spec:
         operator: Exists
       volumes:
       - hostPath:
-          path: /var/lib/ateom-gvisor
+          path: /var/lib/ate
           type: DirectoryOrCreate
         name: run-ateom
+      {{- if .Values.atelet.snapshotPlugin }}
+      - name: snapshot-plugin
+        emptyDir: {}
+      # Holds asset downloads until verified; plugin caps usage at
+      # --asset-staging-capacity, +1Gi slack for filesystem overhead.
+      - name: asset-staging
+        emptyDir:
+          sizeLimit: 9Gi
+      {{- end }}
       - hostPath:
           path: /var/lib/kubelet/plugins
           type: DirectoryOrCreate
