@@ -23,6 +23,7 @@ data:
         localhost;
       };
       
+      forward only;            # never iterate: upstream DNS hijack breaks priming
       forwarders {
         1.1.1.1;
         1.0.0.1;
