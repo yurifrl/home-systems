@@ -73,6 +73,13 @@ otel:
     OTEL_METRIC_EXPORT_TIMEOUT: "10000"
     OTEL_LOGS_EXPORTER: otlp
 
+ateapi:
+  authentication:
+    # kube-apiserver mints SA tokens with this issuer here (talos advertises
+    # its LB endpoint, not the in-cluster default the chart assumes); ax's
+    # controller is the only client authenticating with SA JWTs.
+    issuer: https://api.k8s.lan:6443
+
 atelet:
   # Actor images pull from public ghcr.io anonymously — no GCP auth, no
   # localhost registry replacement (talos has no sidecar registry).
