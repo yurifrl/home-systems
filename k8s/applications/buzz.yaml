@@ -50,9 +50,13 @@ spec:
           # identity you'd rather use.
           ownerPubkey: "c0d50085f361f163afcd9551969c5aa6aa0f5c2fbb5fa504d7822baae0c4f862"
 
-          # Single replica: no Redis (buzz-pubsub) and no git-hook HMAC secret
-          # needed. Huddle audio (single-pod-only until an SFU exists) stays
-          # valid at 1 replica.
+          # Single replica: no git-hook HMAC secret needed. Huddle audio
+          # (single-pod-only until an SFU exists) stays valid at 1 replica.
+          # Redis: 0.1.x _readiness gates on Redis reachability (buzz-pubsub),
+          # so the relay still needs a dialable Redis even at 1 replica —
+          # without REDIS_URL the image defaults to 127.0.0.1:6379, readiness
+          # 503s forever, and the rollout wedges (old RS keeps 1 pod). Point at
+          # the shared unauthenticated in-cluster redis (redis/redis, db 0).
           replicaCount: 1
 
           # GitOps-safe secrets: everything sensitive comes from the
@@ -96,6 +100,11 @@ spec:
             extraEnv:
               - name: BUZZ_GIT_CONFORMANCE_PROBE
                 value: "false"
+              # Redis for buzz-pubsub (readiness gate in 0.1.x). Shared,
+              # unauthenticated, empty-keyspace instance; pub/sub channels and
+              # keys are buzz-namespaced upstream.
+              - name: REDIS_URL
+                value: "redis://redis.redis.svc.cluster.local:6379"
 
           # Networking is handled by the Istio VirtualService (support chart
           # below) + Cloudflare tunnel, not the chart's own ingress/HTTPRoute.
