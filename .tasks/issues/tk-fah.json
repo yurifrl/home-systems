@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "_type": "issue",
+  "id": "tk-fah",
+  "title": "Make warning-severity alert delivery explicit in the VMAlertmanagerConfig",
+  "description": "Only severity=critical + environment=production has a matching sub-route today; disk.yaml/longhorn-backup.yaml fire severity=warning rules whose delivery is not established (may be firing into the void). Add an explicit severity=warning → discord sub-route in the VMAlertmanagerConfig.",
+  "status": "open",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": null,
+  "assignee": null,
+  "created_by": "yuri",
+  "created_at": "2026-10-14T18:25:27.134Z",
+  "updated_at": "2026-10-14T18:25:27.393Z",
+  "started_at": null,
+  "closed_at": null,
+  "due_at": null,
+  "defer_until": null,
+  "parent": null,
+  "sprint": null,
+  "labels": [
+    "pm:2026-10-14-pc01-qemu-memory-overcommit-wedge"
+  ],
+  "notes": null,
+  "design": null,
+  "acceptance_criteria": "Synthetic severity=warning alert delivered to Discord.",
+  "estimated_minutes": null,
+  "spec_id": null,
+  "external_ref": null,
+  "branch": null,
+  "metadata": {},
+  "attachments": [],
+  "dependencies": [
+    {
+      "issue_id": "tk-fah",
+      "depends_on_id": "tk-pqp",
+      "type": "blocks",
+      "created_at": "2026-10-14T18:25:27.393Z",
+      "created_by": "yuri",
+      "metadata": {}
+    }
+  ],
+  "dependency_count": 1,
+  "dependent_count": 0,
+  "comments": [],
+  "comment_count": 0
+}

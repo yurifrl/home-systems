@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "_type": "issue",
+  "id": "tk-yyk",
+  "title": "PVE host pc01 has no monitoring: Gatus API probe + rename guest ICMP check",
+  "description": "Edits already in nixos/modules/gatus/config.yaml: endpoint 'Proxmox pc01 API' committed COMMENTED OUT (deploying before the substrate would alert-permanently-fail — 401-on-8006 is the cheapest 'pveproxy is answering' signal; ICMP stays green through a TCP-accepts wedge, see PM.md) plus rename 'Tailnet pc01'→'Tailnet talos-pc01' (safe, deploys with any routine apply). Remaining: uncomment the endpoint, set the final URL per substrate choice, nixos apply digitalocean-gatus-01. Catches a host wedge in ~2 min instead of ~40.",
+  "status": "open",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": null,
+  "assignee": null,
+  "created_by": "yuri",
+  "created_at": "2026-10-14T18:25:26.871Z",
+  "updated_at": "2026-10-14T18:25:27.327Z",
+  "started_at": null,
+  "closed_at": null,
+  "due_at": null,
+  "defer_until": null,
+  "parent": null,
+  "sprint": null,
+  "labels": [
+    "pm:2026-10-14-pc01-qemu-memory-overcommit-wedge"
+  ],
+  "notes": null,
+  "design": null,
+  "acceptance_criteria": "Endpoint green (STATUS 401) and a forced failure (>2 min with 8006 unreachable) alerts Discord once.",
+  "estimated_minutes": null,
+  "spec_id": null,
+  "external_ref": null,
+  "branch": null,
+  "metadata": {},
+  "attachments": [],
+  "dependencies": [
+    {
+      "issue_id": "tk-yyk",
+      "depends_on_id": "tk-pqp",
+      "type": "blocks",
+      "created_at": "2026-10-14T18:25:27.327Z",
+      "created_by": "yuri",
+      "metadata": {}
+    }
+  ],
+  "dependency_count": 1,
+  "dependent_count": 0,
+  "comments": [],
+  "comment_count": 0
+}

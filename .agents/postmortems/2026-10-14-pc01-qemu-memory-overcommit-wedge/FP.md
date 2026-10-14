@@ -1,12 +1,10 @@
 # Follow-up Plan: pc01 QEMU memory overcommit wedge
 
-<!-- Proposed 2026-10-14; awaiting user approval. Once approved: declares exactly what
-     gets created — nothing else — and is updated in place with the resulting
-     bead ids, commits, and links as each item lands. This file persists as the
-     implementation ledger for the sibling PM.md. -->
+<!-- Approved 2026-10-14 ("all"). Implementation ledger for the sibling PM.md —
+     tk issue ids, commits, and links land in place as each item commits. -->
 
 Action markers:
-- `[CREATE]` new file/resource/bead, with exact path or title
+- `[CREATE]` new file/resource/tk issue, with exact path or title
 - `[EDIT]`   change to an existing file (path + precise change)
 - `[DELETE]` remove an existing alert/file — with justification
 
@@ -17,12 +15,12 @@ node_exporter, no API probe, no memory-pressure signal, and its VMs can
 sit in a start-fail loop for days unnoticed. One new probe closes the
 host gap — a Gatus external check for the host's API (needs a tailnet
 substrate first, see caveat) — plus one label fix, one routing fix, and
-beads for the durable work. No new VMRule: k8s-node memory pressure is
+tk issues for the durable work. No new VMRule: k8s-node memory pressure is
 already covered by `NodeMemoryCritical` (<8% available, 5m, critical,
 → Discord) in node-resources.yaml, and the wedge itself happens on the
 host, before any guest exporter exists to see it. Phase-1 coverage (the
 2-day silent start loop → vanished worker) rides the existing
-`node-down` alert; a bead below verifies it actually fired during
+`node-down` alert; a tk issue below verifies it actually fired during
 2026-10-12→14.
 
 ## Probes
@@ -98,40 +96,40 @@ Talos **guest**, not the host — the label is actively misleading.
 Same target (`icmp://100.101.182.40`), same alerts; label now matches
 the guest node it actually probes.
 
-## Beads
+## tk issues
 
 <!-- Epic labeled pm:<YYYY-MM-DD>-<slug>; children created with --parent inherit it.
-     Filter the whole incident: bd list -l pm:2026-10-14-pc01-qemu-memory-overcommit-wedge --all -->
+     Filter the whole incident: tk list -l pm:2026-10-14-pc01-qemu-memory-overcommit-wedge --all -->
 
-- [CREATE] Epic: `Postmortem: pc01 QEMU memory overcommit wedge`
+- [CREATE] Epic: `Postmortem: pc01 QEMU memory overcommit wedge` → tk-wtv
   (label `pm:2026-10-14-pc01-qemu-memory-overcommit-wedge`,
   description links PM.md)
-  - [CREATE] task: `Expose PVE host pc01 to the tailnet (subnet route for 192.168.68.0/24 or host join)`
+  - [CREATE] task: `Expose PVE host pc01 to the tailnet (subnet route for 192.168.68.0/24 or host join)` → tk-ait
     (P1 — prerequisite for the monitoring task below; without it the DO
     gatus host cannot reach 192.168.68.112:8006 and the check would
     permanently fail)
-  - [CREATE] task: `PVE host pc01 has no monitoring: Gatus API probe + rename guest ICMP check`
+  - [CREATE] task: `PVE host pc01 has no monitoring: Gatus API probe + rename guest ICMP check` → tk-yyk
     (P1 — after the substrate task lands: the two Gatus edits above,
     plus nixos apply; catch phase 2 in ~2 min instead of ~40)
-  - [CREATE] task: `Verify node-down alert fired for the vanished pc01 worker (2026-10-12→14)` (P2 —
+  - [CREATE] task: `Verify node-down alert fired for the vanished pc01 worker (2026-10-12→14)` → tk-lqz (P2 —
     the VM was off for 2 days; node-down.yaml should have paged on
     kube_node_status_condition Ready!=true. Check Discord delivery; if it
     stayed silent (e.g. the node object vanished from kube-state-metrics
     instead of going NotReady), extend the expr with an
     absent()/kube_node_info clause so a missing production worker pages)
-  - [CREATE] task: `Harvest pc01 host journal for 2-day start-loop stderr` (P2 —
+  - [CREATE] task: `Harvest pc01 host journal for 2-day start-loop stderr` → tk-nn5 (P2 —
     verify the insta-fail cause recorded in PM.md Open Ends; needs LAN or
     console access)
-  - [CREATE] task: `Never size fixed guest RAM > host RAM minus QEMU+PVE overhead (~2.5G)` (P3 —
+  - [CREATE] task: `Never size fixed guest RAM > host RAM minus QEMU+PVE overhead (~2.5G)` → tk-ckr (P3 —
     comment-only doc change in `k8s/charts/crossplane-proxmox/values.yaml`
     near `memoryMiB`; prevents re-committing the 2026-09-20 assumption)
-  - [CREATE] task (P3): `Make warning-severity alert delivery explicit in the VMAlertmanagerConfig`
+  - [CREATE] task (P3): `Make warning-severity alert delivery explicit in the VMAlertmanagerConfig` → tk-fah
     (only severity=critical + environment=production has a matching
     sub-route today; disk.yaml/longhorn-backup.yaml fire severity=warning
     rules whose delivery is not established. Add an explicit
     severity=warning → discord sub-route, then confirm delivery with a
     synthetic warning alert)
-  - [CREATE] task (P3): verify each created alert actually fires and routes
+  - [CREATE] task (P3): verify each created alert actually fires and routes → tk-pqp
     (Gatus: pause pveproxy or drop 8006 for >2 min; VMRule: mem-stress a
     non-prod node or synth the series, then confirm Discord delivery)
 
@@ -140,6 +138,22 @@ the guest node it actually probes.
 - [DELETE] none — no noisy/standing alert targets this failure mode
   today; the mislabeled `Tailnet pc01` entry is renamed, not deleted
   (it still probes the guest's tailnet reachability).
-- [FIX via bead, P3] warning-severity delivery in the
-  VMAlertmanagerConfig — see Beads; disk.yaml/longhorn-backup.yaml
+- [FIX via tk, P3] warning-severity delivery in the
+  VMAlertmanagerConfig — see tk issues; disk.yaml/longhorn-backup.yaml
   warning alerts may be firing into the void today.
+
+## Landed 2026-10-14
+
+- nixos `modules/gatus/config.yaml`: `Proxmox pc01 API` endpoint added but
+  **commented out** pending tk-ait — deploying it uncommented would
+  permanently alert-fail (DO gatus host has no route to 192.168.68.0/24;
+  uncomment + apply is tk-yyk's job). Rename `Tailnet talos-pc01` landed.
+- Epic tk-wtv + 7 tk issues created (ids inline above); deps wired:
+  tk-ait→tk-yyk→tk-pqp, tk-fah→tk-pqp.
+- Provider-log timeline pass done 2026-10-14 (negative finding): zero
+  `talos-pc01` provider-proxmox log lines before 10-14T12Z — the 2-day
+  loop left no trace in Crossplane logs (PM.md Timeline updated).
+  values.yaml RAM comment landed with the fix itself (2d266077, line 102)
+  — tk-ckr closed.
+- Still open: nixos apply (blocked on tk-ait substrate — tk-yyk), journal
+  harvest (no SSH key for root@pc01 — tk-nn5).

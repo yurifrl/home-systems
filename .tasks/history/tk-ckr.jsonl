@@ -1,0 +1,2 @@
+{"issue_id":"tk-ckr","action":"save","at":"2026-10-14T18:25:27.070Z","actor":null,"data":{"status":"open","title":"Never size fixed guest RAM > host RAM minus QEMU+PVE overhead (~2.5G)"}}
+{"issue_id":"tk-ckr","action":"save","at":"2026-10-14T18:57:50.990Z","actor":null,"data":{"status":"closed","title":"Never size fixed guest RAM > host RAM minus QEMU+PVE overhead (~2.5G)"}}

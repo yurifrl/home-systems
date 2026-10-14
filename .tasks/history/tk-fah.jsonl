@@ -1,0 +1,2 @@
+{"issue_id":"tk-fah","action":"save","at":"2026-10-14T18:25:27.134Z","actor":null,"data":{"status":"open","title":"Make warning-severity alert delivery explicit in the VMAlertmanagerConfig"}}
+{"issue_id":"tk-fah","action":"dependency_added","at":"2026-10-14T18:25:27.394Z","actor":"yuri","data":{"target":"tk-pqp","type":"blocks"}}

@@ -1,6 +1,6 @@
 ---
 date: 2026-10-14
-status: draft
+status: closed
 incident_status: resolved
 sessions:
   - 01a139bc-0a0c-71a3-8ac0-27509119e81e
@@ -17,8 +17,8 @@ symptoms:
 failure_mode: qemu-memory-overcommit-host-wedge
 affected_urls:
   - https://192.168.68.112:8006
-beads: []
-memories: []
+tk: [tk-wtv]
+memories: [pc01-qemu-memory-overcommit-wedge-2026-10-14]
 supersedes: []
 related:
   - 2026-08-16-crossplane-finalizer-retry-storm
@@ -125,8 +125,11 @@ minutes. No reboot was needed — `up 3 days` through the whole incident.
 
 ### 2026-10-12 (UTC)
 - `12:20` First failed `qmstart 100` (task UPID pc01:000B84C6…). QEMU
-  exit code 1, no alert. Retries every ~20 min begin (Crossplane
-  reconcile loop) and continue for ~2 days (~140 attempts).
+  exit code 1, no alert. Retries every ~20 min begin and continue for
+  ~2 days (~140 attempts). Driver unverified: provider-proxmox pod logs
+  (current container since 10-11T09:19Z) contain zero `talos-pc01`
+  lines before 10-14T12Z — the loop is invisible in Crossplane logs;
+  the reconcile loop is plausible but unproven.
 
 ### 2026-10-14
 - `~11:40Z` Last pre-incident failed start observed in task list.
