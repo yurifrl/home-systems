@@ -24,6 +24,7 @@ data:
       };
       
       forward only;            # never iterate: upstream DNS hijack breaks priming
+      dnssec-validation no;    # same hijack strips DNSSEC records, breaking trust chains
       forwarders {
         1.1.1.1;
         1.0.0.1;
