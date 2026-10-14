@@ -8,6 +8,8 @@ data:
   named.conf: |
     # ifconfig | grep "inet " | grep -v 127.0.0.1
     acl internal {
+      10.244.0.0/16;         # Pod network
+      100.64.0.0/10;         # Tailscale
       192.168.0.0/16;
       198.19.0.0/16;
     };
