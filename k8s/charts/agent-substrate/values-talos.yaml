@@ -2,8 +2,8 @@
 # Mirrors the kind profile shape: rustfs object store with static creds
 # (no cloud IAM), in-chart OTLP collector + jaeger (the repo's `monitoring`
 # namespace stack is Prometheus, no OTLP receiver), small PostgreSQL sizing.
-# Image distribution: ghcr.io/yurifrl/ate/<name> (public), mirrored from the
-# ECR build registry; no pull secret needed.
+# Image distribution: ghcr.io/yurifrl/ate/<name> (public), built from pinned
+# source by the mirror-ate-images GitHub workflow; no pull secret needed.
 
 # 16ccb13: main-HEAD substrate. a0b680d's podcertcontroller writes
 # ClusterTrustBundles via certificates.k8s.io/v1beta1, which k8s 1.37

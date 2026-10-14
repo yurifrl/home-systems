@@ -25,4 +25,4 @@ tests:
               path: token
       - equal:
           path: spec.template.spec.containers[0].image
-          value: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ax/ax-controller:c5c1ac5
+          value: ghcr.io/yurifrl/ax/ax-controller:c5c1ac5

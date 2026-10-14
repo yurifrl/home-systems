@@ -12,51 +12,51 @@ substrate:
 images:
   ateapi:
     # -- ate-api-server image (ko build of substrate/cmd/ateapi).
-    # Mirrored to ECR by the ko mirror script (see scripts in the PR).
-    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/ateapi
+    # Built from pinned source by the mirror-ate-images GitHub workflow.
+    repository: ghcr.io/yurifrl/ate/ateapi
     tag: "16ccb13"
   atecontroller:
-    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/atecontroller
+    repository: ghcr.io/yurifrl/ate/atecontroller
     tag: "16ccb13"
   atelet:
-    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/atelet
+    repository: ghcr.io/yurifrl/ate/atelet
     tag: "16ccb13"
   podcert:
     # -- podcertificate-controller (publishes the podidentity/servicedns
     # ClusterTrustBundles the atelet/ate-controller projected volumes use).
-    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/podcertcontroller
+    repository: ghcr.io/yurifrl/ate/podcertcontroller
     tag: "16ccb13"
   snapshotPlugin:
     # -- 16ccb13 control-snapshot plugin sidecar served next to ate-api-server.
-    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/snapshot-plugin
+    repository: ghcr.io/yurifrl/ate/snapshot-plugin
     tag: "16ccb13"
   # -- atenet-router runs the agentgateway image (see values.images.agentgateway);
   # there is no separate atenet server image in the cluster manifests.
   agentgateway:
-    # -- Upstream agentgateway (egress proxy), mirrored into ECR.
+    # -- Upstream agentgateway (egress proxy), crane-copied to public ghcr.
     # Pinned by substrate's ate-install manifests (the image atenet-router runs).
-    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/agentgateway
+    repository: ghcr.io/yurifrl/ate/agentgateway
     tag: "v0.0.0-alpha.9f9744cf"
   postgres:
     # -- Bundled PostgreSQL (see postgres.bundled), digest-pinned upstream.
-    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/postgres
+    repository: ghcr.io/yurifrl/ate/postgres
     tag: "18-alpine"
   rustfs:
     # -- S3-compatible object store for local clusters (storage.rustfs.enabled).
-    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/rustfs
+    repository: ghcr.io/yurifrl/ate/rustfs
     tag: "1.0.0-beta.3"
   awscli:
     # -- Bucket-bootstrap Job image (rustfs.yaml).
-    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/aws-cli
+    repository: ghcr.io/yurifrl/ate/aws-cli
     tag: "2.17.0"
   otelcollector:
     # -- In-cluster OTLP collector (otel.collector.enabled), digest-pinned
     # upstream kind overlay (kind/otel-collector.yaml).
-    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/otel-collector-contrib
+    repository: ghcr.io/yurifrl/ate/otel-collector-contrib
     tag: "0.157.0"
   jaeger:
     # -- Jaeger all-in-one trace store + UI (otel.collector.enabled).
-    repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/jaeger
+    repository: ghcr.io/yurifrl/ate/jaeger
     tag: "1.55"
 
 ateapi:
@@ -79,16 +79,16 @@ ateapi:
   # pool) but relying parties cannot yet resolve the issuer.
   actorJwtIssuer: https://idp.ate-system.svc
 
-# -- dockerconfigjson Secret (created when registry.password is set) so
-# kind nodes without node IAM can pull the mirrored private images.
+# -- ghcr.io/yurifrl/ate/* is public: no pull Secret, no imagePullSecrets.
+# registry.* only builds one when a private registry needs it.
 imagePullSecrets: []
 
 registry:
-  # -- Private registry backing every image. Only used to build the
-  # ate-registry pull Secret (see imagePullSecrets); never persisted.
-  server: 710045723375.dkr.ecr.us-east-1.amazonaws.com
-  username: AWS
-  # -- ECR token. Empty creates no Secret (EKS: node IAM authenticates).
+  # -- Only used to build the ate-registry pull Secret (see
+  # imagePullSecrets) when registry.password is set; never persisted.
+  server: ghcr.io
+  username: yurifrl
+  # -- Token for a PRIVATE registry. Empty creates no Secret.
   password: ""
 
 postgres:
@@ -127,8 +127,8 @@ postgres:
 
 atelet:
   # -- Pass GCP credentials for pulling actor images from GCR/Artifact Registry.
-  # MUST be false on EKS: node IAM handles ECR pulls; atelet's in-process
-  # go-containerregistry pulls are anonymous for non-GCP registries.
+  # MUST be false here: the workload/actor images are public ghcr, and atelet's
+  # in-process go-containerregistry pulls are anonymous for non-GCP registries.
   gcpAuthForImagePulls: false
   # -- Extra atelet CLI args appended verbatim. The kind profile mirrors the
   # upstream kind overlay: --log-level=debug and

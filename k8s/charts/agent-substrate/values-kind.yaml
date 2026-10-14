@@ -18,11 +18,9 @@ storage:
     enabled: true
     storage: 1Gi
 
-imagePullSecrets:
-  - name: ate-registry
-registry:
-  server: 710045723375.dkr.ecr.us-east-1.amazonaws.com
-  username: AWS
+# Images come from public ghcr.io/yurifrl/ate/*: no pull Secret needed.
+# (The kind-registry replacement below only rewrites ActorTemplate image
+# pulls, not the workload images set here.)
 
 atelet:
   gcpAuthForImagePulls: false
