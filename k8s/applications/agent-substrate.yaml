@@ -19,6 +19,14 @@ spec:
       # CRDs + ValidatingAdmissionPolicy + PriorityClasses must land before
       # workloads; the chart has no dependency ordering, so waves would race.
       - ServerSideApply=true
+    # volumeClaimTemplates is immutable and the apiserver fills volumeMode on
+    # the live STS, so without this the postgres STS is permanently OutOfSync.
+    ignoreDifferences:
+      - group: apps
+        kind: StatefulSet
+        name: postgres
+        jqPathExpressions:
+          - ".spec.volumeClaimTemplates[].spec.volumeMode"
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
