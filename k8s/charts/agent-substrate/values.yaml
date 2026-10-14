@@ -55,6 +55,13 @@ images:
     repository: 710045723375.dkr.ecr.us-east-1.amazonaws.com/ate/jaeger
     tag: "1.55"
 
+ateapi:
+  authentication:
+    # -- JWT issuer the api-server trusts for Kubernetes service-account tokens
+    # (ate-api-authentication ConfigMap). In-cluster default; on GKE set
+    # https://container.googleapis.com/v1/projects/<p>/locations/<l>/clusters/<c>.
+    issuer: https://kubernetes.default.svc
+
 # -- dockerconfigjson Secret (created when registry.password is set) so
 # kind nodes without node IAM can pull the mirrored private images.
 imagePullSecrets: []

@@ -173,3 +173,26 @@ kind: ConfigMap
 metadata:
   name: atenet-router-agentgateway-config
   namespace: ate-system
+
+---
+# ate-api-server OIDC authentication config (ate-setup's
+# `create api-authentication-config` step, ported to the chart).
+# In-cluster issuer (talos, kind, self-hosted): not publicly discoverable, so
+# discovery completes with the pod's own projected service-account CA+token.
+# A GKE/external issuer (ateapi.authentication.issuer override) needs neither.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ate-api-authentication
+  namespace: ate-system
+data:
+  authentication.yaml: |
+    actorIdentityJWTProvider: kubernetes
+    jwtProviders:
+    - name: kubernetes
+      issuer: {{ .Values.ateapi.authentication.issuer }}
+      audiences: [api.ate-system.svc]
+      {{- if eq .Values.ateapi.authentication.issuer "https://kubernetes.default.svc" }}
+      certificateAuthorityFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      discoveryTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      {{- end }}
