@@ -23,8 +23,9 @@ images:
   controller:
     repository: ghcr.io/yurifrl/ax/ax-controller
     tag: "c5c1ac5"
+  # -- Official upstream redis, not ko-built.
   redis:
-    repository: ghcr.io/yurifrl/ax/redis
+    repository: docker.io/library/redis
     tag: "7-alpine"
 
 substrate:

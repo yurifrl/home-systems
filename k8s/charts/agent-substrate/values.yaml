@@ -33,31 +33,35 @@ images:
   # -- atenet-router runs the agentgateway image (see values.images.agentgateway);
   # there is no separate atenet server image in the cluster manifests.
   agentgateway:
-    # -- Upstream agentgateway (egress proxy), crane-copied to public ghcr.
-    # Pinned by substrate's ate-install manifests (the image atenet-router runs).
-    repository: ghcr.io/yurifrl/ate/agentgateway
+    # -- Official upstream agentgateway image (ghcr.io/agentgateway), as pinned
+    # by substrate's ate-install manifests (the image atenet-router runs).
+    repository: ghcr.io/agentgateway/agentgateway
     tag: "v0.0.0-alpha.9f9744cf"
   postgres:
-    # -- Bundled PostgreSQL (see postgres.bundled), digest-pinned upstream.
-    repository: ghcr.io/yurifrl/ate/postgres
-    tag: "18-alpine"
+    # -- Bundled PostgreSQL (see postgres.bundled): official upstream image,
+    # digest-pinned (multi-arch: amd64 + arm64).
+    repository: docker.io/library/postgres
+    tag: "18-alpine@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15"
   rustfs:
-    # -- S3-compatible object store for local clusters (storage.rustfs.enabled).
-    repository: ghcr.io/yurifrl/ate/rustfs
-    tag: "1.0.0-beta.3"
+    # -- S3-compatible object store for local clusters
+    # (storage.rustfs.enabled): official upstream image, digest-pinned.
+    repository: docker.io/rustfs/rustfs
+    tag: "1.0.0-beta.3@sha256:378642b05b7dcb4849fb77ebe6aca4ced1c3f66e7e504247df95a5c9018d3358"
   awscli:
-    # -- Bucket-bootstrap Job image (rustfs.yaml).
-    repository: ghcr.io/yurifrl/ate/aws-cli
-    tag: "2.17.0"
+    # -- Bucket-bootstrap Job image (rustfs.yaml): official upstream image,
+    # digest-pinned.
+    repository: docker.io/amazon/aws-cli
+    tag: "2.17.0@sha256:643507c10ada7964ca6157b3d799f030b90577643da9955d319a77399ed80d73"
   otelcollector:
-    # -- In-cluster OTLP collector (otel.collector.enabled), digest-pinned
-    # upstream kind overlay (kind/otel-collector.yaml).
-    repository: ghcr.io/yurifrl/ate/otel-collector-contrib
-    tag: "0.157.0"
+    # -- In-cluster OTLP collector (otel.collector.enabled): official upstream
+    # image, digest-pinned (kind/otel-collector.yaml).
+    repository: docker.io/otel/opentelemetry-collector-contrib
+    tag: "0.157.0@sha256:f2f01157055a9b2aab9df7118e1f1c9abf345e99b23bc7a2bc791db374a7d0f6"
   jaeger:
-    # -- Jaeger all-in-one trace store + UI (otel.collector.enabled).
-    repository: ghcr.io/yurifrl/ate/jaeger
-    tag: "1.55"
+    # -- Jaeger all-in-one trace store + UI (otel.collector.enabled): official
+    # upstream image, digest-pinned.
+    repository: docker.io/jaegertracing/all-in-one
+    tag: "1.55@sha256:f6b5d09073f14f76873d300f565a6691d815e81bea8e07e1dc3ff67e0596dd4e"
 
 ateapi:
   authentication:

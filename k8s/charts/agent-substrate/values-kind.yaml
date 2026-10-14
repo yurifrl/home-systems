@@ -18,7 +18,8 @@ storage:
     enabled: true
     storage: 1Gi
 
-# Images come from public ghcr.io/yurifrl/ate/*: no pull Secret needed.
+# Images are all public (ko components from ghcr.io/yurifrl/ate, infra from
+# official upstream registries): no pull Secret needed.
 # (The kind-registry replacement below only rewrites ActorTemplate image
 # pulls, not the workload images set here.)
 

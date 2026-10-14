@@ -1,6 +1,7 @@
-# home talos-default profile. Images mirrored to public ghcr.io/yurifrl/ax/*;
-# no pull secret. Everything stays on amd64 (ko single-arch builds) via the
-# chart's default nodeSelector.
+# home talos-default profile. ko-built images mirrored to public
+# ghcr.io/yurifrl/ax/*; redis is the official upstream image. No pull secret.
+# Everything stays on amd64 (ko single-arch builds) via the chart's default
+# nodeSelector.
 
 images:
   controller:
@@ -8,7 +9,7 @@ images:
   server:
     repository: ghcr.io/yurifrl/ax/ax-server
   redis:
-    repository: ghcr.io/yurifrl/ax/redis
+    repository: docker.io/library/redis
 
 snapshots:
   # rustfs (agent-substrate) hosts the bucket; ateom workers read/write
