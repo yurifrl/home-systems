@@ -73,5 +73,4 @@ otel:
 atelet:
   # Actor images pull from public ghcr.io anonymously — no GCP auth, no
   # localhost registry replacement (talos has no sidecar registry).
-  gcpAuthForImagePulls: false
   extraArgs: []
