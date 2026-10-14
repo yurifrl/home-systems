@@ -26,7 +26,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: Always
           command: ["/usr/sbin/named"]
-          args: ["-u", "root", "-g"]
+          args: ["-u", "root", "-g", "-4"]
           ports:
             - name: dns-tcp
               containerPort: 53
