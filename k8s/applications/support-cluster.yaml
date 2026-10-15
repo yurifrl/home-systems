@@ -29,7 +29,21 @@ spec:
       - Validate=false
     managedNamespaceMetadata:
       labels:
-        istio.io/dataplane-mode: ambient      
+        istio.io/dataplane-mode: ambient
+  # 2026-10-15: VMRule CRD (upstream victoria-metrics-k8s-stack 0.90.2, chart
+  # crds/) sets a schema default `record: ''` on rules. The API server stamps
+  # it on every admission (operator status updates re-trigger it), no field
+  # manager owns it, and git correctly renders no `record` for alert rules —
+  # so all 17 VMRules diff permanently OutOfSync on that one orphaned field
+  # and every sync op "succeeds" without ever reaching Synced. Mask the field:
+  # git keeps rendering record only for recording rules, and a changed/renamed
+  # record on recording rules is no longer flagged as drift (accepted tradeoff —
+  # renaming a recording rule breaks its consumers immediately via missing
+  # series, so the footgun is loud elsewhere).
+  ignoreDifferences:
+    - group: operator.victoriametrics.com
+      kind: VMRule
+      jqPathExpr: '.spec.groups[].rules[].record'
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
