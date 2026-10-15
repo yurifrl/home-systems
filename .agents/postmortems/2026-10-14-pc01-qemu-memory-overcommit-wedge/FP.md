@@ -170,3 +170,31 @@ the guest node it actually probes.
   2026-10-13T12:00Z, empty now (no false positive). New follow-up:
   tk-elx (KSM restart-loop root cause).
 - Still open: tk-fah (warning route) → tk-pqp (fire + route verify).
+
+## Landed 2026-10-15 (KSM root cause, tk-elx)
+
+Root cause of the 4-day KSM kill-loop (evidence at fix time):
+- KSM watched the **full default 28-collector set incl. `secrets`**
+  (`--resources=certificatesigningrequests,...,secrets,...` in the live
+  Deployment args); over the offsite Tailscale link to the apiserver the
+  cache sync/catch-up is slow, and after every restart it re-lists
+  everything.
+- Pod is BestEffort (no requests/limits) on rpi01, which was at
+  **96% allocatable CPU (3786m/3950m)** — longhorn 289m, cilium 217m,
+  vmagent 134m; KSM steady-state itself only 32m/35Mi. The post-restart
+  catch-up spike starves `/livez` (5s timeout ×3 failures, period 10s,
+  initialDelay 5s → kill at ~35-38s), matching the observed ~38s
+  pod lifetime ×214 restarts since 10-11T09:12Z. No fatal error in logs —
+  clean startup then probe kill (exit 2).
+- Fix `96922cb1` (victoria-metrics-k8s-stack app values,
+  `kube-state-metrics:` block): collectors trimmed to the 4 families the
+  repo's alerts/dashboards actually use (`daemonsets,nodes,pods,
+  statefulsets` — grep'd `kube_*` usage repo-wide), requests
+  100m/64Mi + limit 256Mi (Burstable, no CPU limit), liveness
+  timeoutSeconds 5→15, failureThreshold 3→5 (window 5+5×~15s ≈ 80s).
+  Helm-rendered and verified before push.
+- Verification pending: vmks app sync (blocked by my bad force-sync:
+  `revisions:["HEAD","HEAD"]` pinned the helm-repo source 2 to HEAD →
+  "improper constraint: HEAD" ComparisonError; poisoned op snapshot must
+  burn its retries, then automated policy resyncs at the correct targets
+  `96922cb1` + `0.90.2`) → rollout → pod survives >2min.
