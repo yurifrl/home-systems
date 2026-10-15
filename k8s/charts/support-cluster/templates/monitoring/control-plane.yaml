@@ -82,4 +82,4 @@ spec:
             service: control-plane
           annotations:
             summary: "Kubernetes API server is slow"
-            description: "The authenticated control-plane Pod LIST probe has taken more than 2 seconds for 5 minutes. Check kube-apiserver CPU, request timeouts, and Crossplane finalizers. Runbook: .agents/postmortems/2026-08-16-crossplane-finalizer-retry-storm/PM.md"
+            description: "The authenticated control-plane Pod LIST probe has taken more than 2 seconds for 5 minutes. Check kube-apiserver CPU, request timeouts, and Crossplane finalizers. Runbooks: .agents/postmortems/2026-08-16-crossplane-finalizer-retry-storm/PM.md (finalizer retry storm), .agents/postmortems/2026-10-15-crossplane-provider-write-storm/PM.md (provider status-write storm saturating the control plane)"

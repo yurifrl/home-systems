@@ -1,0 +1,61 @@
+# ArgoCD per-Application sync health alerts.
+# Incident 2026-10-15 (.agents/postmortems/2026-10-15-crossplane-provider-write-storm/PM.md):
+# during a control-plane write storm, two app-level fix commits were pushed but
+# never landed: a sync operation wedged in "Running" for ~8m while the
+# controller starved, another errored with a diff-timeout while the app still
+# reported "Synced". ClusterCacheDown (argocd.yaml) stays green the whole time,
+# and CrashLooping fires only for pods — so "fix committed, never landed" is
+# invisible until a human re-checks ArgoCD. These alerts close that gap:
+#   ArgoCDAppSyncFailed     - a sync completed with a failure phase recently
+#   ArgoCDAppSyncPendingStuck - a sync has been in flight (Running) too long
+#   ArgoCDAppOutOfSync      - an auto-sync app has drifted for 30m+
+# Series verified against the argocd-operational-overview dashboard (in-repo,
+# rendering live data): argocd_app_sync_total{cluster,dest_server,job,namespace,
+# phase,project}, argocd_app_info{cluster,...}. sync_status/autosync_enabled
+# labels are upstream-stable; the P3 verify task re-checks both against live
+# /metrics after the VMRule syncs (live check was blocked 2026-10-15: macarm01
+# CNI dead — vmsingle pod proxy i/o timeout, kubelet SPDY silent hang).
+# Routed to Discord via the VMAlertmanagerConfig (severity=critical + environment=production).
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: argocd-sync-rules
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  groups:
+    - name: argocd-sync.rules
+      rules:
+        - alert: ArgoCDAppSyncFailed
+          expr: increase(argocd_app_sync_total{phase=~"Error|Failed"}[30m]) > 0
+          labels:
+            severity: critical
+            environment: production
+            service: argocd
+          annotations:
+            summary: "ArgoCD sync failed"
+            description: "Application {{ `{{ $labels.name }}` }} (project {{ `{{ $labels.project }}` }}) failed a sync within the last 30m — the app spec was rejected or errored (e.g. duplicate env keys broke the render), so the intended change never landed. Check `kubectl get application {{ `{{ $labels.name }}` }} -n argocd -o jsonpath='{.status.operationState.message}'`. Runbook: .agents/postmortems/2026-10-15-crossplane-provider-write-storm/PM.md"
+        - alert: ArgoCDAppSyncPendingStuck
+          expr: max(argocd_app_sync_pending{phase="Running"}) by (name, namespace) == 1
+          for: 30m
+          labels:
+            severity: critical
+            environment: production
+            service: argocd
+          annotations:
+            summary: "ArgoCD sync stuck in-flight"
+            description: "Application {{ `{{ $labels.name }}` }} has had a sync operation Running for 30m+ — the app controller is starved or the operation wedged (write storm on the control plane, unrenderable chart). The app may still report Synced with a stale comparedTo while the op never completes. Check `.status.operationState` and controller logs. Runbook: .agents/postmortems/2026-10-15-crossplane-provider-write-storm/PM.md"
+        - alert: ArgoCDAppOutOfSync
+          expr: argocd_app_info{autosync_enabled="true", sync_status="OutOfSync"} == 1
+          for: 30m
+          labels:
+            severity: critical
+            environment: production
+            service: argocd
+          annotations:
+            summary: "ArgoCD app drifted from git"
+            description: "Auto-sync Application {{ `{{ $labels.name }}` }} has been OutOfSync for 30m+ — commits are landed in git but the cluster never received them (controller starved, sync loop wedged, or selfHeal not firing). Compare `.status.sync.comparedTo` vs HEAD, then force a sync operation. Runbook: .agents/postmortems/2026-10-15-crossplane-provider-write-storm/PM.md"
