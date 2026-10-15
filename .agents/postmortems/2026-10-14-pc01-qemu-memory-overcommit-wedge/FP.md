@@ -144,10 +144,11 @@ the guest node it actually probes.
 
 ## Landed 2026-10-14
 
-- nixos `modules/gatus/config.yaml`: `Proxmox pc01 API` endpoint added but
-  **commented out** pending tk-ait — deploying it uncommented would
-  permanently alert-fail (DO gatus host has no route to 192.168.68.0/24;
-  uncomment + apply is tk-yyk's job). Rename `Tailnet talos-pc01` landed.
+- nixos `modules/gatus/config.yaml`: `Proxmox pc01 API` endpoint was staged
+  **commented out** pending tk-ait (uncommenting without a route would
+  permanently alert-fail); after the substrate was rejected the commented
+  block was deleted 2026-10-15 and a one-line "no API probe" note remains.
+  Rename `Tailnet talos-pc01` landed.
 - Epic tk-wtv + 7 tk issues created (ids inline above); deps wired:
   tk-ait→tk-yyk→tk-pqp, tk-fah→tk-pqp.
 - Provider-log timeline pass done 2026-10-14 (negative finding): zero
@@ -155,5 +156,7 @@ the guest node it actually probes.
   loop left no trace in Crossplane logs (PM.md Timeline updated).
   values.yaml RAM comment landed with the fix itself (2d266077, line 102)
   — tk-ckr closed.
-- Still open: nixos apply (blocked on tk-ait substrate — tk-yyk), journal
-  harvest (no SSH key for root@pc01 — tk-nn5).
+- Killed by user 2026-10-15: substrate tk-ait, probe tk-yyk, journal
+  harvest tk-nn5 — no host-API probe for pc01 by decision.
+- Still open (verification chain only): tk-lqz (node-down fired?), tk-fah
+  (warning route) → tk-pqp (fire + route verify).

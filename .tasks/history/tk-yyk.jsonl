@@ -1,2 +1,3 @@
 {"issue_id":"tk-yyk","action":"save","at":"2026-10-14T18:25:26.872Z","actor":null,"data":{"status":"open","title":"PVE host pc01 has no monitoring: Gatus API probe + rename guest ICMP check"}}
 {"issue_id":"tk-yyk","action":"dependency_added","at":"2026-10-14T18:25:27.327Z","actor":"yuri","data":{"target":"tk-pqp","type":"blocks"}}
+{"issue_id":"tk-yyk","action":"save","at":"2026-10-15T14:00:38.044Z","actor":null,"data":{"status":"closed","title":"PVE host pc01 has no monitoring: Gatus API probe + rename guest ICMP check"}}

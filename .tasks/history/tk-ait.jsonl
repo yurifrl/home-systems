@@ -1,2 +1,3 @@
 {"issue_id":"tk-ait","action":"save","at":"2026-10-14T18:25:26.792Z","actor":null,"data":{"status":"open","title":"Expose PVE host pc01 to the tailnet (subnet route for 192.168.68.0/24 or host join)"}}
 {"issue_id":"tk-ait","action":"dependency_added","at":"2026-10-14T18:25:27.266Z","actor":"yuri","data":{"target":"tk-yyk","type":"blocks"}}
+{"issue_id":"tk-ait","action":"save","at":"2026-10-15T13:59:14.645Z","actor":null,"data":{"status":"closed","title":"Expose PVE host pc01 to the tailnet (subnet route for 192.168.68.0/24 or host join)"}}

@@ -4,16 +4,16 @@
   "id": "tk-yyk",
   "title": "PVE host pc01 has no monitoring: Gatus API probe + rename guest ICMP check",
   "description": "Edits already in nixos/modules/gatus/config.yaml: endpoint 'Proxmox pc01 API' committed COMMENTED OUT (deploying before the substrate would alert-permanently-fail — 401-on-8006 is the cheapest 'pveproxy is answering' signal; ICMP stays green through a TCP-accepts wedge, see PM.md) plus rename 'Tailnet pc01'→'Tailnet talos-pc01' (safe, deploys with any routine apply). Remaining: uncomment the endpoint, set the final URL per substrate choice, nixos apply digitalocean-gatus-01. Catches a host wedge in ~2 min instead of ~40.",
-  "status": "open",
+  "status": "closed",
   "priority": 1,
   "issue_type": "task",
   "owner": null,
   "assignee": null,
   "created_by": "yuri",
   "created_at": "2026-10-14T18:25:26.871Z",
-  "updated_at": "2026-10-14T18:25:27.327Z",
+  "updated_at": "2026-10-15T14:00:38.042Z",
   "started_at": null,
-  "closed_at": null,
+  "closed_at": "2026-10-15T14:00:38.042Z",
   "due_at": null,
   "defer_until": null,
   "parent": null,
@@ -21,7 +21,7 @@
   "labels": [
     "pm:2026-10-14-pc01-qemu-memory-overcommit-wedge"
   ],
-  "notes": null,
+  "notes": "Killed with its dependency: tk-ait (tailnet substrate) rejected by user 2026-10-15; uncommenting the probe with no route would permanently alert-fail. Rename (Tailnet talos-pc01) already landed",
   "design": null,
   "acceptance_criteria": "Endpoint green (STATUS 401) and a forced failure (>2 min with 8006 unreachable) alerts Discord once.",
   "estimated_minutes": null,
@@ -41,7 +41,7 @@
     }
   ],
   "dependency_count": 1,
-  "dependent_count": 0,
+  "dependent_count": 1,
   "comments": [],
   "comment_count": 0
 }
