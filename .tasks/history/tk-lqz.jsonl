@@ -1,1 +1,2 @@
 {"issue_id":"tk-lqz","action":"save","at":"2026-10-14T18:25:26.939Z","actor":null,"data":{"status":"open","title":"Verify node-down alert fired for the vanished pc01 worker (2026-10-12→14)"}}
+{"issue_id":"tk-lqz","action":"save","at":"2026-10-15T22:46:56.080Z","actor":null,"data":{"status":"closed","title":"Verify node-down alert fired for the vanished pc01 worker (2026-10-12→14)"}}

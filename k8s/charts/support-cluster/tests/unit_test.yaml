@@ -4,6 +4,9 @@ templates:
   - monitoring/cloudflare-tunnel.yaml
   - monitoring/victoriametrics-watchdog.yaml
   - longhorn-node-scheduling.yaml
+  - monitoring/nic-offload-fix.yaml
+  - monitoring/zigbee2mqtt.yaml
+  - alertmanagerconfig.yaml
 tests:
   - it: should render connector correctly
     template: tailscale/connector.yaml
@@ -30,7 +33,7 @@ tests:
           path: spec.groups[0].rules[0].expr
           value: sum(cloudflared_tunnel_ha_connections) == 0
 
-  - it: should render the independent VictoriaMetrics watchdog
+  - it: should render the independent VictoriaMetrics watchdog as a looping Deployment
     template: monitoring/victoriametrics-watchdog.yaml
     asserts:
       # Deployment, NOT CronJob: a CronJob churning one pod/min grew VM storage
@@ -49,7 +52,7 @@ tests:
     documentIndex: 3
     asserts:
       - isKind:
-          of: CronJob
+          of: Deployment
       - equal:
           path: spec.schedule
           value: "*/30 * * * *"
@@ -62,3 +65,45 @@ tests:
       - equal:
           path: spec.jobTemplate.spec.template.spec.containers[0].env[0].value
           value: "[]"
+
+  - it: should suppress NicOffloadFixNotRunning while any node is NotReady
+    template: monitoring/nic-offload-fix.yaml
+    asserts:
+      - isKind:
+          of: VMRule
+      - matchRegex:
+          path: spec.groups[0].rules[0].expr
+          pattern: 'unless on\(\) count\(kube_node_status_condition\{condition="Ready",status="true"\} == 0\) > 0'
+      - equal:
+          path: spec.groups[0].rules[0].for
+          value: 15m
+
+  - it: should page only on sustained Zigbee2MQTT outages
+    template: monitoring/zigbee2mqtt.yaml
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: VMRule
+      - equal:
+          path: spec.groups[0].rules[0].for
+          value: 15m
+
+  - it: should inhibit KubeNodeUnreachable when KubeNodeNotReady fires for the same node
+    template: alertmanagerconfig.yaml
+    values:
+      - ../test.yaml
+    asserts:
+      - isKind:
+          of: VMAlertmanagerConfig
+      - equal:
+          path: spec.inhibit_rules[0].source_matchers
+          value:
+            - 'alertname="KubeNodeNotReady"'
+      - equal:
+          path: spec.inhibit_rules[0].target_matchers
+          value:
+            - 'alertname="KubeNodeUnreachable"'
+      - equal:
+          path: spec.inhibit_rules[0].equal
+          value:
+            - node
