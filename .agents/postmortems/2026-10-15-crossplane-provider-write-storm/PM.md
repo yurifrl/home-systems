@@ -133,6 +133,27 @@ cause" — this storm is a candidate for that cause, though a real residual rema
 4. Chart-injected env vars resolve at **pod start**: after the secret finally syncs, the
    27h-old pod still has the old (empty) env — restart the deployment.
 
+**Syncs fail fleet-wide under saturation ("failed to download openapi"):**
+
+- Signature in `kubectl -n argocd logs argocd-application-controller-0`:
+  `Apply failed ... dryRun=true message="error validating data: failed to download openapi
+  ... request canceled (Client.Timeout or context cancellation while reading body)"`,
+  repeated across different apps and resources; the sync operation stays `Running`
+  cycling retries, then `retried 5 times` and the op fails.
+- Cause: kube-apiserver on macintel01 streams `/openapi/v2` (22MB) at ~1.4MB/s under its
+  standing system/softirq load; ArgoCD's client-side dry-run validation downloads that
+  schema per apply and times out mid-body. `ServerSideApply=true` does NOT bypass it
+  (the client still validates first). Fresh-from-workstation fetch took 16s — the
+  controller's client timeout is shorter than that.
+- Fix per app (or on the parent to cover all): add `Validate=false` sync option —
+  server-side admission validation still applies. Applied 2026-10-15 to
+  `support-cluster` (git) and the parent `applications` (live CR).
+- The parent `applications` Application (directory-source of `k8s/applications/`, auto
+  sync+selfHeal) is **out-of-band** — it is not declared anywhere in git (it cannot be:
+  its source dir would recursively contain it). Live-patch its CR; it is the source of
+  truth for that app. Fleet-wide `Validate=false` rollout not yet done — consider it when
+  macintel01 sizing lands (tk-qpb).
+
 **ESO collateral (crashloop "Failed to update lease"):** ESO loses leader election whenever
 the API degrades; its backoff then outlives the recovery. Delete the pods once the API is
 stable, and restart the webhook if cert-controller logged fresh CA injection

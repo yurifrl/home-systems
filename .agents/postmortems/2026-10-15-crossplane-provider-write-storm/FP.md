@@ -65,3 +65,19 @@ Each executed item gains `→ done: <bead-id | commit | link>` inline.
 
 ## Alert Cleanup
 - (none — all firing alerts during this incident were real)
+
+## Verification (2026-10-15)
+- → VMRule `argocd-sync-rules` exists in cluster (`kubectl get vmrule -n monitoring`);
+  vmalert serves group `argocd-sync.rules` (18→19 groups), all 3 alerts evaluating
+  with health=ok: SyncFailed already firing (true positive — includes this incident's
+  failed syncs), OutOfSync pending (support-cluster itself, the target condition),
+  PendingStuck inactive.
+- → Implementation hit a second-order blocker recorded in the PM runbook: client-side
+  openapi validation killed every sync under the saturated apiserver; fixed with
+  `Validate=false` on support-cluster (git 0b274bf0) + live CR patch, parent `applications`
+  (out-of-band, live-only) patched to match.
+- → App sync op still Running behind the `vmks-victoria-metrics-operator` health gate —
+  the operator flaps (lease/discovery read timeouts vs macintel01's standing 3.5-core
+  apiserver burn). VMRule landed and activates regardless; app goes Synced when the
+  operator stabilizes (macintel01 sizing, tk-qpb). Alert-fire/route-to-Discord live test
+  remains tk-gjx.
