@@ -51,8 +51,10 @@ tests:
     template: longhorn-node-scheduling.yaml
     documentIndex: 3
     asserts:
+      # CronJob (not Deployment): re-asserts allowScheduling=true on every
+      # nodes.longhorn.io every 30m (2026-09-16 degraded-replica outage).
       - isKind:
-          of: Deployment
+          of: CronJob
       - equal:
           path: spec.schedule
           value: "*/30 * * * *"
