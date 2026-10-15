@@ -194,6 +194,28 @@ spec:
           # restated in full because overriding it replaces the chart default,
           # including the labeldrop relabel.
           kube-state-metrics:
+            # 2026-10-15 (tk-elx): KSM crashed every ~38s on rpi01 for 4d —
+            # /livez timed out while the full 28-collector set (incl. secrets)
+            # synced its caches over the offsite Tailscale link, and the pod
+            # (BestEffort, no requests) starved during catch-up on a node at
+            # 82%+ CPU. That left every node alert blind for the entire
+            # pc01 wedge. Now: 4 collectors (all any alert here uses), a
+            # Burstable guarantee, and a probe window that survives one slow
+            # sync instead of killing mid-sync forever.
+            collectors:
+              - daemonsets
+              - nodes
+              - pods
+              - statefulsets
+            resources:
+              requests:
+                cpu: 100m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+            livenessProbe:
+              timeoutSeconds: 15
+              failureThreshold: 5
             vmScrape:
               spec:
                 endpoints:
