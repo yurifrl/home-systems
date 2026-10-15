@@ -30,6 +30,16 @@ spec:
           - 'severity="critical"'
           - 'environment="production"'
         continue: false
+      # 2026-10-15 (tk-fah): warning alerts previously delivered only via this
+      # route's fallback receiver (implicit); disk.yaml/longhorn-backup.yaml
+      # fire severity=warning and deserve an explicit matcher. Without the
+      # explicit route a future catch-all sibling config could silently reroute
+      # warnings to blackhole.
+      - receiver: discord
+        matchers:
+          - 'severity="warning"'
+          - 'environment="production"'
+        continue: false
   receivers:
     - name: discord
       discord_configs:
