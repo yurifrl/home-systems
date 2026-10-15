@@ -18,7 +18,7 @@ GitHub mirror backup (Argo Workflow + CronWorkflow) deployed to home Talos clust
 
 ## Current State
 - ALL pushed: public b503cca5, private 80641a8. 1Password item github-backup created (vault kubernetes, GHA_PAT seeded from env)
-- In-cluster verified: SecretSynced, PVC Bound, template+cron live, PAT valid (listing NSXBet+yurifrl with privates, clones+snapshots work)
+- In-cluster verified: SecretSynced, PVC Bound, template+cron live, PAT valid (listing configured org+yurifrl with privates, clones+snapshots work)
 - Runs: r1 27/304 ok (Longhorn replica fault tp4->volume faulted), r2 0 ok (volume reattached READ-ONLY), r3 97/304 ok (RO again). PVC/PV 7795e75c stuck faulted+detached -> needs delete (ArgoCD recreates) before next run
 - STUCK UNCOMMITTED: home-systems-values GHA_BACKUP_JOBS 4->2 staged; commit signing=1Password op-ssh-sign needs biometric (user away); 'failed to fill whole buffer' x2
 - Mac left home LAN (now 192.168.0.x); cluster 192.168.68.x + ts context peer 100.65.212.5 both unreachable -> cluster ops blocked

@@ -24,7 +24,7 @@ Behavior per run:
 Configuration (env, all optional except GHA_PAT):
   GHA_PAT            GitHub PAT. Needs read access to the target repos:
                      fine-grained -> "Contents: read-only", or classic -> repo scope.
-  GHA_BACKUP_ORGS    Comma-separated org logins (default "NSXBet").
+  GHA_BACKUP_ORGS    Comma-separated org logins (required, no default).
   GHA_BACKUP_USERS   Comma-separated user logins (default "yurifrl"; the PAT
                      owner's private repos are included via /user/repos).
   GHA_BACKUP_STATE   Root directory for mirrors/snapshots (default "/state").
@@ -33,7 +33,7 @@ Configuration (env, all optional except GHA_PAT):
   GHA_BACKUP_TIMEOUT Per-repo git/API timeout in seconds (default 1800).
 
 Usage:
-  uv run github_backup.py [--orgs NSXBet] [--users yurifrl] [--state /state]
+  uv run github_backup.py [--orgs ORG[,ORG...]] [--users yurifrl] [--state /state]
                           [--jobs 4] [--snapshots 5] [--timeout 1800]
 """
 
@@ -321,13 +321,15 @@ def main() -> None:
     token = env("GHA_PAT")
 
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--orgs", default=env("GHA_BACKUP_ORGS", "NSXBet"))
+    parser.add_argument("--orgs", default=env("GHA_BACKUP_ORGS", ""))
     parser.add_argument("--users", default=env("GHA_BACKUP_USERS", "yurifrl"))
     parser.add_argument("--state", default=env("GHA_BACKUP_STATE", "/state"))
     parser.add_argument("--jobs", type=int, default=int(env("GHA_BACKUP_JOBS", "4")))
     parser.add_argument("--snapshots", type=int, default=int(env("GHA_BACKUP_SNAPSHOTS", "5")))
     parser.add_argument("--timeout", type=int, default=int(env("GHA_BACKUP_TIMEOUT", "1800")))
     args = parser.parse_args()
+    if not args.orgs.strip():
+        parser.error("--orgs / GHA_BACKUP_ORGS is required")
 
     os.environ["GHA_BACKUP_STATE"] = args.state
     orgs = [o.strip() for o in args.orgs.split(",") if o.strip()]
