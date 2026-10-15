@@ -100,11 +100,10 @@ spec:
             extraEnv:
               - name: BUZZ_GIT_CONFORMANCE_PROBE
                 value: "false"
-              # Redis for buzz-pubsub (readiness gate in 0.1.x). Shared,
-              # unauthenticated, empty-keyspace instance; pub/sub channels and
-              # keys are buzz-namespaced upstream.
-              - name: REDIS_URL
-                value: "redis://redis.redis.svc.cluster.local:6379"
+            # Redis for buzz-pubsub (readiness gate in 0.1.x): chart 0.1.7
+            # injects REDIS_URL from buzz-secrets, so it's supplied there via
+            # the ExternalSecret below (shared, unauthenticated in-cluster
+            # redis; pub/sub channels and keys are buzz-namespaced upstream).
 
           # Networking is handled by the Istio VirtualService (support chart
           # below) + Cloudflare tunnel, not the chart's own ingress/HTTPRoute.
@@ -137,6 +136,9 @@ spec:
                 - secretKey: BUZZ_S3_SECRET_KEY
                   key: buzz
                   property: S3_SECRET_KEY
+                - secretKey: REDIS_URL
+                  key: buzz
+                  property: REDIS_URL
             # CNPG role password for the `buzz` login role, in the databases
             # namespace. basic-auth so the operator's passwordSecret ref works.
             - name: buzz-db
