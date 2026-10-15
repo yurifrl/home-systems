@@ -20,6 +20,13 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
       - SkipDryRunOnMissingResource=true
+      # 2026-10-15: kube-apiserver on macintel01 streams /openapi/v2 (22MB) at
+      # ~1.4MB/s; ArgoCD's client-side validation timeout kills the fetch and
+      # every sync dies with "failed to download openapi" (see
+      # .agents/postmortems/2026-10-15-crossplane-provider-write-storm/PM.md).
+      # Validate=false skips the client-side schema download; server-side
+      # admission validation still applies.
+      - Validate=false
     managedNamespaceMetadata:
       labels:
         istio.io/dataplane-mode: ambient      
