@@ -8,9 +8,12 @@
 # Evaluated by VMAlert (selectAllByDefault); severity=critical routes to Discord
 # via the VMAlertmanagerConfig in this chart.
 #
-# NOTE: if kube-state-metrics itself is down (e.g. cross-site node can't reach
-# the apiserver), this alert goes silent too. The watchdog alert
-# (victoriametrics-watchdog.yaml) covers that case.
+# NOTE: if kube-state-metrics itself stops exporting (pod down, liveness
+# restart-loop, cross-site node can't reach the apiserver), both alerts below
+# go silent — max_over_time(...)==0 matches nothing when the series is absent.
+# KubeNodeMetricsAbsent covers that blind spot (2026-10-12→14 pc01 gap:
+# KSM restart-looping on rpi01 made node alerts dead for 3 days). The watchdog
+# (victoriametrics-watchdog.yaml) only covers vmsingle/vmagent, NOT KSM.
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMRule
 metadata:
@@ -51,3 +54,14 @@ spec:
           annotations:
             summary: "Node {{ `{{ $labels.node }}` }} is Unreachable"
             description: "Node {{ `{{ $labels.node }}` }} has been Unreachable for >5m. The node-controller has stopped receiving heartbeats — likely a network partition or kubelet crash."
+
+        - alert: KubeNodeMetricsAbsent
+          expr: absent(kube_node_status_condition{condition="Ready"})
+          for: 10m
+          labels:
+            severity: critical
+            environment: production
+            service: node-health
+          annotations:
+            summary: "Node inventory absent — kube-state-metrics is not exporting node conditions"
+            description: "No kube_node_status_condition samples for 10m: kube-state-metrics is down or not exporting. KubeNodeNotReady and KubeNodeUnreachable are blind until this clears. This was the 2026-10-12→14 gap (KSM restart-looping on rpi01) that left the pc01 wedge invisible to node alerts."

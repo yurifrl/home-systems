@@ -130,6 +130,15 @@ minutes. No reboot was needed — `up 3 days` through the whole incident.
   (current container since 10-11T09:19Z) contain zero `talos-pc01`
   lines before 10-14T12Z — the loop is invisible in Crossplane logs;
   the reconcile loop is plausible but unproven.
+  - Node alerts were blind the entire window: kube-state-metrics
+    (pod vmks-kube-state-metrics-…-8nw2x on rpi01) restart-looped from
+    10-11T09:12Z on liveness `livez` timeouts (208 restarts) and had no
+    stable samples until 10-14T13:00Z — `kube_node_status_condition` is
+    absent in 10-11T10:00→10-14T13:00, so `KubeNodeNotReady`/`…Unreachable`
+    matched nothing. Coverage returned 10-14T13:45: KubeNodeNotReady fired
+    13:45→17:50 for pc01 and delivered ~59 Discord notifications
+    (alertmanager_notifications_total 64→123). Verified via
+    alertmanager_notifications_total + ALERTS history in vmsingle.
 
 ### 2026-10-14
 - `~11:40Z` Last pre-incident failed start observed in task list.

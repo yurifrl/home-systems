@@ -158,5 +158,15 @@ the guest node it actually probes.
   — tk-ckr closed.
 - Killed by user 2026-10-15: substrate tk-ait, probe tk-yyk, journal
   harvest tk-nn5 — no host-API probe for pc01 by decision.
-- Still open (verification chain only): tk-lqz (node-down fired?), tk-fah
-  (warning route) → tk-pqp (fire + route verify).
+- tk-lqz closed 2026-10-15 (verified): KubeNodeNotReady fired for pc01
+  10-14T13:45→17:50 and delivered (~59 Discord sends, AM counter 64→123)
+  — but only after KSM stabilized. During 10-11T10:00→10-14T13:00
+  kube-state-metrics (pod 8nw2x, rpi01) restart-looped on liveness
+  `livez` timeouts (208 restarts), so node condition series were absent
+  and every node alert was blind the whole gap; the watchdog does not
+  cover KSM (node-down.yaml comment was wrong — fixed). Fix landed:
+  `KubeNodeMetricsAbsent` (absent() for 10m, critical) added to
+  node-down.yaml; expr verified against the incident — returns 1 at
+  2026-10-13T12:00Z, empty now (no false positive). New follow-up:
+  tk-elx (KSM restart-loop root cause).
+- Still open: tk-fah (warning route) → tk-pqp (fire + route verify).
