@@ -11,12 +11,12 @@
   "assignee": null,
   "created_by": "yuri",
   "created_at": "2026-10-15T15:28:20.132Z",
-  "updated_at": "2026-10-15T15:28:36.985Z",
+  "updated_at": "2026-10-15T17:12:05.618Z",
   "started_at": null,
   "closed_at": null,
   "due_at": null,
   "defer_until": null,
-  "parent": null,
+  "parent": "tk-kft",
   "sprint": null,
   "labels": [
     "pm:2026-10-14-pc01-qemu-memory-overcommit-wedge"

@@ -1,1 +1,2 @@
 {"issue_id":"tk-elx","action":"save","at":"2026-10-15T15:48:54.188Z","actor":null,"data":{"status":"open","title":"kube-state-metrics restart-loops on rpi01 (liveness livez timeouts)"}}
+{"issue_id":"tk-elx","action":"save","at":"2026-10-15T21:44:05.585Z","actor":null,"data":{"status":"closed","title":"kube-state-metrics restart-loops on rpi01 (liveness livez timeouts)"}}

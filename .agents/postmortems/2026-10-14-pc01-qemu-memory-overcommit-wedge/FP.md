@@ -193,12 +193,36 @@ Root cause of the 4-day KSM kill-loop (evidence at fix time):
   100m/64Mi + limit 256Mi (Burstable, no CPU limit), liveness
   timeoutSeconds 5→15, failureThreshold 3→5 (window 5+5×~15s ≈ 80s).
   Helm-rendered and verified before push.
-- Verification pending: vmks app sync (blocked by my bad force-sync:
-  `revisions:["HEAD","HEAD"]` pinned the helm-repo source 2 to HEAD →
-  "improper constraint: HEAD" ComparisonError; poisoned op snapshot must
-  burn its retries, then automated policy resyncs at the correct targets
-  `96922cb1` + `0.90.2`) → rollout → pod survives >2min.
+- Verified live 2026-10-15 (~17:45Z), tk-elx closed: vmks sync Succeeded
+  on retry #4 (the "HEAD,HEAD" poison was my bad force-sync patch — see
+  below); Deployment now `--resources=daemonsets,nodes,pods,statefulsets`,
+  requests 100m/64Mi + 256Mi limit, probe 15s×5. New pod
+  `vmks-kube-state-metrics-956cffd66-9m257` Running **0 restarts** (old
+  pod died every ~38s); `kube_node_status_condition{condition="Ready"}`
+  samples 30s old — 3-day gap closed; `KubeNodeMetricsAbsent` correctly
+  silent with metrics flowing.
 - Alert fix LIVE 2026-10-15 ~16:40Z: support-cluster sync applied
   node-down-rules with `KubeNodeMetricsAbsent` (VMRule gen=3 observed=3,
   `ConfigParsedAndApplied`, updateStatus operational — vmalert has it
-  loaded). Remaining pending: vmks sync → KSM rollout → pod survival.
+  loaded).
+
+## Systemic finding: openapi schema fetch is the ArgoCD wedge mechanism
+
+During burn windows the apiserver's `/openapi/v2` body read degrades
+catastrophically: measured 2026-10-15 17:4xZ from tp4 pod (LAN, healthy
+node): **200 OK, 12MB, 66.3s**; same hour from the workstation: 22MB in
+0.09s. Every ArgoCD apply validates manifests against this schema, so
+during burn windows ALL syncs fail with `error validating data: failed
+to download openapi: net/http: request cancel` / `context deadline
+exceeded while reading body` — observed on the vmks op (82 resources
+SyncFailed at 17:2xZ) and the support-cluster op (17 VMRules stuck
+OutOfSync). Two argocd-application-controller restarts (macarm01→tp4,
+18:00+ cache rebuild) didn't fix it — the path is the problem, not the
+controller. Retry cycles DO eventually get through (vmks Succeeded on
+attempt #4), so syncs self-heal when the burn dips. Noted on tk-qpb;
+the fix (bigger control-plane VM / off-host CP) addresses this too.
+Ops lesson: ArgoCD `operationState` in this cluster's Application CRD
+has no `terminated` field — finalize wedged ops with a status patch
+setting `phase: Failed` + `finishedAt`, then let the automated policy
+resync; and never force-sync a multi-source app with
+`revisions:["HEAD",...]` (pins helm-repo sources to an invalid semver).

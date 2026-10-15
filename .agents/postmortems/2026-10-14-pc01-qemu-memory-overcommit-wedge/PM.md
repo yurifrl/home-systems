@@ -24,6 +24,7 @@ related:
   - 2026-08-16-crossplane-finalizer-retry-storm
   - 2026-08-18-pc01-containerd-pleg-dead
   - 2026-07-05-pc01-tailscale-flag-drift-crashloop
+  - 2026-10-15-crossplane-provider-write-storm
 ---
 
 # Postmortem: pc01 (Proxmox host) QEMU memory overcommit wedges host; VM 100 start-loop for 2 days

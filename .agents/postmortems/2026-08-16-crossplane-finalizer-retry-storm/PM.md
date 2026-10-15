@@ -23,6 +23,7 @@ supersedes: []
 related:
   - 2026-07-05-argocd-crossplane-webhook-blocks-sync
   - 2026-07-13-apiserver-crd-cache-oom
+  - 2026-10-15-crossplane-provider-write-storm
 ---
 
 # Postmortem: Crossplane finalizer retry storm saturates kube-apiserver
