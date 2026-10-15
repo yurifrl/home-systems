@@ -41,7 +41,7 @@ spec:
             # 3 instances for HA: 1 primary + 2 streaming replicas across nodes
             # (CNPG manages replication + automatic failover). Requires >=3
             # schedulable nodes with healthy Longhorn so replicas land on
-            # distinct healthy nodes (keep them off the flaky roaming VMs).
+            # distinct healthy nodes.
             instances: 3
 
             # Spread the 3 instances across distinct hosts. The CNPG default
@@ -53,20 +53,6 @@ spec:
               enablePodAntiAffinity: true
               podAntiAffinityType: preferred
               topologyKey: kubernetes.io/hostname
-              # Keep instances OFF the flaky roaming / cross-site VMs
-              # (macarm01, macintel01, rpi01) - a Postgres replica there can't
-              # keep its local server up (readiness 500, perpetual 0/1) and
-              # degrades the cluster. Leaves tp1/tp4/pc01 for the 3 instances.
-              nodeAffinity:
-                requiredDuringSchedulingIgnoredDuringExecution:
-                  nodeSelectorTerms:
-                    - matchExpressions:
-                        - key: kubernetes.io/hostname
-                          operator: NotIn
-                          values:
-                            - macarm01
-                            - macintel01
-                            - rpi01
 
             # PostgreSQL container image: the Supabase-extensions build
             # (home-systems-jfr.6) so this single cluster can also back Supabase.
