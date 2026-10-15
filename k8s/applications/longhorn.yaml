@@ -177,3 +177,24 @@ reclaimPolicy: Delete
 # Allow online PVC expansion (e.g. growing a StatefulSet volume in place).
 allowVolumeExpansion: true
 volumeBindingMode: Immediate
+---
+# StorageClass for replica=1 restricted to disks tagged `backup` (github-backup
+# state). Only macarm01's dedicated data disk carries that tag, so volumes from
+# this class land exclusively there regardless of scheduler decisions.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-backup
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: driver.longhorn.io
+parameters:
+  numberOfReplicas: "1"
+  staleReplicaTimeout: "2880"
+  fromBackup: ""
+  fsType: ext4
+  dataLocality: best-effort
+  diskSelector: "backup"
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+volumeBindingMode: Immediate

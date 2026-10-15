@@ -127,6 +127,11 @@ nodes:
     arch: arm64
     install_disk: /dev/nvme0n1
     template: macarm01.yaml
+    # Dedicated Longhorn data disk REQUIRED for github-backup: attach a second
+    # virtual disk in UTM (virtio), then `nostos render macarm01 && nostos
+    # apply macarm01`. The template partitions it to /var/mnt/storage and tags
+    # the Longhorn disk `backup`; the longhorn-backup StorageClass binds only
+    # there.
     # arm64 VM: tailscale + iscsi-tools + util-linux-tools + entropy kernel args
     # baked in. Source: nostos/manifests/schematics/vm01-arm64.yaml
     schematic_id: 773f49ef0c412e83da0eb190d3b1915aba0c2baf358f4db7589fd843788751ab

@@ -16,6 +16,27 @@ machine:
     image: ghcr.io/siderolabs/kubelet:v1.37.1
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
+    extraMounts:
+      # Longhorn data disk mount (same pattern as tp1's template). Required for
+      # the kubelet to see /var/mnt/storage, which machine.disks partitions and
+      # mounts and Longhorn then uses as this node's storage disk.
+      - destination: /var/mnt/storage
+        type: bind
+        source: /var/mnt/storage
+        options:
+          - bind
+          - rshared
+          - rw
+  # Labels/annotations land on the Node object. The create-default-disk
+  # "config" label (chart already sets createDefaultDiskLabeledNodes: true)
+  # makes Longhorn create disks ONLY from the default-disks-config annotation
+  # below — instead of auto-adopting every blank disk — and we tag the disk
+  # `backup` so the longhorn-backup StorageClass (diskSelector: backup) binds
+  # here and nowhere else.
+  nodeLabels:
+    node.longhorn.io/create-default-disk: "config"
+  nodeAnnotations:
+    node.longhorn.io/default-disks-config: '[{"path":"/var/mnt/storage","allowScheduling":true,"tags":["backup"]}]'
   network:
     hostname: macarm01
     interfaces:
@@ -33,6 +54,16 @@ machine:
     disk: /dev/nvme0n1
     image: {{ .InstallImage }}
     wipe: true
+  # Dedicated Longhorn data disk: a SECOND virtual disk attached in UTM
+  # (virtio). The system NVMe stays Talos-owned (EPHEMERAL takes the rest —
+  # do NOT carve storage out of it). A new virtio disk shows up as /dev/vda;
+  # confirm with `talosctl -n 192.168.68.90 get disks` after attaching and
+  # adjust the device below if it lands elsewhere (e.g. /dev/nvme1n1).
+  disks:
+    - device: /dev/vda
+      partitions:
+        - mountpoint: /var/mnt/storage
+          size: 0 # use all available space
   features:
     rbac: true
     stableHostname: true
