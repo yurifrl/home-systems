@@ -1,0 +1,59 @@
+# tk-ndu: branches older than 2 weeks that are not on main get surfaced
+# weekly. The 2026-10-15 write-storm postmortem traced a 5-week-old unmerged
+# fix (image-updater async-callback) that was invisible to everyone because
+# nothing watched branch age. This workflow makes stale branches loud.
+name: branch-age-reminder
+
+on:
+  schedule:
+    - cron: "17 9 * * 1" # Mondays 09:17 UTC
+  workflow_dispatch: {}
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: List branches not on main, older than 14 days
+        id: scan
+        run: |
+          set -euo pipefail
+          # Only branches with commits absent from main, last touched > 14d ago.
+          # Patches that already exist on main (git cherry shows no '+') are
+          # marked DELETE; older snapshots the owner keeps are marked KEEP.
+          {
+            echo "## Stale branches (> 14d, not on main) — $(date -u +%Y-%m-%d)"
+            echo
+            while read -r sha ref; do
+              age_days=$(( ( $(date -u +%s) - $(git log -1 --format=%ct "$sha") ) / 86400 ))
+              [ "$age_days" -lt 14 ] && continue
+              patches=$(git cherry main "$ref" | grep -c '^+' || true)
+              name=${ref#origin/}
+              echo "- \`$name\` — ${age_days}d old, $patches patch(es) not on main"
+            done < <(git for-each-ref --sort=committerdate --format='%(objectname) %(refname)' refs/remotes/origin refs/heads | grep -v -E 'refs/remotes/origin/(main|HEAD)$|refs/heads/main$')
+          } > stale-branches.md
+          {
+            echo 'body<<EOF'
+            cat stale-branches.md
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+      - name: Open or update tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          existing=$(gh issue list --label branch-age --state open --json number -q '.[0].number' || true)
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file stale-branches.md
+          else
+            gh issue create \
+              --title "Stale branch review (> 14d not on main)" \
+              --label branch-age \
+              --body-file stale-branches.md
+          fi
