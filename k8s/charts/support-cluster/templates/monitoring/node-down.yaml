@@ -55,8 +55,12 @@ spec:
             summary: "Node {{ `{{ $labels.node }}` }} is Unreachable"
             description: "Node {{ `{{ $labels.node }}` }} has been Unreachable for >5m. The node-controller has stopped receiving heartbeats — likely a network partition or kubelet crash."
 
+        # tk-pqp synthetic-fire test 2026-10-15: selector never matches (no
+        # series carries tk_pqp_synthetic), so absent()=1 immediately — the
+        # alert exercises its real for:10m wait and delivery path. REVERTED in
+        # the next commit after fire+delivery evidence.
         - alert: KubeNodeMetricsAbsent
-          expr: absent(kube_node_status_condition{condition="Ready"})
+          expr: absent(kube_node_info{tk_pqp_synthetic="2026-10-15"})
           for: 10m
           labels:
             severity: critical
