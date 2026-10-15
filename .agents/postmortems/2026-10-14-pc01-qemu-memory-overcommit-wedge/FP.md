@@ -198,3 +198,7 @@ Root cause of the 4-day KSM kill-loop (evidence at fix time):
   "improper constraint: HEAD" ComparisonError; poisoned op snapshot must
   burn its retries, then automated policy resyncs at the correct targets
   `96922cb1` + `0.90.2`) → rollout → pod survives >2min.
+- Alert fix LIVE 2026-10-15 ~16:40Z: support-cluster sync applied
+  node-down-rules with `KubeNodeMetricsAbsent` (VMRule gen=3 observed=3,
+  `ConfigParsedAndApplied`, updateStatus operational — vmalert has it
+  loaded). Remaining pending: vmks sync → KSM rollout → pod survival.
