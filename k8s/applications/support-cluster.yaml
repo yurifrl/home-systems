@@ -43,7 +43,11 @@ spec:
   ignoreDifferences:
     - group: operator.victoriametrics.com
       kind: VMRule
-      jqPathExpr: '.spec.groups[].rules[].record'
+      # jqPathExpressions (plural, list) — a singular jqPathExpr key is pruned
+      # by the Application CRD schema (observed 2026-10-15: it vanished from
+      # the live CR, leaving a whole-resource ignore).
+      jqPathExpressions:
+        - '.spec.groups[].rules[].record'
   sources:
     - repoURL: https://github.com/yurifrl/home-systems.git
       targetRevision: HEAD
