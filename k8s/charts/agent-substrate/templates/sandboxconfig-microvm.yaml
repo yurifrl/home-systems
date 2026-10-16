@@ -10,14 +10,18 @@ metadata:
   namespace: ate-system
 spec:
   sandboxClass: microvm
-  pauseImage: {{ .Values.sandbox.microvm.pauseImage | quote }}
-  assets:
-  {{- range $arch, $assets := .Values.sandbox.microvm.assets }}
-    {{ $arch }}:
-    {{- range $name, $asset := $assets }}
-      {{ $name }}:
-        url: "gs://{{ $.Values.sandbox.microvm.bucket }}/{{ $asset.url }}"
-        sha256: {{ $asset.sha256 | quote }}
+  # 16ccb13 groups the runtime pieces into named versions; pauseImage is not
+  # allowed for microvm (no pause container).
+  defaultVersion: default
+  versions:
+    - name: default
+      assets:
+    {{- range $arch, $assets := .Values.sandbox.microvm.assets }}
+      {{ $arch }}:
+      {{- range $name, $asset := $assets }}
+        {{ $name }}:
+          url: "gs://{{ $.Values.sandbox.microvm.bucket }}/{{ $asset.url }}"
+          sha256: {{ $asset.sha256 | quote }}
+      {{- end }}
     {{- end }}
-  {{- end }}
 {{- end }}
