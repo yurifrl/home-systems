@@ -35,7 +35,11 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
             - "--addr=:8080"
+            {{- if .Values.redis.local.enabled }}
             - "--redis-addr=ax-redis.ax-system.svc.cluster.local:6379"
+            {{- else }}
+            - "--redis-addr={{ required "redis.address must be set when redis.local.enabled=false" .Values.redis.address }}"
+            {{- end }}
             - "--substrate-endpoint={{ .Values.substrate.endpoint }}"
             - "--substrate-authority={{ .Values.substrate.authority }}"
             - "--substrate-token-file=/var/run/secrets/ateapi/token"

@@ -31,6 +31,21 @@ spec:
     name: {{ .name }}-selfsigned
     kind: Issuer
 ---
+{{- if .clusterIssuer }}
+# Cluster-scoped CA Issuer so consumer namespaces can issue their own leaves
+# pinned to this CA. cert-manager resolves a ClusterIssuer's CA secret from
+# its --cluster-resource-namespace (the controller's own namespace), so the
+# CA Certificate above must be rendered there (set namespace on this entry).
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .name }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  ca:
+    secretName: {{ .name }}-ca
+{{- else }}
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
@@ -41,6 +56,7 @@ metadata:
 spec:
   ca:
     secretName: {{ .name }}-ca
+{{- end }}
 {{- end }}
 ---
 apiVersion: cert-manager.io/v1

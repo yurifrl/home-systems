@@ -42,11 +42,19 @@ dex:
     serviceMonitor:
       enabled: true
 
+# Shared cluster redis (ns redis) instead of a bundled argocd-redis
+# StatefulSet. externalRedis.host with no existingSecret/password makes the
+# REDIS_PASSWORD refs optional, so components skip AUTH against the
+# unauthenticated instance; the real address and db index flow through
+# configs.params (redis.server / redis.db -> REDIS_SERVER / REDISDB env).
+# The secret-init job is auto-disabled by the chart when externalRedis.host
+# is set.
+externalRedis:
+  host: redis.redis.svc.cluster.local
+  port: 6379
+
 redis:
-  metrics:
-    enabled: true
-    serviceMonitor:
-      enabled: true
+  enabled: false
 
 server:
   ingress:
@@ -141,6 +149,11 @@ configs:
     # Private/local-only submodules are not manifest sources. Disabling recursive
     # checkout prevents them from blocking repository generation.
     reposerver.enable.git.submodule: false
+    # Shared cluster redis: db 8 is argocd's private index in the db registry
+    # (k8s/applications/redis.yaml); every component reads REDIS_SERVER +
+    # REDISDB from these keys.
+    redis.server: redis.redis.svc.cluster.local:6379
+    redis.db: "8"
   cm:
     # Passwordless UI: --disable-auth only opens the API; the web UI still shows
     # a login page without a session. Anonymous access gives the UI a session.

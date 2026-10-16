@@ -6,6 +6,12 @@ metadata:
   name: {{ .name | required "name is required" }}
   namespace: {{ $.Release.Namespace | default .namespace }}
 spec:
+  {{- if .externalName }}
+  # DNS alias to an existing service elsewhere in the cluster (e.g. an app
+  # component hardcoding a hostname that no longer has a local Service).
+  type: ExternalName
+  externalName: {{ .externalName }}
+  {{- else }}
   ports:
     - name: http
       port: {{ .port | required "port is required" }}
@@ -13,4 +19,5 @@ spec:
       targetPort: {{ .targetPort | default "http" }}
   selector:
     app: {{ .selector | default .name }}
+  {{- end }}
 {{- end }}

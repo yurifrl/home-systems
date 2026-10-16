@@ -23,10 +23,15 @@ spec:
       helm:
         valuesObject:
           # Single shared Redis instance for every app in the cluster that
-          # wants Redis (litellm router cache/rate-limits today, more later).
+          # wants Redis (ax and mecatl today, more later).
           # No auth, no clustering, no Sentinel: cluster-internal only
           # (ClusterIP, no VirtualService), so a password buys nothing here
           # and would just be one more secret to rotate. Keep it simple.
+          #
+          # Two listeners: plaintext 6379 for unauthenticated consumers, and
+          # TLS 6380 for clients that require a verified TLS endpoint (mecak8s
+          # rejects plaintext redis and cannot do client certs, upstream ADR
+          # 0233 -- so server-side TLS with --tls-auth-clients no).
           #
           # Persistence: --appendonly yes on a Longhorn-backed PVC (defaults
           # to the longhorn-ha StorageClass, 2 replicas) so the data survives
@@ -36,14 +41,39 @@ spec:
           # Database index registry: Redis gives 16 logical DBs (0-15) per
           # instance via SELECT/the URL path segment. Each consumer picks an
           # unused index below so they don't collide on the same instance.
-          # Add a line here AND set that app's REDIS_URL to
-          # redis://redis.redis.svc.cluster.local:6379/<n> when it starts
-          # using Redis:
-          #   0, 1, 2, 5 - harbor (core, jobservice, registry, trivy)
+          # Consumers without a db selector (mecak8s, ax-server) share db 0
+          # and are isolated by their own key prefixes instead. Add a line
+          # here when a consumer starts using Redis:
+          #   0 - key-prefixed consumers: mecak8s (sessions/event log),
+          #       ax-server (streams) -- no db flag upstream
+          #   1, 2, 5 - harbor (core, jobservice, registry, trivy)
           #   3 - n8n (Bull queue)
           #   4 - firecrawl (queue and rate limits)
           #   6 - happy
           #   7 - litellm (router cache, rate limits, budgets)
+          #   8 - argocd (cache; REDIS_SERVER/REDISDB via argocd-cmd-params)
+          #
+          # The TLS CA is a ClusterIssuer (redis-ca, CA secret in ns
+          # cert-manager because ClusterIssuers resolve their CA secret from
+          # cert-manager's --cluster-resource-namespace) so each consumer
+          # namespace issues its own leaf Certificate and pins the same
+          # ca.crt from it (cert-manager writes the issuing CA to ca.crt on
+          # every issued secret) - mecatl does exactly that.
+          certificates:
+            - name: redis-ca
+              namespace: cert-manager
+              selfSignedCA: true
+              clusterIssuer: true
+            - name: redis-tls
+              issuerRef:
+                name: redis-ca
+                kind: ClusterIssuer
+              dnsNames:
+                # First SAN must match the TLS clients' endpoint hostname
+                # (mecak8s verifies it byte-exact).
+                - redis.redis.svc.cluster.local
+                - redis.redis.svc
+                - redis.redis
           statefulSets:
             - name: redis
               replicas: 1
@@ -54,13 +84,30 @@ spec:
                     - redis-server
                     - --appendonly
                     - "yes"
+                    - --port
+                    - "6379"
+                    - --tls-port
+                    - "6380"
+                    - --tls-cert-file
+                    - /tls/tls.crt
+                    - --tls-key-file
+                    - /tls/tls.key
+                    - --tls-ca-cert-file
+                    - /tls/ca.crt
+                    - --tls-auth-clients
+                    - "no"
                   ports:
                     - name: redis
                       containerPort: 6379
                       protocol: TCP
+                    - name: redis-tls
+                      containerPort: 6380
+                      protocol: TCP
                   volumeMounts:
                     - name: data
                       mountPath: /data
+                    - name: tls
+                      mountPath: /tls
                   resources:
                     requests:
                       cpu: 50m
@@ -68,6 +115,10 @@ spec:
                     limits:
                       cpu: 500m
                       memory: 256Mi
+              volumes:
+                - name: tls
+                  secret:
+                    secretName: redis-tls
               volumeClaimTemplates:
                 - name: data
                   accessModes:
@@ -77,3 +128,7 @@ spec:
             - name: redis
               port: 6379
               targetPort: 6379
+            - name: redis-tls
+              selector: redis
+              port: 6380
+              targetPort: 6380

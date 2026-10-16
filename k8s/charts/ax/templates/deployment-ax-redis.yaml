@@ -1,3 +1,4 @@
+{{- if .Values.redis.local.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,3 +53,4 @@ spec:
       name: redis
   selector:
     app.kubernetes.io/name: ax-redis
+{{- end }}

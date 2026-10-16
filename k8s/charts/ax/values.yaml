@@ -12,6 +12,19 @@ ax:
 replicas:
   server: 1
 
+# -- Redis for ax-server's streams controller. By default the chart deploys
+# its own ax-redis Deployment in ax-system (requirepass off, emptyDir).
+# Set local.enabled=false and address to reuse an existing instance -- the
+# home talos cluster points ax-server at the shared cluster redis
+# (redis.redis.svc.cluster.local:6379, db 0 of the shared index registry).
+redis:
+  local:
+    enabled: true
+  # -- Connection string handed to ax-server's --redis-addr. Ignored when
+  # local.enabled=true, which pins the bundled instance's in-cluster DNS
+  # name instead.
+  address: ""
+
 images:
   # -- ko-built image, published to public ghcr by the mirror-ate-images
   # workflow (there are no upstream ax images; upstream manifests reference

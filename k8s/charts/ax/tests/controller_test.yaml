@@ -22,6 +22,18 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].args
           content: "--redis-addr=ax-redis.ax-system.svc.cluster.local:6379"
+  - it: points ax-server at an external redis when the bundled one is disabled
+    documentSelector:
+      path: kind
+      value: Deployment
+    set:
+      snapshots.bucket: s3://ate-snapshots/ax-env/
+      redis.local.enabled: false
+      redis.address: redis.redis.svc.cluster.local:6379
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--redis-addr=redis.redis.svc.cluster.local:6379"
       - contains:
           path: spec.template.spec.volumes[0].projected.sources
           content:
@@ -32,3 +44,10 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: ghcr.io/yurifrl/ax/ax-server:92d297e@sha256:5734e79fa6277ad19343603c385f003faa245fb05eeef5d0396713ca39758f9a
+  - it: fails closed when local redis is disabled without an address
+    set:
+      snapshots.bucket: s3://ate-snapshots/ax-env/
+      redis.local.enabled: false
+    asserts:
+      - failedTemplate:
+          errorPattern: "redis.address must be set when redis.local.enabled=false"

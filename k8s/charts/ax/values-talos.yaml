@@ -9,6 +9,13 @@ images:
   redis:
     repository: docker.io/library/redis
 
+# Shared cluster redis (ns redis, db 0 of the index registry in
+# k8s/applications/redis.yaml) instead of a bundled ax-redis Deployment.
+redis:
+  local:
+    enabled: false
+  address: redis.redis.svc.cluster.local:6379
+
 snapshots:
   # rustfs (agent-substrate) hosts the bucket; ateom workers read/write
   # snapshots with its static credentials.

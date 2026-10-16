@@ -29,8 +29,9 @@ spec:
     # restarts via Redis.
     #
     # Secure posture required by the chart for a real LLM provider:
-    #   - TLS-verified Redis (dedicated instance below; the shared cluster
-    #     redis is plaintext and is rejected by mecak8s)
+    #   - TLS-verified Redis (the shared cluster redis's TLS listener on
+    #     :6380; the shared CA is a ClusterIssuer so this namespace issues
+    #     its own transport leaf and pins its ca.crt)
     #   - OIDC caller identity via dex (issuer compared byte-exact)
     #   - security.tlsTerminatedUpstream: istio gateways terminate TLS with
     #     the letsencrypt wildcard (syscd-tls); ambient mesh mTLS protects
@@ -62,11 +63,15 @@ spec:
             - name: workspace
               mountPath: /workspace
           redis:
-            # Dedicated TLS-redis in this namespace (statefulSet below).
-            # Hostname verification runs against this exact name -> the cert's
-            # first SAN must be redis.mecatl.svc.cluster.local.
-            endpoint: redis.mecatl.svc.cluster.local:6379
-            credentialsSecret: redis-tls
+            # Shared cluster redis TLS listener (ns redis; statefulSet owned
+            # by the redis application). Hostname verification runs against
+            # this exact name -> the cert's first SAN must be
+            # redis.redis.svc.cluster.local. credentialsSecret is the
+            # transport leaf issued in THIS namespace by the shared redis CA
+            # (ClusterIssuer redis-ca); cert-manager writes the issuing CA to
+            # its ca.crt, which is the only key mecak8s reads.
+            endpoint: redis.redis.svc.cluster.local:6380
+            credentialsSecret: redis-shared-ca
             caKey: ca.crt
           security:
             # TLS terminated by the istio gateway (real LE wildcard cert);
@@ -108,69 +113,18 @@ spec:
       path: k8s/charts/support
       helm:
         valuesObject:
-          statefulSets:
-            # Dedicated TLS redis for mecak8s session state (snapshots + event
-            # streams). Server-side TLS only -- mecak8s cannot do client certs
-            # (upstream ADR 0233) -- so --tls-auth-clients no. ClusterIP only,
-            # ambient mTLS on the wire; not exposed via VirtualService.
-            - name: redis
-              replicas: 1
-              containers:
-                - name: redis
-                  image: redis:7-alpine
-                  args:
-                    - redis-server
-                    - --port
-                    - "0"
-                    - --tls-port
-                    - "6379"
-                    - --tls-cert-file
-                    - /tls/tls.crt
-                    - --tls-key-file
-                    - /tls/tls.key
-                    - --tls-ca-cert-file
-                    - /tls/ca.crt
-                    - --tls-auth-clients
-                    - "no"
-                    - --appendonly
-                    - "yes"
-                  ports:
-                    - name: redis
-                      containerPort: 6379
-                      protocol: TCP
-                  volumeMounts:
-                    - name: data
-                      mountPath: /data
-                    - name: tls
-                      mountPath: /tls
-                  resources:
-                    requests:
-                      cpu: 50m
-                      memory: 64Mi
-                    limits:
-                      cpu: 500m
-                      memory: 256Mi
-              volumes:
-                - name: tls
-                  secret:
-                    secretName: redis-tls
-              volumeClaimTemplates:
-                - name: data
-                  accessModes:
-                    - ReadWriteOnce
-                  storage: 5Gi
-          services:
-            - name: redis
-              port: 6379
-              targetPort: 6379
           certificates:
-            - name: redis-tls
-              selfSignedCA: true
+            # Transport leaf used only to carry the shared redis CA into this
+            # namespace: cert-manager writes the issuing CA to the secret's
+            # ca.crt, and mecak8s pins exactly that (caKey: ca.crt). The leaf
+            # keypair itself is unused. Signed by the ClusterIssuer owned by
+            # the redis application (CA secret lives in ns cert-manager).
+            - name: redis-shared-ca
+              issuerRef:
+                name: redis-ca
+                kind: ClusterIssuer
               dnsNames:
-                # First SAN must match redis.endpoint (hostname verification).
-                - redis.mecatl.svc.cluster.local
-                - redis.mecatl.svc
-                - redis.mecatl
+                - redis-shared-ca
           persistentVolumeClaims:
             # Agent workspace: real filesystem + shell for sessions, survives
             # pod/node loss (longhorn-ha = 2 replicas) and is backed up weekly.

@@ -42,7 +42,7 @@ certificates: []
   #   selfSignedCA: true             # create a private CA for this certificate
   #   secretName: ""                 # defaults to <name>
   #   dnsNames:                      # SANs; keep the full service FQDN first
-  #     - redis.mecatl.svc.cluster.local
+  #     - redis.redis.svc.cluster.local
   #   duration: 2160h                # optional (CA defaults to 5y)
   #   renewBefore: 360h              # optional
   #   issuerRef:                     # explicit issuer (ignored with selfSignedCA)
