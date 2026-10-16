@@ -4,6 +4,7 @@
 
 ### Fixed
 - `crossplane-proxmox` no longer shows ArgoCD `Degraded` while its three `EnvironmentVM`s (talos-pc01, windows, workstation) are deliberately paused: argo-cd's builtin crossplane health lua maps `Synced=False` unconditionally to Degraded, so a chart-declared `crossplane.io/paused: "true"` (Ready=True) flagged the app. Added a paused-aware copy of the builtin lua to `manifests/values/argocd.yaml` `configs.cm` (`resource.customizations.health.virtualenvironmentvm.proxmoxbpg.crossplane.io_EnvironmentVM`).
+- The `argocd` application itself no longer shows `Degraded` from its HPAs: the argocd-server/repo-server containers had no cpu request, so the chart HPAs (which target both cpu and memory) reported `ScalingActive/FailedGetResourceMetric` and argo-cd's builtin HPA health mapped that to Degraded. Added `cpu: 50m` requests next to the existing memory requests in `manifests/values/argocd.yaml`; HPA now reports `ScalingActive=True/ValidMetricFound`.
 
 ### Known State
 - `crossplane-gcp` stays `Degraded` by decision (2026-10-16): Crossplane MRs for `billing-discord`, `billing-killswitch`, and the `billing-discord-webhook` Secret stack fail observe with Google 403 because billing is disabled on projects `syscd-443112` and `555680140769` (no billing account linked; deliberately left off to avoid costs). Deployed resources keep running (`Ready=True`); only observation fails.
