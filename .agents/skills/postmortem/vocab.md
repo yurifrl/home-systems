@@ -17,4 +17,5 @@ conversion-webhook-blocks-argocd-sync, apiserver-crd-cache-oom,
 cloudflared-tunnel-connector-gap, cloudflared-quic-edge-unreachable,
 aggressive-liveness-probe, cross-node-tcp-broken, dns-timeout,
 longhorn-sharemanager-on-cross-site-node,
-csi-provisioner-pinned-to-cordoned-node, cnpg-replica-timeline-divergence
+csi-provisioner-pinned-to-cordoned-node, cnpg-replica-timeline-divergence,
+argocd-degraded-health-blindspot
