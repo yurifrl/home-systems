@@ -153,6 +153,82 @@ configs:
     # -- Timeout to refresh application data as well as target manifests cache
     timeout.hard.reconciliation: 0s
 
+    # Crossplane health for EnvironmentVM: reconcile is deliberately paused
+    # (crossplane.io/paused: "true") on these VMs, which Crossplane reports as
+    # Synced=False / ReconcilePaused; the builtin *.crossplane.io lua maps any
+    # Synced=False to Degraded. Skip that branch when paused so an intentionally
+    # paused, Ready MR is not reported Degraded.
+    resource.customizations.health.virtualenvironmentvm.proxmoxbpg.crossplane.io_EnvironmentVM: |
+      -- Copy of argo-cd builtin resource_customizations/_.crossplane.io/_/health.lua
+      -- with one change: Synced=False does not degrade a paused resource.
+      health_status = {
+        status = "Progressing",
+        message = "Provisioning ..."
+      }
+
+      local function contains (table, val)
+        for i, v in ipairs(table) do
+          if v == val then
+            return true
+          end
+        end
+        return false
+      end
+
+      local has_no_status = {
+        "Composition",
+        "CompositionRevision",
+        "DeploymentRuntimeConfig",
+        "ClusterProviderConfig",
+        "ProviderConfig",
+        "ProviderConfigUsage",
+        "ControllerConfig"
+      }
+      if obj.status == nil or next(obj.status) == nil and contains(has_no_status, obj.kind) then
+        health_status.status = "Healthy"
+        health_status.message = "Resource is up-to-date."
+        return health_status
+      end
+
+      if obj.status == nil or next(obj.status) == nil or obj.status.conditions == nil then
+        if (obj.kind == "ProviderConfig" or obj.kind == "ClusterProviderConfig") and obj.status.users ~= nil then
+          health_status.status = "Healthy"
+          health_status.message = "Resource is in use."
+          return health_status
+        end
+        return health_status
+      end
+
+      local paused = obj.metadata ~= nil
+        and obj.metadata.annotations ~= nil
+        and obj.metadata.annotations["crossplane.io/paused"] == "true"
+
+      for i, condition in ipairs(obj.status.conditions) do
+        if condition.type == "LastAsyncOperation" then
+          if condition.status == "False" then
+            health_status.status = "Degraded"
+            health_status.message = condition.message
+            return health_status
+          end
+        end
+
+        if condition.type == "Synced" then
+          if condition.status == "False" and not paused then
+            health_status.status = "Degraded"
+            health_status.message = condition.message
+            return health_status
+          end
+        end
+
+        if contains({"Ready", "Healthy", "Offered", "Established", "ValidPipeline", "RevisionHealthy"}, condition.type) then
+          if condition.status == "True" then
+            health_status.status = "Healthy"
+            health_status.message = "Resource is up-to-date."
+          end
+        end
+      end
+
+      return health_status
 
   rbac:
     # Anonymous user needs a role, otherwise the passwordless UI has no access.
