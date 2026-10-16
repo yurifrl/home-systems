@@ -20,6 +20,35 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+  # The CNPG operator materializes defaults (connection limits, timeouts,
+  # computed postgresql.parameters, replication slots, probes, ...) directly
+  # into the live Cluster CR spec. Argo diffs the raw spec against the chart
+  # render, so without these ignores the app is permanently OutOfSync.
+  ignoreDifferences:
+    - group: postgresql.cnpg.io
+      kind: Cluster
+      name: pg
+      jqPathExpressions:
+        - ".spec.bootstrap.initdb.encoding"
+        - ".spec.bootstrap.initdb.localeCType"
+        - ".spec.bootstrap.initdb.localeCollate"
+        - ".spec.failoverDelay"
+        - ".spec.managed.roles[].connectionLimit"
+        - ".spec.managed.roles[].inherit"
+        - ".spec.maxSyncReplicas"
+        - ".spec.minSyncReplicas"
+        - ".spec.monitoring.customQueriesConfigMap"
+        - ".spec.monitoring.enablePodMonitor"
+        # Operator-computed map (desired values are folded in; diffing it raw
+        # always shows drift).
+        - ".spec.postgresql.parameters"
+        - ".spec.postgresql.syncReplicaElectionConstraint"
+        - ".spec.probes"
+        - ".spec.replicationSlots"
+        - ".spec.smartShutdownTimeout"
+        - ".spec.startDelay"
+        - ".spec.storage.resizeInUseVolumes"
+        - ".spec.switchoverDelay"
   sources:
     # Upstream CloudNativePG "cluster" chart (same repo as the operator chart).
     # It renders a CNPG `Cluster` CR (+ optional PodMonitor/PrometheusRule/
