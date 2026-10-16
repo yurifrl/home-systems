@@ -1,8 +1,8 @@
 # ax
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: c5c1ac5](https://img.shields.io/badge/AppVersion-c5c1ac5-informational?style=flat-square)
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 92d297e](https://img.shields.io/badge/AppVersion-92d297e-informational?style=flat-square)
 
-Deploys google/ax on EKS (ax-system): ax-server, ax-controller and Redis. The controller talks to the agent-substrate control plane (api.ate-system.svc), so this chart must deploy after agent-substrate.
+Deploys google/ax (ax-system): ax-server (direct task executor) and Redis. ax-server talks to the agent-substrate control plane (api.ate-system.svc), so this chart must deploy after agent-substrate.
 
 **Homepage:** <https://github.com/nsxbet/helm-charts>
 
@@ -20,23 +20,20 @@ Deploys google/ax on EKS (ax-system): ax-server, ax-controller and Redis. The co
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| ax.version | string | `"c5c1ac5"` | The ax build version. Stamps the controller/server image tags and appVersion expectations. The ECR mirror script (ko build) pushes exactly this tag; it must exist in the registry or pods stay ImagePullBackOff. |
+| ax.version | string | `"92d297e"` | The ax build version. Stamps the server image tag and appVersion expectations. The mirror-ate-images workflow (ko build) pushes exactly this tag; it must exist or pods stay ImagePullBackOff. |
 | env.atenetRouterAddr | string | `"atenet-router.ate-system.svc.cluster.local:80"` | atenet-router ingress for task sockets. |
 | imagePullSecrets | list | `[]` | imagePullSecrets attached to every ax pod spec (kind profile sets [{name: ax-registry}]). |
-| images.controller.repository | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com/ax/ax-controller"` |  |
-| images.controller.tag | string | `"c5c1ac5"` |  |
-| images.redis.repository | string | `"710045723375.dkr.ecr.us-east-1.amazonaws.com/ax/redis"` |  |
-| images.redis.tag | string | `"7-alpine"` |  |
-| images.server | object | `{"repository":"710045723375.dkr.ecr.us-east-1.amazonaws.com/ax/ax-server","tag":"c5c1ac5"}` | ko-built images, mirrored into ECR (there are no upstream ax images; upstream manifests reference ko://github.com/google/ax/cmd/ax-{server,controller}). |
-| registry | object | `{"password":"","server":"710045723375.dkr.ecr.us-east-1.amazonaws.com","username":"AWS"}` | dockerconfigjson Secret (created when registry.password is set) so kind nodes without node IAM can pull the mirrored private images. EKS ignores this: node IAM authenticates and imagePullSecrets is []. |
-| replicas.controller | int | `1` |  |
+| images.redis | object | `{"repository":"docker.io/library/redis","tag":"7-alpine"}` | Official upstream redis, not ko-built. |
+| images.server | object | `{"repository":"ghcr.io/yurifrl/ax/ax-server","tag":"92d297e"}` | ko-built image, published to public ghcr by the mirror-ate-images workflow (there are no upstream ax images; upstream manifests reference ko://github.com/google/ax/cmd/ax-server). |
+| nodeSelector | object | `{"kubernetes.io/arch":"amd64"}` | Pod nodeSelector for all ax workloads. Images are linux/amd64-only (ko single-arch builds); the home talos cluster is mixed-arch. |
+| registry | object | `{"password":"","server":"ghcr.io","username":"yurifrl"}` | ghcr.io/yurifrl/ax/* is public: no pull Secret, no imagePullSecrets. registry.* only builds one when a private registry needs it. |
 | replicas.server | int | `1` |  |
-| snapshots.bucket | string | `""` | REQUIRED. Bucket the controller records task snapshots into, forwarded to substrate ActorTemplates. On EKS use s3:// (substrate's ategcs parses any scheme and ATE_STORAGE_BACKEND=s3 serves it); a trailing slash keeps name concatenation unambiguous. Render fails when unset because the upstream default (a Google dev gs:// bucket) is meaningless off-GKE. |
-| substrate.authority | string | `"api.ate-system.svc"` | TLS server name (SNI/hostname verification) and the ServiceAccount token audience for the controller's substrate connection. |
+| snapshots.bucket | string | `""` | REQUIRED. Bucket ax-server records task snapshots into, forwarded to substrate ActorTemplates. On EKS use s3:// (substrate's ategcs parses any scheme and ATE_STORAGE_BACKEND=s3 serves it); a trailing slash keeps name concatenation unambiguous. Render fails when unset because the upstream default (a Google dev gs:// bucket) is meaningless off-GKE. |
+| substrate.authority | string | `"api.ate-system.svc"` | TLS server name (SNI/hostname verification) and the ServiceAccount token audience for ax-server's substrate connection. |
 | substrate.caFile | string | `"/run/servicedns-ca/trust-bundle.pem"` | Path of the cluster trust bundle mounted for verifying the substrate control plane. Served by agent-substrate's podcert servicedns signer. |
-| substrate.endpoint | string | `"api.ate-system.svc.cluster.local:443"` | Control-plane endpoint the controller connects to (gRPC over TLS). |
+| substrate.endpoint | string | `"api.ate-system.svc.cluster.local:443"` | Control-plane endpoint ax-server connects to (gRPC over TLS). |
 | template.atespace | string | `"ax-system"` |  |
-| template.name | string | `"default-template"` | ActorTemplate the controller fetches from substrate for each task. |
+| template.name | string | `"default-template"` | ActorTemplate ax-server fetches from substrate for each task. |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

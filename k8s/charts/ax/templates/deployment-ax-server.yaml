@@ -17,6 +17,12 @@ spec:
         app.kubernetes.io/name: ax-server
         app.kubernetes.io/part-of: {{ include "ax.partOf" . }}
     spec:
+      # ax-server executes tasks directly (the Redis-streams controller was
+      # removed upstream): it talks to Substrate to create ActorTemplates and
+      # actors, so it carries the same substrate identity as the old
+      # ax-controller — SA audience token for the ate API, servicedns CA, and
+      # the snapshot bucket for golden snapshots.
+      serviceAccountName: ax-server
       nodeSelector:
         {{- include "ax.nodeSelector" . | nindent 8 }}
       {{- with .Values.imagePullSecrets }}
@@ -30,6 +36,17 @@ spec:
           args:
             - "--addr=:8080"
             - "--redis-addr=ax-redis.ax-system.svc.cluster.local:6379"
+            - "--substrate-endpoint={{ .Values.substrate.endpoint }}"
+            - "--substrate-authority={{ .Values.substrate.authority }}"
+            - "--substrate-token-file=/var/run/secrets/ateapi/token"
+            - "--substrate-ca-file={{ .Values.substrate.caFile }}"
+            - "--template={{ .Values.template.name }}"
+            - "--template-atespace={{ .Values.template.atespace }}"
+          env:
+            - name: ATENET_ROUTER_ADDR
+              value: {{ .Values.env.atenetRouterAddr | quote }}
+            - name: AX_SNAPSHOTS_BUCKET
+              value: {{ required "snapshots.bucket must be set (s3://bucket/prefix/ on EKS)" .Values.snapshots.bucket | quote }}
           ports:
             - containerPort: 8080
               name: http
@@ -52,6 +69,32 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
+          volumeMounts:
+            - mountPath: /var/run/secrets/ateapi
+              name: ate-token
+              readOnly: true
+            - mountPath: /run/servicedns-ca
+              name: servicedns-ca
+              readOnly: true
+      volumes:
+        - name: ate-token
+          projected:
+            defaultMode: 420
+            sources:
+              - serviceAccountToken:
+                  audience: {{ .Values.substrate.authority }}
+                  expirationSeconds: 7200
+                  path: token
+        - name: servicedns-ca
+          projected:
+            defaultMode: 420
+            sources:
+              - clusterTrustBundle:
+                  labelSelector:
+                    matchLabels:
+                      podcert.ate.dev/canarying: live
+                  path: trust-bundle.pem
+                  signerName: servicedns.podcert.ate.dev/identity
 ---
 apiVersion: v1
 kind: Service

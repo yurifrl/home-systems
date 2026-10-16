@@ -1,12 +1,15 @@
 suite: ax
 templates:
-  - deployment-ax-controller.yaml
+  - deployment-ax-server.yaml
 tests:
   - it: fails closed when snapshots.bucket is unset
     asserts:
       - failedTemplate:
           errorPattern: "snapshots.bucket must be set"
-  - it: couples ax-controller to the substrate control plane
+  - it: couples ax-server to the substrate control plane
+    documentSelector:
+      path: kind
+      value: Deployment
     set:
       snapshots.bucket: s3://ate-snapshots/ax-env/
     asserts:
@@ -17,6 +20,9 @@ tests:
           path: spec.template.spec.containers[0].args
           content: "--substrate-authority=api.ate-system.svc"
       - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--redis-addr=ax-redis.ax-system.svc.cluster.local:6379"
+      - contains:
           path: spec.template.spec.volumes[0].projected.sources
           content:
             serviceAccountToken:
@@ -25,4 +31,4 @@ tests:
               path: token
       - equal:
           path: spec.template.spec.containers[0].image
-          value: ghcr.io/yurifrl/ax/ax-controller:c5c1ac5
+          value: ghcr.io/yurifrl/ax/ax-server:92d297e

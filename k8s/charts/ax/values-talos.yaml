@@ -4,8 +4,6 @@
 # nodeSelector.
 
 images:
-  controller:
-    repository: ghcr.io/yurifrl/ax/ax-controller
   server:
     repository: ghcr.io/yurifrl/ax/ax-server
   redis:
@@ -15,9 +13,6 @@ snapshots:
   # rustfs (agent-substrate) hosts the bucket; ateom workers read/write
   # snapshots with its static credentials.
   bucket: "s3://ate-snapshots/"
-
-env:
-  substrateEndpoint: "http://api.ate-system.svc.cluster.local:80"
 
 # Public images: no registry Secret.
 registry:
