@@ -8,10 +8,11 @@ metadata:
   annotations:
     # bpg provider imports/owns a VM by its bare numeric id (it Atoi's this).
     crossplane.io/external-name: {{ $v.vmId | quote }}
-    # TEMP 2026-10-15: provider v1.15.0 hot-loops per-VM status-write conflicts
+    # TEMP 2026-10-15: provider hot-loops per-VM status-write conflicts
     # (~1.5 resourceVersion bumps/s across the 3 VMs -> macintel01 control plane
-    # at 100% CPU, API slow). Unpause once the provider is upgraded past the
-    # async-callback conflict bug.
+    # at 100% CPU, API slow). v1.21.0 upgrade did NOT fix it (still upjet
+    # v2.2.0; unpause re-tested 2026-10-15, storm reproduced). Unpause once the
+    # provider ships past the async-callback conflict bug.
     crossplane.io/paused: "true"
 spec:
   deletionPolicy: {{ .Values.deletionPolicy }}
