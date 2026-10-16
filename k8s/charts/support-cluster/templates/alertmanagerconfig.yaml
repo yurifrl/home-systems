@@ -30,7 +30,6 @@ spec:
           - 'severity="critical"'
           - 'environment="production"'
         continue: false
-<<<<<<< HEAD
       # 2026-10-15 (tk-fah): warning alerts previously delivered only via this
       # route's fallback receiver (implicit); disk.yaml/longhorn-backup.yaml
       # fire severity=warning and deserve an explicit matcher. Without the
@@ -41,8 +40,6 @@ spec:
           - 'severity="warning"'
           - 'environment="production"'
         continue: false
-||||||| 0c3ea860
-=======
   inhibit_rules:
     # A node that goes Unreachable (kubelet heartbeats lost) almost always also
     # turns NotReady — page the NotReady alert, not both. Field shape verified
@@ -54,7 +51,6 @@ spec:
         - 'alertname="KubeNodeUnreachable"'
       equal:
         - node
->>>>>>> alert-rules-hygiene
   receivers:
     - name: discord
       discord_configs:
