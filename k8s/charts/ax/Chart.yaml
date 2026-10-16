@@ -1,15 +1,15 @@
 apiVersion: v2
 name: ax
 description: >
-  Deploys google/ax (ax-system): ax-server (direct task executor) and Redis.
-  ax-server talks to the agent-substrate control plane (api.ate-system.svc),
-  so this chart must deploy after agent-substrate.
+  Deploys google/ax: ax-server (direct task executor) and Redis, into the
+  Helm release namespace. ax-server talks to the agent-substrate control
+  plane (api.ate-system.svc), so this chart must deploy after agent-substrate.
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "92d297e"
-home: https://github.com/nsxbet/helm-charts
+home: https://github.com/yurifrl/home-systems
 sources:
-  - https://github.com/nsxbet/helm-charts/tree/main/charts/ax
+  - https://github.com/yurifrl/home-systems/tree/main/k8s/charts/ax
 maintainers:
   - name: yurifrlcw
 keywords:

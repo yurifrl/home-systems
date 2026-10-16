@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ax-server
-  namespace: ax-system
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: ax-server
     app.kubernetes.io/part-of: {{ include "ax.partOf" . }}
@@ -36,7 +36,7 @@ spec:
           args:
             - "--addr=:8080"
             {{- if .Values.redis.local.enabled }}
-            - "--redis-addr=ax-redis.ax-system.svc.cluster.local:6379"
+            - "--redis-addr=ax-redis.{{ .Release.Namespace }}.svc.cluster.local:6379"
             {{- else }}
             - "--redis-addr={{ required "redis.address must be set when redis.local.enabled=false" .Values.redis.address }}"
             {{- end }}
@@ -104,7 +104,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ax-server
-  namespace: ax-system
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: ax-server
     app.kubernetes.io/part-of: {{ include "ax.partOf" . }}

@@ -10,6 +10,8 @@ tests:
     documentSelector:
       path: kind
       value: Deployment
+    release:
+      namespace: ax-system
     set:
       snapshots.bucket: s3://ate-snapshots/ax-env/
     asserts:
@@ -22,6 +24,9 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].args
           content: "--redis-addr=ax-redis.ax-system.svc.cluster.local:6379"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--template-atespace=default"
   - it: points ax-server at an external redis when the bundled one is disabled
     documentSelector:
       path: kind
