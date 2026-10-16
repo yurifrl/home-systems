@@ -15,24 +15,28 @@ spec:
       operations:  ["CREATE", "UPDATE"]
       resources:   ["sandboxconfigs"]
   validations:
+  # 16ccb13 groups pauseImage + assets under named versions; validate the
+  # versioned asset sets.
   # gVisor needs a "gvisor" release-tarball asset (runsc plus its gvisor-bin/
   # helpers) for every architecture it advertises. A legacy bare-binary "runsc"
   # asset is still accepted for releases that predate the tarball.
   - expression: >-
       object.spec.sandboxClass != 'gvisor' ||
-      (has(object.spec.assets) && size(object.spec.assets) > 0 &&
-       object.spec.assets.all(arch,
-         'gvisor' in object.spec.assets[arch] || 'runsc' in object.spec.assets[arch]))
-    message: "a gvisor SandboxConfig must define a 'gvisor' (release tarball) or legacy 'runsc' asset for every architecture under spec.assets"
+      (has(object.spec.versions) && size(object.spec.versions) > 0 &&
+       object.spec.versions.all(v, has(v.assets) && size(v.assets) > 0 &&
+        v.assets.all(arch,
+          'gvisor' in v.assets[arch] || 'runsc' in v.assets[arch])))
+    message: "a gvisor SandboxConfig must define a 'gvisor' (release tarball) or legacy 'runsc' asset for every architecture under each version's spec.assets"
   # The micro-VM (cloud-hypervisor) runtime needs its asset set for every
   # architecture it advertises.
   - expression: >-
       object.spec.sandboxClass != 'microvm' ||
-      (has(object.spec.assets) && size(object.spec.assets) > 0 &&
-       object.spec.assets.all(arch,
-         ['cloud-hypervisor', 'virtiofsd', 'kata-kernel', 'kata-image']
-           .all(name, name in object.spec.assets[arch])))
-    message: "a microvm SandboxConfig must define cloud-hypervisor, virtiofsd, kata-kernel, and kata-image assets for every architecture under spec.assets"
+      (has(object.spec.versions) && size(object.spec.versions) > 0 &&
+       object.spec.versions.all(v, has(v.assets) && size(v.assets) > 0 &&
+        v.assets.all(arch,
+          ['cloud-hypervisor', 'virtiofsd', 'kata-kernel', 'kata-image']
+            .all(name, name in v.assets[arch]))))
+    message: "a microvm SandboxConfig must define cloud-hypervisor, virtiofsd, kata-kernel, and kata-image assets for every architecture under each version's spec.assets"
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
