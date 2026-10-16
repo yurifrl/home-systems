@@ -95,11 +95,6 @@ spec:
       path: k8s/charts/support
       helm:
         valuesObject:
-          services:
-            - name: node-red
-              port: 1880
-              selector:
-                app.kubernetes.io/name: home-assistant
           virtualServices:
             - name: code
               service:
