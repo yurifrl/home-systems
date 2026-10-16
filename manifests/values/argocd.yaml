@@ -52,6 +52,11 @@ server:
   ingress:
     enabled: false
   insecure: true
+  # HPA targets memory utilization; without a memory request it can't compute
+  # replicas and Argo marks the HPA (and the app) Degraded.
+  resources:
+    requests:
+      memory: 128Mi
   configs:
     params:
       server.insecure: true
@@ -77,6 +82,11 @@ server:
 
 repoServer:
   replicas: 1
+  # HPA targets memory utilization; without a memory request it can't compute
+  # replicas and Argo marks the HPA (and the app) Degraded.
+  resources:
+    requests:
+      memory: 256Mi
   # Co-locate with the application-controller (loopback gRPC) without pinning to
   # a specific node, so the scheduler keeps them together wherever the
   # controller lands.
