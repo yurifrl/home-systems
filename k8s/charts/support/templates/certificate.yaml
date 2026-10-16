@@ -59,6 +59,9 @@ spec:
 {{- end }}
 {{- end }}
 ---
+{{- /* cert-manager requires every Certificate to carry a subject; a pure-CA
+entry (selfSignedCA with no dnsNames/commonName) has no leaf to issue. */ -}}
+{{- if or .dnsNames .commonName }}
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -68,6 +71,9 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   secretName: {{ .secretName | default .name }}
+  {{- with .commonName }}
+  commonName: {{ . }}
+  {{- end }}
   {{- with .dnsNames }}
   dnsNames:
     {{- toYaml . | nindent 4 }}
@@ -84,4 +90,5 @@ spec:
   {{- with .renewBefore }}
   renewBefore: {{ . }}
   {{- end }}
+{{- end }}
 {{- end }}

@@ -70,7 +70,7 @@ spec:
             # transport leaf issued in THIS namespace by the shared redis CA
             # (ClusterIssuer redis-ca); cert-manager writes the issuing CA to
             # its ca.crt, which is the only key mecak8s reads.
-            endpoint: redis.redis.svc.cluster.local:6380
+            endpoint: redis-tls.redis.svc.cluster.local:6380
             credentialsSecret: redis-shared-ca
             caKey: ca.crt
           security:

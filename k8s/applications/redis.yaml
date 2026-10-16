@@ -70,10 +70,10 @@ spec:
                 kind: ClusterIssuer
               dnsNames:
                 # First SAN must match the TLS clients' endpoint hostname
-                # (mecak8s verifies it byte-exact).
-                - redis.redis.svc.cluster.local
-                - redis.redis.svc
-                - redis.redis
+                # (mecak8s verifies it byte-exact): the redis-tls service.
+                - redis-tls.redis.svc.cluster.local
+                - redis-tls.redis.svc
+                - redis-tls
           statefulSets:
             - name: redis
               replicas: 1
