@@ -20,6 +20,15 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+  # Crossplane's apiserver defaulting fills runtimeConfigRef.apiVersion/kind
+  # (DeploymentRuntimeConfig) on the live Provider; git declares only .name.
+  # Without this the app flaps OutOfSync after every revision activation.
+  ignoreDifferences:
+    - group: pkg.crossplane.io
+      kind: Provider
+      jsonPointers:
+        - /spec/runtimeConfigRef/apiVersion
+        - /spec/runtimeConfigRef/kind
   source:
     repoURL: https://github.com/yurifrl/home-systems.git
     targetRevision: HEAD
