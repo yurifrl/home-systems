@@ -12,6 +12,11 @@ machine:
     crt: "op://kubernetes/talos/MACHINE_CA_CRT"
     key: ""
   certSANs: []
+  # gVisor sandboxed actors (ax / agent-substrate) need user namespaces; Talos
+  # ships user.max_user_namespaces=0, so unshare(CLONE_NEWUSER) fails and
+  # actors crash on start. Comfortable ceiling, same on every node.
+  sysctls:
+    user.max_user_namespaces: "28633"
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.37.1
     defaultRuntimeSeccompProfileEnabled: true

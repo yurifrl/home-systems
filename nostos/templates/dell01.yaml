@@ -21,6 +21,11 @@ machine:
   certSANs:
     - 192.168.68.100
     - 100.82.148.37
+  # gVisor sandboxed actors (ax / agent-substrate) need user namespaces; Talos
+  # ships user.max_user_namespaces=0, so unshare(CLONE_NEWUSER) fails and
+  # actors crash on start. Comfortable ceiling, same on every node.
+  sysctls:
+    user.max_user_namespaces: "28633"
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.37.1
     defaultRuntimeSeccompProfileEnabled: true
