@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-16 Crossplane Paused VM Health In ArgoCD
+
+### Fixed
+- `crossplane-proxmox` no longer shows ArgoCD `Degraded` while its three `EnvironmentVM`s (talos-pc01, windows, workstation) are deliberately paused: argo-cd's builtin crossplane health lua maps `Synced=False` unconditionally to Degraded, so a chart-declared `crossplane.io/paused: "true"` (Ready=True) flagged the app. Added a paused-aware copy of the builtin lua to `manifests/values/argocd.yaml` `configs.cm` (`resource.customizations.health.virtualenvironmentvm.proxmoxbpg.crossplane.io_EnvironmentVM`).
+
+### Known State
+- `crossplane-gcp` stays `Degraded` by decision (2026-10-16): Crossplane MRs for `billing-discord`, `billing-killswitch`, and the `billing-discord-webhook` Secret stack fail observe with Google 403 because billing is disabled on projects `syscd-443112` and `555680140769` (no billing account linked; deliberately left off to avoid costs). Deployed resources keep running (`Ready=True`); only observation fails.
+
+### Verified
+- `argocd` app synced the new cm (`lua key present`), `crossplane-proxmox` flipped to Synced/Healthy after controller picked up the override; `argocd-redis-secret-init` hook churn during the argocd self-upgrade was benign.
+
 ## 2026-09-16 Edge And Crossplane Webhook Recovery
 
 ### Fixed
