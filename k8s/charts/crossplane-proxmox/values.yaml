@@ -251,7 +251,9 @@ preflight:
 isoPipeline:
   enabled: false
   schedule: "0 4 * * 1"                 # weekly (URL TTL is 7d) -> always fresh
-  builderImage: nixery.dev/shell/aria2/cabextract/wimlib/p7zip/xorriso/cdrkit/chntpw/google-cloud-sdk/kubectl/curl/unzip/gnused/gnutar/coreutils
+  # uup_download_linux.sh checks deps via `which` (not command -v): without
+  # this package the check exits 127 even though aria2c et al. are on PATH.
+  builderImage: nixery.dev/shell/aria2/which/cabextract/wimlib/p7zip/xorriso/cdrkit/chntpw/google-cloud-sdk/kubectl/curl/unzip/gnused/gnutar/coreutils
   uupId: f7e8991e-4fd8-4bfd-a404-0de6dccd4191        # Win11 24H2 retail amd64
   virtioWinUrl: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
   objectName: Win11_24H2_combined.iso

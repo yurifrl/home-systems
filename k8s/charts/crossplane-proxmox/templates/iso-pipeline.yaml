@@ -116,6 +116,9 @@ spec:
           containers:
             - name: build
               image: {{ $p.builderImage }}
+              # nixery tags are mutable: Always re-resolves, else a stale cached
+              # image silently misses packages (e.g. aria2c missing on pc01).
+              imagePullPolicy: Always
               command: ["bash", "/scripts/run.sh"]
               env:
                 - name: WIN_ADMIN_PASSWORD
