@@ -102,7 +102,7 @@ jobs:
           (cd ax && KO_DOCKER_REPO="$AX" ko build --sbom=none -t "$TAG" ./cmd/ax-server)
           crane copy "$AX/ax-server-$(printf '%s' "$MOD/cmd/ax-server" | md5sum | cut -d' ' -f1):$TAG" "$AX/ax-server:$TAG"
           (cd ax && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o bin/linux_amd64/ax-task-runner ./cmd/ax-task-runner)
-          docker build --platform linux/amd64 -t "$AX/ax-task-runner:$TAG" -f Dockerfile.task-runner ax
+          (cd ax && docker build --platform linux/amd64 -t "$AX/ax-task-runner:$TAG" -f Dockerfile.task-runner .)
           docker push "$AX/ax-task-runner:$TAG"
 
       - name: Verify published images
