@@ -4,16 +4,16 @@
   "id": "tk-ndu",
   "title": "Audit + merge or delete stale fix branches",
   "description": "The image-updater async-callback fix sat unmerged for 5 weeks (2026-09-05 to 2026-10-14) and was invisible to ArgoCD and alerts, which let the write storm incident recur. List all local+remote branches with commits not on main, classify each: merge it, rebase it, or delete it. Add a standing reminder: branches older than 2 weeks get surfaced weekly.",
-  "status": "open",
+  "status": "closed",
   "priority": 3,
   "issue_type": "task",
   "owner": null,
   "assignee": null,
   "created_by": "yuri",
   "created_at": "2026-10-15T17:12:05.842Z",
-  "updated_at": "2026-10-15T17:12:05.842Z",
+  "updated_at": "2026-10-16T01:10:44.884Z",
   "started_at": null,
-  "closed_at": null,
+  "closed_at": "2026-10-16T01:10:44.884Z",
   "due_at": null,
   "defer_until": null,
   "parent": "tk-kft",
@@ -21,7 +21,7 @@
   "labels": [
     "pm:2026-10-15-crossplane-provider-write-storm"
   ],
-  "notes": null,
+  "notes": "All stale branches have explicit disposition; weekly reminder workflow live. Acceptance met.",
   "design": null,
   "acceptance_criteria": "Every stale branch has an explicit disposition recorded (merged/rebased/deleted); a recurring reminder exists for branch age review.",
   "estimated_minutes": null,
@@ -33,6 +33,14 @@
   "dependencies": [],
   "dependency_count": 0,
   "dependent_count": 0,
-  "comments": [],
-  "comment_count": 0
+  "comments": [
+    {
+      "id": "comment-4cbcdc3a-7429-4aba-88e9-a4ee5a45a420",
+      "issue_id": "tk-ndu",
+      "author": "yuri",
+      "text": "DISPOSITION (2026-10-15): Every branch classified; evidence = git cherry patchnew counts vs main.\n\nMERGED TO MAIN (4): fix/noshow-gu..., pc01-kubelet-guardrails, obs-control-plane-tolerations, alert-rules-hygiene — merge commits df3fb0da, 6f0b84a3 + follow-ups; remote refs deleted.\n\nREMOTE DELETED (34+): 29 empty-diff branches (patchnew=0; 15 had open PRs — closed first: 241,242,243,244,245,246,251,253,254,256,257,264,267,271) + 5 dead May-2026 renovate proposals with 1 stale patch each. Renovate pruned refs on PR close; our explicit deletes raced it (FAILs were phantom — refs verified gone via ls-remote).\n\nREMOTE KEPT (12): after-this-its-k3s, bkp1, bkp-before-turing-pi, feat/from-strach, nixos, nix-version-full, old, pre-talos, rook-ceph, rpi (2024-2025 snapshot backups, user de facto archives) + renovate/configure, renovate/lock-file-maintenance (recurring renovate channels).\n\nPRs LEFT OPEN (owner decision): #249 fix/pages-restart, #250 fix/pages-rollme, #260 ourtube/add-anunnaki-dreams (Yuri's own).\n\nLOCAL DELETED (28): 17 patchnew=0 (card/*, cnpg-*, gcp-billing-relink-buzz-bucket, hermes-backup-token-audit, image-updater-args-fix, pi-agent-e415db3d, merged 4) + 11 superseded Nov-2025 renovate pins (kps-76/79, pg-16/18, mosquitto, zigbee2mqtt, tailscale-operator, istio-monorepo, ollama, kpetrem, argo-workflows-0.x, connect-2.x).\n\nLOCAL KEPT: python (WIP), mainbkp, main-bkp-for-git-filter, renovate/configure, renovate/lock-file-maintenance + the snapshot backups above.\n\nSTANDING REMINDER: .github/workflows/branch-age-reminder.yaml (pushed with workflow commit) — weekly cron surfaces branches not on main and >14d old.",
+      "created_at": "2026-10-16T01:10:44.792Z"
+    }
+  ],
+  "comment_count": 1
 }

@@ -11,7 +11,7 @@
   "assignee": null,
   "created_by": "yuri",
   "created_at": "2026-10-15T15:28:20.132Z",
-  "updated_at": "2026-10-15T17:12:05.618Z",
+  "updated_at": "2026-10-16T01:50:54.889Z",
   "started_at": null,
   "closed_at": null,
   "due_at": null,
@@ -33,6 +33,21 @@
   "dependencies": [],
   "dependency_count": 0,
   "dependent_count": 0,
-  "comments": [],
-  "comment_count": 0
+  "comments": [
+    {
+      "id": "comment-871064b0-5b16-450c-a8e6-f501dc8d8168",
+      "issue_id": "tk-ac9",
+      "author": "yuri",
+      "text": "BLOCKED (2026-10-15) — upstream fix required; both paths exhausted:\n\n1) UPGRADE: latest provider-proxmox-bpg v1.21.0 still builds on upjet v2.2.0 — same async-callback self-conflict; no knobs changed. Not a fix vehicle.\n\n2) UNPAUSE REPRODUCED (talos-pc01 MR): ~3800 MR writes in ~5.5 min (~590 RV bumps/min ≈ 10 RV bumps/s; 6× the incident's per-VM rate), then frozen at rv=156102356 after auto-brake re-applied crossplane.io/paused (Synced reason=ReconcilePaused). cb/min=0 throughout — conflicts are silent writes, no callback-failed log lines. VM Ready=True, provider-proxmox-bpg 1/1, provider healthy. Unpause without fix = guaranteed CPU storm recurrence (incident: kube-apiserver ~3 cores, macintel01 100% CPU).\n\nCONCLUSION: keep all three EnvironmentVM MRs paused (commit 4df62139 annotations). Unpause condition = upstream provider release with async-callback conflict fixed (or upjet bump). Unpause procedure: revert annotation blocks in k8s/charts/crossplane-proxmox/templates/{workstation,windows,talos-pc01}.yaml.",
+      "created_at": "2026-10-16T01:10:55.925Z"
+    },
+    {
+      "id": "comment-aebdd3f7-0551-49be-b635-3f57cc80f5df",
+      "issue_id": "tk-ac9",
+      "author": "yuri",
+      "text": "UPGRADED 2026-10-16: provider-proxmox-bpg v1.15.0 -> v1.21.0 (736d1f0f chain: d1bd45b1 values+templates, 736d1f0f ignoreDifferences for runtimeConfigRef defaulting). Result: new ProviderRevision provider-proxmox-bpg-4ce19882438b Active, pull+activation clean, controller 1/1 Running 0 restarts, 0 EnvironmentVM log lines. 60s watch: all 3 VM RVs frozen (156102356/155803895/155803896), apiserver drifting down (3148m->2733m). CONFIRMED: v1.21.0 does not change the hot-loop (upjet v2.2.0 identical) — VMs stay paused via 4df62139 annotations; unpause still gated on an upstream release past the async-callback status-write conflict.",
+      "created_at": "2026-10-16T01:50:54.888Z"
+    }
+  ],
+  "comment_count": 2
 }

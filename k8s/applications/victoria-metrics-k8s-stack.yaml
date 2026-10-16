@@ -80,6 +80,13 @@ spec:
             # Convert existing prometheus-operator objects if any remain.
             operator:
               disable_prometheus_converter: false
+            # The operator is single-replica; leader election buys nothing (no
+            # second candidate) but the lease renewals crash-loop the process
+            # whenever the apiserver hiccups (>5s GET on the lease => leader
+            # elector exits => pod restart). The chart hardcodes --leader-elect
+            # before extraArgs; Go flags are last-wins, so this overrides it.
+            extraArgs:
+              leader-elect: "false"
 
           # ----------------------------------------------------------------
           # Storage / query engine (single node)

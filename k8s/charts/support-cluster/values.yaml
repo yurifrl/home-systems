@@ -55,7 +55,6 @@ limitRanges:
     - board-games
     - camofox
     - cloudflare-tunnel
-    - dolt
     - edge
     - external-dns
     - gha-runner
