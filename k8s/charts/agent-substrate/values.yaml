@@ -30,6 +30,13 @@ images:
     # -- 16ccb13 control-snapshot plugin sidecar served next to ate-api-server.
     repository: ghcr.io/yurifrl/ate/snapshot-plugin
     tag: "16ccb13"
+  ateomGvisor:
+    # -- ateom worker image (workerpool-gvisor.yaml): the sandboxed worker
+    # runtime actors boot on. ko build of substrate/cmd/ateom-gvisor; without
+    # a WorkerPool the substrate scheduler has no placement capacity and
+    # every actor create fails with "no worker has room for the actor".
+    repository: ghcr.io/yurifrl/ate/ateom-gvisor
+    tag: "16ccb13"
   # -- atenet-router runs the agentgateway image (see values.images.agentgateway);
   # there is no separate atenet server image in the cluster manifests.
   agentgateway:
@@ -232,6 +239,19 @@ sandbox:
         kata-image:
           url: "kata-assets/rootfs.img"
           sha256: "96497f64da1de9c7473fef46c3d29ddd0805d334731cf9d903a21a5b2c33cefb"
+
+# The gvisor WorkerPool (templates/workerpool-gvisor.yaml): substrate worker
+# capacity for actors. spec.sandboxClasses (the LIST field) is what the
+# controller mirrors onto Worker.sandbox_class — the scheduler rejects actors
+# with "no worker has room" when it is empty. The singular legacy
+# spec.sandboxClass field is ignored by the controller.
+workers:
+  gvisor:
+    # -- Deploy the gvisor WorkerPool so actors have placement capacity.
+    enabled: true
+    # -- Worker pod count. Each worker reports node capacity to the substrate
+    # scheduler.
+    replicas: 1
 
 # Fail-closed ValidatingAdmissionPolicy enforcing per-sandbox-class asset
 # requirements (requires k8s >= 1.30; EKS 1.31 OK).

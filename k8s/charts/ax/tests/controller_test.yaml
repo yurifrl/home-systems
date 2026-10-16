@@ -31,4 +31,4 @@ tests:
               path: token
       - equal:
           path: spec.template.spec.containers[0].image
-          value: ghcr.io/yurifrl/ax/ax-server:92d297e
+          value: ghcr.io/yurifrl/ax/ax-server:92d297e@sha256:5734e79fa6277ad19343603c385f003faa245fb05eeef5d0396713ca39758f9a

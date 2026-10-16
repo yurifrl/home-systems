@@ -1,0 +1,24 @@
+{{- if and .Values.sandbox.gvisor.enabled .Values.workers.gvisor.enabled }}
+# The substrate control plane has no built-in worker capacity: ate-controller
+# deploys worker pods from WorkerPool objects, and only registered Workers
+# give the scheduler somewhere to place actors ("no worker has room for the
+# actor" otherwise). spec.sandboxClasses (the LIST field) is what the
+# controller mirrors onto Worker.sandbox_class — the singular legacy
+# spec.sandboxClass field is ignored, leaving the Worker class-less and
+# unschedulable. workerImage must resolve on amd64 only: substrate ko builds
+# are amd64, and the atelet DaemonSet already pins nodes to
+# ate.dev/substrate-version via node labels.
+apiVersion: ate.dev/v1alpha1
+kind: WorkerPool
+metadata:
+  name: gvisor-pool
+  namespace: ate-system
+spec:
+  replicas: {{ .Values.workers.gvisor.replicas }}
+  sandboxClasses:
+    - name: gvisor
+  workerImage: "{{ .Values.images.ateomGvisor.repository }}:{{ .Values.images.ateomGvisor.tag }}"
+  template:
+    nodeSelector:
+      kubernetes.io/arch: amd64
+{{- end }}

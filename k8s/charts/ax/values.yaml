@@ -18,7 +18,11 @@ images:
   # ko://github.com/google/ax/cmd/ax-server).
   server:
     repository: ghcr.io/yurifrl/ax/ax-server
-    tag: "92d297e"
+    # 92d297e: main-HEAD ax, built for substrate's v0.4 actor schema (the
+    # Redis-streams controller shipped through c5c1ac5 was incompatible with
+    # 16ccb13's renamed snapshot_config field). Substrate requires actor
+    # images pinned by digest (snapshots depend on immutable images).
+    tag: "92d297e@sha256:5734e79fa6277ad19343603c385f003faa245fb05eeef5d0396713ca39758f9a"
   # -- Official upstream redis, not ko-built.
   redis:
     repository: docker.io/library/redis
