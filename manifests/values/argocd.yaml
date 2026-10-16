@@ -52,10 +52,12 @@ server:
   ingress:
     enabled: false
   insecure: true
-  # HPA targets memory utilization; without a memory request it can't compute
+  # HPA targets cpu+memory utilization; without these requests it can't compute
   # replicas and Argo marks the HPA (and the app) Degraded.
+  # 2026-10-16: cpu request was missing -> HPA ScalingActive/FailedGetResourceMetric.
   resources:
     requests:
+      cpu: 50m
       memory: 128Mi
   configs:
     params:
@@ -82,10 +84,11 @@ server:
 
 repoServer:
   replicas: 1
-  # HPA targets memory utilization; without a memory request it can't compute
+  # HPA targets cpu+memory utilization; without these requests it can't compute
   # replicas and Argo marks the HPA (and the app) Degraded.
   resources:
     requests:
+      cpu: 50m
       memory: 256Mi
   # Co-locate with the application-controller (loopback gRPC) without pinning to
   # a specific node, so the scheduler keeps them together wherever the
