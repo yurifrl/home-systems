@@ -82,8 +82,13 @@ env:
 # item name equals the ExternalSecret name (see obs/, hermes/).
 externalSecret:
   enabled: true
-  # -- 1Password item AND ExternalSecret name (repo convention: identical).
+  # -- ExternalSecret name.
   name: ax-gemini-api-secret
+  # -- Upstream 1Password item + field holding the model-provider key.
+  # Defaults to the shared `litellm` item (the same item litellm proxies
+  # Gemini from) so the key is stored exactly once.
+  item: litellm
+  property: GEMINI_API_KEY
   secretStore:
     # -- ESO store holding the 1Password provider; ClusterSecretStore in
     # the ESO namespace is the repo-wide default.

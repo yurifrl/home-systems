@@ -16,30 +16,15 @@ Deploys google/ax: ax-server (direct task executor) and Redis, into the Helm rel
 
 * <https://github.com/yurifrl/home-systems/tree/main/k8s/charts/ax>
 
-## Model API key
-
-ax-server resolves the Kubernetes Secret `gemini-api-secret` / key `GEMINI_API_KEY`
-in the task atespace namespace and injects it into every ActorTemplate it creates.
-The name is fixed by ax's secret contract (`internal/controller/reconciler.go`);
-this chart provisions it through External Secrets Operator:
-
-1. ESO installed with a 1Password-backed store — default
-   `externalSecret.secretStore` is ClusterSecretStore `onepassword`.
-2. A 1Password item named `externalSecret.name` (`ax-gemini-api-secret`) with a
-   `GEMINI_API_KEY` field.
-
-The materialized Secret lands in `externalSecret.namespace` — the atespace
-namespace (`default`), NOT the release namespace. With
-`externalSecret.enabled=false`, create the Secret there yourself.
-
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | ax.version | string | `"92d297e"` | The ax build version. Stamps the server image tag and appVersion expectations. The mirror-ate-images workflow (ko build) pushes exactly this tag; it must exist or pods stay ImagePullBackOff. |
 | env.atenetRouterAddr | string | `"atenet-router.ate-system.svc.cluster.local:80"` | atenet-router ingress for task sockets. |
-| externalSecret | object | `{"enabled":true,"name":"ax-gemini-api-secret","namespace":"default","refreshInterval":"1h","secretStore":{"kind":"ClusterSecretStore","name":"onepassword"},"target":{"creationPolicy":"Owner","deletionPolicy":"Retain","name":"gemini-api-secret"}}` | Model-provider API key, provisioned via External Secrets Operator from 1Password. ax-server resolves the K8s Secret `gemini-api-secret` (fixed ax contract, not configurable upstream) / key `GEMINI_API_KEY` in the task atespace's Kubernetes namespace — NOT the release namespace — and injects it into every ActorTemplate it creates for a task. The 1Password item must contain a field named GEMINI_API_KEY; by repo convention the item name equals the ExternalSecret name (see obs/, hermes/). |
-| externalSecret.name | string | `"ax-gemini-api-secret"` | 1Password item AND ExternalSecret name (repo convention: identical). |
+| externalSecret | object | `{"enabled":true,"item":"litellm","name":"ax-gemini-api-secret","namespace":"default","property":"GEMINI_API_KEY","refreshInterval":"1h","secretStore":{"kind":"ClusterSecretStore","name":"onepassword"},"target":{"creationPolicy":"Owner","deletionPolicy":"Retain","name":"gemini-api-secret"}}` | Model-provider API key, provisioned via External Secrets Operator from 1Password. ax-server resolves the K8s Secret `gemini-api-secret` (fixed ax contract, not configurable upstream) / key `GEMINI_API_KEY` in the task atespace's Kubernetes namespace — NOT the release namespace — and injects it into every ActorTemplate it creates for a task. The 1Password item must contain a field named GEMINI_API_KEY; by repo convention the item name equals the ExternalSecret name (see obs/, hermes/). |
+| externalSecret.item | string | `"litellm"` | Upstream 1Password item + field holding the model-provider key. Defaults to the shared `litellm` item (the same item litellm proxies Gemini from) so the key is stored exactly once. |
+| externalSecret.name | string | `"ax-gemini-api-secret"` | ExternalSecret name. |
 | externalSecret.namespace | string | `"default"` | Namespace of the materialized K8s Secret: the atespace namespace ax-server reads secrets from (the substrate `default` atespace maps to the Kubernetes `default` namespace here). |
 | externalSecret.refreshInterval | string | `"1h"` | ESO refresh interval for the upstream item. |
 | externalSecret.secretStore.kind | string | `"ClusterSecretStore"` | ESO store holding the 1Password provider; ClusterSecretStore in the ESO namespace is the repo-wide default. |
