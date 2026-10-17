@@ -53,6 +53,24 @@ spec:
                   type: git
                   url: git@github.com:yurifrl/home-systems-values.git
                   sshPrivateKey: "{{ .sshPrivateKey }}"
+            # ArgoCD repository credential for the PRIVATE app repo
+            # (git@github.com:yurifrl/banana-danger.git). Read-only SSH deploy
+            # key lives in 1Password (item: argocd-user-management, field:
+            # sshPrivateKey).
+            - name: argocd-user-management
+              namespace: argocd
+              data:
+                - secretKey: sshPrivateKey
+                  key: argocd-user-management
+                  property: sshPrivateKey
+              template:
+                metadata:
+                  labels:
+                    argocd.argoproj.io/secret-type: repository
+                data:
+                  type: git
+                  url: git@github.com:yurifrl/banana-danger.git
+                  sshPrivateKey: "{{ .sshPrivateKey }}"
 
     # - chart: argocd-image-updater
     #   repoURL: https://argoproj.github.io/argo-helm

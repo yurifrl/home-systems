@@ -143,6 +143,15 @@ spec:
                 login: true
                 passwordSecret:
                   name: litellm-db
+              # user-management API's login role. Password lives in the
+              # `user-management` 1Password item (field DB_PASSWORD, Kubernetes
+              # vault); mirrored into the databases ns as `user-management-db`
+              # (basic-auth) by an ExternalSecret in home-systems-values.
+              - name: user_management
+                ensure: present
+                login: true
+                passwordSecret:
+                  name: user-management-db
               # syscd-app (budget/health/ourtube API) login role. Password lives
               # in the `syscd-app` 1Password item (field DB_PASSWORD, Kubernetes
               # vault); mirrored into the databases ns as the `syscd-db`
@@ -259,6 +268,10 @@ spec:
             - name: buzz
               ensure: present
               owner: buzz
+              databaseReclaimPolicy: retain
+            - name: user_management
+              ensure: present
+              owner: user_management
               databaseReclaimPolicy: retain
 
           # ---------------------------------------------------------------------
