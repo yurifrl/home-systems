@@ -50,7 +50,7 @@ images:
   # egress-mitm-ca-pool secret, the mode the running atelet (16ccb13) requires.
   agentgatewayEgress:
     repository: cr.agentgateway.dev/agentgateway
-    tag: "v0.0.0-alpha.168b05d6@sha256:5e8384d1fcfdc443a3ad5155ea6a64dc7953bde162df7f5f8e131a5c19ae08a3"
+    tag: "v0.0.0-alpha.955d56fa@sha256:fc64f1093a5f7fd32c9cc58d2b53f0a5d5781f7960e3a1ac0a59db4f6a39850f"
   postgres:
     # -- Bundled PostgreSQL (see postgres.bundled): official upstream image,
     # digest-pinned (multi-arch: amd64 + arm64).
