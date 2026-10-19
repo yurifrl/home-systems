@@ -4,14 +4,11 @@
 # (client certs from actor-id-ca-certs) and dials destinations, resolving
 # actors via api.ate-system.svc with its own podidentity cert.
 #
-# Vendored from substrate 16ccb13's agentgateway-egress overlay
-# (manifests/ate-install/agentgateway-egress), with two home-cluster deltas:
-# - image follows values.images.agentgateway (the pin atenet-router runs and
-#   the configmap's contract was validated on), not 16ccb13's newer
-#   cr.agentgateway.dev digest, which pairs with the new-style config that
-#   requires the egress-mitm-ca-pool secret.
-# - the egress-mitm volume/mount is dropped: it needs that secret, which only
-#   ate-setup creates and this configmap never references.
+# Pairs with the 16ccb13 agentgateway digest: the internal dynamicCa bind
+# mints MITM leaves signed by the egress-mitm-ca-pool secret (created once
+# per cluster, like actor-id-ca-pool), while the front door serves TLS with
+# the pod's servicedns certificate and trusts actor clients from
+# actor-id-ca-certs.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -49,7 +46,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
-        image: "{{ .Values.images.agentgateway.repository }}:{{ .Values.images.agentgateway.tag }}"
+        image: "{{ .Values.images.agentgatewayEgress.repository }}:{{ .Values.images.agentgatewayEgress.tag }}"
         name: agentgateway
         ports:
         - containerPort: 8443
@@ -84,6 +81,9 @@ spec:
           readOnly: true
         - mountPath: /run/servicedns-ca
           name: servicedns-ca
+          readOnly: true
+        - mountPath: /run/egress-mitm
+          name: egress-mitm
           readOnly: true
       securityContext:
         sysctls:
@@ -141,3 +141,11 @@ spec:
                   podcert.ate.dev/canarying: live
               path: trust-bundle.pem
               signerName: servicedns.podcert.ate.dev/identity
+      - name: egress-mitm
+        secret:
+          secretName: egress-mitm-ca-pool
+          items:
+          - key: tls.crt
+            path: tls.crt
+          - key: tls.key
+            path: tls.key

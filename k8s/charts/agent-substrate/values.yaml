@@ -44,6 +44,13 @@ images:
     # by substrate's ate-install manifests (the image atenet-router runs).
     repository: ghcr.io/agentgateway/agentgateway
     tag: "v0.0.0-alpha.9f9744cf"
+  # -- atenet-egress runs the digest-pinned 16ccb13 image (see
+  # values.images.agentgatewayEgress), which pairs with the new-style egress
+  # configmap: its internal dynamicCa bind mints MITM leaves signed by the
+  # egress-mitm-ca-pool secret, the mode the running atelet (16ccb13) requires.
+  agentgatewayEgress:
+    repository: cr.agentgateway.dev/agentgateway
+    tag: "v0.0.0-alpha.168b05d6@sha256:5e8384d1fcfdc443a3ad5155ea6a64dc7953bde162df7f5f8e131a5c19ae08a3"
   postgres:
     # -- Bundled PostgreSQL (see postgres.bundled): official upstream image,
     # digest-pinned (multi-arch: amd64 + arm64).
