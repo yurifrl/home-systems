@@ -49,12 +49,16 @@ machine:
         memory.available: "1Gi"
         nodefs.available: "10%"
         imagefs.available: "10%"
-    # Register kubelet on the Tailscale IP so this CP's cilium VXLAN endpoint is
-    # a 100.x address like every other node. Agents reach the apiserver via
-    # KubePrism (localhost:7445), not this IP.
+    # Register kubelet on the LAN IP: the tailscale data path to this VM is
+    # CPU-starved (tailscaled ~1.3 cores, ~1s RTT even on direct paths), which
+    # made every in-pod client hit the apiserver through a ~1s queue and
+    # triggered cluster-wide timeout/retry storms. On the LAN the apiserver
+    # responds in ~40ms. rpi01 keeps reaching it via its accepted subnet
+    # routes (tailscale must approve ONLY 192.168.68.0/24 — never pod/Service
+    # CIDRs). Agents on-node reach the apiserver via KubePrism (localhost:7445).
     nodeIP:
       validSubnets:
-        - 100.64.0.0/10
+        - 192.168.68.0/24
   network:
     hostname: macintel01
     interfaces:
