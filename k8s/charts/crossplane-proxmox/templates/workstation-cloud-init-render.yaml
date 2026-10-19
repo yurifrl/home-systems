@@ -149,6 +149,11 @@ spec:
       template:
         spec:
           restartPolicy: Never
+          nodeSelector:
+            # amd64-only image (provides the cloud-init rendering tools);
+            # without the pin the weekly run lands on ARM rpi01 and dies with
+            # "exec format error", failing the Job and degrading the app.
+            kubernetes.io/arch: amd64
           serviceAccountName: {{ $name }}
           containers:
             - name: render
