@@ -24,10 +24,12 @@ spec:
     - repoURL: git@github.com:yurifrl/home-systems-values.git
       targetRevision: HEAD
       ref: values
-    # App: banana-danger chart (Deployment/Service/ExternalSecrets/PVC).
-    - repoURL: git@github.com:yurifrl/banana-danger.git
+    # App chart: lives in the PRIVATE values repo (this app is not public).
+    # Two sources share the repoURL: the ref-only source above exposes
+    # $values, this one renders the chart itself.
+    - repoURL: git@github.com:yurifrl/home-systems-values.git
       targetRevision: HEAD
-      path: chart
+      path: user-management/chart
       helm:
         releaseName: user-management
         valueFiles:
