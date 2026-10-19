@@ -5,8 +5,9 @@
 # actors via api.ate-system.svc with its own podidentity cert.
 #
 # Pairs with the 16ccb13 agentgateway digest: the internal dynamicCa bind
-# mints MITM leaves signed by the egress-mitm-ca-pool secret (created once
-# per cluster, like actor-id-ca-pool), while the front door serves TLS with
+# mints MITM leaves signed by the egress-mitm-ca-pool secret (generated once
+# per cluster by `ate-setup create egress-mitm-ca-pool`, like actor-id-ca-pool;
+# Argo is selfHeal/prune so generated CA pools must not be chart secrets), while the front door serves TLS with
 # the pod's servicedns certificate and trusts actor clients from
 # actor-id-ca-certs.
 apiVersion: v1
