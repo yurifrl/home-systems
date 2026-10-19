@@ -8,6 +8,10 @@ kind: SandboxConfig
 metadata:
   name: gvisor-default
   namespace: ate-system
+  annotations:
+    # Required: WorkerPools without configRef resolve the default for their
+    # sandbox class via this annotation.
+    sandboxconfig.ate.dev/is-class-default: "true"
 spec:
   sandboxClass: gvisor
   # 16ccb13 groups the runtime pieces into named versions; the default names
