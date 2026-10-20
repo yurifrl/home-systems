@@ -96,6 +96,12 @@ machine:
   nodeLabels:
     node.kubernetes.io/exclude-from-external-load-balancers: ""
     node.longhorn.io/create-default-disk: "false"
+    # atelet DaemonSet pins nodes via nodeSelector ate.dev/substrate: "true"
+    # (generic capability marker, never a version — bumps don't require
+    # re-labeling). Migration: ate.dev/substrate-version stays until the
+    # updated atelet DaemonSet is live, then removed.
+    ate.dev/substrate: "true"
+    ate.dev/substrate-version: "16ccb13"
   registries:
     config:
       ghcr.io:

@@ -102,7 +102,7 @@ Deploys the agent-substrate (ate-system) platform on EKS: ate-api-server, ate-co
 | storage.rustfs.region | string | `"us-east-1"` |  |
 | storage.rustfs.secretKey | string | `"rustfsadmin"` |  |
 | storage.rustfs.storage | string | `"1Gi"` |  |
-| substrate | object | `{"version":"16ccb13"}` | The substrate build version. Stamps the ate.dev/substrate-version label, names the atelet DaemonSet (atelet-<suffix>, see versionSuffix helper) and is the default image tag. Bumping this value triggers an atelet DS rollout. |
+| substrate | object | `{"version":"16ccb13"}` | The substrate build version. Stamps the ate.dev/substrate-version label on the atelet DaemonSet and its pods, names the DaemonSet (atelet-<suffix>, see versionSuffix helper) and is the default image tag. Bumping this value triggers an atelet DS rollout. Scheduling pins nodes via the generic ate.dev/substrate: "true" node label instead — no per-node re-labeling on version bumps. |
 | validatingAdmissionPolicy.enabled | bool | `true` |  |
 | workers.gvisor.enabled | bool | `true` | Deploy the gvisor WorkerPool so actors have placement capacity. |
 | workers.gvisor.replicas | int | `1` | Worker pod count. Each worker reports node capacity to the substrate scheduler. |

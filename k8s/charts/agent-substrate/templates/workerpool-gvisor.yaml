@@ -7,7 +7,7 @@
 # spec.sandboxClass field is ignored, leaving the Worker class-less and
 # unschedulable. workerImage must resolve on amd64 only: substrate ko builds
 # are amd64, and the atelet DaemonSet already pins nodes to
-# ate.dev/substrate-version via node labels.
+# ate.dev/substrate via node labels.
 apiVersion: ate.dev/v1alpha1
 kind: WorkerPool
 metadata:

@@ -3,9 +3,12 @@
 # atelet (DaemonSet), atenet-router and agentgateway on an EKS cluster.
 # It replaces `ate-setup deploy ate-system` (kustomize + ko) with ArgoCD-managed Helm.
 
-# -- The substrate build version. Stamps the ate.dev/substrate-version label,
-# names the atelet DaemonSet (atelet-<suffix>, see versionSuffix helper) and is
-# the default image tag. Bumping this value triggers an atelet DS rollout.
+# -- The substrate build version. Stamps the ate.dev/substrate-version label
+# on the atelet DaemonSet and its pods, names the DaemonSet (atelet-<suffix>,
+# see versionSuffix helper) and is the default image tag. Bumping this value
+# triggers an atelet DS rollout. Scheduling pins nodes via the generic
+# ate.dev/substrate: "true" node label instead — no per-node re-labeling on
+# version bumps.
 substrate:
   version: "16ccb13"
 

@@ -190,7 +190,10 @@ spec:
           name: host-dev
           readOnly: true
       nodeSelector:
-        ate.dev/substrate-version: {{ .Values.substrate.version }}
+        # Generic capability marker set once per node (nostos machineconfig).
+        # Version never enters the pin — substrate.version only labels the
+        # workload (DS name/pods) so bumps roll out without re-labeling nodes.
+        ate.dev/substrate: "true"
         {{- include "agent-substrate.nodeSelector" . | nindent 8 }}
       priorityClassName: ate-node-critical
       serviceAccountName: atelet
