@@ -107,6 +107,7 @@ jobs:
           # (go.mod requires go >= 1.27.1). A script-level export overrides it.
           export GOTOOLCHAIN=auto
           AX="${GHCR}/ax"
+          MOD=github.com/google/ax
           TAG="${AX_REF}"
           # ax-server is a plain ko binary image. The task-runner is NOT:
           # ax's guest command is /usr/local/bin/ax-task-runner (not ko's
