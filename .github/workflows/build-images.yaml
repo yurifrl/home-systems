@@ -88,6 +88,7 @@ jobs:
         run: |
           set -euo pipefail
           SUB="${GHCR}/ate"
+          MOD=github.com/agent-substrate/substrate
           TAG="${SUBSTRATE_REF}"
           for name in ateapi atecontroller atelet atenet podcertcontroller ateom-gvisor objectstore-plugin; do
             # ko's default namer appends an md5(import-path) suffix; crane copy
