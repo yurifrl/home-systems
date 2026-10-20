@@ -11,12 +11,10 @@ name: Build upstream images to ghcr
 # The workflow's own GITHUB_TOKEN (packages: write) is the only credential.
 #
 # Charts reference the results (official naming: <registry>/<repo>/<component>):
-#   ghcr.io/yurifrl/substrate/<name>:vX.Y.Z   (agent-substrate, substrate's
+#   ghcr.io/yurifrl/ate/<name>:vX.Y.Z         (agent-substrate components,
 #                                              `ate-setup publish` layout)
 #   ghcr.io/yurifrl/ax/<name>:vX.Y.Z          (ax, `make deploy` layout)
-# ko's default namer publishes intermediates as <base>/<name>-<md5(import
-# path)>:<tag>; crane copy renames them to the canonical tags. Packages are
-# public (flipped once after the first push).
+# Packages are public (flipped once after the first push).
 #
 # Bump inputs when a new upstream release lands; do not pin raw main commits.
 

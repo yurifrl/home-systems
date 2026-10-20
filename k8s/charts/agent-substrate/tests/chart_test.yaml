@@ -15,17 +15,17 @@ tests:
       - equal:
           path: metadata.name
           value: gvisor-default
-      # 16ccb13 groups pauseImage + assets under a named version; defaultVersion
-      # names the one actors boot.
+      # Versions group pauseImage + assets; defaultVersion names the one
+      # actors boot. Values match v0.5.0's official sandboxconfig-gvisor.yaml.
       - equal:
           path: spec.defaultVersion
-          value: default
+          value: v3
       - equal:
           path: spec.versions[0].name
-          value: default
+          value: v3
       - equal:
           path: spec.versions[0].pauseImage
           value: "registry.k8s.io/pause:3.10.2@sha256:f548e0e8e3dc1896ca956272154dde3314e8cc4fde0a57577ee9fa1c63f5baf4"
       - equal:
           path: spec.versions[0].assets.amd64.gvisor.url
-          value: gs://gvisor/releases/nightly/2026-09-02/x86_64/gvisor.tar.zstd
+          value: gs://gvisor/releases/nightly/2026-10-10/x86_64/gvisor.tar.zstd
