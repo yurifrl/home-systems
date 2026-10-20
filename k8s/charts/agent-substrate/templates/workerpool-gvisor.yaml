@@ -13,6 +13,12 @@ kind: WorkerPool
 metadata:
   name: gvisor-pool
   namespace: ate-system
+  # Mirrored onto the registered Worker by the controller's workersync
+  # (Labels: pool.GetLabels()), which is where the scheduler matches actor
+  # template selectors like ate.dev/worker-pool=gvisor-pool. The pod gets this
+  # label from the pool controller; the CR itself must carry it too.
+  labels:
+    ate.dev/worker-pool: gvisor-pool
 spec:
   replicas: {{ .Values.workers.gvisor.replicas }}
   sandboxClasses:
