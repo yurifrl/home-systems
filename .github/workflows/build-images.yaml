@@ -1,36 +1,43 @@
-name: Mirror ATE images to ghcr
+name: Build upstream images to ghcr
 
-# Build the agent-substrate + ax component images from pinned source commits
-# (public repos) with ko, pushing to public ghcr for the home talos cluster.
-# Bundled infra images are official upstream references in the charts —
-# nothing to copy for them.
+# Build the agent-substrate + ax component images from upstream RELEASE TAGS
+# (unmodified public sources) with ko, publishing to public ghcr for the home
+# talos cluster. This mirrors upstream's own install path: there is no
+# official substrate/ax image registry — `ate-setup publish release-images
+# --ko-docker-repo REPO` and `make deploy AX_IMAGE_REPO=...` both expect the
+# operator to build from a checkout and push to their own registry
+# (agent-substrate/substrate#79: publishing builds is deferred upstream).
+#
 # The workflow's own GITHUB_TOKEN (packages: write) is the only credential.
 #
-# Charts reference the results:
-#   ghcr.io/yurifrl/ate/<name>:<short-sha>   (agent-substrate)
-#   ghcr.io/yurifrl/ax/<name>:<short-sha>    (ax)
+# Charts reference the results (official naming: <registry>/<repo>/<component>):
+#   ghcr.io/yurifrl/substrate/<name>:vX.Y.Z   (agent-substrate, substrate's
+#                                              `ate-setup publish` layout)
+#   ghcr.io/yurifrl/ax/<name>:vX.Y.Z          (ax, `make deploy` layout)
 # ko's default namer publishes intermediates as <base>/<name>-<md5(import
-# path)>:<tag>; crane copy renames them to the canonical tags. First push creates each package PRIVATE — flip to public
-# once (UI) or the cluster needs a pull secret.
+# path)>:<tag>; crane copy renames them to the canonical tags. Packages are
+# public (flipped once after the first push).
+#
+# Bump inputs when a new upstream release lands; do not pin raw main commits.
 
 on:
   workflow_dispatch:
     inputs:
       substrate_version:
-        description: agent-substrate/substrate commit (full SHA; short tag derived)
+        description: agent-substrate/substrate release tag (full SHA resolved at checkout)
         required: true
-        default: a0b680d72e10e38c55657d9809a1998dfcf6500c
+        default: v0.5.0
       ax_version:
-        description: google/ax commit (full SHA; short tag derived)
+        description: google/ax release tag
         required: true
-        default: c5c1ac5b3d66f4b4747825fa4ddb5880b5e1177b
+        default: v0.3.1
 
 permissions:
   contents: read
   packages: write
 
 jobs:
-  mirror:
+  build:
     runs-on: ubuntu-latest
     env:
       GHCR: ghcr.io/${{ github.repository_owner }}
@@ -70,17 +77,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Component set = cmd/ate-setup/internal/images/images.go Components at
+      # the pinned tag, pruned to what the chart deploys. Naming follows
+      # ImageName() = path.Base(pkg): ghcr.io/yurifrl/substrate/<name>:<tag>.
       - name: Build substrate images
         env:
           SUBSTRATE_REF: ${{ inputs.substrate_version }}
         run: |
           set -euo pipefail
-          ATE="${GHCR}/ate"
-          MOD=github.com/agent-substrate/substrate
-          TAG="${SUBSTRATE_REF:0:7}"
-          for name in ateapi atecontroller atelet podcertcontroller ateom-gvisor snapshot-plugin; do
-            (cd substrate && KO_DOCKER_REPO="$ATE" ko build --sbom=none -t "$TAG" "./cmd/$name")
-            crane copy "$ATE/$name-$(printf '%s' "$MOD/cmd/$name" | md5sum | cut -d' ' -f1):$TAG" "$ATE/$name:$TAG"
+          SUB="${GHCR}/substrate"
+          TAG="${SUBSTRATE_REF}"
+          for name in ateapi atecontroller atelet atenet podcertcontroller ateom-gvisor objectstore-plugin; do
+            (cd substrate && KO_DOCKER_REPO="$SUB" ko build --sbom=none -t "$TAG" "./cmd/$name")
           done
 
       - name: Build ax images
@@ -92,15 +100,13 @@ jobs:
           # (go.mod requires go >= 1.27.1). A script-level export overrides it.
           export GOTOOLCHAIN=auto
           AX="${GHCR}/ax"
-          MOD=github.com/google/ax
-          TAG="${AX_REF:0:7}"
+          TAG="${AX_REF}"
           # ax-server is a plain ko binary image. The task-runner is NOT:
           # ax's guest command is /usr/local/bin/ax-task-runner (not ko's
           # /ko-app/<name>), and the runner needs git/curl/ssh plus the
-          # antigravity agent SDK at runtime — exactly what upstream's
-          # Dockerfile.task-runner + Makefile build-task-runner assemble.
+          # antigravity agent SDK at runtime — upstream's Dockerfile.task-runner
+          # + Makefile build-task-runner assemble exactly that.
           (cd ax && KO_DOCKER_REPO="$AX" ko build --sbom=none -t "$TAG" ./cmd/ax-server)
-          crane copy "$AX/ax-server-$(printf '%s' "$MOD/cmd/ax-server" | md5sum | cut -d' ' -f1):$TAG" "$AX/ax-server:$TAG"
           (cd ax && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o bin/linux_amd64/ax-task-runner ./cmd/ax-task-runner)
           (cd ax && docker build --platform linux/amd64 -t "$AX/ax-task-runner:$TAG" -f Dockerfile.task-runner .)
           docker push "$AX/ax-task-runner:$TAG"
@@ -113,12 +119,13 @@ jobs:
           set -euo pipefail
           fail=0
           for ref in \
-            "ate/ateapi:${SUBSTRATE_REF:0:7}" "ate/atecontroller:${SUBSTRATE_REF:0:7}" \
-            "ate/atelet:${SUBSTRATE_REF:0:7}" "ate/podcertcontroller:${SUBSTRATE_REF:0:7}" \
-            "ate/ateom-gvisor:${SUBSTRATE_REF:0:7}" \
-            "ate/snapshot-plugin:${SUBSTRATE_REF:0:7}" \
-            "ax/ax-server:${AX_REF:0:7}" \
-            "ax/ax-task-runner:${AX_REF:0:7}"; do
+            "substrate/ateapi:$SUBSTRATE_REF" "substrate/atecontroller:$SUBSTRATE_REF" \
+            "substrate/atelet:$SUBSTRATE_REF" "substrate/atenet:$SUBSTRATE_REF" \
+            "substrate/podcertcontroller:$SUBSTRATE_REF" \
+            "substrate/ateom-gvisor:$SUBSTRATE_REF" \
+            "substrate/objectstore-plugin:$SUBSTRATE_REF" \
+            "ax/ax-server:$AX_REF" \
+            "ax/ax-task-runner:$AX_REF"; do
             img="$GHCR/$ref"
             # Index manifests: arch per entry in .manifests[].platform.
             # Single manifests (ko output): arch lives in the config blob.
