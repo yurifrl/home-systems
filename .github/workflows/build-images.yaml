@@ -90,7 +90,11 @@ jobs:
           SUB="${GHCR}/ate"
           TAG="${SUBSTRATE_REF}"
           for name in ateapi atecontroller atelet atenet podcertcontroller ateom-gvisor objectstore-plugin; do
+            # ko's default namer appends an md5(import-path) suffix; crane copy
+            # publishes the same image under the canonical component name that
+            # the chart references (ImageName() = path.Base(pkg) layout).
             (cd substrate && KO_DOCKER_REPO="$SUB" ko build --sbom=none --platform=linux/amd64 -t "$TAG" "./cmd/$name")
+            crane copy "$SUB/$name-$(printf '%s' "$MOD/cmd/$name" | md5sum | cut -d' ' -f1):$TAG" "$SUB/$name:$TAG"
           done
 
       - name: Build ax images
@@ -109,6 +113,7 @@ jobs:
           # antigravity agent SDK at runtime — upstream's Dockerfile.task-runner
           # + Makefile build-task-runner assemble exactly that.
           (cd ax && KO_DOCKER_REPO="$AX" ko build --sbom=none --platform=linux/amd64 -t "$TAG" ./cmd/ax-server)
+          crane copy "$AX/ax-server-$(printf '%s' "$MOD/cmd/ax-server" | md5sum | cut -d' ' -f1):$TAG" "$AX/ax-server:$TAG"
           (cd ax && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o bin/linux_amd64/ax-task-runner ./cmd/ax-task-runner)
           (cd ax && docker build --platform linux/amd64 -t "$AX/ax-task-runner:$TAG" -f Dockerfile.task-runner .)
           docker push "$AX/ax-task-runner:$TAG"
