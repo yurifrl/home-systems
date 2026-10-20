@@ -15,7 +15,7 @@ spec:
       operations:  ["CREATE", "UPDATE"]
       resources:   ["sandboxconfigs"]
   validations:
-  # 16ccb13 groups pauseImage + assets under named versions; validate the
+  # Named versions group pauseImage + assets under named versions; validate the
   # versioned asset sets.
   # gVisor needs a "gvisor" release-tarball asset (runsc plus its gvisor-bin/
   # helpers) for every architecture it advertises. A legacy bare-binary "runsc"

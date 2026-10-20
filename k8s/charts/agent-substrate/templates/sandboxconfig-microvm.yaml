@@ -10,7 +10,7 @@ metadata:
   namespace: ate-system
 spec:
   sandboxClass: microvm
-  # 16ccb13 groups the runtime pieces into named versions; pauseImage is not
+  # Named versions group the runtime pieces into named versions; pauseImage is not
   # allowed for microvm (no pause container).
   defaultVersion: default
   versions:

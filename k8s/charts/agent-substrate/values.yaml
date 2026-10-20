@@ -93,7 +93,7 @@ ateapi:
   # issuer hostname only resolves from outside the cluster (e.g. a LAN DNS
   # name like api.k8s.lan that cluster CoreDNS upstreams don't serve).
   hostAliases: []
-  # -- iss claim of minted actor JWTs (ATE_API_ACTOR_JWT_ISSUER). 16ccb13's
+  # -- iss claim of minted actor JWTs (ATE_API_ACTOR_JWT_ISSUER). The
   # default is the in-cluster ate-idp-server URL; that server is not part of
   # this chart, so MintActorJWT still works (api-server signs from its local
   # pool) but relying parties cannot yet resolve the issuer.
@@ -119,13 +119,13 @@ postgres:
   # -- Full DSN override; empty uses the bundled server's default. Rendered
   # into the ate-api-server-secret-envvars Secret (optional envFrom source).
   connectionString: ""
-  # -- ate-api-server rejects an empty schema. 16ccb13's postgressetup creates
+  # -- ate-api-server rejects an empty schema. official postgressetup creates
   # the substrate schema; only change when the setup.sql in postgres.yaml was
   # edited to match.
   schema: substrate
   # -- Roles ATE_API_POSTGRES_READ_WRITE_ROLE / ATE_API_POSTGRES_OWNER_ROLE
   # assert. Must match the identities setup.sql creates (fixed constants at
-  # 16ccb13: postgressetup.ReadWriteRole/OwnerRole).
+  # postgressetup.ReadWriteRole/OwnerRole).
   readWriteRole: substrate_readwrite
   ownerRole: substrate_owner
   # -- Headroom so WAL churn cannot fill the volume (full pg_wal = PANIC).

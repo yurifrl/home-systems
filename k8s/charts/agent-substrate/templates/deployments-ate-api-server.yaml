@@ -144,7 +144,7 @@ spec:
           name: servicedns
         - mountPath: /run/podidentity.podcert.ate.dev
           name: podidentity
-        # 16ccb13 -> v0.5.0: separate owner and read/write login certificates; each
+        # v0.5.0: separate owner and read/write login certificates; each
         # login is its certificate's CN, matching the bundled server's hba.
         - mountPath: /run/postgres.podcert.ate.dev
           name: postgres

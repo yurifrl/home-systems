@@ -51,7 +51,7 @@ rules:
   resourceNames:
   - servicedns.podcert.ate.dev/*
   - podidentity.podcert.ate.dev/*
-  # postgres login-cert signer (16ccb13)
+  # postgres login-cert signer
   - postgres.podcert.ate.dev/*
   verbs:
   - sign
@@ -136,7 +136,7 @@ spec:
         - --sharding-application-name=podcertificate-controller
         - --service-dns-ca-pool=/run/ca-state/service-dns-pool.json
         - --pod-identity-ca-pool=/run/ca-state/pod-identity-pool.json
-        # 16ccb13 added the postgres login-cert signer; its pool is mandatory
+        # The postgres login-cert signer; its pool is mandatory
         # and the binary exits when the flag is empty.
         - --postgres-ca-pool=/run/ca-state/postgres-pool.json
         - --postgres-client-namespace=ate-system

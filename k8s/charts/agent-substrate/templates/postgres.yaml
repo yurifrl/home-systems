@@ -1,6 +1,6 @@
 {{- if .Values.postgres.bundled }}
 # Bundled PostgreSQL for ate-api-server, ported from substrate's
-# manifests/ate-install/postgres/postgres.yaml at 16ccb13. The serving
+# manifests/ate-install/postgres/postgres.yaml at v0.5.0. The serving
 # certificate comes from the servicedns podCertificate projection; client
 # certificates authenticate by CN against the fixed per-user identities
 # created by the embedded setup.sql (substrate_owner_user /
@@ -29,7 +29,7 @@ data:
     # Client certificate CNs must match the requested database username.
     hostssl atepg substrate_owner_user,substrate_readwrite_user all cert
   # Parameterized identity setup from pkg/postgressetup/setup.sql at
-  # 16ccb13, run idempotently by the postgres container's postStart hook
+  # Run idempotently by the postgres container's postStart hook
   # (ate-setup's setupBundledPostgres equivalent: same SQL, same psql
   # variable defaults for passwordless bundled installs).
   setup.sql: |
