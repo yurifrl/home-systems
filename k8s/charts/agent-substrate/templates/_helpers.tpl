@@ -1,7 +1,7 @@
 {{/*
 agent-substrate shared helpers.
-Mirrors substrate internal/versionlabel: the atelet DaemonSet name and the
-ate.dev/substrate-version label are derived from the build version.
+The official install names the DaemonSet plain `atelet`; version stamps live
+only on image tags.
 */}}
 
 {{- define "agent-substrate.name" -}}
@@ -30,22 +30,5 @@ rustfs) that are safe on arm64.
 {{- else -}}
 {{- $defaults := default (dict "kubernetes.io/arch" "amd64") .Values.nodeSelector -}}
 {{- toYaml $defaults -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-versionSuffix mirrors versionlabel.NameSuffix:
-lowercase, map non-[a-z0-9] to '-', trim '-', max 30 chars,
-otherwise "v" + first 10 hex chars of sha256(version).
-Must stay byte-compatible with substrate/cmd/ate-setup so an ate-setup
-managed cluster and this chart roll the same DaemonSet names.
-*/}}
-{{- define "agent-substrate.versionSuffix" -}}
-{{- $version := .Values.substrate.version | toString | lower -}}
-{{- $sanitized := regexReplaceAll "[^a-z0-9]" $version "-" | trimAll "-" -}}
-{{- if or (eq (len $sanitized) 0) (gt (len $sanitized) 30) -}}
-{{- printf "v%s" (substr 0 10 (sha256sum $version)) -}}
-{{- else -}}
-{{- $sanitized -}}
 {{- end -}}
 {{- end -}}

@@ -56,10 +56,6 @@ spec:
         fsGroup: 10001
       nodeSelector:
         {{- include "agent-substrate.nodeSelector" (dict "root" $ "overrides" .Values.storage.rustfs.nodeSelector) | nindent 8 }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       containers:
       - name: rustfs
         image: {{ .Values.images.rustfs.repository }}:{{ .Values.images.rustfs.tag }}
@@ -102,10 +98,6 @@ spec:
       restartPolicy: OnFailure
       nodeSelector:
         {{- include "agent-substrate.nodeSelector" . | nindent 8 }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       containers:
       - name: create-bucket
         image: {{ .Values.images.awscli.repository }}:{{ .Values.images.awscli.tag }}

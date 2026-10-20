@@ -127,10 +127,6 @@ spec:
     spec:
       nodeSelector:
         {{- include "agent-substrate.nodeSelector" . | nindent 8 }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       containers:
       - name: otel-collector
         image: {{ .Values.images.otelcollector.repository }}:{{ .Values.images.otelcollector.tag }}
@@ -198,10 +194,6 @@ spec:
     spec:
       nodeSelector:
         {{- include "agent-substrate.nodeSelector" . | nindent 8 }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       containers:
       - name: jaeger
         image: {{ .Values.images.jaeger.repository }}:{{ .Values.images.jaeger.tag }}

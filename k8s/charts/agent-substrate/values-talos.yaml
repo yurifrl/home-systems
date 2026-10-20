@@ -2,34 +2,33 @@
 # Mirrors the kind profile shape: rustfs object store with static creds
 # (no cloud IAM), in-chart OTLP collector + jaeger (the repo's `monitoring`
 # namespace stack is Prometheus, no OTLP receiver), small PostgreSQL sizing.
-# Image distribution: ko components from ghcr.io/yurifrl/ate/<name> (public,
-# built from pinned source by the mirror-ate-images workflow); infra images
-# are official upstream references. No pull secret needed.
+# Image distribution: ko components from ghcr.io/yurifrl/ate/<name>
+# (public, built from upstream release tag v0.5.0 by the build-images
+# workflow); infra images are official upstream references. No pull secret
+# needed.
 
-# 16ccb13: main-HEAD substrate. a0b680d's podcertcontroller writes
-# ClusterTrustBundles via certificates.k8s.io/v1beta1, which k8s 1.37
-# no longer serves (v1 only) — every bundle create 404s.
-substrate:
-  version: "16ccb13"
+# v0.5.0: podcertcontroller writes ClusterTrustBundles via
+# certificates.k8s.io/v1 (16ccb13's v1beta1 writes 404 on k8s 1.37).
 
 images:
   ateapi:
     repository: ghcr.io/yurifrl/ate/ateapi
-    tag: "16ccb13"
+    tag: "v0.5.0"
   atecontroller:
     repository: ghcr.io/yurifrl/ate/atecontroller
-    tag: "16ccb13"
+    tag: "v0.5.0"
   atelet:
     repository: ghcr.io/yurifrl/ate/atelet
-    tag: "16ccb13"
+    tag: "v0.5.0"
   podcert:
     repository: ghcr.io/yurifrl/ate/podcertcontroller
-    tag: "16ccb13"
-  snapshotPlugin:
-    repository: ghcr.io/yurifrl/ate/snapshot-plugin
-    tag: "16ccb13"
+    tag: "v0.5.0"
+  objectStorePlugin:
+    repository: ghcr.io/yurifrl/ate/objectstore-plugin
+    tag: "v0.5.0"
   agentgateway:
-    repository: ghcr.io/agentgateway/agentgateway
+    repository: cr.agentgateway.dev/agentgateway
+    tag: "v0.0.0-alpha.168b05d6@sha256:5e8384d1fcfdc443a3ad5155ea6a64dc7953bde162df7f5f8e131a5c19ae08a3"
   postgres:
     repository: docker.io/library/postgres
   rustfs:
@@ -95,7 +94,8 @@ atelet:
   # Actor images pull from public ghcr.io anonymously — no GCP auth, no
   # localhost registry replacement (talos has no sidecar registry).
   extraArgs: []
-  # 16ccb13: storage/snapshot handling moved to the node snapshot-plugin
-  # sidecar; both containers share the /var/lib/ate hostPath and atecontroller
-  # hardcodes that path for worker pod volumes (nodepath.BasePath).
-  snapshotPlugin: true
+  # v0.5.0: snapshot/object-store handling lives in the node
+  # objectstore-plugin sidecar; both containers share the /var/lib/ate
+  # hostPath and atecontroller hardcodes that path for worker pod volumes
+  # (nodepath.BasePath).
+  objectStorePlugin: true

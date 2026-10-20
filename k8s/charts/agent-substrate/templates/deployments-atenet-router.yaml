@@ -52,10 +52,6 @@ spec:
       serviceAccountName: atenet-router
       nodeSelector:
         {{- include "agent-substrate.nodeSelector" . | nindent 8 }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       terminationGracePeriodSeconds: 60
       volumes:
       - configMap:

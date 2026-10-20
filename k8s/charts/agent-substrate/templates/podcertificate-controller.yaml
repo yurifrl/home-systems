@@ -139,6 +139,7 @@ spec:
         # 16ccb13 added the postgres login-cert signer; its pool is mandatory
         # and the binary exits when the flag is empty.
         - --postgres-ca-pool=/run/ca-state/postgres-pool.json
+        - --postgres-client-namespace=ate-system
         - --workers-per-signer=$(WORKERS_PER_SIGNER)
         env:
         - name: POD_NAMESPACE
@@ -193,8 +194,4 @@ spec:
       schedulerName: default-scheduler
       securityContext: {}
       serviceAccountName: default
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       terminationGracePeriodSeconds: 30

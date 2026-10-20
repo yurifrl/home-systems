@@ -178,10 +178,6 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
       nodeSelector:
         {{- include "agent-substrate.nodeSelector" (dict "root" $ "overrides" .Values.postgres.nodeSelector) | nindent 8 }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       # PostgreSQL re-reads its TLS files only on SIGHUP, so this sidecar
       # reloads the server whenever the kubelet rotates the projected pod
       # certificate. fsGroup is also what makes that projection readable: the

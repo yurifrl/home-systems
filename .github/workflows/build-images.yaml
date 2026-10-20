@@ -79,18 +79,20 @@ jobs:
 
       # Component set = cmd/ate-setup/internal/images/images.go Components at
       # the pinned tag, pruned to what the chart deploys. Naming follows
-      # ImageName() = path.Base(pkg): ghcr.io/yurifrl/substrate/<name>:<tag>.
+      # ImageName() = path.Base(pkg): ghcr.io/yurifrl/ate/<name>:<tag>.
+      # --platform=linux/amd64: the old proven build produced single-arch
+      # images; ko defaults now also build the base image's other platforms,
+      # and their digest-tagged index PUTs are what ghcr DENIED (both prior
+      # runs failed exactly there). Chart pins arch: amd64 anyway.
       - name: Build substrate images
         env:
           SUBSTRATE_REF: ${{ inputs.substrate_version }}
         run: |
           set -euo pipefail
-          SUB="${GHCR}/substrate"
-          MOD=github.com/agent-substrate/substrate
+          SUB="${GHCR}/ate"
           TAG="${SUBSTRATE_REF}"
           for name in ateapi atecontroller atelet atenet podcertcontroller ateom-gvisor objectstore-plugin; do
-            (cd substrate && KO_DOCKER_REPO="$SUB" ko build --sbom=none -t "$TAG" "./cmd/$name")
-            crane copy "$SUB/$name-$(printf '%s' "$MOD/cmd/$name" | md5sum | cut -d' ' -f1):$TAG" "$SUB/$name:$TAG"
+            (cd substrate && KO_DOCKER_REPO="$SUB" ko build --sbom=none --platform=linux/amd64 -t "$TAG" "./cmd/$name")
           done
 
       - name: Build ax images
@@ -102,15 +104,13 @@ jobs:
           # (go.mod requires go >= 1.27.1). A script-level export overrides it.
           export GOTOOLCHAIN=auto
           AX="${GHCR}/ax"
-          MOD=github.com/google/ax
           TAG="${AX_REF}"
           # ax-server is a plain ko binary image. The task-runner is NOT:
           # ax's guest command is /usr/local/bin/ax-task-runner (not ko's
           # /ko-app/<name>), and the runner needs git/curl/ssh plus the
           # antigravity agent SDK at runtime — upstream's Dockerfile.task-runner
           # + Makefile build-task-runner assemble exactly that.
-          (cd ax && KO_DOCKER_REPO="$AX" ko build --sbom=none -t "$TAG" ./cmd/ax-server)
-          crane copy "$AX/ax-server-$(printf '%s' "$MOD/cmd/ax-server" | md5sum | cut -d' ' -f1):$TAG" "$AX/ax-server:$TAG"
+          (cd ax && KO_DOCKER_REPO="$AX" ko build --sbom=none --platform=linux/amd64 -t "$TAG" ./cmd/ax-server)
           (cd ax && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o bin/linux_amd64/ax-task-runner ./cmd/ax-task-runner)
           (cd ax && docker build --platform linux/amd64 -t "$AX/ax-task-runner:$TAG" -f Dockerfile.task-runner .)
           docker push "$AX/ax-task-runner:$TAG"
@@ -123,11 +123,11 @@ jobs:
           set -euo pipefail
           fail=0
           for ref in \
-            "substrate/ateapi:$SUBSTRATE_REF" "substrate/atecontroller:$SUBSTRATE_REF" \
-            "substrate/atelet:$SUBSTRATE_REF" "substrate/atenet:$SUBSTRATE_REF" \
-            "substrate/podcertcontroller:$SUBSTRATE_REF" \
-            "substrate/ateom-gvisor:$SUBSTRATE_REF" \
-            "substrate/objectstore-plugin:$SUBSTRATE_REF" \
+            "ate/ateapi:$SUBSTRATE_REF" "ate/atecontroller:$SUBSTRATE_REF" \
+            "ate/atelet:$SUBSTRATE_REF" "ate/atenet:$SUBSTRATE_REF" \
+            "ate/podcertcontroller:$SUBSTRATE_REF" \
+            "ate/ateom-gvisor:$SUBSTRATE_REF" \
+            "ate/objectstore-plugin:$SUBSTRATE_REF" \
             "ax/ax-server:$AX_REF" \
             "ax/ax-task-runner:$AX_REF"; do
             img="$GHCR/$ref"

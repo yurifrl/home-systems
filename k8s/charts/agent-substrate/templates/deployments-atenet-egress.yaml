@@ -4,7 +4,7 @@
 # (client certs from actor-id-ca-certs) and dials destinations, resolving
 # actors via api.ate-system.svc with its own podidentity cert.
 #
-# Pairs with the 16ccb13 agentgateway digest: the internal dynamicCa bind
+# Pairs with the v0.5.0 agentgateway digest: the internal dynamicCa bind
 # mints MITM leaves signed by the egress-mitm-ca-pool secret (generated once
 # per cluster by `ate-setup create egress-mitm-ca-pool`, like actor-id-ca-pool;
 # Argo is selfHeal/prune so generated CA pools must not be chart secrets), while the front door serves TLS with
@@ -93,10 +93,6 @@ spec:
       serviceAccountName: atenet-egress
       nodeSelector:
         {{- include "agent-substrate.nodeSelector" . | nindent 8 }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       terminationGracePeriodSeconds: 60
       volumes:
       - configMap:

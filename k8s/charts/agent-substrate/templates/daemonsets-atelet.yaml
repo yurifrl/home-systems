@@ -3,14 +3,12 @@ kind: DaemonSet
 metadata:
   labels:
     app: atelet
-    ate.dev/substrate-version: {{ .Values.substrate.version }}
-  name: atelet-{{ include "agent-substrate.versionSuffix" . }}
+  name: atelet
   namespace: ate-system
 spec:
   selector:
     matchLabels:
       app: atelet
-      ate.dev/substrate-version: {{ .Values.substrate.version }}
   template:
     metadata:
       annotations:
@@ -18,31 +16,30 @@ spec:
         prometheus.io/scrape: "true"
       labels:
         app: atelet
-        ate.dev/substrate-version: {{ .Values.substrate.version }}
     spec:
-      {{- if .Values.atelet.snapshotPlugin }}
-      # Node snapshot plugin (native sidecar): moves snapshots and sandbox
+      {{- if .Values.atelet.objectStorePlugin }}
+      # Node object-store plugin (native sidecar): moves snapshots and sandbox
       # assets between this node and object storage over a pod-local Unix
       # socket. Starts before atelet so the socket exists when it connects.
-      # Mirrors manifests/ate-install/kind/atelet at 16ccb13.
+      # Mirrors manifests/ate-install/kind/atelet at v0.5.0.
       initContainers:
-      - name: snapshot-plugin
-        image: {{ .Values.images.snapshotPlugin.repository }}:{{ .Values.images.snapshotPlugin.tag }}
+      - name: objectstore-plugin
+        image: {{ .Values.images.objectStorePlugin.repository }}:{{ .Values.images.objectStorePlugin.tag }}
         restartPolicy: Always
         args:
         - node
-        - --socket=/run/snapshot-plugin/node.sock
+        - --socket=/run/objectstore-plugin/node.sock
         - --root=/var/lib/ate
-        - --asset-staging-dir=/var/lib/snapshot-plugin/asset-staging
+        - --asset-staging-dir=/var/lib/objectstore-plugin/asset-staging
         - --asset-staging-capacity=8Gi
         # The plugin listens on a Unix socket; the image has no shell, so the
         # binary checks itself.
         startupProbe:
           exec:
             command:
-            - /ko-app/snapshot-plugin
+            - /ko-app/objectstore-plugin
             - healthcheck
-            - --socket=/run/snapshot-plugin/node.sock
+            - --socket=/run/objectstore-plugin/node.sock
           periodSeconds: 2
           failureThreshold: 30
         # Reads/writes under the /var/lib/ate hostPath as root, like atelet.
@@ -79,10 +76,10 @@ spec:
         volumeMounts:
         - name: run-ateom
           mountPath: /var/lib/ate
-        - name: snapshot-plugin
-          mountPath: /run/snapshot-plugin
+        - name: objectstore-plugin
+          mountPath: /run/objectstore-plugin
         - name: asset-staging
-          mountPath: /var/lib/snapshot-plugin/asset-staging
+          mountPath: /var/lib/objectstore-plugin/asset-staging
       {{- end }}
       containers:
       - args:
@@ -91,9 +88,9 @@ spec:
         - --ateapi-ca-file=/run/servicedns.podcert.ate.dev/trust-bundle.pem
         - --drain-delay=0s
         - --drain-timeout=5m
-        {{- if .Values.atelet.snapshotPlugin }}
-        # 16ccb13 moved snapshot/object-store work into the node plugin sidecar.
-        - --snapshot-plugin-socket=/run/snapshot-plugin/node.sock
+        {{- if .Values.atelet.objectStorePlugin }}
+        # v0.5.0: snapshot/object-store work lives in the node plugin sidecar.
+        - --objectstore-plugin-socket=/run/objectstore-plugin/node.sock
         {{- end }}
         {{- range .Values.atelet.extraArgs }}
         - {{ . | quote }}
@@ -117,7 +114,7 @@ spec:
               fieldPath: metadata.uid
         - name: OTEL_RESOURCE_ATTRIBUTES
           value: k8s.namespace.name=$(POD_NAMESPACE),k8s.pod.name=$(POD_NAME),k8s.pod.uid=$(POD_UID),k8s.node.name=$(NODE_NAME),service.instance.id=$(POD_UID)
-        {{- if not .Values.atelet.snapshotPlugin }}
+        {{- if not .Values.atelet.objectStorePlugin }}
         - name: ATE_STORAGE_BACKEND
           value: {{ .Values.storage.backend }}
         {{- if .Values.storage.rustfs.enabled }}
@@ -141,7 +138,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 9090
+            port: health
           initialDelaySeconds: 10
           periodSeconds: 10
         name: atelet
@@ -150,14 +147,16 @@ spec:
           hostPort: 8085
           name: grpc
         - containerPort: 9090
-          hostPort: 9090
           name: prometheus
+          protocol: TCP
+        - containerPort: 9091
+          name: health
           protocol: TCP
         readinessProbe:
           failureThreshold: 3
           httpGet:
             path: /readyz
-            port: 9090
+            port: health
           initialDelaySeconds: 5
           periodSeconds: 2
         resources:
@@ -173,9 +172,9 @@ spec:
         volumeMounts:
         - mountPath: /var/lib/ate
           name: run-ateom
-        {{- if .Values.atelet.snapshotPlugin }}
-        - mountPath: /run/snapshot-plugin
-          name: snapshot-plugin
+        {{- if .Values.atelet.objectStorePlugin }}
+        - mountPath: /run/objectstore-plugin
+          name: objectstore-plugin
         {{- end }}
         - mountPath: /run/podidentity.podcert.ate.dev
           name: podidentity
@@ -190,17 +189,12 @@ spec:
           name: host-dev
           readOnly: true
       nodeSelector:
-        # Generic capability marker set once per node (nostos machineconfig).
-        # Version never enters the pin — substrate.version only labels the
-        # workload (DS name/pods) so bumps roll out without re-labeling nodes.
+        # Generic capability marker set once per node (nostos machineconfig);
+        # never a version, so image-tag bumps roll out without re-labeling nodes.
         ate.dev/substrate: "true"
         {{- include "agent-substrate.nodeSelector" . | nindent 8 }}
       priorityClassName: ate-node-critical
       serviceAccountName: atelet
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       terminationGracePeriodSeconds: 330
       tolerations:
       - effect: NoSchedule
@@ -211,8 +205,8 @@ spec:
           path: /var/lib/ate
           type: DirectoryOrCreate
         name: run-ateom
-      {{- if .Values.atelet.snapshotPlugin }}
-      - name: snapshot-plugin
+      {{- if .Values.atelet.objectStorePlugin }}
+      - name: objectstore-plugin
         emptyDir: {}
       # Holds asset downloads until verified; plugin caps usage at
       # --asset-staging-capacity, +1Gi slack for filesystem overhead.

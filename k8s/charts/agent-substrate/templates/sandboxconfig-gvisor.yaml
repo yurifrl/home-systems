@@ -14,12 +14,15 @@ metadata:
     sandboxconfig.ate.dev/is-class-default: "true"
 spec:
   sandboxClass: gvisor
-  # 16ccb13 groups the runtime pieces into named versions; the default names
-  # the one actors boot. pauseImage is required per gvisor version (with a
-  # digest) and forbidden for other classes.
-  defaultVersion: default
+  # Runtime pieces are grouped into named versions; defaultVersion names the
+  # one actors boot. pauseImage is required per gvisor version (with a digest)
+  # and forbidden for other classes.
+  defaultVersion: v3
   versions:
-    - name: default
+    - name: v3
+      state: Enabled
+      # gVisor nightly 2026-10-10, for the split filesystem checkpoint
+      # (runsc fscheckpoint) ateom-gvisor uses to save/restore durable dirs.
       pauseImage: {{ .Values.sandbox.gvisor.pauseImage | quote }}
       assets:
 {{ toYaml .Values.sandbox.gvisor.assets | indent 8 }}

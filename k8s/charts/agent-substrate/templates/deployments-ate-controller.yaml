@@ -17,6 +17,9 @@ spec:
       - args:
         - --ateapi-ca-file=/run/servicedns-ca/trust-bundle.pem
         - --ateapi-client-cert=/run/podidentity.podcert.ate.dev/credential-bundle.pem
+        # v0.5.0: cluster DNS egress is proxied through the actor's atunnel
+        # (mitm'd by the egress gateway) instead of resolving upstream.
+        - --dns-egress-policy=enforce-in-atunnel
         env:
         - name: POD_NAME
           valueFrom:
@@ -52,10 +55,6 @@ spec:
       serviceAccountName: ate-controller
       nodeSelector:
         {{- include "agent-substrate.nodeSelector" . | nindent 8 }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       volumes:
       - name: podidentity
         projected:

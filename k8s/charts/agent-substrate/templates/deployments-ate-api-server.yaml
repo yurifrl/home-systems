@@ -25,17 +25,17 @@ spec:
       {{- toYaml . | nindent 8 }}
       {{- end }}
       initContainers:
-      # 16ccb13: the control snapshot plugin deletes and copies external
+      # v0.5.0: the control object-store plugin deletes and copies external
       # snapshots for ate-api-server over a Unix socket in a pod-local
       # emptyDir. A native sidecar starts before ate-api-server and stops
       # after it; ate-api-server starts only once the startup probe sees the
       # plugin serving (the image has no shell, so the binary checks itself).
-      - name: snapshot-plugin
-        image: {{ .Values.images.snapshotPlugin.repository }}:{{ .Values.images.snapshotPlugin.tag }}
+      - name: objectstore-plugin
+        image: {{ .Values.images.objectStorePlugin.repository }}:{{ .Values.images.objectStorePlugin.tag }}
         restartPolicy: Always
         args:
         - control
-        - --socket=/run/snapshot-plugin/control.sock
+        - --socket=/run/objectstore-plugin/control.sock
         {{- if .Values.storage.rustfs.enabled }}
         # Local-cluster object store (see rustfs.yaml): static creds instead of IRSA.
         env:
@@ -52,17 +52,23 @@ spec:
         - name: AWS_S3_USE_PATH_STYLE
           value: "true"
         {{- end }}
+        # The plugin listens on a Unix socket, which a gRPC probe cannot
+        # reach, and the image has no shell, so the binary checks itself.
         startupProbe:
           exec:
             command:
-            - /ko-app/snapshot-plugin
+            - /ko-app/objectstore-plugin
             - healthcheck
-            - --socket=/run/snapshot-plugin/control.sock
-          failureThreshold: 60
-          periodSeconds: 5
+            - --socket=/run/objectstore-plugin/control.sock
+          periodSeconds: 2
+          failureThreshold: 30
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
         volumeMounts:
-        - name: snapshot-plugin
-          mountPath: /run/snapshot-plugin
+        - name: objectstore-plugin
+          mountPath: /run/objectstore-plugin
       containers:
       - args:
         - --grpc-server-cred-bundle=/run/servicedns.podcert.ate.dev/credential-bundle.pem
@@ -78,9 +84,10 @@ spec:
         - --atelet-client-cred-bundle=/run/podidentity.podcert.ate.dev/credential-bundle.pem
         - --pod-identity-ca-certs=/run/podidentity.podcert.ate.dev/trust-bundle.pem
         - --default-egress-gateway-address=atenet-egress.ate-system.svc:443
-        - --snapshot-plugin-socket=/run/snapshot-plugin/control.sock
+        # Graceful shutdown knobs. The sum must fit within terminationGracePeriodSeconds.
         - --drain-delay=13s
         - --drain-timeout=15s
+        - --objectstore-plugin-socket=/run/objectstore-plugin/control.sock
         env:
         - name: POD_NAME
           valueFrom:
@@ -109,33 +116,35 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 9090
+            port: health
           initialDelaySeconds: 10
           periodSeconds: 10
         name: ate-api-server
         ports:
         - containerPort: 443
-        - containerPort: 9090
-          name: prometheus
+        - name: prometheus
+          containerPort: 9090
+        - name: health
+          containerPort: 9091
         readinessProbe:
           failureThreshold: 3
           httpGet:
             path: /readyz
-            port: 9090
+            port: health
           initialDelaySeconds: 5
           periodSeconds: 2
         startupProbe:
           failureThreshold: 24
           httpGet:
             path: /healthz
-            port: 9090
+            port: health
           periodSeconds: 5
         volumeMounts:
         - mountPath: /run/servicedns.podcert.ate.dev
           name: servicedns
         - mountPath: /run/podidentity.podcert.ate.dev
           name: podidentity
-        # 16ccb13: separate owner and read/write login certificates; each
+        # 16ccb13 -> v0.5.0: separate owner and read/write login certificates; each
         # login is its certificate's CN, matching the bundled server's hba.
         - mountPath: /run/postgres.podcert.ate.dev
           name: postgres
@@ -145,8 +154,8 @@ spec:
         - mountPath: /run/actor-id-ca-pool
           name: actor-id-ca-pool
           readOnly: true
-        - mountPath: /run/snapshot-plugin
-          name: snapshot-plugin
+        - mountPath: /run/objectstore-plugin
+          name: objectstore-plugin
         - mountPath: /etc/ateapi/authentication
           name: authentication-config
           readOnly: true
@@ -156,15 +165,11 @@ spec:
       serviceAccountName: ate-api-server
       nodeSelector:
         {{- include "agent-substrate.nodeSelector" . | nindent 8 }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       terminationGracePeriodSeconds: 40
       volumes:
-      # Pod-local socket dir the control snapshot-plugin sidecar serves and
-      # ate-api-server dials (snapshot-plugin-socket).
-      - name: snapshot-plugin
+      # Pod-local socket dir the control object-store plugin serves and
+      # ate-api-server dials (objectstore-plugin-socket).
+      - name: objectstore-plugin
         emptyDir: {}
       - name: postgres
         projected:

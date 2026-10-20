@@ -3,57 +3,56 @@
 # atelet (DaemonSet), atenet-router and agentgateway on an EKS cluster.
 # It replaces `ate-setup deploy ate-system` (kustomize + ko) with ArgoCD-managed Helm.
 
-# -- The substrate build version. Stamps the ate.dev/substrate-version label
-# on the atelet DaemonSet and its pods, names the DaemonSet (atelet-<suffix>,
-# see versionSuffix helper) and is the default image tag. Bumping this value
-# triggers an atelet DS rollout. Scheduling pins nodes via the generic
-# ate.dev/substrate: "true" node label instead — no per-node re-labeling on
-# version bumps.
-substrate:
-  version: "16ccb13"
+# -- No substrate.version value: the official install does not version-stamp
+# the DaemonSet or nodes. Versions live on image tags only
+# (values.images.*.tag). Scheduling pins nodes via the generic
+# ate.dev/substrate: "true" node label (nostos machineconfig).
 
 images:
   ateapi:
-    # -- ate-api-server image (ko build of substrate/cmd/ateapi).
-    # Built from pinned source by the mirror-ate-images GitHub workflow.
+    # -- Official component layout mirrors upstream's `ate-setup publish
+    # release-images`: one repo per component under org, one tag per release.
+    # ghcr.io/yurifrl/ate/* is built from the unmodified upstream source
+    # at tag v0.5.0 by the build-images workflow (upstream publishes no images
+    # of its own; ate-setup expects the operator's registry).
     repository: ghcr.io/yurifrl/ate/ateapi
-    tag: "16ccb13"
+    tag: "v0.5.0"
   atecontroller:
     repository: ghcr.io/yurifrl/ate/atecontroller
-    tag: "16ccb13"
+    tag: "v0.5.0"
   atelet:
     repository: ghcr.io/yurifrl/ate/atelet
-    tag: "16ccb13"
+    tag: "v0.5.0"
   podcert:
     # -- podcertificate-controller (publishes the podidentity/servicedns
     # ClusterTrustBundles the atelet/ate-controller projected volumes use).
     repository: ghcr.io/yurifrl/ate/podcertcontroller
-    tag: "16ccb13"
-  snapshotPlugin:
-    # -- 16ccb13 control-snapshot plugin sidecar served next to ate-api-server.
-    repository: ghcr.io/yurifrl/ate/snapshot-plugin
-    tag: "16ccb13"
+    tag: "v0.5.0"
+  objectStorePlugin:
+    # -- v0.5.0 control object-store plugin sidecar served next to ate-api-server.
+    repository: ghcr.io/yurifrl/ate/objectstore-plugin
+    tag: "v0.5.0"
   ateomGvisor:
     # -- ateom worker image (workerpool-gvisor.yaml): the sandboxed worker
     # runtime actors boot on. ko build of substrate/cmd/ateom-gvisor; without
     # a WorkerPool the substrate scheduler has no placement capacity and
     # every actor create fails with "no worker has room for the actor".
     repository: ghcr.io/yurifrl/ate/ateom-gvisor
-    tag: "16ccb13"
+    tag: "v0.5.0"
   # -- atenet-router runs the agentgateway image (see values.images.agentgateway);
   # there is no separate atenet server image in the cluster manifests.
   agentgateway:
-    # -- Official upstream agentgateway image (ghcr.io/agentgateway), as pinned
-    # by substrate's ate-install manifests (the image atenet-router runs).
-    repository: ghcr.io/agentgateway/agentgateway
-    tag: "v0.0.0-alpha.9f9744cf"
-  # -- atenet-egress runs the digest-pinned 16ccb13 image (see
-  # values.images.agentgatewayEgress), which pairs with the new-style egress
-  # configmap: its internal dynamicCa bind mints MITM leaves signed by the
-  # egress-mitm-ca-pool secret, the mode the running atelet (16ccb13) requires.
+    # -- Official upstream agentgateway image, digest-pinned exactly as
+    # substrate v0.5.0's ate-install agentgateway component overlay pins it
+    # (atenet-router and atenet-egress both run it).
+    repository: cr.agentgateway.dev/agentgateway
+    tag: "v0.0.0-alpha.168b05d6@sha256:5e8384d1fcfdc443a3ad5155ea6a64dc7953bde162df7f5f8e131a5c19ae08a3"
+  # -- atenet-egress runs the same digest-pinned agentgateway image as the
+  # v0.5.0 agentgateway component overlay; its internal dynamicCa bind mints
+  # MITM leaves signed by the egress-mitm-ca-pool secret.
   agentgatewayEgress:
     repository: cr.agentgateway.dev/agentgateway
-    tag: "v0.0.0-alpha.955d56fa@sha256:fc64f1093a5f7fd32c9cc58d2b53f0a5d5781f7960e3a1ac0a59db4f6a39850f"
+    tag: "v0.0.0-alpha.168b05d6@sha256:5e8384d1fcfdc443a3ad5155ea6a64dc7953bde162df7f5f8e131a5c19ae08a3"
   postgres:
     # -- Bundled PostgreSQL (see postgres.bundled): official upstream image,
     # digest-pinned (multi-arch: amd64 + arm64).
@@ -210,12 +209,12 @@ sandbox:
     assets:
       amd64:
         gvisor:
-          url: "gs://gvisor/releases/nightly/2026-09-02/x86_64/gvisor.tar.zstd"
-          sha256: "d547d81401461fd1c679c5c4fa0a6c2b8ef7dc3c22ce23c9e25dcc4c69cfd06f"
+          url: "gs://gvisor/releases/nightly/2026-10-10/x86_64/gvisor.tar.zstd"
+          sha256: "4ae7fab988c3647d2a835d6c3c70c6a99021c562db97827592562b6c51c3e88c"
       arm64:
         gvisor:
-          url: "gs://gvisor/releases/nightly/2026-09-02/aarch64/gvisor.tar.zstd"
-          sha256: "a64916f9813ce7e4841a30480a599337f7dda07b421c6bf0123db2212aa7d1df"
+          url: "gs://gvisor/releases/nightly/2026-10-10/aarch64/gvisor.tar.zstd"
+          sha256: "aaf414f06eea7960238e43165c691f0a36cefc0593fb141e011e96211c7b6f57"
   microvm:
     # -- Apply the microvm (cloud-hypervisor/kata) SandboxConfig. Opt-in:
     # requires the kata asset set staged in the cluster bucket first.
