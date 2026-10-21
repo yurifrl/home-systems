@@ -16,7 +16,9 @@ name: Build upstream images to ghcr
 #   ghcr.io/yurifrl/ax/<name>:vX.Y.Z          (ax, `make deploy` layout)
 # Packages are public (flipped once after the first push).
 #
-# Bump inputs when a new upstream release lands; do not pin raw main commits.
+# Bump inputs when a new upstream release lands. Exception — ax: releases
+# lag the substrate integration (v0.3.1 predates -substrate-endpoint), so ax
+# pins upstream main HEAD. Substrate pins release tags.
 
 on:
   workflow_dispatch:
@@ -26,9 +28,9 @@ on:
         required: true
         default: v0.5.0
       ax_version:
-        description: google/ax release tag
+        description: google/ax ref (main HEAD; releases lag the substrate integration)
         required: true
-        default: v0.3.1
+        default: 7b3347f5a8af37676f711e750f354014a1705e24
 
 permissions:
   contents: read
