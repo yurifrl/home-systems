@@ -48,7 +48,7 @@ tests:
               path: token
       - equal:
           path: spec.template.spec.containers[0].image
-          value: ghcr.io/yurifrl/ax/ax-server:v0.3.1
+          value: "ghcr.io/yurifrl/ax/ax-server:7b3347f5a8af37676f711e750f354014a1705e24@sha256:0eeb5c568497ec45a93126f5fdf6506b815338eb52fadbc3a7a7fb50fad63aae"
   - it: fails closed when local redis is disabled without an address
     set:
       snapshots.bucket: s3://ate-snapshots/ax-env/

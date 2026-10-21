@@ -33,10 +33,11 @@ images:
   # ko://github.com/google/ax/cmd/ax-server).
   server:
     repository: ghcr.io/yurifrl/ax/ax-server
-    # Built from upstream release tag v0.3.1, digest-pinned: substrate
-    # requires actor images pinned by digest (snapshots depend on immutable
-    # images).
-    tag: "v0.3.1"
+    # Built from upstream main HEAD 7b3347f5 (substrate-coupled integration
+    # lands on main between releases: v0.3.1 predates -substrate-endpoint and
+    # the substrate v0.5.0 bump). Digest-pinned: snapshots depend on immutable
+    # images.
+    tag: "7b3347f5a8af37676f711e750f354014a1705e24@sha256:0eeb5c568497ec45a93126f5fdf6506b815338eb52fadbc3a7a7fb50fad63aae"
   # -- Official upstream redis, not ko-built.
   redis:
     repository: docker.io/library/redis
