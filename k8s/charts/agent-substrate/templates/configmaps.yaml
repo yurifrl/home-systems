@@ -114,6 +114,11 @@ data:
     # yaml-language-server: $schema=https://agentgateway.dev/schema/config
     config:
       statsAddr: 0.0.0.0:15020
+      backend:
+        # Guest process services live at the actor sandbox's link-local
+        # address (169.254.17.2). agentgateway v1.7+ refuses dynamic backends
+        # resolving to loopback/link-local unless this is set.
+        allowDynamicLoopback: true
 
     frontendPolicies:
       tracing:
