@@ -245,6 +245,17 @@
         }
       ]
     },
+    "guardrailsModel": {
+      "type": "string",
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "pattern": "^\\S(?:.*\\S)?$"
+        }
+      ]
+    },
     "maxRunTokens": {
       "type": [
         "integer",

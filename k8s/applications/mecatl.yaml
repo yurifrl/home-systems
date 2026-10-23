@@ -101,6 +101,10 @@ spec:
           telemetry:
             installationID: 18f26f57-1e55-4eeb-9301-d049e7a7d5a7
           defaultProvider: openrouter
+          # mecak8s v0.0.50: posture=auto requires an enforcing guardrails
+          # checker or startup hard-fails. Reusing the active session model
+          # (openrouter's openai/gpt-5) as the preventive checker.
+          guardrailsModel: openai/gpt-5
           # No model pinned: mecatl's provider default applies. Tune later.
           extraEnv:
             - name: OPENROUTER_API_KEY

@@ -123,6 +123,9 @@ spec:
             {{- if .Values.model }}
             - {{ printf "--model=%s" .Values.model | quote }}
             {{- end }}
+            {{- if .Values.guardrailsModel }}
+            - {{ printf "--guardrails-model=%s" .Values.guardrailsModel | quote }}
+            {{- end }}
             {{- if ne .Values.maxRunTokens nil }}
             - {{ printf "--max-run-tokens=%v" .Values.maxRunTokens | quote }}
             {{- end }}

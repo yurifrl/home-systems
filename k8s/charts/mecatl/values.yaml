@@ -107,6 +107,10 @@ mockProvider: false
 # does not pass the corresponding flag; the runtime/provider default applies.
 defaultProvider: ""
 model: ""
+# Enforcing guardrails checker model. Empty means the chart does not pass the
+# flag; posture=auto hard-fails at startup without a checker as of mecak8s
+# v0.0.50, so real deployments must set this (or switch posture to yolo).
+guardrailsModel: ""
 maxRunTokens: null
 maxTeamTokens: null
 
