@@ -42,17 +42,19 @@ images:
   # -- atenet-router runs the agentgateway image (see values.images.agentgateway);
   # there is no separate atenet server image in the cluster manifests.
   agentgateway:
-    # -- Official upstream agentgateway image, digest-pinned exactly as
-    # substrate v0.5.0's ate-install agentgateway component overlay pins it
+    # -- Official upstream agentgateway image. Bumped from v0.5.0's
+    # alpha.168b05d6 pin: that build predates agentgateway PR #3990 (default
+    # egress policy lookup) and fails against ateapi v0.5.0 with
+    # "name: Required value" on every egress fetch.
     # (atenet-router and atenet-egress both run it).
     repository: cr.agentgateway.dev/agentgateway
-    tag: "v0.0.0-alpha.168b05d6@sha256:5e8384d1fcfdc443a3ad5155ea6a64dc7953bde162df7f5f8e131a5c19ae08a3"
+    tag: "v1.7.0-alpha.1@sha256:2a8ab6e70cc18c74cbe4cacdb435fe24f1b413e0f95bb2b6972961a46c4d63a1"
   # -- atenet-egress runs the same digest-pinned agentgateway image as the
   # v0.5.0 agentgateway component overlay; its internal dynamicCa bind mints
   # MITM leaves signed by the egress-mitm-ca-pool secret.
   agentgatewayEgress:
     repository: cr.agentgateway.dev/agentgateway
-    tag: "v0.0.0-alpha.168b05d6@sha256:5e8384d1fcfdc443a3ad5155ea6a64dc7953bde162df7f5f8e131a5c19ae08a3"
+    tag: "v1.7.0-alpha.1@sha256:2a8ab6e70cc18c74cbe4cacdb435fe24f1b413e0f95bb2b6972961a46c4d63a1"
   postgres:
     # -- Bundled PostgreSQL (see postgres.bundled): official upstream image,
     # digest-pinned (multi-arch: amd64 + arm64).

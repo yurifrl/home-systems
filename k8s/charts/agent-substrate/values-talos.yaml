@@ -28,7 +28,7 @@ images:
     tag: "v0.5.0"
   agentgateway:
     repository: cr.agentgateway.dev/agentgateway
-    tag: "v0.0.0-alpha.168b05d6@sha256:5e8384d1fcfdc443a3ad5155ea6a64dc7953bde162df7f5f8e131a5c19ae08a3"
+    tag: "v1.7.0-alpha.1@sha256:2a8ab6e70cc18c74cbe4cacdb435fe24f1b413e0f95bb2b6972961a46c4d63a1"
   postgres:
     repository: docker.io/library/postgres
   rustfs:
