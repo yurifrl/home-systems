@@ -44,6 +44,15 @@ spec:
               # leaving the external-dns target (in support-cluster gateways.yaml)
               # pointing at a dead device. FQDN: syscd-gateway.tailcecc0.ts.net
               tailscale.com/hostname: "syscd-gateway"
+              # Public A record for the tailnet-fronted domain: *.syscd.tech ->
+              # the gateway LB IP (follows loadBalancerIP automatically via the
+              # external-dns `service` source in the tailscale release).
+              # Replaces the CNAME->syscd-gateway.ts.net that used to be declared
+              # on the istio-system/tailscale Gateway (support-cluster chart):
+              # the CNAME broke public resolvers (ts.net names don't exist in
+              # public DNS) and made records flap. Additive status is preserved
+              # (tailscale operator appends; MetalLB owns the VIP).
+              external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
             externalTrafficPolicy: Local
             type: LoadBalancer
             loadBalancerIP: "192.168.68.201"

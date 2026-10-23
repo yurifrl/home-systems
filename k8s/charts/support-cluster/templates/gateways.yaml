@@ -39,9 +39,8 @@ kind: Gateway
 metadata:
   name: tailscale
   namespace: istio-system
-  annotations:
-    external-dns.alpha.kubernetes.io/hostname: "*.syscd.tech"
-    external-dns.alpha.kubernetes.io/target: "syscd-gateway.tailcecc0.ts.net"
+  # DNS for *.syscd.tech is published by external-dns (service source) from the
+  # istio-system/istio-gateway Service annotations (public A -> LB IP), not here.
 spec:
   selector:
     istio: gateway

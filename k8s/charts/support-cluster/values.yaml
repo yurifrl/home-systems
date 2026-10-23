@@ -118,3 +118,7 @@ tailscale:
         - 10.0.0.0/16
         - 10.1.0.0/16
         - 10.69.0.0/16
+        # Home LAN: lets tailnet devices (phone, offsite Mac) reach
+        # istio-gateway's MetalLB VIP 192.168.68.201 directly, so the public
+        # A records for *.syscd.tech resolve and connect from anywhere.
+        - 192.168.68.0/24
