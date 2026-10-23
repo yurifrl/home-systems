@@ -16,7 +16,10 @@ data:
     # yaml-language-server: $schema=https://agentgateway.dev/schema/config
     frontendPolicies:
       connect:
-        mode: tunnel
+        # agentgateway v1.7 rejects CONNECTs on HTTP listeners in tunnel mode
+        # (httpproxy CONNECT only proceeds under mode: route); the substrate
+        # outer CONNECT re-enters as a plain HTTP request.
+        mode: route
       accessLog:
         add:
           substrate.connect.authority: source.connectHeaders["host"]
