@@ -37,4 +37,4 @@ spec:
       path: k8s/charts/agent-substrate
       helm:
         valueFiles:
-          - values-talos.yaml
+          - values-my-cluster.yaml
