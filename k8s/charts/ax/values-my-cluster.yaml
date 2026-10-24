@@ -1,0 +1,20 @@
+# my-cluster profile (Apple container k8s 1.35, single arm64 node; the
+# amd64-only ax-server image runs via Rosetta in the node VM — helpers honor
+# an explicit {} via hasKey). Bundled ax-redis, snapshots on the substrate
+# rustfs bucket, no ESO: gemini-api-secret is seeded manually into the task
+# atespace namespace (default).
+nodeSelector: {}
+
+redis:
+  local:
+    enabled: true
+  address: ""
+
+snapshots:
+  # rustfs (agent-substrate) bootstrap Job creates the bucket; ateom workers
+  # read/write snapshots with its static credentials.
+  bucket: "s3://ate-snapshots/"
+
+externalSecret:
+  # No External Secrets Operator on the scratch container cluster.
+  enabled: false

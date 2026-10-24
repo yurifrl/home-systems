@@ -18,17 +18,25 @@ to use X instead of the default for upstream multi-arch images (postgres,
 rustfs) that are safe on arm64.
 */}}
 {{- define "agent-substrate.nodeSelector" -}}
+{{- $sel := dict -}}
 {{- if hasKey . "overrides" -}}
 {{- $overrides := index . "overrides" -}}
 {{- $root := index . "root" -}}
 {{- if ne $overrides nil -}}
-{{- toYaml $overrides -}}
+{{- $sel = $overrides -}}
+{{- else if hasKey $root.Values "nodeSelector" -}}
+{{- $sel = $root.Values.nodeSelector -}}
 {{- else -}}
-{{- $defaults := default (dict "kubernetes.io/arch" "amd64") $root.Values.nodeSelector -}}
-{{- toYaml $defaults -}}
+{{- $sel = dict "kubernetes.io/arch" "amd64" -}}
 {{- end -}}
 {{- else -}}
-{{- $defaults := default (dict "kubernetes.io/arch" "amd64") .Values.nodeSelector -}}
-{{- toYaml $defaults -}}
+{{- if hasKey .Values "nodeSelector" -}}
+{{- $sel = .Values.nodeSelector -}}
+{{- else -}}
+{{- $sel = dict "kubernetes.io/arch" "amd64" -}}
+{{- end -}}
+{{- end -}}
+{{- if not (empty $sel) -}}
+{{- toYaml $sel -}}
 {{- end -}}
 {{- end -}}

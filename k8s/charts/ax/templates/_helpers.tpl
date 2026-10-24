@@ -8,6 +8,11 @@ single-arch builds) and the target cluster is mixed-arch, so pin to amd64
 unless overridden.
 */}}
 {{- define "ax.nodeSelector" -}}
-{{- $defaults := default (dict "kubernetes.io/arch" "amd64") .Values.nodeSelector -}}
-{{- toYaml $defaults -}}
+{{- $sel := dict "kubernetes.io/arch" "amd64" -}}
+{{- if hasKey .Values "nodeSelector" -}}
+{{- $sel = .Values.nodeSelector -}}
+{{- end -}}
+{{- if not (empty $sel) -}}
+{{- toYaml $sel -}}
+{{- end -}}
 {{- end -}}

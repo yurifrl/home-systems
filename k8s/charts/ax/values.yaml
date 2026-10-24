@@ -119,7 +119,7 @@ registry:
 # [{name: ax-registry}]).
 imagePullSecrets: []
 
-# -- Pod nodeSelector for all ax workloads. Images are linux/amd64-only
-# (ko single-arch builds); the home talos cluster is mixed-arch.
-nodeSelector:
-  kubernetes.io/arch: amd64
+# -- Pod nodeSelector for all ax workloads. Images are linux/amd64-only (ko
+# single-arch builds); when this key is ABSENT the helper defaults every pod
+# to kubernetes.io/arch: amd64. Set it to {} to opt out on single-arch
+# (e.g. arm64) clusters.

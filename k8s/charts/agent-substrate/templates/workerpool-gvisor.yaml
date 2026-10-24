@@ -25,6 +25,7 @@ spec:
     - name: gvisor
   workerImage: "{{ .Values.images.ateomGvisor.repository }}:{{ .Values.images.ateomGvisor.tag }}"
   template:
+    {{- $nodeSelector := include "agent-substrate.nodeSelector" (dict "root" $ "overrides" .Values.workers.gvisor.nodeSelector) }}
     nodeSelector:
-      kubernetes.io/arch: amd64
+      {{- $nodeSelector | default "{}" | nindent 6 }}
 {{- end }}

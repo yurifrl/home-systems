@@ -270,7 +270,7 @@ validatingAdmissionPolicy:
   enabled: true
 
 # -- Pod nodeSelector for every workload. Images are linux/amd64-only (ko
-# single-arch builds); mixed-arch clusters need arch pinning. Override with
-# {} on single-arch clusters.
-nodeSelector:
-  kubernetes.io/arch: amd64
+# single-arch builds), so when this key is ABSENT the helper defaults every
+# pod to kubernetes.io/arch: amd64. Set it to {} to opt out entirely on
+# single-arch (e.g. arm64) clusters. NOTE: YAML merge means {} here overrides
+# cleanly only because the key is not defined in this file.

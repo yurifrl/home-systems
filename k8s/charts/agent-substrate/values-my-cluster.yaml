@@ -1,0 +1,41 @@
+# my-cluster profile (Apple container k8s 1.35, single arm64 node, 3 CPU /
+# 6 GB; the amd64-only ko images run via Rosetta in the node VM). Same shape
+# as the kind/talos local profiles: rustfs object store with static creds,
+# in-chart OTLP collector + jaeger, small PostgreSQL.
+# nodeSelector MUST be empty: the default amd64 pin would strand every pod on
+# the arm64-only node (helpers honor an explicit {} via hasKey).
+nodeSelector: {}
+
+atelet:
+  # v0.5.0: snapshot/object-store handling lives in the node objectstore-plugin
+  # sidecar (shared /var/lib/ate hostPath; atecontroller hardcodes the worker
+  # volume path). Required with the rustfs s3 backend.
+  objectStorePlugin: true
+
+postgres:
+  storage: 2Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "2"
+      memory: 1Gi
+
+storage:
+  backend: s3
+  rustfs:
+    enabled: true
+    storage: 2Gi
+
+otel:
+  # The in-chart collector deploys into the chart-hardcoded otel-system
+  # namespace (templates/otel-collector.yaml).
+  exporterOtlpEndpoint: "http://opentelemetry-collector.otel-system.svc:4317"
+  exporterOtlpAddress: "http://opentelemetry-collector.otel-system.svc:4317"
+  collector:
+    enabled: true
+  extraEnv:
+    OTEL_METRIC_EXPORT_INTERVAL: "10000"
+    OTEL_METRIC_EXPORT_TIMEOUT: "10000"
+    OTEL_LOGS_EXPORTER: otlp
