@@ -144,7 +144,7 @@ vms:
     scsiHardware: virtio-scsi-pci      # scsihw: virtio-scsi-pci
     osType: win11                      # ostype: win11
     smbiosUuid: 4623676c-033a-4880-9727-675adef0023b
-    bootOrder: [virtio0, ide2, ide0, net0]   # boot: order=virtio0;ide2;ide0;net0
+    bootOrder: [virtio0, ide2, net0]   # boot: order=virtio0;ide2;net0 (ide0 dropped: single combined ISO means no second cdrom)
     cpu:
       cores: 4                         # cores: 4
       sockets: 1                       # sockets: 1
