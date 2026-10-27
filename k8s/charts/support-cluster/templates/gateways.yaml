@@ -62,6 +62,17 @@ spec:
       tls:
         mode: SIMPLE
         credentialName: syscd-tls
+    # Plaintext h2c listener for the ax CLI: it dials insecure gRPC and strips
+    # https:// (github.com/google/ax cmd/ax/main.go getAXClient), so TLS
+    # termination breaks its HTTP/2 preface. Scoped to exactly ax.syscd.tech —
+    # the ax-server API is unauthenticated and must not sit on *.syscd.tech.
+    # Use: export AX_SERVER=http://ax.syscd.tech:18080
+    - port:
+        number: 18080
+        name: http2-plain
+        protocol: HTTP2
+      hosts:
+        - "ax.syscd.tech"
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
