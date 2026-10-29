@@ -11,6 +11,36 @@ atelet:
   # sidecar (shared /var/lib/ate hostPath; atecontroller hardcodes the worker
   # volume path). Required with the rustfs s3 backend.
   objectStorePlugin: true
+  extraArgs:
+    # Registry traffic resolves inside the guest network namespace, where
+    # 127.0.0.1 is the sandbox loopback; the worker host's 127.0.0.1:5000
+    # (Apple container registry proxy) is rewritten so actors can pull.
+    - --localhost-registry-replacement=127.0.0.1:5000
+
+# Arm64 node (Apple Container kind): upstream gVisor publishes a separate
+# aarch64 asset, but the v0.5.0 worker selects assets under the `amd64` key
+# (SandboxConfig apiVersion), so the aarch64 binary is staged under amd64.
+# Adopted from the hand-applied kubectl patches so helm apply matches the
+# live cluster conflict-free.
+# ate-api-authentication ConfigMap matches the hand-patched live value
+# (kubernetes.default.svc.cluster.local); chart default lacks the
+# .cluster.local suffix and is overridden here to avoid SSA conflicts.
+ateapi:
+  authentication:
+    issuer: https://kubernetes.default.svc.cluster.local
+sandbox:
+  gvisor:
+    pauseImage: "127.0.0.1:5000/pause:3.10.2@sha256:a433214620b407678934ebd69690a9ed6066247231eacfba181fab20dbc3dbf1"
+    assets:
+      amd64:
+        gvisor:
+          # Same aarch64 binary as below — see the note above.
+          url: "gs://gvisor/releases/nightly/2026-10-10/aarch64/gvisor.tar.zstd"
+          sha256: "aaf414f06eea7960238e43165c691f0a36cefc0593fb141e011e96211c7b6f57"
+      arm64:
+        gvisor:
+          url: "gs://gvisor/releases/nightly/2026-10-10/aarch64/gvisor.tar.zstd"
+          sha256: "aaf414f06eea7960238e43165c691f0a36cefc0593fb141e011e96211c7b6f57"
 
 postgres:
   storage: 2Gi
@@ -39,3 +69,10 @@ otel:
     OTEL_METRIC_EXPORT_INTERVAL: "10000"
     OTEL_METRIC_EXPORT_TIMEOUT: "10000"
     OTEL_LOGS_EXPORTER: otlp
+
+ateapi:
+  authentication:
+    # kind (my-cluster): kube-apiserver's in-cluster DNS name has the
+    # .cluster.local suffix (the talos profile's bare
+    # https://kubernetes.default.svc also resolves in-cluster, so both work).
+    issuer: https://kubernetes.default.svc.cluster.local
