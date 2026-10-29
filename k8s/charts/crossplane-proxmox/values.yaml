@@ -198,7 +198,7 @@ vms:
     netMac: "BC:24:11:7C:B3:51"          # stable MAC (Proxmox BC:24:11 OUI)
     disk:
       interface: scsi0                 # boot disk: imports image below
-      sizeGiB: 40
+      sizeGiB: 70
     # NixOS qcow2 built by the nixos CI (build-image action) and uploaded to the
     # same GCS bucket as gatus/foundry, under one stable name: nixos-workstation.qcow2
     # (uncompressed; bucket versioning + keep-only-current lifecycle keeps exactly
