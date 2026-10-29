@@ -239,6 +239,69 @@ vms:
         tsTag: tag:workstation            # tag the minted key (and thus the VM) gets
         tsKeyExpirySeconds: 7776000       # 90d (Tailscale max); re-minted weekly so never stale
 
+  # --- workstation-gpu gaming VM (VM 103) -----------------------------------
+  # Third contender for the shared GPU (0000:01:00.0), same exclusive-ownership
+  # model as talos-pc01/windows: AT MOST ONE of the three may be started with
+  # the GPU attached (enforced by templates/00-guards.yaml). This is the NixOS
+  # gaming VM: same qcow2 pipeline as the workstation VM but its own image
+  # (nixos-workstation-gpu.qcow2), hostname, tailnet identity, and cloud-init
+  # snippet, so both workstation VMs can exist without stepping on each other.
+  # Full VGA passthrough (x-vga) like windows production: the physical monitor
+  # on pc01's NVIDIA card IS this VM's display.
+  workstationGpu:
+    enabled: false                     # PRIVATE overlay flips true once the qcow2 is published
+    name: workstation-gpu
+    vmId: 103
+    onBoot: false                      # never auto-start: GPU is contended; owner is explicit
+    started: false
+    passthrough: true                  # this VM's reason to exist
+    hostpci:                           # same devices as windows production variant
+      - device: hostpci0               # GPU: 01:00.0,pcie=1,x-vga=1
+        id: "0000:01:00.0"
+        pcie: true
+        xvga: true
+      - device: hostpci1               # HDMI audio function
+        id: "0000:01:00.1"
+    machine: q35
+    scsiHardware: virtio-scsi-single
+    osType: l26
+    smbiosUuid: "e26ddd30-2f39-4e23-ba7e-f5812ad0c971"   # stable VM UUID (uuidgen)
+    bootOrder: [scsi0, net0]
+    cpu:
+      cores: 6                         # all six cores when talos-pc01 is stopped
+      sockets: 1
+      type: host
+    memoryMiB: 12288
+    floatingMiB: 6144                  # balloon floor: headless workstation VM may keep running
+    netMac: "BC:24:11:89:17:D8"        # stable MAC (Proxmox BC:24:11 OUI)
+    disk:
+      interface: scsi0                 # boot disk: imports image below
+      sizeGiB: 40
+    image:
+      fileName: nixos-workstation-gpu.qcow2      # imported name on local:import
+      url: ""                          # HUMAN: same bucket as nixos-workstation.qcow2 (UNCOMPRESSED)
+      decompressionAlgorithm: ""
+      uploadTimeout: 3600
+    dataDisk:
+      enabled: true                    # games live here; survives VM rebuilds (Orphan policy)
+      interface: scsi1
+      sizeGiB: 100
+      iothread: true
+    cloudInit:
+      enabled: true
+      datastoreId: local
+      interface: ide2
+      userDataFileName: workstation-gpu-user-data.yaml
+      mrName: workstation-gpu-cloud-init     # EnvironmentFile MR the render job patches
+      render:
+        enabled: true
+        image: nixery.dev/shell/kubectl/openssl/jq/curl/coreutils/bash
+        schedule: "0 5 * * 1"          # weekly, offset from the workstation render (04:00)
+        secretName: workstation-gpu-cloud-init-op
+        onepasswordItem: workstation   # same human + login; reuse the `workstation` item
+        tsTag: tag:workstation         # same tailnet tag; hostname distinguishes the VM
+        tsKeyExpirySeconds: 7776000    # 90d (Tailscale max); re-minted weekly so never stale
+
 # --- Preflight (ArgoCD PreSync hook): fail the sync if a hard dep is missing ---
 preflight:
   enabled: true

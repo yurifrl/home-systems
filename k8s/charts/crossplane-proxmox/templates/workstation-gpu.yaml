@@ -1,0 +1,86 @@
+{{- $v := .Values.vms.workstationGpu }}
+{{- if $v.enabled }}
+{{- $d := .Values.defaults }}
+apiVersion: virtualenvironmentvm.proxmoxbpg.crossplane.io/v1alpha1
+kind: EnvironmentVM
+metadata:
+  name: {{ $v.name }}
+  annotations:
+    # bpg provider imports/owns a VM by its bare numeric id (it Atoi's this).
+    crossplane.io/external-name: {{ $v.vmId | quote }}
+spec:
+  deletionPolicy: {{ .Values.deletionPolicy }}
+  providerConfigRef:
+    name: {{ .Values.providerConfig.name }}
+  forProvider:
+    nodeName: {{ $d.nodeName }}
+    vmId: {{ $v.vmId }}
+    name: {{ $v.name }}
+    machine: {{ $v.machine }}
+    scsiHardware: {{ $v.scsiHardware }}
+    onBoot: {{ $v.onBoot }}
+    started: {{ if hasKey $v "started" }}{{ $v.started }}{{ else }}{{ .Values.started }}{{ end }}
+    bootOrder:
+      {{- range $v.bootOrder }}
+      - {{ . }}
+      {{- end }}
+    agent:
+      - enabled: true
+    operatingSystem:
+      - type: {{ $v.osType }}
+    cpu:
+      - cores: {{ $v.cpu.cores }}
+        sockets: {{ $v.cpu.sockets }}
+        type: {{ $v.cpu.type | quote }}
+    memory:
+      - dedicated: {{ $v.memoryMiB }}
+        {{- if $v.floatingMiB }}
+        floating: {{ $v.floatingMiB }}   # balloon floor: min guaranteed; VM balloons between floating..dedicated
+        {{- end }}
+    smbios:
+      - uuid: {{ $v.smbiosUuid }}
+    # No vga block: with x-vga=1 the passed-through NVIDIA card IS the VM's
+    # primary display (same as the windows production variant).
+    networkDevice:
+      - bridge: {{ $d.bridge }}
+        model: virtio
+        macAddress: {{ $v.netMac }}
+        firewall: true
+    {{- if $v.passthrough }}
+    hostpci:
+      {{- range $v.hostpci }}
+      - device: {{ .device }}
+        id: {{ .id | quote }}
+        pcie: {{ .pcie | default false }}
+        {{- if .xvga }}
+        xvga: {{ .xvga }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    disk:
+      # boot disk: import the NixOS qcow2 fetched onto local:import (downloads.yaml).
+      # fileFormat raw: local-lvm (LVM-thin) stores raw only; bpg converts qcow2->raw on import.
+      - datastoreId: {{ $d.datastoreId }}
+        interface: {{ $v.disk.interface }}
+        size: {{ $v.disk.sizeGiB }}
+        fileFormat: raw
+        importFrom: {{ .Values.isos.datastoreId }}:import/{{ $v.image.fileName }}
+      {{- if $v.dataDisk.enabled }}
+      # SEPARATE data disk: games live here. Chart-wide deletionPolicy Orphan
+      # keeps this volume on the datastore across VM MR delete/recreate.
+      - datastoreId: {{ $d.datastoreId }}
+        interface: {{ $v.dataDisk.interface }}
+        size: {{ $v.dataDisk.sizeGiB }}
+        fileFormat: raw
+        iothread: {{ $v.dataDisk.iothread | default false }}
+      {{- end }}
+    {{- if $v.cloudInit.enabled }}
+    initialization:
+      # cidata drive lives on the images-capable pool ($d.datastoreId, local-lvm);
+      # userDataFileId references the snippet uploaded to local:snippets by
+      # templates/workstation-gpu-cloud-init.yaml (push-model: carries the Tailscale key).
+      - datastoreId: {{ $d.datastoreId }}
+        interface: {{ $v.cloudInit.interface }}
+        userDataFileId: {{ $v.cloudInit.datastoreId }}:snippets/{{ $v.cloudInit.userDataFileName }}
+    {{- end }}
+{{- end }}

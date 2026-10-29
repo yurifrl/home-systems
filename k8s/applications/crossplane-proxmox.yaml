@@ -29,6 +29,13 @@ spec:
       name: workstation-cloud-init
       jsonPointers:
         - /spec/forProvider/sourceRaw
+    # Same ownership model for the workstation-gpu VM's cloud-init snippet:
+    # its render CronJob patches sourceRaw in-cluster; selfHeal must not revert.
+    - group: virtualenvironmentfile.proxmoxbpg.crossplane.io
+      kind: EnvironmentFile
+      name: workstation-gpu-cloud-init
+      jsonPointers:
+        - /spec/forProvider/sourceRaw
   syncPolicy:
     automated:
       prune: true
