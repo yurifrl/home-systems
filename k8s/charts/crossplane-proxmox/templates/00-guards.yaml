@@ -5,11 +5,11 @@
 */ -}}
 {{- $t := .Values.vms.talosPc01 }}
 {{- $w := .Values.vms.windows }}
-{{- $g := .Values.vms.workstationGpu }}
+{{- $s := .Values.vms.workstation }}
 {{- $claimers := list }}
 {{- if and $t.enabled $t.started }}{{ $claimers = append $claimers "talos-pc01 (hostpci0)" }}{{ end }}
 {{- if and $w.enabled $w.started $w.passthrough }}{{ $claimers = append $claimers "windows (passthrough)" }}{{ end }}
-{{- if and $g.enabled $g.started }}{{ $claimers = append $claimers "workstation-gpu (hostpci0)" }}{{ end }}
+{{- if and $s.enabled $s.started $s.passthrough }}{{ $claimers = append $claimers "workstation (GPU mode)" }}{{ end }}
 {{- if gt (len $claimers) 1 }}
-{{- fail (printf "GPU conflict: %s are all started. The GPU 0000:01:00.0 can serve only one VM at a time. Set started:false on all but one, or windows.passthrough:false (install variant)." (join ", " $claimers)) }}
+{{- fail (printf "GPU conflict: %s are all started. The GPU 0000:01:00.0 can serve only one VM at a time. Set started:false on all but one, or windows.passthrough:false (install variant), or workstation.passthrough:false (headless mode)." (join ", " $claimers)) }}
 {{- end }}

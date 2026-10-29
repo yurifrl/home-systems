@@ -45,8 +45,22 @@ spec:
         {{- end }}
     smbios:
       - uuid: {{ $v.smbiosUuid }}
+    {{- if not $v.passthrough }}
     vga:
       - type: std
+    {{- end }}
+    {{- if $v.passthrough }}
+    # GPU mode ("workstation-gpu"): the shared RTX 4070 IS this VM's display.
+    hostpci:
+      {{- range $v.hostpci }}
+      - device: {{ .device }}
+        id: {{ .id | quote }}
+        pcie: {{ .pcie | default false }}
+        {{- if .xvga }}
+        xvga: {{ .xvga }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
     networkDevice:
       - bridge: {{ $d.bridge }}
         model: virtio
