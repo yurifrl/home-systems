@@ -243,11 +243,13 @@ vms:
   # Third contender for the shared GPU (0000:01:00.0), same exclusive-ownership
   # model as talos-pc01/windows: AT MOST ONE of the three may be started with
   # the GPU attached (enforced by templates/00-guards.yaml). This is the NixOS
-  # gaming VM: same qcow2 pipeline as the workstation VM but its own image
-  # (nixos-workstation-gpu.qcow2), hostname, tailnet identity, and cloud-init
-  # snippet, so both workstation VMs can exist without stepping on each other.
-  # Full VGA passthrough (x-vga) like windows production: the physical monitor
-  # on pc01's NVIDIA card IS this VM's display.
+  # gaming deploy of the SAME workstation image (nixos-workstation.qcow2,
+  # which carries the Hyprland + Steam + NVIDIA stack) — just another Proxmox
+  # VM, with full VGA passthrough (x-vga) like the windows production variant:
+  # the physical monitor on pc01's NVIDIA card IS this VM's display. The cloud-
+  # init seed is per-VM (single-use keys must not be shared between concurrent
+  # boots), rendered by its own CronJob from the SAME `workstation` 1Password
+  # item.
   workstationGpu:
     enabled: false                     # PRIVATE overlay flips true once the qcow2 is published
     name: workstation-gpu
@@ -278,8 +280,8 @@ vms:
       interface: scsi0                 # boot disk: imports image below
       sizeGiB: 40
     image:
-      fileName: nixos-workstation-gpu.qcow2      # imported name on local:import
-      url: ""                          # HUMAN: same bucket as nixos-workstation.qcow2 (UNCOMPRESSED)
+      fileName: nixos-workstation.qcow2          # SAME image as the workstation VM (one shared local:import object)
+      url: ""                                    # PRIVATE overlay: unused here; the workstation import block owns this object
       decompressionAlgorithm: ""
       uploadTimeout: 3600
     dataDisk:

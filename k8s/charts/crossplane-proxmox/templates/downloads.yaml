@@ -56,33 +56,3 @@ spec:
     overwrite: false
     verify: false
 {{- end }}
-{{- $g := .Values.vms.workstationGpu }}
-{{- if and $g.enabled $g.image.url }}
-# NixOS workstation-gpu boot image (qcow2) pulled onto local:import for VM disk
-# import. Published by the nixos CI build-image action to the same GCS bucket as
-# the workstation, under one stable name: nixos-workstation-gpu.qcow2
-# (uncompressed; bucket versioning + keep-only-current lifecycle keeps exactly
-# one copy).
-apiVersion: virtualenvironmentdownloadfile.proxmoxbpg.crossplane.io/v1alpha1
-kind: EnvironmentDownloadFile
-metadata:
-  name: import-{{ $g.image.fileName | lower | replace "_" "-" | replace "." "-" }}
-  annotations:
-    crossplane.io/external-name: {{ $iso.datastoreId }}:import/{{ $g.image.fileName }}
-spec:
-  deletionPolicy: {{ $.Values.deletionPolicy }}
-  providerConfigRef:
-    name: {{ $.Values.providerConfig.name }}
-  forProvider:
-    nodeName: {{ $d.nodeName }}
-    contentType: import
-    datastoreId: {{ $iso.datastoreId }}
-    fileName: {{ $g.image.fileName }}
-    url: {{ $g.image.url | quote }}
-    {{- with $g.image.decompressionAlgorithm }}
-    decompressionAlgorithm: {{ . }}
-    {{- end }}
-    uploadTimeout: {{ $g.image.uploadTimeout | default 3600 }}
-    overwrite: false
-    verify: false
-{{- end }}
