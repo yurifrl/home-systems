@@ -30,7 +30,7 @@ ARG HERMES_VERSION=0.19.0
 ARG KUBECTL_VERSION=1.33.0
 
 # renovate: datasource=github-releases depName=astral-sh/uv versioning=semver
-ARG UV_VERSION=0.13.5
+ARG UV_VERSION=0.13.6
 
 # renovate: datasource=node-version depName=node versioning=node
 ARG NODE_VERSION=24
