@@ -33,7 +33,7 @@ ARG KUBECTL_VERSION=1.33.0
 ARG UV_VERSION=0.13.5
 
 # renovate: datasource=node-version depName=node versioning=node
-ARG NODE_VERSION=24
+ARG NODE_VERSION=26
 
 ARG TARGETARCH
 
