@@ -28,6 +28,18 @@ spec:
       helm:
         valuesObject:
           replicaCount: 1
+          # 2026-11-03 outage: cloudflared landed on rpi01 (offsite, Tailscale-only
+          # path) and every origin request died there when the rpi01<->macintel01
+          # underlay broke. Prefer LAN nodes; rpi01 stays as fallback only.
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  preference:
+                    matchExpressions:
+                      - key: kubernetes.io/hostname
+                        operator: NotIn
+                        values: [rpi01]
           cloudflare:
             secretName: cloudflare-tunnel-secret
             tunnelName: nixos-1
