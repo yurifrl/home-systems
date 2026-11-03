@@ -7,3 +7,6 @@
 [submodule ".submodules/nixos"]
 	path = .submodules/nixos
 	url = git@github.com:Yurifrl/nixos.git
+[submodule ".submodules/pvedial"]
+	path = .submodules/pvedial
+	url = git@github.com:yurifrl/pvedial.git
