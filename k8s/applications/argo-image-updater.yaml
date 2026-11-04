@@ -23,7 +23,7 @@ spec:
     - repoURL: https://argoproj.github.io/argo-helm
       chart: argocd-image-updater
       # Chart 1.2.4 -> appVersion v1.2.2 (CRD/ImageUpdater model).
-      targetRevision: "1.2.4"
+      targetRevision: "1.4.0"
       helm:
         releaseName: argocd-image-updater
         valuesObject:
