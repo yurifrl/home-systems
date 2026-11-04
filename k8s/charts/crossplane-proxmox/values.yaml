@@ -181,10 +181,11 @@ vms:
   #
   # GPU mode: `passthrough: true` attaches the shared GPU (0000:01:00.0
   # x-vga + HDMI audio) to THIS VM — "workstation-gpu" is this same machine
-  # in its gaming config, same disks, no second VM. Flip it via
-  # .bin/gpu-switch.sh workstation-gpu --apply (also stops talos-pc01/windows;
-  # the VM reboots with the GPU attached). At most one VM may claim the GPU
-  # (enforced by templates/00-guards.yaml).
+  # in its gaming config, same disks, no second VM. Switching ownership is a
+  # normal values change in the private overlay: set workstation.passthrough
+  # (and started) on the VM that should own the GPU, stop the others — the
+  # guard fails the render if two VMs claim the GPU at once
+  # (templates/00-guards.yaml).
   workstation:
     enabled: false                     # flip true once the qcow2 is published + image.url set
     name: workstation
