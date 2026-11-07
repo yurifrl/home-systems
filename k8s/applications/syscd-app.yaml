@@ -31,7 +31,7 @@ spec:
           # Flat image-tag pins from the syscd-app repo (second source
           # below) — deep-merged over the inline valuesObject below, so
           # a new release tag overrides the `latest` fallback per Deployment.
-          - $values/image-tags.yaml
+          - $values/k8s/image-tags.yaml
         valuesObject:
           configMaps:
             - name: ourtube-channels
@@ -245,6 +245,6 @@ spec:
     # this deep-merge (flat map — Helm replaces lists across sources but
     # merges maps) overrides the chart's `latest` fallback per Deployment.
     # A VERSION push therefore rolls the cluster with no manual steps.
-    - repoURL: git@github.com:yurifrl/syscd-app.git
+    - repoURL: https://github.com/yurifrl/syscd-app.git
       targetRevision: main
       ref: values
