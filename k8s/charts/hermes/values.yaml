@@ -4,7 +4,10 @@ fullnameOverride: ""
 # home-systems image (built by .github/workflows/build-hermes.yaml).
 image:
   repository: ghcr.io/yurifrl/hermes-agent
-  tag: latest
+  # Digest-pinned so Renovate (helm-values manager) PRs a new digest whenever
+  # the registry `latest` tag moves — a floating `latest` would never update
+  # already-running pods, no matter the pullPolicy.
+  tag: latest@sha256:bfd7e210a2ef9b99f3f1707f38c5926a2f4399e17b8e54f355df3d228d3aff3d
   pullPolicy: Always
 
 imagePullSecrets: []
