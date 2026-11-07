@@ -23,6 +23,10 @@ name: Build upstream images to ghcr
 on:
   workflow_dispatch:
     inputs:
+      pause_only:
+        description: Mirror pause only (skip component builds)
+        required: false
+        default: "false"
       substrate_version:
         description: agent-substrate/substrate release tag (full SHA resolved at checkout)
         required: true
@@ -38,6 +42,7 @@ permissions:
 
 jobs:
   build:
+    if: ${{ inputs.pause_only != 'true' }}
     runs-on: ubuntu-latest
     env:
       GHCR: ghcr.io/${{ github.repository_owner }}
@@ -146,3 +151,44 @@ jobs:
             echo "ok $img ($archs)"
           done
           exit $fail
+
+  mirror-pause:
+    # Byte-identical crane copy of upstream pause: the atelet raw-pulls the
+    # pinned arm64 platform manifest digest, so a rebuild would change digests.
+    # crane copy preserves every manifest digest verbatim; the SandboxConfig pin
+    # (values-my-cluster.yaml) must keep matching a4332146...
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    env:
+      GHCR: ghcr.io/${{ github.repository_owner }}
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
+      - name: Install crane
+        run: go install github.com/google/go-containerregistry/cmd/crane@latest
+
+      - name: Log in to ghcr
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Mirror pause
+        run: |
+          set -euo pipefail
+          crane copy registry.k8s.io/pause:3.10.2 "$GHCR/ate/pause:3.10.2"
+
+      - name: Verify pinned digests
+        run: |
+          set -euo pipefail
+          # Index digest must match upstream exactly, and the arm64 platform
+          # manifest must be the digest pinned in SandboxConfig.
+          index=$(crane digest "$GHCR/ate/pause:3.10.2")
+          [ "$index" = "sha256:f548e0e8e3dc1896ca956272154dde3314e8cc4fde0a57577ee9fa1c63f5baf4" ]
+          crane manifest "$GHCR/ate/pause:3.10.2" | jq -e '(.manifests[] | select(.platform.architecture == "arm64" and .platform.os == "linux") | .digest) == "sha256:a433214620b407678934ebd69690a9ed6066247231eacfba181fab20dbc3dbf1"' > /dev/null
+          echo "ok $GHCR/ate/pause:3.10.2 (index=$index)"
