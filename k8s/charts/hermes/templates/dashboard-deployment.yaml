@@ -12,6 +12,13 @@ metadata:
     app.kubernetes.io/component: dashboard
 spec:
   replicas: {{ .Values.dashboard.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # No surge: the old pod holds the only schedulable slot on this small
+      # cluster, so a surged pod can never schedule and the rollout stalls.
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: {{ $name }}
