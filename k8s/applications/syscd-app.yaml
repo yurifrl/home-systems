@@ -245,6 +245,6 @@ spec:
     # this deep-merge (flat map — Helm replaces lists across sources but
     # merges maps) overrides the chart's `latest` fallback per Deployment.
     # A VERSION push therefore rolls the cluster with no manual steps.
-    - repoURL: https://github.com/yurifrl/syscd-app.git
+    - repoURL: git@github.com:yurifrl/syscd-app.git
       targetRevision: main
       ref: values

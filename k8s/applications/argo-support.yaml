@@ -54,6 +54,25 @@ spec:
                   url: git@github.com:yurifrl/home-systems-values.git
                   sshPrivateKey: "{{ .sshPrivateKey }}"
 
+            # Credential for the PRIVATE syscd-app repo — the syscd-app
+            # Application's $values source reads k8s/image-tags.yaml through
+            # it. Private key lives in 1Password (item: argocd-syscd-app,
+            # field: sshPrivateKey); same type: git requirement as above.
+            - name: argocd-syscd-app
+              namespace: argocd
+              data:
+                - secretKey: sshPrivateKey
+                  key: argocd-syscd-app
+                  property: sshPrivateKey
+              template:
+                metadata:
+                  labels:
+                    argocd.argoproj.io/secret-type: repository
+                data:
+                  type: git
+                  url: git@github.com:yurifrl/syscd-app.git
+                  sshPrivateKey: "{{ .sshPrivateKey }}"
+
     # - chart: argocd-image-updater
     #   repoURL: https://argoproj.github.io/argo-helm
     #   targetRevision: "*"
