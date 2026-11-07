@@ -51,7 +51,17 @@ spec:
         {{- toYaml .containers | nindent 8 }}
       {{- else }}
         - name: {{ .name }}
-          image: "{{ .image.repository }}:{{ .image.tag }}"
+          {{- /* Flat `imageTags` map (from a values FILE source, e.g. ArgoCD
+             $values) pins per-Deployment tags: Helm deep-merges maps across
+             value sources but REPLACES lists, so the pin file must be a map
+             keyed by Deployment name. Absent map or key → the declared tag
+             (usually `latest`). */ -}}
+          {{- $tag := .image.tag }}
+          {{- $tags := $.Values.imageTags | default (dict) }}
+          {{- if hasKey $tags .name }}
+            {{- $tag = index $tags .name }}
+          {{- end }}
+          image: "{{ .image.repository }}:{{ $tag }}"
           imagePullPolicy: {{ .image.pullPolicy | default "Always" }}
           {{- if .containerPort }}
           ports:

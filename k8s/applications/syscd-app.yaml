@@ -27,6 +27,11 @@ spec:
       targetRevision: HEAD
       path: k8s/charts/support
       helm:
+        valueFiles:
+          # Flat image-tag pins from the syscd-app repo (second source
+          # below) — deep-merged over the inline valuesObject below, so
+          # a new release tag overrides the `latest` fallback per Deployment.
+          - $values/image-tags.yaml
         valuesObject:
           configMaps:
             - name: ourtube-channels
@@ -233,3 +238,13 @@ spec:
                 name: syscd-api
                 namespace: syscd-app
                 port: 3000
+
+    # The syscd-app repo pins the image tags this Application renders: the
+    # release workflow (syscd-app .github/workflows/release.yml deploy job)
+    # commits `deploy: images <VERSION>` to k8s/image-tags.yaml on main, and
+    # this deep-merge (flat map — Helm replaces lists across sources but
+    # merges maps) overrides the chart's `latest` fallback per Deployment.
+    # A VERSION push therefore rolls the cluster with no manual steps.
+    - repoURL: git@github.com:yurifrl/syscd-app.git
+      targetRevision: main
+      ref: values
