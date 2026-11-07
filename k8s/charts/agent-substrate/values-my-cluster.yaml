@@ -17,11 +17,11 @@ atelet:
     # (Apple container registry proxy) is rewritten so actors can pull.
     - --localhost-registry-replacement=127.0.0.1:5000
 
-# Arm64 node (Apple Container kind): upstream gVisor publishes a separate
-# aarch64 asset, but the v0.5.0 worker selects assets under the `amd64` key
-# (SandboxConfig apiVersion), so the aarch64 binary is staged under amd64.
-# Adopted from the hand-applied kubectl patches so helm apply matches the
-# live cluster conflict-free.
+# Cluster substrate is Talos (amd64 dell01 is the only ate.dev/substrate node):
+# gVisor assets must match the node architecture for real. The older aarch64
+# under `amd64` mapping was for the retired Apple Container substrate and
+# shipped an arm64 runsc to amd64 nodes (runsc exec format error) plus an
+# arm64 pause image (failed to load /pause: exec format error).
 # ate-api-authentication ConfigMap matches the hand-patched live value
 # (kubernetes.default.svc.cluster.local); chart default lacks the
 # .cluster.local suffix and is overridden here to avoid SSA conflicts.
@@ -30,13 +30,12 @@ ateapi:
     issuer: https://kubernetes.default.svc.cluster.local
 sandbox:
   gvisor:
-    pauseImage: "127.0.0.1:5000/pause:3.10.2@sha256:a433214620b407678934ebd69690a9ed6066247231eacfba181fab20dbc3dbf1"
+    pauseImage: "127.0.0.1:5000/pause:3.10.2@sha256:412c4a7219cb8a299a37337f3d87810c5340095322e15594a1637785adad0f17"
     assets:
       amd64:
         gvisor:
-          # Same aarch64 binary as below — see the note above.
-          url: "gs://gvisor/releases/nightly/2026-10-10/aarch64/gvisor.tar.zstd"
-          sha256: "aaf414f06eea7960238e43165c691f0a36cefc0593fb141e011e96211c7b6f57"
+          url: "gs://gvisor/releases/nightly/2026-10-10/x86_64/gvisor.tar.zstd"
+          sha256: "4ae7fab988c3647d2a835d6c3c70c6a99021c562db97827592562b6c51c3e88c"
       arm64:
         gvisor:
           url: "gs://gvisor/releases/nightly/2026-10-10/aarch64/gvisor.tar.zstd"

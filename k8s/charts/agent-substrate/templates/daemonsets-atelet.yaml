@@ -164,11 +164,10 @@ spec:
             cpu: 50m
             memory: 128Mi
         securityContext:
-          capabilities:
-            drop:
-            - ALL
-          runAsGroup: 0
-          runAsUser: 0
+          # runsc needs writable cgroupfs (/sys/fs/cgroup/cgroup.subtree_control)
+          # at `start` time to set up the sandbox cgroup; an unprivileged
+          # container mounts cgroupfs read-only and runsc start exits 128.
+          privileged: true
         volumeMounts:
         - mountPath: /var/lib/ate
           name: run-ateom
