@@ -28,10 +28,26 @@ spec:
   groups:
     - name: node.rules
       rules:
+        # Suppression layer (2026-11-08): a Talos VM stopped by hand (pvedial)
+        # takes its kube node NotReady — that is planned maintenance, not an
+        # incident. The pve-exporter (installed by pvedial) exposes
+        # pve_up{id="qemu/<vmid>"}; joining pve_guest_info gives the VM's
+        # PVE name, and the talos-(.*) regex is the naming convention: a VM
+        # running Talos is talos-<k8s-node-name>. The unless only matches
+        # when pve_up == 0 (VM off): an exporter outage leaves the right
+        # side empty, which FAILS OPEN — node alerts keep firing. Tradeoff:
+        # a VM that crashes off cannot be distinguished from a stopped one,
+        # so those incidents arrive as the crash-loop/Cilium alerts instead.
+        # Sentinel below covers exporter scrape death.
         - alert: KubeNodeNotReady
           expr: |
             max by (node) (
               max_over_time(kube_node_status_condition{condition="Ready",status="true"}[10m])
+            ) == 0
+            unless on (node)
+            label_replace(
+              pve_up{id=~"qemu/.*"} * on (id) group_left(name) pve_guest_info,
+              "node", "$1", "name", "talos-(.*)"
             ) == 0
           for: 5m
           labels:
@@ -47,6 +63,11 @@ spec:
             max by (node) (
               max_over_time(kube_node_status_condition{condition="Ready",status="unknown"}[10m])
             ) == 1
+            unless on (node)
+            label_replace(
+              pve_up{id=~"qemu/.*"} * on (id) group_left(name) pve_guest_info,
+              "node", "$1", "name", "talos-(.*)"
+            ) == 0
           labels:
             severity: critical
             environment: production
@@ -69,3 +90,17 @@ spec:
           annotations:
             summary: "Node inventory absent — kube-state-metrics is not exporting node conditions"
             description: "No kube_node_status_condition samples for 10m: kube-state-metrics is down or not exporting. KubeNodeNotReady and KubeNodeUnreachable are blind until this clears. This was the 2026-10-12→14 gap (KSM restart-looping on rpi01) that left the pc01 wedge invisible to node alerts."
+
+        # The unless-suppression above fails open when the exporter's scrape
+        # dies — correct default (real incidents page), but every hand-stopped
+        # VM pages again with no explanation. This sentinel names the cause.
+        - alert: PVEExporterScrapeDown
+          expr: max by (job) (up{job="pve-exporter"}) == 0
+          for: 10m
+          labels:
+            severity: warning
+            environment: production
+            service: node-health
+          annotations:
+            summary: "pve-exporter scrape is down — node-down suppression is inactive"
+            description: "VictoriaMetrics cannot scrape the Proxmox exporter (installed by pvedial). While this is down, stopping a VM by hand pages KubeNodeNotReady/KubeNodeUnreachable again. Restart the exporter or re-run pvedial's exporter install."
