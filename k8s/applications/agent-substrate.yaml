@@ -32,9 +32,9 @@ spec:
         - ".spec.volumeClaimTemplates[].apiVersion"
         - ".spec.volumeClaimTemplates[].kind"
   sources:
-    - repoURL: https://github.com/yurifrl/home-systems.git
+    - repoURL: https://github.com/yurifrl/agents.git
       targetRevision: HEAD
-      path: k8s/charts/agent-substrate
+      path: charts/agent-substrate
       helm:
         valueFiles:
           - values-my-cluster.yaml
