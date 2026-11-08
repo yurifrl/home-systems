@@ -73,6 +73,26 @@ spec:
                   url: git@github.com:yurifrl/syscd-app.git
                   sshPrivateKey: "{{ .sshPrivateKey }}"
 
+            # Credential for the PRIVATE pvedial repo — pvedial installs its
+            # own metrics exporter as an ArgoCD Application whose chart lives
+            # in that repo (deploy/chart). Private key lives in 1Password
+            # (item: argocd-pvedial, field: sshPrivateKey); same type: git
+            # requirement as above.
+            - name: argocd-pvedial
+              namespace: argocd
+              data:
+                - secretKey: sshPrivateKey
+                  key: argocd-pvedial
+                  property: sshPrivateKey
+              template:
+                metadata:
+                  labels:
+                    argocd.argoproj.io/secret-type: repository
+                data:
+                  type: git
+                  url: git@github.com:yurifrl/pvedial.git
+                  sshPrivateKey: "{{ .sshPrivateKey }}"
+
     # - chart: argocd-image-updater
     #   repoURL: https://argoproj.github.io/argo-helm
     #   targetRevision: "*"
