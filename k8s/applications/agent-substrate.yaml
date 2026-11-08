@@ -32,7 +32,7 @@ spec:
         - ".spec.volumeClaimTemplates[].apiVersion"
         - ".spec.volumeClaimTemplates[].kind"
   sources:
-    - repoURL: https://github.com/yurifrl/agents.git
+    - repoURL: git@github.com:yurifrl/agents.git
       targetRevision: HEAD
       path: charts/agent-substrate
       helm:

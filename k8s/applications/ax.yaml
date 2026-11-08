@@ -28,7 +28,7 @@ spec:
     - name: prerequisite
       value: agent-substrate application must be healthy first
   sources:
-    - repoURL: https://github.com/yurifrl/agents.git
+    - repoURL: git@github.com:yurifrl/agents.git
       targetRevision: HEAD
       path: charts/ax
       helm:
