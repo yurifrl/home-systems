@@ -55,7 +55,7 @@ spec:
                   sshPrivateKey: "{{ .sshPrivateKey }}"
 
             # Credential for the PRIVATE syscd-app repo — the syscd-app
-            # Application's $values source reads k8s/image-tags.yaml through
+            # Application's $values source reads k8s/values.yaml through
             # it. Private key lives in 1Password (item: argocd-syscd-app,
             # field: sshPrivateKey); same type: git requirement as above.
             - name: argocd-syscd-app
