@@ -41,5 +41,8 @@ spec:
       targetRevision: HEAD
       path: charts/agent-substrate
       helm:
+        # values-my-cluster.yaml is the Apple-container profile (2Gi volumes,
+        # empty selectors); this cluster is the talos-default cluster the live
+        # substrate was deployed from (10Gi postgres, 5Gi rustfs, amd64 pin).
         valueFiles:
-          - values-my-cluster.yaml
+          - values-talos.yaml
