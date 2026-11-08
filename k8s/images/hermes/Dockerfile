@@ -17,11 +17,14 @@
 # volumes (/opt/data PVC, /tmp emptyDir, HOME=/opt/data/home). kubectl is bundled
 # so the agent can use its (read-only + pod-delete) RBAC.
 
-# Pinned to 3.13: hermes-agent requires Python >=3.11,<3.15. Upstream supports
-# 3.14 but 3.13 is the version this image's dependency set is proven on — bump
-# deliberately, not via Renovate's next floating tag.
+# 3.14: hermes-agent requires Python >=3.11,<3.15, but since 0.20+ upstream
+# gates its runtime dependency set on python_version >= '3.14' (47 lines in
+# pyproject.toml — openai, pydantic, fastapi, ruamel.yaml, ...) — on 3.13 the
+# package installs without its dependencies and crashes at import. Keep in
+# lockstep with upstream's matrix; bump deliberately, not via Renovate's next
+# floating tag.
 # renovate: datasource=docker depName=python versioning=docker
-ARG PYTHON_VERSION=3.13-slim-trixie
+ARG PYTHON_VERSION=3.14-slim-trixie
 FROM python:${PYTHON_VERSION}
 
 # renovate: datasource=github-releases depName=NousResearch/hermes-agent versioning=semver
@@ -69,7 +72,20 @@ RUN apt-get update \
     # Upstream setup.py blocks bdist_wheel for non-managed packagers; HERMES_NIX_BUILD=1
     # is their sanctioned escape hatch for owned derivations (gates only the guard —
     # the wheel content is identical).
-    && HERMES_NIX_BUILD=1 uv pip install --system "hermes-agent[all,messaging] @ https://github.com/NousResearch/hermes-agent/archive/refs/tags/v${HERMES_VERSION}.tar.gz" \
+    && printf '%s\n' \
+        'pynacl>=1.6,<1.7' \
+        'cryptography==50.0.2' \
+        'Pillow==13.0.0' \
+        "spacy-curated-transformers; sys_platform == 'never'" \
+        > /tmp/hermes-uv-overrides.txt \
+    # Overrides mirror upstream [tool.uv] override-dependencies (pyproject.toml):
+    # browser-harness pins pillow==12.3.0, discord.py pins pynacl<1.6, and
+    # alibabacloud-tea-openapi caps cryptography<49 — upstream force-resolves
+    # these exact versions and we must too, or [all] resolution fails.
+    && HERMES_NIX_BUILD=1 uv pip install --system \
+        --overrides /tmp/hermes-uv-overrides.txt \
+        "hermes-agent[all,messaging] @ https://github.com/NousResearch/hermes-agent/archive/refs/tags/v${HERMES_VERSION}.tar.gz" \
+    && rm -f /tmp/hermes-uv-overrides.txt \
     && apt-get purge -y gcc python3-dev libffi-dev \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
@@ -91,7 +107,7 @@ RUN apt-get update \
 # npm cache is a BuildKit cache mount, so no npm cache lands in the image.
 RUN --mount=type=cache,target=/root/.npm set -eu \
     && SP="$(python -c 'import site; print(site.getsitepackages()[0])')" \
-    && curl -fsSL "https://github.com/NousResearch/hermes-agent/archive/refs/tags/v${HERMES_VERSION}.tar.gz" -o /tmp/hermes-src.tar.gz \
+    && curl -fsSL --retry 3 --retry-delay 2 "https://github.com/NousResearch/hermes-agent/archive/refs/tags/v${HERMES_VERSION}.tar.gz" -o /tmp/hermes-src.tar.gz \
     && tar -xzf /tmp/hermes-src.tar.gz -C /tmp \
     && SRC="/tmp/hermes-agent-${HERMES_VERSION}" \
     && COMMIT="$(git ls-remote https://github.com/NousResearch/hermes-agent.git "refs/tags/v${HERMES_VERSION}^{}" | awk 'NR==1{print $1; exit}')" \
