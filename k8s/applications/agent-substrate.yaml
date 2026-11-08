@@ -5,6 +5,11 @@ metadata:
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+  # Server-side diff dry-runs the postgres StatefulSet, which the apiserver
+  # rejects (volumeClaimTemplates validation) and breaks comparison+sync.
+  # Client-side diff with the jqPathExpressions below is correct here.
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=false
 spec:
   project: default
   destination:
