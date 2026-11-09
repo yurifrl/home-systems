@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  rebuild:
+    desc: 🔁 Rebuild the workstation from the pinned nixos submodule (lutris/sunshine/streaming pins live there)
+    cmds:
+      - git -C "$(git rev-parse --show-toplevel)" submodule update --init .submodules/nixos
+      - git -C "$(git rev-parse --show-toplevel)/.submodules/nixos" pull --ff-only
+      - sudo nixos-rebuild switch --flake "$(git rev-parse --show-toplevel)/.submodules/nixos#workstation"

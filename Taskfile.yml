@@ -11,3 +11,4 @@ includes:
   clusterbootstrap: ./taskfiles/clusterbootstrap.yml
   backup: ./taskfiles/backup.yml
   submodules: ./taskfiles/submodules.yml
+  nixos: ./taskfiles/nixos.yml
