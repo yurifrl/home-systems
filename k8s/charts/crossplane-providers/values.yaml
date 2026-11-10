@@ -54,12 +54,17 @@ providers:
   # (group virtualenvironmentvm.proxmoxbpg.crossplane.io). Used by the
   # crossplane-proxmox chart to replicate the proxmox/ VM configs.
   - name: provider-proxmox-bpg
-    # Unpause retest 2026-11-10 (tk-ac9): 30-min soak of workstation (stopped VM)
-    # on v1.24.0 showed NO status-write storm — 12 writes/30min decaying to
-    # reconcile cadence (~0.4/min) vs ~90/min in the 2026-10-15 storm; paused
-    # controls stayed flat. windows + workstation unpaused in git.
-    # talos-pc01 STAYS PAUSED deliberately: git says started:true but the VM is
-    # off (pc01 down since ~2026-11-04) — unpausing it would power the machine on.
+    # Unpause retest 2026-11-10 (tk-ac9): v1.22-v1.24.0 DO NOT fix the storm.
+    # Retest on v1.24.0: ~18-19 RV writes/s per live XR — status-write hot loop
+    # reproduces, and is FASTER than the Oct-15 record ("1.5 bumps/s across 3
+    # VMs" then; now ~18/s per VM). macintel01 hit ~94% CPU within minutes of
+    # unpausing windows+workstation. Both repaused the same day; all three XRs
+    # stay paused. Root is upjet's async-callback status writes (upjet issue
+    # #768) — needs an upjet bump in the fork, not a bpg/terraform bump.
+    # talos-pc01 additionally must stay paused until pc01 returns: it is the
+    # only started:true VM, so an unpaused reconcile would power the node on.
+    # Pin stays v1.24.0 only because a rollback re-download is pointless; the
+    # upgrade is inert while every XR is paused.
     package: xpkg.upbound.io/valkiriaaquaticamendi/provider-proxmox-bpg:v1.24.0
     # Its controller must bootstrap through the direct apiserver path after a
     # provider-revision recovery; the Service VIP is unreliable across LANs.

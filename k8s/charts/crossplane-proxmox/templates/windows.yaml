@@ -8,9 +8,11 @@ metadata:
   annotations:
     # Import/own VM by its bare numeric id (the bpg provider Atoi's external-name).
     crossplane.io/external-name: {{ $v.vmId | quote }}
-    # Unpaused 2026-11-10 on provider v1.24.0: the 2026-10-15 status-write storm
-    # did not reproduce in a 30-min soak (12 writes/30min vs ~90/min, controls
-    # flat). See crossplane-providers values comment for the retest record.
+    # STAYS PAUSED 2026-11-10: the status-write storm reproduced on provider
+    # v1.24.0 — ~18 RV writes/s per live XR measured (faster than the Oct-15
+    # record), pegging macintel01 at ~94% CPU within minutes. See the provider
+    # pin comment in k8s/charts/crossplane-providers/values.yaml (tk-ac9).
+    crossplane.io/paused: "true"
 spec:
   deletionPolicy: {{ .Values.deletionPolicy }}
   providerConfigRef:
