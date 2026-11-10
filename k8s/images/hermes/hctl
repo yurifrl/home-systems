@@ -23,7 +23,7 @@ init/sidecar containers. Subcommands:
 
 CLIENT subcommands (local machine, need kubectl + a working kubeconfig):
 
-  hctl exec [args...]
+  hctl hermes [args...]
       Run the `hermes` CLI inside the hermes-0 pod.
 
   hctl bash
@@ -556,7 +556,7 @@ _POD = f"{_STS}-0"
 _STATE_PVC = _env("HERMES_STATE_PVC") or f"state-{_STS}-0"
 
 
-def cmd_exec(args) -> int:
+def cmd_hermes(args) -> int:
     """Run the `hermes` CLI inside the pod."""
     return subprocess.run(
         ["kubectl", "exec", "-it", _POD, "-n", _NS, "-c", _CONTAINER,
@@ -905,7 +905,7 @@ server commands (run INSIDE the container):
   restore                          seed an empty HERMES_HOME from the backup repo
 
 client commands (run on your LOCAL machine, talk to the pod via kubectl):
-  exec|hermes [args...]            run the hermes CLI inside the pod
+  hermes [args...]                 run the hermes CLI inside the pod
   bash                             interactive bash shell in the pod
   status                           table of every hermes pod (pure status)
   doctor|fix [text]                open a pi session to diagnose AND fix (mutates state);
@@ -969,9 +969,9 @@ def _build_parser() -> argparse.ArgumentParser:
     rst.set_defaults(func=cmd_restore)
 
     # client (local machine → pod via kubectl)
-    ex = sub.add_parser("exec", aliases=["hermes"])
+    ex = sub.add_parser("hermes")
     ex.add_argument("args", nargs=argparse.REMAINDER, help="args passed to `hermes`")
-    ex.set_defaults(func=cmd_exec)
+    ex.set_defaults(func=cmd_hermes)
 
     bh = sub.add_parser("bash")
     bh.set_defaults(func=cmd_bash)
