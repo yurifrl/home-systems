@@ -8,12 +8,9 @@ metadata:
   annotations:
     # Import/own VM by its bare numeric id (the bpg provider Atoi's external-name).
     crossplane.io/external-name: {{ $v.vmId | quote }}
-    # TEMP 2026-10-15: provider hot-loops per-VM status-write conflicts
-    # (~1.5 resourceVersion bumps/s across the 3 VMs -> macintel01 control plane
-    # at 100% CPU, API slow). v1.21.0 upgrade did NOT fix it (still upjet
-    # v2.2.0; unpause re-tested 2026-10-15, storm reproduced). Unpause once the
-    # provider ships past the async-callback conflict bug.
-    crossplane.io/paused: "true"
+    # Unpaused 2026-11-10 on provider v1.24.0: the 2026-10-15 status-write storm
+    # did not reproduce in a 30-min soak (12 writes/30min vs ~90/min, controls
+    # flat). See crossplane-providers values comment for the retest record.
 spec:
   deletionPolicy: {{ .Values.deletionPolicy }}
   providerConfigRef:

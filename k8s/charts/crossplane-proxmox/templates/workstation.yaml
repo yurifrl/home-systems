@@ -8,12 +8,9 @@ metadata:
   annotations:
     # bpg provider imports/owns a VM by its bare numeric id (it Atoi's this).
     crossplane.io/external-name: {{ $v.vmId | quote }}
-    # TEMP 2026-10-15: provider hot-loops per-VM status-write conflicts
-    # (~1.5 resourceVersion bumps/s across the 3 VMs -> macintel01 control plane
-    # at 100% CPU, API slow). v1.21.0 upgrade did NOT fix it (still upjet
-    # v2.2.0; unpause re-tested 2026-10-15, storm reproduced). Unpause once the
-    # provider ships past the async-callback conflict bug.
-    crossplane.io/paused: "true"
+    # Unpaused 2026-11-10 on provider v1.24.0 (retest of the 2026-10-15
+    # status-write storm, tk-ac9). talos-pc01 and windows stay paused until
+    # this soak proves clean.
 spec:
   deletionPolicy: {{ .Values.deletionPolicy }}
   providerConfigRef:
