@@ -11,7 +11,7 @@
   "assignee": null,
   "created_by": "yuri",
   "created_at": "2026-10-15T15:28:20.132Z",
-  "updated_at": "2026-10-16T01:50:54.889Z",
+  "updated_at": "2026-11-10T16:16:07.801Z",
   "started_at": null,
   "closed_at": null,
   "due_at": null,
@@ -47,7 +47,21 @@
       "author": "yuri",
       "text": "UPGRADED 2026-10-16: provider-proxmox-bpg v1.15.0 -> v1.21.0 (736d1f0f chain: d1bd45b1 values+templates, 736d1f0f ignoreDifferences for runtimeConfigRef defaulting). Result: new ProviderRevision provider-proxmox-bpg-4ce19882438b Active, pull+activation clean, controller 1/1 Running 0 restarts, 0 EnvironmentVM log lines. 60s watch: all 3 VM RVs frozen (156102356/155803895/155803896), apiserver drifting down (3148m->2733m). CONFIRMED: v1.21.0 does not change the hot-loop (upjet v2.2.0 identical) — VMs stay paused via 4df62139 annotations; unpause still gated on an upstream release past the async-callback status-write conflict.",
       "created_at": "2026-10-16T01:50:54.888Z"
+    },
+    {
+      "id": "comment-1e3b4198-459a-460a-a0c7-8be7db8bd5c3",
+      "issue_id": "tk-ac9",
+      "author": "yuri",
+      "text": "Unpause retest 2026-11-10 (provider v1.21.0 -> v1.24.0, d1bd45b1's gate satisfied: upstream shipped v1.22-v1.24 since the 2026-10-15 retest):\n\n- 30-min soak of the `workstation` EnvironmentVM (stopped VM, live-annotation unpause): NO storm. 12 RV writes/30min (~0.4/min) decaying to reconcile cadence, vs ~90/min in the Oct-15 storm. Both paused controls (talos-pc01, windows) wrote ZERO — baseline flat.\n- Provider runtime healthy throughout (0 restarts; one replacement pod caused by an unrelated dell01 NotReady flap at 14:53, not provider behavior).\n- windows + workstation unpaused via git (d07e90c2 + 277a791b: chart templates + private overlay). talos-pc01 STAYS PAUSED: overlay said started:true but VM 100 is off (host down ~2026-11-04) — unpausing would power the sole-ish node on. Overlay now records all 3 VMs stopped; when the host returns, flip talosPc01.started (or workstation GPU-owner) in the overlay and unpause its template.\n- Incidental fixes en route: stale GPU-guard render in crossplane-proxmox app (overlay claimed talos-pc01 + workstation both started -> ComparisonError since values drifted), provider runtime recovery on dell01, wedged cilium agent (23 restarts) + stale agent-not-ready taint cleared.\n\nRemaining for full close: verify windows/workstation XR annotations cleared after the ArgoCD sync lands, and confirm no churn regression on the now-live XRs. talos-pc01 unpause is gated on a deliberate power-on decision, not on upstream.",
+      "created_at": "2026-11-10T15:31:46.693Z"
+    },
+    {
+      "id": "comment-4555a96a-95da-4bd4-af27-7e2b5b1e05d2",
+      "issue_id": "tk-ac9",
+      "author": "yuri",
+      "text": "CORRECTION to my 2026-11-10 15:31 comment: the storm DID reproduce on v1.24.0.\n\nThe '30-min soak, no repro' verdict was a units/counting error. RV-bump distinct-value counting under-measured; delta-based rate says:\n\n- Soak (1 live XR, workstation): ~11 RV writes/s sustained (not 12/30min).\n- Ambient with 2 live XRs (windows+workstation unpaused): ~18-19 writes/s per XR, FLAT rate (no runaway growth) — but faster than the Oct-15 record of '1.5/s across 3 VMs'.\n- macintel01 climbed to ~94% CPU within minutes of the 2-XR unpause.\n\nRepaused windows+workstation the same day (live patch + git 7c609b24). All 3 XRs paused again; v1.22-v1.24.0 releases (bpg/terraform bumps only) do NOT fix it. Root stays upjet async-callback status writes (upjet #768) — fix vehicle is an UPJET bump in valkiriaaquatica/provider-proxmox-bpg, which is still on v2.2.0; its tracker is renovate-only (no human issue filed).\n\nAlso fixed 2026-11-10 while testing: dell01 was OOM-thrashing from ~878 leaked containerd-shims (5.77 GB RSS rollup) on a 7.5 GB node — it OOM-killed besteffort pods (metallb-frr crashloop since Nov 7, cilium 23 restarts), starved the kubelet into NotReady flaps, and evicted the amd64-pinned provider pods. Force-rebooted; 878→11 shims, available memory 118 MB→3.8 GB. The 'provider runtime was down' observation earlier today was that eviction wave, not a package problem.\n\nRemaining: file the upjet-bump request upstream (needs a human-maintained issue; tracker is renovate-only), then wait for an upjet > v2.2.0 release in the fork. talos-pc01 unpause additionally gated on a deliberate pc01 power-on.",
+      "created_at": "2026-11-10T16:16:07.801Z"
     }
   ],
-  "comment_count": 2
+  "comment_count": 4
 }
