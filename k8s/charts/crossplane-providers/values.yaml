@@ -54,9 +54,10 @@ providers:
   # (group virtualenvironmentvm.proxmoxbpg.crossplane.io). Used by the
   # crossplane-proxmox chart to replicate the proxmox/ VM configs.
   - name: provider-proxmox-bpg
-    # v1.21.0 still builds on upjet v2.2.0 — the per-VM async-callback
-    # status-write conflict remains; EnvironmentVMs stay paused (tk-ac9).
-    package: xpkg.upbound.io/valkiriaaquaticamendi/provider-proxmox-bpg:v1.21.0
+    # Upjet v2.2.0 — the per-VM async-callback status-write conflict remains
+    # unfixed upstream; EnvironmentVMs stay paused. v1.22-v1.24 are bpg bumps
+    # only. v1.24.0 unpause retest in progress (tk-ac9).
+    package: xpkg.upbound.io/valkiriaaquaticamendi/provider-proxmox-bpg:v1.24.0
     # Its controller must bootstrap through the direct apiserver path after a
     # provider-revision recovery; the Service VIP is unreliable across LANs.
     runtimeConfig: gcp-storage-pinned
