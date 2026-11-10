@@ -126,7 +126,7 @@ vms:
   # hack/win11-iso/build.sh and placed on the local datastore. This both
   # satisfies the single-cdrom limit and makes the install hands-free.
   windows:
-    enabled: true                      # re-managed 2026-11-10: XR was live-but-orphaned (prune hazard); git state matches the VM (stopped, vga:std install variant)
+    enabled: false
     name: windows
     vmId: 101
     # proxmox/101.conf documents TWO variants: an install-time "# vnc" (std VGA)
@@ -187,7 +187,7 @@ vms:
   # guard fails the render if two VMs claim the GPU at once
   # (templates/00-guards.yaml).
   workstation:
-    enabled: true                      # re-managed 2026-11-10: XR was live-but-orphaned (prune hazard); git state matches the VM (stopped since 2026-09-20)
+    enabled: false                     # flip true once the qcow2 is published + image.url set
     name: workstation
     vmId: 102
     onBoot: false                      # retired 2026-09-20: no auto-start on host reboot
