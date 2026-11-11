@@ -101,6 +101,28 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       initContainers:
+        {{- if .Values.persistence.enabled }}
+        # volume-owner: hermes 0.23 refuses to run sessions when HERMES_HOME is
+        # not owned by the gateway uid ("unsafe_control_path"). fsGroup only
+        # fixes the group, and the volume root is created root-owned, so chown
+        # that one directory (non-recursive). Upstream's s6 stage2 hook does the
+        # same as root. CHOWN is the only capability granted.
+        - name: volume-owner
+          image: {{ .Values.pages.image | quote }}
+          command: ["chown", "{{ .Values.podSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.runAsGroup }}", {{ .Values.persistence.mountPath | quote }}]
+          volumeMounts:
+            - name: {{ $dataVolumeName }}
+              mountPath: {{ $mountPath }}
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+              add: ["CHOWN"]
+        {{- end }}
         {{- if .Values.memoryBackup.restore.enabled }}
         - name: memory-restore
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
