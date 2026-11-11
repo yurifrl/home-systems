@@ -7,7 +7,7 @@ image:
   # Digest-pinned so Renovate (helm-values manager) PRs a new digest whenever
   # the registry `latest` tag moves — a floating `latest` would never update
   # already-running pods, no matter the pullPolicy.
-  tag: latest@sha256:463eecfe0fee5a4c62d5f2e7652991aca13d1968e2a2ff15636ff31cf27df9b3
+  tag: latest@sha256:69f19b6afa75d4df8266d8be079e4a90855d7bd220421c5b0a85257d258178b8
   pullPolicy: Always
 
 imagePullSecrets: []
