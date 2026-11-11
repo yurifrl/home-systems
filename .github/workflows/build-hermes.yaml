@@ -28,12 +28,10 @@ jobs:
         id: vers
         run: |
           DF=k8s/images/hermes/Dockerfile
-          # Python tag prefix only (e.g. 3.14 from 3.14-slim-trixie)
-          PY=$(grep -oP '^ARG PYTHON_VERSION=\K[0-9]+\.[0-9]+' "$DF")
+          # Python is pinned by hermes' own pm lock, so the tag is the hermes version.
           HV=$(grep -oP '^ARG HERMES_VERSION=\K[0-9.]+' "$DF")
-          echo "py=$PY" >> "$GITHUB_OUTPUT"
           echo "hv=$HV" >> "$GITHUB_OUTPUT"
-          echo "Building hermes $HV on python $PY"
+          echo "Building hermes $HV"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -55,7 +53,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ steps.vers.outputs.hv }}-py${{ steps.vers.outputs.py }}
+            type=raw,value=${{ steps.vers.outputs.hv }}
             type=sha
 
       - name: Build and push

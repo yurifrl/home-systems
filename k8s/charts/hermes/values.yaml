@@ -251,6 +251,22 @@ probes:
 
 npmPackages: []
 
+# hermes-prepare init container: config migration + pm dependency refresh (the
+# work upstream's s6 stage2 hook does) and declarative plugin installs.
+prepare:
+  enabled: true
+
+# Declarative plugins, installed into HERMES_HOME/plugins by hermes-prepare and
+# (re-)enabled every boot. `source` defaults to `name` (a catalog entry); it may
+# also be owner/repo[/subdir] or a git URL. Pin `ref` to a 40-char commit for
+# non-catalog sources (catalog entries are already pinned to a reviewed SHA).
+# Changing source/ref of an installed plugin needs a manual
+# `hermes plugins install <source> --force --ref <sha>`.
+plugins:
+  # Browser backend (moved out of core in 0.23); talks to the in-cluster
+  # camofox service via CAMOFOX_URL / CAMOFOX_KEY from the hermes secret.
+  - name: camofox
+
 # Trimmed for the arm nodes (upstream 1Gi/4Gi was too heavy and got evicted).
 resources:
   requests:

@@ -100,7 +100,6 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or .Values.bootstrap.enabled $npmEnabled .Values.extraInitContainers .Values.auth.gitLogin.enabled .Values.gitRepos.enabled .Values.memoryBackup.restore.enabled }}
       initContainers:
         {{- if .Values.memoryBackup.restore.enabled }}
         - name: memory-restore
@@ -214,10 +213,77 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- end }}
+        {{- if .Values.prepare.enabled }}
+        # hermes-prepare: the boot work upstream's s6 stage2-hook.sh does before
+        # services start (the image runs hermes directly, without s6):
+        #   1. config-schema migration of the persisted config.yaml
+        #   2. re-resolve pm dependency generations on the volume (plugin deps,
+        #      lazy extras) against this image's uv.lock, and GC stale ones
+        #   3. declarative plugins: install missing ones, (re-)enable all —
+        #      bootstrap-config rewrites config.yaml each boot, so enabling here
+        #      is what puts them back in plugins.enabled.
+        # Failures warn instead of crashlooping the gateway (as upstream).
+        - name: hermes-prepare
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              py=/opt/hermes/.venv/bin/python
+              if [ -f "$HERMES_HOME/config.yaml" ]; then
+                "$py" /opt/hermes/scripts/docker_config_migrate.py || echo "[prepare] warning: config migration failed"
+              fi
+              "$py" -c '
+              from pathlib import Path
+              from hermes_cli.runtime_state import collect_generations
+              from pm.environments import install_state_dir
+              from pm.recovery import refresh_dependencies
+              from pm.runtime import collect_runtime_generations
+              root = Path("/opt/hermes")
+              print("[prepare] dependency environment:", refresh_dependencies(root))
+              removed = collect_generations(root) + collect_runtime_generations(install_state_dir(root) / "pm-runtime")
+              print("[prepare] collected", len(removed), "unused dependency generations")
+              ' || echo "[prepare] warning: dependency refresh failed"
+              {{- range .Values.plugins }}
+              {{- $source := .source | default .name }}
+              if [ ! -d "$HERMES_HOME/plugins/{{ .name }}" ]; then
+                echo "[prepare] installing plugin {{ .name }} from {{ $source }}"
+                hermes plugins install {{ $source | quote }}{{ with .ref }} --ref {{ . | quote }}{{ end }} --yes-deps --enable \
+                  || echo "[prepare] warning: plugin {{ .name }} install failed"
+              else
+                echo "[prepare] enabling plugin {{ .name }}"
+                hermes plugins enable {{ .name | quote }} || echo "[prepare] warning: plugin {{ .name }} enable failed"
+              fi
+              {{- end }}
+              exit 0
+          workingDir: /opt/hermes
+          env:
+            - name: HERMES_HOME
+              value: {{ $mountPath | quote }}
+            - name: HOME
+              value: {{ printf "%s/home" $mountPath | quote }}
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ printf "%v" $value | quote }}
+            {{- end }}
+          {{- if or .Values.externalSecret.enabled .Values.secrets.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ include "hermes-agent.secretName" . }}
+          {{- end }}
+          volumeMounts:
+            - name: {{ $dataVolumeName }}
+              mountPath: {{ $mountPath }}
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
         {{- with .Values.extraInitContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
       containers:
         - name: hermes-agent
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

@@ -2,30 +2,32 @@
 #
 # Hermes Agent — container image for home-systems.
 #
-# Nous Research publishes NO official container image, and stopped publishing
-# hermes-agent wheels to PyPI at 0.19.0 (uploaded 2026-07-20) — releases since
-# then are GitHub tags only. We build from the release tag's source tarball
-# rather than reproducing their complex multi-stage s6-overlay Dockerfile,
-# which would drift from upstream.
+# Built from the v${HERMES_VERSION} release tarball using upstream's own 0.23+
+# layout (NousResearch/hermes-agent Dockerfile): the source tree lives at
+# /opt/hermes, its package manager (pm) stages Python/node/npm/ffmpeg/ripgrep
+# into /opt/hermes/tools, the app runs from a sealed pm-built venv at
+# /opt/hermes/.venv, and docker/build_agent.py assembles the payload. Hermes
+# 0.23 assumes this layout: plugin and lazy-extra dependencies are admitted by
+# pm into dependency generations on the /opt/data volume, which only works
+# when the app runs from pm's own environment (a pip/--system install broke
+# WhatsApp, plugin enabling, and lazy provider installs).
 #
-# Both versions below are auto-bumped by Renovate (see renovate.json custom
-# manager) and are the single source of truth for the image tag, which CI
-# derives as "<hermes-version>-py<python-version>".
+# What we deliberately do NOT take from upstream:
+#   - s6-overlay / entrypoint-dispatch: Kubernetes supervises; the chart runs
+#     `hermes gateway run` / `hermes dashboard` directly. The boot work upstream's
+#     stage2-hook.sh does (config migration, dependency refresh) runs in the
+#     chart's hermes-prepare init container instead.
+#   - the [matrix] extra (needs libolm) and the Electron webapp / photon sidecar.
+#
+# Our additions: kubectl, gh, beads, hctl, fish + shell tools, uid 1000 user.
 #
 # Runs as a non-root user (uid 1000) with a read-only root filesystem under the
 # hermes Helm chart's hardened securityContext. All runtime writes go to mounted
-# volumes (/opt/data PVC, /tmp emptyDir, HOME=/opt/data/home). kubectl is bundled
-# so the agent can use its (read-only + pod-delete) RBAC.
+# volumes (/opt/data PVC, /tmp emptyDir, HOME=/opt/data/home).
 
-# 3.14: hermes-agent requires Python >=3.11,<3.15, but since 0.20+ upstream
-# gates its runtime dependency set on python_version >= '3.14' (47 lines in
-# pyproject.toml — openai, pydantic, fastapi, ruamel.yaml, ...) — on 3.13 the
-# package installs without its dependencies and crashes at import. Keep in
-# lockstep with upstream's matrix; bump deliberately, not via Renovate's next
-# floating tag.
-# renovate: datasource=docker depName=python versioning=docker
-ARG PYTHON_VERSION=3.14-slim-trixie
-FROM python:${PYTHON_VERSION}
+# renovate: datasource=docker depName=debian versioning=docker
+ARG DEBIAN_VERSION=trixie-slim
+FROM debian:${DEBIAN_VERSION}
 
 # renovate: datasource=github-releases depName=NousResearch/hermes-agent versioning=semver
 ARG HERMES_VERSION=0.23.1
@@ -33,32 +35,22 @@ ARG HERMES_VERSION=0.23.1
 # renovate: datasource=github-releases depName=kubernetes/kubectl versioning=semver
 ARG KUBECTL_VERSION=1.33.0
 
-# renovate: datasource=github-releases depName=astral-sh/uv versioning=semver
-ARG UV_VERSION=0.13.7
-
 ARG TARGETARCH
 
 ENV PYTHONUNBUFFERED=1 \
-    UV_NO_CACHE=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
     HERMES_HOME=/opt/data \
     HERMES_RUNTIME_DIR=/opt/hermes/tools \
-    HERMES_PYTHON=/usr/local/bin/python3 \
-    HERMES_WEB_DIST=/opt/hermes/web_dist \
-    HERMES_TUI_DIR=/usr/local/lib/hermes-tui
+    PLAYWRIGHT_BROWSERS_PATH=/opt/hermes/tools
 
-# Runtime deps used by the agent's built-in tools (ripgrep, media, git, gh).
-# The GitHub CLI (gh) gives the bundled github-* skills their richest auth path
-# and is installed from GitHub's official multi-arch apt repo (amd64 + arm64).
-# Node.js is NOT installed from apt: since 0.23 hermes resolves node/npm only
-# through its own package manager (pm) and never falls back to PATH, so node,
-# npm and pnpm are staged by pm into HERMES_RUNTIME_DIR in the next layer.
-# Build deps (gcc/dev headers) are installed only to compile native wheels,
-# then purged in the same layer to keep the image lean.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        ca-certificates curl git git-lfs ripgrep ffmpeg wget gnupg \
-        gcc python3-dev libffi-dev \
-        fish less vim htop jq tree tmux procps iproute2 fzf bat fd-find \
+# System packages. python3 is only the bootstrap interpreter for pm — the app
+# runs on pm's pinned Python. The C toolchain stays (as upstream): plugin and
+# lazy-extra dependency admission may compile native wheels at runtime.
+RUN apt-get -o Acquire::Retries=3 update \
+    && apt-get -o Acquire::Retries=3 install -y --no-install-recommends \
+        ca-certificates curl wget gnupg git git-lfs openssh-client xz-utils \
+        python3 python3-venv python-is-python3 gcc g++ make python3-dev libffi-dev libatomic1 \
+        procps tmux fish less vim htop jq tree iproute2 fzf bat fd-find \
     && ln -sf /usr/bin/batcat /usr/local/bin/bat \
     && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
     && mkdir -p -m 755 /etc/apt/keyrings \
@@ -67,87 +59,92 @@ RUN apt-get update \
     && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
         > /etc/apt/sources.list.d/github-cli.list \
-    && apt-get update \
+    && apt-get -o Acquire::Retries=3 update \
     && apt-get install -y --no-install-recommends gh \
-    && curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh \
-    # Upstream setup.py blocks bdist_wheel for non-managed packagers; HERMES_NIX_BUILD=1
-    # is their sanctioned escape hatch for owned derivations (gates only the guard —
-    # the wheel content is identical).
-    && printf '%s\n' \
-        'pynacl>=1.6,<1.7' \
-        'cryptography==50.0.2' \
-        'Pillow==13.0.0' \
-        "spacy-curated-transformers; sys_platform == 'never'" \
-        > /tmp/hermes-uv-overrides.txt \
-    # Overrides mirror upstream [tool.uv] override-dependencies (pyproject.toml):
-    # browser-harness pins pillow==12.3.0, discord.py pins pynacl<1.6, and
-    # alibabacloud-tea-openapi caps cryptography<49 — upstream force-resolves
-    # these exact versions and we must too, or [all] resolution fails.
-    && HERMES_NIX_BUILD=1 uv pip install --system \
-        --overrides /tmp/hermes-uv-overrides.txt \
-        "hermes-agent[all,messaging] @ https://github.com/NousResearch/hermes-agent/archive/refs/tags/v${HERMES_VERSION}.tar.gz" \
-    && rm -f /tmp/hermes-uv-overrides.txt \
-    && apt-get purge -y gcc python3-dev libffi-dev \
-    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Source products from the v${HERMES_VERSION} release tree (one extraction),
-# mirroring the pm/frontend steps of upstream's own Dockerfile:
-#   1. pm tools — since 0.23 hermes resolves node/npm only through its package
-#      manager (find_node_executable never falls back to PATH). uv/node/npm/pnpm
-#      are staged into HERMES_RUNTIME_DIR=/opt/hermes/tools, outside the
-#      /opt/data volume, and node/npm/pnpm are symlinked onto PATH.
-#   2. PM runtime — PM's own isolated venv. A docker-distribution install
-#      stamp MUST name it (pmRuntime) with a pm-runtime.json marker, or every
-#      pm call fails "packaged PM runtime is missing" (this took WhatsApp down).
-#      Upstream's seal_pm_runtime() requires a payload-owned interpreter, so
-#      the marker is written directly against the base image's python.
-#   3. install-stamp.json — `hermes --version` reads the stamp; we resolve the
-#      tag's commit with ls-remote (the ^{} peel — tags are annotated).
-#   4. Frontends — JS workspaces install with pm's pinned pnpm (upstream
-#      dropped package-lock.json at 0.23.1). The dashboard SPA is built into
-#      HERMES_WEB_DIST (without it: "Frontend not built"); the TUI bundle into
-#      HERMES_TUI_DIR (the launcher's ui-tui/ workspace guard is repo-only).
-#   5. WhatsApp bridge — scripts/whatsapp-bridge ships in the source tree only;
-#      node_modules is baked in. At runtime the read-only tree is mirrored to
-#      HERMES_HOME/scripts/whatsapp-bridge; pairing state persists on /opt/data.
-# npm cache is a BuildKit cache mount, so no npm cache lands in the image.
+WORKDIR /opt/hermes
+
+# Source tree + pm tools + PM runtime (upstream runtime_base stage).
+# Tools land in /opt/hermes/tools (outside the /opt/data volume) and are put on
+# PATH; hermes resolves node/npm only through pm, never PATH, so these are the
+# copies it actually uses. The PM runtime is pm's own isolated venv; the
+# install stamp's pmRuntime names it (without it: "packaged PM runtime is
+# missing").
+RUN set -eu \
+    && curl -fsSL --retry 3 --retry-delay 2 \
+        "https://github.com/NousResearch/hermes-agent/archive/refs/tags/v${HERMES_VERSION}.tar.gz" \
+        | tar -xz --strip-components=1 -C /opt/hermes \
+    && rm -rf website tests evals \
+    && python3 -c 'from pm import ensure; [ensure(name, explicit=True) for name in ("uv", "python", "npm", "pnpm", "ffmpeg", "ripgrep")]' \
+    && python3 -c 'from pathlib import Path; from pm import installed_package; [Path("/usr/local/bin", c).symlink_to(installed_package(p).binary) for c, p in (("python3", "python"), ("node", "node"), ("npm", "npm"), ("pnpm", "pnpm"), ("ffmpeg", "ffmpeg"), ("rg", "ripgrep"))]; Path("/usr/local/bin/ffprobe").symlink_to(installed_package("ffmpeg").binary.with_name("ffprobe"))' \
+    && ln -s python3 /usr/local/bin/python \
+    && python3 -c 'import shutil; from pathlib import Path; from pm import env_for; Path("/usr/local/bin/npx").symlink_to(shutil.which("npx", path=env_for("npm", base_env={})["PATH"]))' \
+    && python3 --version && node --version && npm --version && pnpm --version && ffmpeg -version >/dev/null && rg --version >/dev/null \
+    && python3 -c 'from pathlib import Path; from pm import stage_manager_runtime; from scripts.bundles.payload import seal_pm_runtime; root = Path("/opt/hermes"); python = Path("/usr/local/bin/python3").resolve(); stage_manager_runtime(python=python, destination=root / "pm-runtime", project=root / "pm"); seal_pm_runtime(root, python)'
+
+# Sealed application venv (upstream python_deps stage). Extras match upstream's
+# production image minus [matrix]: provider SDKs (anthropic, bedrock, azure)
+# must be baked — lazy installs can't write the sealed venv.
+RUN python3 -m pm.build_env --source /opt/hermes --python /usr/local/bin/python3 \
+        --cache /tmp/uv-cache \
+        --out /opt/hermes/.venv --no-install-project --sealed --record-selection \
+        --extra all --extra messaging --extra otlp --extra anthropic --extra bedrock \
+        --extra azure-identity --extra google-chat --extra fal --extra documents \
+    && rm -rf /tmp/uv-cache
+
+# Frontends (upstream icons + frontend_build stages): pnpm workspace install,
+# TUI bundle, dashboard SPA. Workspace node_modules never ship; only the
+# TypeScript copy upstream keeps for standalone linting.
+# WhatsApp bridge: scripts/whatsapp-bridge ships in the source tree only;
+# node_modules is baked. At runtime the read-only tree is mirrored to
+# HERMES_HOME/scripts/whatsapp-bridge; pairing state persists on /opt/data.
+ENV HERMES_PYTHON=/usr/local/bin/python3 CC=gcc CXX=g++
 RUN --mount=type=cache,target=/root/.npm set -eu \
-    && SP="$(python -c 'import site; print(site.getsitepackages()[0])')" \
-    && curl -fsSL --retry 3 --retry-delay 2 "https://github.com/NousResearch/hermes-agent/archive/refs/tags/v${HERMES_VERSION}.tar.gz" -o /tmp/hermes-src.tar.gz \
-    && tar -xzf /tmp/hermes-src.tar.gz -C /tmp \
-    && SRC="/tmp/hermes-agent-${HERMES_VERSION}" \
-    && python -c 'from pm import ensure; [ensure(name, explicit=True) for name in ("uv", "npm", "pnpm")]' \
-    && python -c 'from pathlib import Path; from pm import installed_package; [Path("/usr/local/bin", c).symlink_to(installed_package(p).binary) for c, p in (("node", "node"), ("npm", "npm"), ("pnpm", "pnpm"))]' \
-    && python -c 'import shutil; from pathlib import Path; from pm import env_for; Path("/usr/local/bin/npx").symlink_to(shutil.which("npx", path=env_for("npm", base_env={})["PATH"]))' \
-    && node --version && npm --version && pnpm --version \
-    && python -c "from pathlib import Path; from pm import stage_manager_runtime; stage_manager_runtime(python=Path('/usr/local/bin/python3').resolve(), destination=Path('/opt/hermes/pm-runtime'), project=Path('$SRC/pm'))" \
-    && python -c 'import json, os, sys; from pathlib import Path; r = Path("/opt/hermes/pm-runtime"); s = list(r.glob("lib/python*/site-packages")); assert len(s) == 1, s; (r / "pm-runtime.json").write_text(json.dumps({"python": os.path.relpath(Path(sys.executable).resolve(), r), "sitePackages": s[0].relative_to(r).as_posix()}))' \
+    && node scripts/build/node-deps.mjs --source /opt/hermes --workspace ui-tui --workspace web \
+    && /opt/hermes/.venv/bin/python -I scripts/generate_icons.py --source /opt/hermes --out /tmp/hermes-icons \
+    && node scripts/build/tui.mjs --source /opt/hermes --out /tmp/products/tui \
+    && node scripts/build/web.mjs --source /opt/hermes --icons /tmp/hermes-icons --out /tmp/products/web \
+    && cp -RL node_modules/typescript /tmp/products/typescript \
+    && find /opt/hermes -path /opt/hermes/tools -prune -o -path /opt/hermes/.venv -prune -o -name node_modules -type d -prune -exec rm -rf {} + \
+    && mkdir -p node_modules/.bin \
+    && mv /tmp/products/typescript node_modules/typescript \
+    && ln -s ../typescript/bin/tsc node_modules/.bin/tsc \
+    && rm -rf ui-tui && mv /tmp/products/tui ui-tui \
+    && rm -rf hermes_cli/web_dist && mv /tmp/products/web hermes_cli/web_dist \
+    && test -f hermes_cli/web_dist/index.html \
+    && (cd scripts/whatsapp-bridge && npm ci --no-fund --no-audit --progress=false) \
+    && rm -rf /tmp/products /tmp/hermes-icons /root/.local/share/pnpm /root/.cache
+
+# Install stamp + payload assembly (upstream runtime stage). The stamp carries
+# the tag's real commit (ls-remote ^{} peel: tags are annotated) so
+# `hermes --version` is accurate, and pmRuntime names the staged PM runtime.
+RUN set -eu \
     && COMMIT="$(git ls-remote https://github.com/NousResearch/hermes-agent.git "refs/tags/v${HERMES_VERSION}^{}" | awk 'NR==1{print $1; exit}')" \
     && if [ -z "$COMMIT" ]; then \
            COMMIT="$(git ls-remote https://github.com/NousResearch/hermes-agent.git "refs/tags/v${HERMES_VERSION}" | awk 'NR==1{print $1; exit}')"; \
        fi \
     && test -n "$COMMIT" \
-    && python "$SRC/scripts/write_install_stamp.py" \
-        --output "$SP/install-stamp.json" \
+    && python3 scripts/write_install_stamp.py --output /opt/hermes/install-stamp.json \
         --base-version "${HERMES_VERSION}" --commit "${COMMIT}" \
         --source docker --distribution docker --update-mechanism external \
-    && python -c "import json; from pathlib import Path; p = Path('$SP/install-stamp.json'); d = json.loads(p.read_text()); d['pmRuntime'] = '/opt/hermes/pm-runtime'; p.write_text(json.dumps(d) + '\\n')" \
-    && python -c 'from pm.runtime import _resident_runtime; print("pm runtime:", _resident_runtime())' \
-    && node "$SRC/scripts/build/node-deps.mjs" --source "$SRC" --workspace ui-tui --workspace web \
-    && python "$SRC/scripts/generate_icons.py" --source "$SRC" --out /tmp/hermes-icons \
-    && node "$SRC/scripts/build/tui.mjs" --source "$SRC" --out "$HERMES_TUI_DIR" \
-    && node "$SRC/scripts/build/web.mjs" --source "$SRC" --icons /tmp/hermes-icons --out "$HERMES_WEB_DIST" \
-    && test -f "$HERMES_WEB_DIST/index.html" \
-    && mkdir -p "$SP/scripts" \
-    && cp -r "$SRC/scripts/whatsapp-bridge" "$SP/scripts/whatsapp-bridge" \
-    && cd "$SP/scripts/whatsapp-bridge" \
-    && npm ci --no-fund --no-audit --progress=false \
-    && rm -rf /tmp/hermes-src.tar.gz "$SRC" /tmp/hermes-icons \
-    && chmod -R a+rX /opt/hermes "$HERMES_TUI_DIR"
+    && /opt/hermes/.venv/bin/python -m docker.build_agent \
+    && python3 -c 'import json; from pathlib import Path; path = Path("/opt/hermes/install-stamp.json"); stamp = json.loads(path.read_text()); stamp["pmRuntime"] = "/opt/hermes/pm-runtime"; path.write_text(json.dumps(stamp) + "\n")' \
+    && printf 'docker\n' > /opt/hermes/.install_method \
+    && chmod 0644 /opt/hermes/tools/facts.json \
+    && rm -f /opt/hermes/.venv/.lock /opt/hermes/pm-runtime/.lock \
+    && chmod -R a+rX,go-w /opt/hermes \
+    && for cmd in /opt/hermes/.venv/bin/hermes*; do ln -sf "$cmd" /usr/local/bin/; done \
+    && /opt/hermes/.venv/bin/python -c 'from pm.runtime import _resident_runtime; print("pm runtime:", _resident_runtime())' \
+    && /opt/hermes/.venv/bin/python -c 'import anthropic, hermes_cli; print("anthropic", anthropic.__version__)'
 
-# State (config.yaml, .env, memory, skills) lives here and is backed by a
-# persistent volume in Kubernetes.
+ENV HERMES_PYTHON=/opt/hermes/.venv/bin/python \
+    HERMES_WEB_DIST=/opt/hermes/hermes_cli/web_dist \
+    HERMES_TUI_DIR=/opt/hermes/ui-tui \
+    PATH="/opt/hermes/.venv/bin:${PATH}"
+
+# State (config.yaml, .env, memory, skills, plugins, dependency generations)
+# lives here and is backed by a persistent volume in Kubernetes.
 RUN mkdir -p /opt/data
 
 # kubectl for the agent's read-only + pod-delete RBAC (multi-arch).
@@ -160,8 +157,7 @@ RUN curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/i
 
 # hctl — in-container helper CLI used by the Helm chart's init/sidecar
 # containers (auth login, op files sync, repos clone, repos sync). One Python
-# entrypoint, stdlib-only, replaces the legacy op-files-sync script and the
-# inline shell blobs that used to live in k8s/applications/hermes.yaml.
+# entrypoint, stdlib-only.
 COPY hctl /usr/local/bin/hctl
 RUN chmod 0755 /usr/local/bin/hctl
 
