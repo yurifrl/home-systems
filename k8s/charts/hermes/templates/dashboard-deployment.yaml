@@ -1,4 +1,4 @@
-{{- if .Values.dashboard.enabled }}
+{{- if and .Values.dashboard.enabled (not .Values.dashboard.sidecar) }}
 {{- if not .Values.sharedStorage.state.enabled }}
 {{- fail "dashboard.enabled=true requires sharedStorage.state.enabled=true" }}
 {{- end }}
@@ -42,40 +42,5 @@ spec:
         - name: tmp
           emptyDir: {}
       containers:
-        - name: hermes-dashboard
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["hermes", "dashboard", "--host", "0.0.0.0", "--port", {{ .Values.dashboard.port | quote }}, "--no-open"]
-          ports:
-            - name: dashboard
-              containerPort: {{ .Values.dashboard.port }}
-          env:
-            {{- range $key, $value := .Values.env }}
-            - name: {{ $key }}
-              value: {{ printf "%v" $value | quote }}
-            {{- end }}
-            - name: HERMES_HOME
-              value: {{ .Values.persistence.mountPath | quote }}
-            - name: HOME
-              value: {{ printf "%s/home" .Values.persistence.mountPath | quote }}
-            - name: HERMES_DASHBOARD_PUBLIC_URL
-              value: {{ printf "https://%s" (first .Values.dashboard.hosts) | quote }}
-            {{- if and .Values.service.enabled .Values.apiServer.enabled }}
-            - name: GATEWAY_HEALTH_URL
-              value: {{ .Values.dashboard.healthUrl | default (printf "http://%s:%v" (include "hermes-agent.fullname" .) .Values.apiServer.port) | quote }}
-            {{- end }}
-          envFrom:
-            - secretRef:
-                name: {{ include "hermes-agent.secretName" . }}
-          volumeMounts:
-            - name: state
-              mountPath: {{ .Values.persistence.mountPath }}
-            - name: tmp
-              mountPath: /tmp
-          securityContext:
-            {{- $dashboardSecurityContext := deepCopy .Values.securityContext }}
-            {{- $_ := set $dashboardSecurityContext "readOnlyRootFilesystem" false }}
-            {{- toYaml $dashboardSecurityContext | nindent 12 }}
-          resources:
-            {{- toYaml .Values.dashboard.resources | nindent 12 }}
+        {{- include "hermes-agent.dashboardContainer" (dict "ctx" . "volume" "state") | nindent 8 }}
 {{- end }}

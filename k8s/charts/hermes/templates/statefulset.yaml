@@ -71,6 +71,10 @@ spec:
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+        {{- if and .Values.dashboard.enabled .Values.dashboard.sidecar }}
+        # dashboard Service + NetworkPolicy select this label
+        app: {{ include "hermes-agent.dashboardName" . }}
+        {{- end }}
       annotations:
         {{- if .Values.bootstrap.existingConfigMap }}
         checksum/config: {{ printf "%s|%s|%s" .Values.bootstrap.existingConfigMap .Values.bootstrap.configKey .Values.bootstrap.soulKey | sha256sum }}
@@ -421,6 +425,9 @@ spec:
             - name: {{ include "hermes-agent.workdirVolumeName" . }}
               mountPath: {{ .Values.gitRepos.mountPath }}
             {{- end }}
+        {{- if and .Values.dashboard.enabled .Values.dashboard.sidecar }}
+        {{- include "hermes-agent.dashboardContainer" (dict "ctx" . "volume" $dataVolumeName) | nindent 8 }}
+        {{- end }}
         {{- with .Values.extraContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

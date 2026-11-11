@@ -399,6 +399,11 @@ pages:
 
 dashboard:
   enabled: false
+  # Run the dashboard as a container in the agent pod instead of its own
+  # Deployment. Required since hermes 0.23: the dashboard chat attaches to the
+  # gateway at the 127.0.0.1 endpoint it publishes, so they must share a
+  # network namespace (a separate pod loops on "reconnecting").
+  sidecar: true
   replicas: 1
   port: 9119
   nodeSelector: {}
