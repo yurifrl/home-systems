@@ -154,10 +154,8 @@ spec:
                 repository: ghcr.io/yurifrl/syscd-app
                 tag: latest
                 pullPolicy: Always
-              # amd64-only image: pin to arch, not a node, so it floats across
-              # any healthy amd64 worker (dell01/pc01) instead of dying with pc01.
-              nodeSelector:
-                kubernetes.io/arch: amd64
+              # Multi-arch image (amd64+arm64): no node/arch pin, floats across
+              # any healthy worker.
               containerPort: 8080
               readinessProbe:
                 httpGet:
@@ -179,9 +177,7 @@ spec:
                 repository: ghcr.io/yurifrl/syscd-app-api
                 tag: latest
                 pullPolicy: Always
-              # amd64-only image: pin to arch, not a node (same as syscd-app).
-              nodeSelector:
-                kubernetes.io/arch: amd64
+              # Multi-arch image (amd64+arm64): no node/arch pin (same as syscd-app).
               containerPort: 3000
               readinessProbe:
                 httpGet:
