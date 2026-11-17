@@ -63,6 +63,14 @@ spec:
           {{- end }}
           image: "{{ .image.repository }}:{{ $tag }}"
           imagePullPolicy: {{ .image.pullPolicy | default "Always" }}
+          {{- with .command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- if .containerPort }}
           ports:
             - name: http

@@ -161,6 +161,16 @@ spec:
                 login: true
                 passwordSecret:
                   name: syscd-db
+              # syscd's self-hosted Temporal (syscd-temporal Application): owns the
+              # syscd_temporal + syscd_temporal_visibility databases. Password
+              # lives in the `syscd-temporal` 1Password item (field DB_PASSWORD);
+              # mirrored into the databases ns as `syscd-temporal-db` by an
+              # ExternalSecret in k8s/applications/syscd-temporal.yaml.
+              - name: syscd_temporal
+                ensure: present
+                login: true
+                passwordSecret:
+                  name: syscd-temporal-db
               # Buzz relay's login role. Password lives in the `buzz` 1Password
               # item (field DB_PASSWORD); mirrored into the databases ns as the
               # `buzz-db` basic-auth secret by an ExternalSecret in
@@ -268,6 +278,16 @@ spec:
             - name: buzz
               ensure: present
               owner: buzz
+              databaseReclaimPolicy: retain
+            # syscd Temporal persistence + SQL visibility (both owned by the
+            # syscd_temporal role; schema is managed by the chart's schema jobs).
+            - name: syscd_temporal
+              ensure: present
+              owner: syscd_temporal
+              databaseReclaimPolicy: retain
+            - name: syscd_temporal_visibility
+              ensure: present
+              owner: syscd_temporal
               databaseReclaimPolicy: retain
             - name: user_management
               ensure: present

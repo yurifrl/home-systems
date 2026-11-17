@@ -201,6 +201,19 @@ spec:
                   value: https://app.syscd.live
                 - name: API_BASE_URL
                   value: https://api.syscd.live
+                # Admin SPA origin (CORS + credentialed session cookie).
+                - name: ADMIN_ORIGIN
+                  value: https://admin.syscd.live
+                - name: TEMPORAL_ADDRESS
+                  value: syscd-temporal-frontend.syscd-app.svc.cluster.local:7233
+                - name: TEMPORAL_NAMESPACE
+                  value: syscd
+                - name: TEMPORAL_TASK_QUEUE
+                  value: syscd-jobs
+                - name: JOBS_INSTANCE_ID
+                  value: prod
+                - name: TEMPORAL_UI_URL
+                  value: https://temporal.syscd.tech
               volumes:
                 - name: channels
                   configMap:
@@ -209,12 +222,72 @@ spec:
                 - name: channels
                   mountPath: /config
                   readOnly: true
+            # Temporal worker + outbox relay (same image as the API, different
+            # entrypoint). No HTTP port. Image tag: imageTags.syscd-worker in
+            # the syscd-app repo's k8s/values.yaml (must track syscd-api's tag).
+            - name: syscd-worker
+              image:
+                repository: ghcr.io/yurifrl/syscd-app-api
+                tag: latest
+                pullPolicy: Always
+              command: ["bun"]
+              args: ["server/worker.ts"]
+              resources:
+                requests:
+                  cpu: 20m
+                  memory: 96Mi
+                limits:
+                  memory: 384Mi
+              envFrom:
+                - secretRef:
+                    name: syscd-app
+              env:
+                - name: APP_BASE_URL
+                  value: https://app.syscd.live
+                - name: API_BASE_URL
+                  value: https://api.syscd.live
+                - name: TEMPORAL_ADDRESS
+                  value: syscd-temporal-frontend.syscd-app.svc.cluster.local:7233
+                - name: TEMPORAL_NAMESPACE
+                  value: syscd
+                - name: TEMPORAL_TASK_QUEUE
+                  value: syscd-jobs
+                - name: JOBS_INSTANCE_ID
+                  value: prod
+                - name: TEMPORAL_UI_URL
+                  value: https://temporal.syscd.tech
+            # Admin SPA (Vite static build, busybox httpd on :8080), behind
+            # Cloudflare Access (Admin policy, see home-systems-values
+            # cloudflare-access) on admin.syscd.live. Image tag:
+            # imageTags.syscd-admin in the syscd-app repo's k8s/values.yaml
+            # (the release workflow must add it next to syscd-app / syscd-api).
+            - name: syscd-admin
+              image:
+                repository: ghcr.io/yurifrl/syscd-app-admin
+                tag: latest
+                pullPolicy: Always
+              containerPort: 8080
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: http
+                initialDelaySeconds: 5
+                periodSeconds: 10
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
           services:
             - name: syscd-app
               port: 80
               targetPort: http
             - name: syscd-api
               port: 3000
+              targetPort: http
+            - name: syscd-admin
+              port: 80
               targetPort: http
           virtualServices:
             - name: syscd-app
@@ -234,6 +307,16 @@ spec:
                 name: syscd-api
                 namespace: syscd-app
                 port: 3000
+            # Admin SPA. admin.syscd.live is protected by Cloudflare Access
+            # (Admin policy); admin.syscd.tech is tailnet-only.
+            - name: syscd-admin
+              hosts:
+                - admin.syscd.live
+                - admin.syscd.tech
+              service:
+                name: syscd-admin
+                namespace: syscd-app
+                port: 80
 
     # The syscd-app repo pins the image tags this Application renders: the
     # release workflow (syscd-app .github/workflows/release.yml deploy job)

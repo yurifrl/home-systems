@@ -1,0 +1,195 @@
+# syscd's own Temporal server (official temporalio/helm-charts), NOT a
+# home-systems platform service. Only the Postgres cluster is shared: persistence
+# + SQL visibility live in the CNPG `pg` cluster (databases syscd_temporal and
+# syscd_temporal_visibility, role syscd_temporal; see postgres.yaml).
+# Design: syscd-app/docs/jobs-temporal-design.md (Q12/Q13).
+#
+# Deploy order: 1Password item -> postgres.yaml (role/DBs) -> this app. The
+# schema + namespace jobs are plain Jobs (useHelmHooks: false), not hooks, so
+# they retry until the ExternalSecret-backed password exists instead of
+# deadlocking an ArgoCD PreSync.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: syscd-temporal
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: syscd-app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://go.temporal.io/helm-charts
+      chart: temporal
+      targetRevision: 1.8.0 # appVersion 1.32.2
+      helm:
+        releaseName: syscd-temporal # -> Services syscd-temporal-{frontend,web,...}
+        valuesObject:
+          # Bundled sub-charts do not exist in 1.x (cassandra/mysql/ES are
+          # external); nothing to disable besides the shims below.
+          server:
+            replicaCount: 1
+            config:
+              logLevel: "info"
+              persistence:
+                # Fixed at cluster creation and immutable afterwards.
+                numHistoryShards: 512
+                defaultStore: default
+                visibilityStore: visibility
+                datastores:
+                  default:
+                    sql:
+                      createDatabase: false # CNPG Database CRs own creation
+                      manageSchema: true    # chart schema job sets up/updates
+                      pluginName: postgres12
+                      driverName: postgres12
+                      databaseName: syscd_temporal
+                      connectAddr: pg-rw.databases.svc.cluster.local:5432
+                      connectProtocol: tcp
+                      user: syscd_temporal
+                      existingSecret: syscd-temporal-db
+                      secretKey: password
+                      maxConns: 10
+                      maxIdleConns: 10
+                  visibility:
+                    sql:
+                      createDatabase: false
+                      manageSchema: true
+                      pluginName: postgres12
+                      driverName: postgres12
+                      databaseName: syscd_temporal_visibility
+                      connectAddr: pg-rw.databases.svc.cluster.local:5432
+                      connectProtocol: tcp
+                      user: syscd_temporal
+                      existingSecret: syscd-temporal-db
+                      secretKey: password
+                      maxConns: 5
+                      maxIdleConns: 5
+              namespaces:
+                create: true
+                useHelmHooks: false
+                namespace:
+                  - name: syscd
+                    retention: 14d
+            frontend:
+              replicaCount: 1
+              resources:
+                requests: { cpu: 25m, memory: 128Mi }
+                limits: { memory: 512Mi }
+            history:
+              replicaCount: 1
+              resources:
+                requests: { cpu: 50m, memory: 256Mi }
+                limits: { memory: 768Mi }
+            matching:
+              replicaCount: 1
+              resources:
+                requests: { cpu: 25m, memory: 128Mi }
+                limits: { memory: 512Mi }
+            worker:
+              replicaCount: 1
+              resources:
+                requests: { cpu: 25m, memory: 128Mi }
+                limits: { memory: 512Mi }
+          schema:
+            useHelmHooks: false
+          web:
+            enabled: true
+            replicaCount: 1
+            resources:
+              requests: { cpu: 10m, memory: 64Mi }
+              limits: { memory: 256Mi }
+          # Minimal admin tools: a single idle pod for `kubectl exec ... temporal`.
+          admintools:
+            enabled: true
+            resources:
+              requests: { cpu: 5m, memory: 32Mi }
+              limits: { memory: 128Mi }
+          # No Elasticsearch / Cassandra / MySQL: SQL (postgres12) visibility.
+          # Custom search attribute TenantId (Keyword) on namespace `syscd`;
+          # idempotent (ignores "already exists"). Runs after the namespace job.
+          extraObjects:
+            - |
+              apiVersion: batch/v1
+              kind: Job
+              metadata:
+                name: syscd-temporal-search-attributes
+                annotations:
+                  argocd.argoproj.io/hook: PostSync
+                  argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+              spec:
+                backoffLimit: 20
+                ttlSecondsAfterFinished: 3600
+                template:
+                  spec:
+                    restartPolicy: OnFailure
+                    containers:
+                      - name: search-attributes
+                        image: temporalio/admin-tools:1.32.2
+                        env:
+                          - name: TEMPORAL_ADDRESS
+                            value: syscd-temporal-frontend.syscd-app.svc.cluster.local:7233
+                        command:
+                          - sh
+                          - -c
+                          - |
+                            set -e
+                            out=$(temporal operator search-attribute create \
+                              --namespace syscd --name TenantId --type Keyword 2>&1) \
+                              || { echo "$out"; echo "$out" | grep -qi 'already'; }
+                            echo "$out"
+                        resources:
+                          requests: { cpu: 5m, memory: 32Mi }
+                          limits: { memory: 128Mi }
+
+    # Support chart: Temporal UI host (tailnet only) + the DB credentials.
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        valuesObject:
+          global:
+            domains:
+              # Tailnet only (temporal.syscd.tech via the tailscale gateway):
+              # the Temporal UI has no auth of its own, so it must not be on
+              # the public cloudflare-proxied domains.
+              live: false
+              tech: true
+              xyz: false
+              dev: false
+          externalSecrets:
+            # CNPG declarative role password: basic-auth secret in the `databases`
+            # ns (postgres.yaml points role syscd_temporal's passwordSecret here).
+            - name: syscd-temporal-db-roles
+              namespace: databases
+              targetName: syscd-temporal-db
+              template:
+                type: kubernetes.io/basic-auth
+                data:
+                  username: syscd_temporal
+                  password: "{{ .password }}"
+              data:
+                - secretKey: password
+                  key: syscd-temporal
+                  property: DB_PASSWORD
+            # Same password for the Temporal server/schema jobs (syscd-app ns).
+            - name: syscd-temporal-db
+              data:
+                - secretKey: password
+                  key: syscd-temporal
+                  property: DB_PASSWORD
+          virtualServices:
+            - name: syscd-temporal-ui
+              hostname: temporal
+              service:
+                name: syscd-temporal-web
+                namespace: syscd-app
+                port: 8080
