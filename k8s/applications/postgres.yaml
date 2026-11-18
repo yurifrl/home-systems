@@ -163,7 +163,7 @@ spec:
                   name: syscd-db
               # syscd's self-hosted Temporal (syscd-temporal Application): owns the
               # syscd_temporal + syscd_temporal_visibility databases. Password
-              # lives in the `syscd-temporal` 1Password item (field DB_PASSWORD);
+              # lives in the `syscd-app` 1Password item (field TEMPORAL_DB_PASSWORD);
               # mirrored into the databases ns as `syscd-temporal-db` by an
               # ExternalSecret in k8s/applications/syscd-temporal.yaml.
               - name: syscd_temporal

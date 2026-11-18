@@ -178,14 +178,14 @@ spec:
                   password: "{{ .password }}"
               data:
                 - secretKey: password
-                  key: syscd-temporal
-                  property: DB_PASSWORD
+                  key: syscd-app
+                  property: TEMPORAL_DB_PASSWORD
             # Same password for the Temporal server/schema jobs (syscd-app ns).
             - name: syscd-temporal-db
               data:
                 - secretKey: password
-                  key: syscd-temporal
-                  property: DB_PASSWORD
+                  key: syscd-app
+                  property: TEMPORAL_DB_PASSWORD
           virtualServices:
             - name: syscd-temporal-ui
               hostname: temporal
