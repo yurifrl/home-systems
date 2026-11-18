@@ -11,8 +11,9 @@
 # budget_temporal; postgres.yaml).
 #
 # Secrets: 1Password vault `kubernetes`, items `budget` (app env, incl.
-# DB_PASSWORD + DATABASE_URL) and `budget-temporal` (DB_PASSWORD). Create them
-# with yurifrl/budget scripts/create-1password-item.sh. Until they exist the
+# DB_PASSWORD + DATABASE_URL), `budget-temporal` (DB_PASSWORD) and
+# `argocd-budget` (sshPrivateKey). Create them with yurifrl/budget
+# scripts/create-1password-item.sh. Until they exist the
 # ExternalSecrets report SecretSyncedError and api/worker/temporal pods wait
 # (CreateContainerConfigError / secret not found); web and admin do not need
 # them. The API refuses to boot in a cluster until GOOGLE_CLIENT_ID/SECRET and
@@ -96,6 +97,28 @@ spec:
                 - secretKey: password
                   key: budget-temporal
                   property: DB_PASSWORD
+            # ArgoCD credential for the PRIVATE yurifrl/budget repo (the
+            # `ref: values` source below, once enabled). Same shape as
+            # argocd-syscd-app in argo-support.yaml; kept here so this app's
+            # pending secret never shows up on another Application. Private
+            # key: 1Password item `argocd-budget` (field sshPrivateKey), public
+            # half is a read-only deploy key on the repo (budget
+            # scripts/create-1password-item.sh creates both). `type: git` is
+            # required, as for the other repository secrets.
+            - name: argocd-budget
+              namespace: argocd
+              data:
+                - secretKey: sshPrivateKey
+                  key: argocd-budget
+                  property: sshPrivateKey
+              template:
+                metadata:
+                  labels:
+                    argocd.argoproj.io/secret-type: repository
+                data:
+                  type: git
+                  url: git@github.com:yurifrl/budget.git
+                  sshPrivateKey: "{{ .sshPrivateKey }}"
           deployments:
             # Expo web export served by busybox httpd on :8080
             # (deploy/Dockerfile.web; API URL baked in at build time).
@@ -401,11 +424,11 @@ spec:
                           limits: { memory: 128Mi }
 
     # Image-tag pins from the budget repo (k8s/values.yaml, rewritten by its
-    # release workflow). DISABLED until ArgoCD has a credential for the private
-    # repo: a repository Secret `argocd-budget` (sshPrivateKey from 1Password
-    # item `argocd-budget`, same shape as argocd-syscd-app in argo-support.yaml)
-    # plus the matching read-only deploy key on yurifrl/budget. Then uncomment
-    # this and `valueFiles` above (see budget docs/MORNING.md).
+    # release workflow). DISABLED until ArgoCD can read the private repo: the
+    # `argocd-budget` repository secret above must be synced (1Password item
+    # `argocd-budget` + its read-only deploy key on yurifrl/budget). Enabling
+    # it before that breaks manifest generation for the WHOLE app. Then
+    # uncomment this and `valueFiles` above (see budget docs/MORNING.md).
     # - repoURL: git@github.com:yurifrl/budget.git
     #   targetRevision: main
     #   ref: values
