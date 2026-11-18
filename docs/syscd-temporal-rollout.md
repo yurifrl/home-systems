@@ -20,7 +20,7 @@ deploys to PROD via ArgoCD auto-sync. Do the manual steps below BEFORE merge.
   commit `dea9134`, which exists only in the local submodule clone.
 
 ## Manual steps (in order)
-1. 1Password (Kubernetes vault): create item `syscd-temporal` with field `DB_PASSWORD`
+1. 1Password (Kubernetes vault): add field `TEMPORAL_DB_PASSWORD` to item `syscd-app`
    (strong random). Nothing else is needed for Temporal itself.
 2. Push the values-submodule branch `syscd-temporal-admin` and merge it to its `main`
    first, then bump the gitlink in home-systems (otherwise Argo cannot fetch `dea9134`).
