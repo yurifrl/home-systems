@@ -1,0 +1,38 @@
+# Route EVERY service account's leader-election lease traffic into the
+# dedicated `leader-election` APF priority level.
+#
+# Why (2026-11-18): the built-in `system-leader-election` FlowSchema only
+# matches the core components (kube-controller-manager, scheduler, ...). All
+# other controllers' lease GET/PUTs fall through to `service-accounts` ->
+# `workload-low`, which on this single overloaded apiserver was saturated
+# (147/245 seats busy, ~2k rejections, highest queue wait). Lease renewals
+# queued behind bulk LIST/WATCH traffic, crossed client-go's 5s timeout, and
+# controllers died with "leader election lost" — external-secrets controller
+# and cert-controller crash-looped for 8 days (19 ExternalSecrets in
+# SecretSyncedError), same pattern seen on crossplane, longhorn csi sidecars.
+#
+# Lease requests are tiny and cheap; giving them their own lane cannot starve
+# anything else. Leader election stays ENABLED everywhere.
+apiVersion: flowcontrol.apiserver.k8s.io/v1
+kind: FlowSchema
+metadata:
+  name: all-serviceaccount-leader-election
+spec:
+  priorityLevelConfiguration:
+    name: leader-election
+  # Lower number = evaluated first. Must beat `service-accounts` (9000) and
+  # `kube-system-service-accounts` (900); sits just after the built-in
+  # system-leader-election (100).
+  matchingPrecedence: 150
+  distinguisherMethod:
+    type: ByUser
+  rules:
+    - subjects:
+        - kind: Group
+          group:
+            name: system:serviceaccounts
+      resourceRules:
+        - apiGroups: ["coordination.k8s.io"]
+          resources: ["leases"]
+          verbs: ["get", "create", "update", "patch"]
+          namespaces: ["*"]
