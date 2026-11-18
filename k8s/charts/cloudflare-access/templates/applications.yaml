@@ -44,3 +44,45 @@ spec:
           {{- toYaml .include | nindent 10 }}
     {{- end }}
 {{- end }}
+{{- /*
+Path-scoped applications: one TrustAccessApplication per path of a host, all
+sharing the same policies. Cloudflare picks the most specific path, so these
+override the host-level application for exactly the listed prefixes (each
+covers the path and everything under it). Used to open only named routes of an
+API that does its own authz while the rest of the host stays gated.
+*/ -}}
+{{- range $group := .Values.pathApplications }}
+{{- range $path := $group.paths }}
+{{- $slug := $path | trimPrefix "/" | trimPrefix "." | replace "/" "-" | replace "." "-" }}
+---
+apiVersion: zero.upjet-cloudflare.upbound.io/v1alpha1
+kind: TrustAccessApplication
+metadata:
+  name: {{ printf "%s-%s" $group.name $slug }}
+spec:
+  deletionPolicy: {{ $group.deletionPolicy | default "Delete" }}
+  providerConfigRef:
+    name: default
+  forProvider:
+    accountId: {{ $.Values.accountId | quote }}
+    name: {{ printf "%s %s" ($group.appName | default $group.name) $path | quote }}
+    domain: {{ printf "%s%s" $group.host $path | quote }}
+    type: "self_hosted"
+    sessionDuration: {{ $group.sessionDuration | default "24h" | quote }}
+    appLauncherVisible: false
+    autoRedirectToIdentity: false
+    policies:
+    {{- range $group.policyIds }}
+      - id: {{ . | quote }}
+    {{- end }}
+    {{- range $group.inlinePolicies }}
+      - name: {{ .name | quote }}
+        decision: {{ .decision | quote }}
+        {{- with .precedence }}
+        precedence: {{ . }}
+        {{- end }}
+        include:
+          {{- toYaml .include | nindent 10 }}
+    {{- end }}
+{{- end }}
+{{- end }}
