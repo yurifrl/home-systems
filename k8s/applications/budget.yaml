@@ -10,10 +10,12 @@
 # the new databases budget_temporal + budget_temporal_visibility (role
 # budget_temporal; postgres.yaml).
 #
-# Secrets: 1Password vault `kubernetes`, items `budget` (app env, incl.
-# DB_PASSWORD + DATABASE_URL), `budget-temporal` (DB_PASSWORD) and
-# `argocd-budget` (sshPrivateKey). Create them with yurifrl/budget
-# scripts/create-1password-item.sh. Until they exist the
+# Secrets: ONE 1Password item, `budget` (vault `kubernetes`): the app env
+# (incl. DB_PASSWORD + DATABASE_URL) plus TEMPORAL_DB_PASSWORD (Temporal's
+# Postgres role) and ARGOCD_SSH_PRIVATE_KEY (ArgoCD's read-only deploy key).
+# Create it with yurifrl/budget scripts/create-1password-item.sh. Because the
+# app secret extracts every field of the item, those two also reach the
+# api/worker env, where nothing reads them. Until the item exists the
 # ExternalSecrets report SecretSyncedError and api/worker/temporal pods wait
 # (CreateContainerConfigError / secret not found); web and admin do not need
 # them. The API refuses to boot in a cluster until GOOGLE_CLIENT_ID/SECRET and
@@ -89,19 +91,19 @@ spec:
                   password: "{{ .password }}"
               data:
                 - secretKey: password
-                  key: budget-temporal
-                  property: DB_PASSWORD
+                  key: budget
+                  property: TEMPORAL_DB_PASSWORD
             # Same password for the Temporal server/schema jobs (budget ns).
             - name: budget-temporal-db
               data:
                 - secretKey: password
-                  key: budget-temporal
-                  property: DB_PASSWORD
+                  key: budget
+                  property: TEMPORAL_DB_PASSWORD
             # ArgoCD credential for the PRIVATE yurifrl/budget repo (the
             # `ref: values` source below, once enabled). Same shape as
             # argocd-syscd-app in argo-support.yaml; kept here so this app's
             # pending secret never shows up on another Application. Private
-            # key: 1Password item `argocd-budget` (field sshPrivateKey), public
+            # key: 1Password item `budget` (field ARGOCD_SSH_PRIVATE_KEY), public
             # half is a read-only deploy key on the repo (budget
             # scripts/create-1password-item.sh creates both). `type: git` is
             # required, as for the other repository secrets.
@@ -109,8 +111,8 @@ spec:
               namespace: argocd
               data:
                 - secretKey: sshPrivateKey
-                  key: argocd-budget
-                  property: sshPrivateKey
+                  key: budget
+                  property: ARGOCD_SSH_PRIVATE_KEY
               template:
                 metadata:
                   labels:
@@ -426,7 +428,8 @@ spec:
     # Image-tag pins from the budget repo (k8s/values.yaml, rewritten by its
     # release workflow). DISABLED until ArgoCD can read the private repo: the
     # `argocd-budget` repository secret above must be synced (1Password item
-    # `argocd-budget` + its read-only deploy key on yurifrl/budget). Enabling
+    # `budget` field ARGOCD_SSH_PRIVATE_KEY + its read-only deploy key on
+    # yurifrl/budget). Enabling
     # it before that breaks manifest generation for the WHOLE app. Then
     # uncomment this and `valueFiles` above (see budget docs/MORNING.md).
     # - repoURL: git@github.com:yurifrl/budget.git

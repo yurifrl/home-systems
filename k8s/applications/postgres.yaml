@@ -196,8 +196,8 @@ spec:
                   name: budget-app-db
               # budget's own Temporal (budget Application): owns the
               # budget_temporal + budget_temporal_visibility databases. Password
-              # lives in the `budget-temporal` 1Password item (field
-              # DB_PASSWORD); mirrored into the databases ns as
+              # lives in the `budget` 1Password item (field
+              # TEMPORAL_DB_PASSWORD); mirrored into the databases ns as
               # `budget-temporal-db` by an ExternalSecret in
               # k8s/applications/budget.yaml.
               - name: budget_temporal
