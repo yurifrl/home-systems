@@ -1,0 +1,411 @@
+# budget: the personal budgeting app extracted from syscd-app
+# (github.com/yurifrl/budget). One Application declares everything the app
+# runs: web, API, worker, admin SPA, its OWN Temporal server (second source,
+# not shared with syscd) and the External Secrets for its credentials.
+#
+# Shared with syscd on purpose: only the CNPG `pg` cluster. The API and worker
+# connect to the EXISTING `budget` database (syscd's live data; both apps run
+# against it until syscd's budget is turned off) as role `budget_app`, a
+# member of `syscd` (postgres.yaml `inRoles`). Temporal persistence lives in
+# the new databases budget_temporal + budget_temporal_visibility (role
+# budget_temporal; postgres.yaml).
+#
+# Secrets: 1Password vault `kubernetes`, items `budget` (app env, incl.
+# DB_PASSWORD + DATABASE_URL) and `budget-temporal` (DB_PASSWORD). Create them
+# with yurifrl/budget scripts/create-1password-item.sh. Until they exist the
+# ExternalSecrets report SecretSyncedError and api/worker/temporal pods wait
+# (CreateContainerConfigError / secret not found); web and admin do not need
+# them. The API refuses to boot in a cluster until GOOGLE_CLIENT_ID/SECRET and
+# AUTH_ALLOWED_EMAILS are filled (api/src/auth-env.ts): crash-loop by design.
+#
+# Hosts: budget.syscd.live (web), budget-api.syscd.live (API, OAuth issuer,
+# /mcp), budget-admin.syscd.live (admin, Cloudflare Access Admin policy in
+# home-systems-values cloudflare-access), budget-temporal.syscd.tech (Temporal
+# UI, tailnet only).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: budget
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: budget
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        istio.io/dataplane-mode: ambient
+  sources:
+    # Support chart: Deployments + Services + istio VirtualServices +
+    # ExternalSecrets.
+    - repoURL: https://github.com/yurifrl/home-systems.git
+      targetRevision: HEAD
+      path: k8s/charts/support
+      helm:
+        # Image tags: pinned inline below (deployments[].image.tag) until
+        # ArgoCD can read the private yurifrl/budget repo. Then uncomment this
+        # and the `ref: values` source at the bottom: budget's release workflow
+        # rewrites k8s/values.yaml `imageTags` (a map, deep-merged over these
+        # declared tags), so a VERSION push rolls the cluster by itself.
+        # valueFiles:
+        #   - $values/k8s/values.yaml
+        valuesObject:
+          externalSecrets:
+            # App env (every key of the 1Password item `budget`).
+            - name: budget
+            # CNPG declarative role password: basic-auth secret in the
+            # `databases` ns (the pg cluster's ns). postgres.yaml points the
+            # `budget_app` role's passwordSecret at this `budget-app-db` secret.
+            - name: budget-app-db-roles
+              namespace: databases
+              targetName: budget-app-db
+              template:
+                type: kubernetes.io/basic-auth
+                data:
+                  username: budget_app
+                  password: "{{ .password }}"
+              data:
+                - secretKey: password
+                  key: budget
+                  property: DB_PASSWORD
+            # Same pattern for Temporal's role (postgres.yaml role
+            # budget_temporal -> `budget-temporal-db` in `databases`).
+            - name: budget-temporal-db-roles
+              namespace: databases
+              targetName: budget-temporal-db
+              template:
+                type: kubernetes.io/basic-auth
+                data:
+                  username: budget_temporal
+                  password: "{{ .password }}"
+              data:
+                - secretKey: password
+                  key: budget-temporal
+                  property: DB_PASSWORD
+            # Same password for the Temporal server/schema jobs (budget ns).
+            - name: budget-temporal-db
+              data:
+                - secretKey: password
+                  key: budget-temporal
+                  property: DB_PASSWORD
+          deployments:
+            # Expo web export served by busybox httpd on :8080
+            # (deploy/Dockerfile.web; API URL baked in at build time).
+            - name: budget-web
+              image:
+                repository: ghcr.io/yurifrl/budget-web
+                tag: "2026.11.18"
+                pullPolicy: Always
+              # Multi-arch image (amd64+arm64): no node/arch pin.
+              containerPort: 8080
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: http
+                initialDelaySeconds: 5
+                periodSeconds: 10
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+            # Bun + Hono API (bun src/index.ts, API_PORT 3100 in the image).
+            # Repeat-rule tick OFF: syscd still runs it on the same data; flip
+            # BUDGET_REPEAT_TICK when syscd's budget is turned off.
+            - name: budget-api
+              image:
+                repository: ghcr.io/yurifrl/budget-api
+                tag: "2026.11.18"
+                pullPolicy: Always
+              containerPort: 3100
+              readinessProbe:
+                httpGet:
+                  path: /health
+                  port: http
+                initialDelaySeconds: 5
+                periodSeconds: 10
+              resources:
+                requests:
+                  cpu: 20m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+              envFrom:
+                - secretRef:
+                    name: budget
+              env:
+                - name: APP_BASE_URL
+                  value: https://budget.syscd.live
+                - name: API_BASE_URL
+                  value: https://budget-api.syscd.live
+                # Admin SPA origin (CORS + credentialed session cookie).
+                - name: ADMIN_ORIGIN
+                  value: https://budget-admin.syscd.live
+                # Cookie `budget_session` (distinct from syscd's) on .syscd.live.
+                - name: COOKIE_DOMAIN
+                  value: .syscd.live
+                - name: TEMPORAL_ADDRESS
+                  value: budget-temporal-frontend.budget.svc.cluster.local:7233
+                - name: TEMPORAL_NAMESPACE
+                  value: budget
+                - name: TEMPORAL_TASK_QUEUE
+                  value: budget-jobs
+                # Must differ from syscd's `prod`: the outbox relay only takes
+                # job runs stamped with its own id (shared jobs.job_runs).
+                - name: JOBS_INSTANCE_ID
+                  value: budget-prod
+                - name: TEMPORAL_UI_URL
+                  value: https://budget-temporal.syscd.tech
+                - name: BUDGET_REPEAT_TICK
+                  value: "0"
+            # Temporal worker + outbox relay (same image as the API, different
+            # entrypoint). No HTTP port. Takes the budget-api tag.
+            - name: budget-worker
+              image:
+                repository: ghcr.io/yurifrl/budget-api
+                tag: "2026.11.18"
+                pullPolicy: Always
+              command: ["bun"]
+              args: ["src/worker.ts"]
+              resources:
+                requests:
+                  cpu: 20m
+                  memory: 96Mi
+                limits:
+                  memory: 384Mi
+              envFrom:
+                - secretRef:
+                    name: budget
+              env:
+                - name: APP_BASE_URL
+                  value: https://budget.syscd.live
+                - name: API_BASE_URL
+                  value: https://budget-api.syscd.live
+                - name: ADMIN_ORIGIN
+                  value: https://budget-admin.syscd.live
+                - name: COOKIE_DOMAIN
+                  value: .syscd.live
+                - name: TEMPORAL_ADDRESS
+                  value: budget-temporal-frontend.budget.svc.cluster.local:7233
+                - name: TEMPORAL_NAMESPACE
+                  value: budget
+                - name: TEMPORAL_TASK_QUEUE
+                  value: budget-jobs
+                - name: JOBS_INSTANCE_ID
+                  value: budget-prod
+                - name: TEMPORAL_UI_URL
+                  value: https://budget-temporal.syscd.tech
+                - name: BUDGET_REPEAT_TICK
+                  value: "0"
+            # Admin SPA (Vite static build, busybox httpd on :8080), behind
+            # Cloudflare Access (Admin policy) on budget-admin.syscd.live.
+            - name: budget-admin
+              image:
+                repository: ghcr.io/yurifrl/budget-admin
+                tag: "2026.11.18"
+                pullPolicy: Always
+              containerPort: 8080
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: http
+                initialDelaySeconds: 5
+                periodSeconds: 10
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+          services:
+            - name: budget-web
+              port: 80
+              targetPort: http
+            - name: budget-api
+              port: 3100
+              targetPort: http
+            - name: budget-admin
+              port: 80
+              targetPort: http
+          virtualServices:
+            - name: budget-web
+              hosts:
+                - budget.syscd.live
+                - budget.syscd.tech
+              service:
+                name: budget-web
+                namespace: budget
+                port: 80
+            # Per-host Cloudflare Access BYPASS (home-systems-values): the API
+            # does its own authz (Google session + AUTH_ALLOWED_EMAILS).
+            - name: budget-api
+              hosts:
+                - budget-api.syscd.live
+              service:
+                name: budget-api
+                namespace: budget
+                port: 3100
+            # budget-admin.syscd.live is protected by Cloudflare Access (Admin
+            # policy); budget-admin.syscd.tech is tailnet-only.
+            - name: budget-admin
+              hosts:
+                - budget-admin.syscd.live
+                - budget-admin.syscd.tech
+              service:
+                name: budget-admin
+                namespace: budget
+                port: 80
+            # Tailnet only (via the tailscale gateway): the Temporal UI has no
+            # auth of its own, so it must not be on cloudflare-proxied domains.
+            - name: budget-temporal-ui
+              hosts:
+                - budget-temporal.syscd.tech
+              service:
+                name: budget-temporal-web
+                namespace: budget
+                port: 8080
+
+    # budget's own Temporal server (official temporalio/helm-charts), modelled
+    # on syscd-temporal.yaml. Schema + namespace jobs are plain Jobs
+    # (useHelmHooks: false), not hooks, so they retry until the
+    # ExternalSecret-backed password exists instead of deadlocking a PreSync.
+    - repoURL: https://go.temporal.io/helm-charts
+      chart: temporal
+      targetRevision: 1.8.0 # appVersion 1.32.2
+      helm:
+        releaseName: budget-temporal # -> Services budget-temporal-{frontend,web,...}
+        valuesObject:
+          server:
+            replicaCount: 1
+            config:
+              logLevel: "info"
+              persistence:
+                # Fixed at cluster creation and immutable afterwards.
+                numHistoryShards: 512
+                defaultStore: default
+                visibilityStore: visibility
+                datastores:
+                  default:
+                    sql:
+                      createDatabase: false # CNPG Database CRs own creation
+                      manageSchema: true    # chart schema job sets up/updates
+                      pluginName: postgres12
+                      driverName: postgres12
+                      databaseName: budget_temporal
+                      connectAddr: pg-rw.databases.svc.cluster.local:5432
+                      connectProtocol: tcp
+                      user: budget_temporal
+                      existingSecret: budget-temporal-db
+                      secretKey: password
+                      maxConns: 10
+                      maxIdleConns: 10
+                  visibility:
+                    sql:
+                      createDatabase: false
+                      manageSchema: true
+                      pluginName: postgres12
+                      driverName: postgres12
+                      databaseName: budget_temporal_visibility
+                      connectAddr: pg-rw.databases.svc.cluster.local:5432
+                      connectProtocol: tcp
+                      user: budget_temporal
+                      existingSecret: budget-temporal-db
+                      secretKey: password
+                      maxConns: 5
+                      maxIdleConns: 5
+              namespaces:
+                create: true
+                useHelmHooks: false
+                namespace:
+                  - name: budget
+                    retention: 14d
+            frontend:
+              replicaCount: 1
+              resources:
+                requests: { cpu: 25m, memory: 128Mi }
+                limits: { memory: 512Mi }
+            history:
+              replicaCount: 1
+              resources:
+                requests: { cpu: 50m, memory: 256Mi }
+                limits: { memory: 768Mi }
+            matching:
+              replicaCount: 1
+              resources:
+                requests: { cpu: 25m, memory: 128Mi }
+                limits: { memory: 512Mi }
+            worker:
+              replicaCount: 1
+              resources:
+                requests: { cpu: 25m, memory: 128Mi }
+                limits: { memory: 512Mi }
+          schema:
+            useHelmHooks: false
+          web:
+            enabled: true
+            replicaCount: 1
+            resources:
+              requests: { cpu: 10m, memory: 64Mi }
+              limits: { memory: 256Mi }
+          # Minimal admin tools: a single idle pod for `kubectl exec ... temporal`.
+          admintools:
+            enabled: true
+            resources:
+              requests: { cpu: 5m, memory: 32Mi }
+              limits: { memory: 128Mi }
+          # No Elasticsearch / Cassandra / MySQL: SQL (postgres12) visibility.
+          # Custom search attribute TenantId (Keyword) on namespace `budget`,
+          # kept for parity with syscd's server; idempotent (ignores "already
+          # exists"). Runs after the namespace job.
+          extraObjects:
+            - |
+              apiVersion: batch/v1
+              kind: Job
+              metadata:
+                name: budget-temporal-search-attributes
+                annotations:
+                  argocd.argoproj.io/hook: PostSync
+                  argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+              spec:
+                backoffLimit: 20
+                ttlSecondsAfterFinished: 3600
+                template:
+                  spec:
+                    restartPolicy: OnFailure
+                    containers:
+                      - name: search-attributes
+                        image: temporalio/admin-tools:1.32.2
+                        env:
+                          - name: TEMPORAL_ADDRESS
+                            value: budget-temporal-frontend.budget.svc.cluster.local:7233
+                        command:
+                          - sh
+                          - -c
+                          - |
+                            set -e
+                            out=$(temporal operator search-attribute create \
+                              --namespace budget --name TenantId --type Keyword 2>&1) \
+                              || { echo "$out"; echo "$out" | grep -qi 'already'; }
+                            echo "$out"
+                        resources:
+                          requests: { cpu: 5m, memory: 32Mi }
+                          limits: { memory: 128Mi }
+
+    # Image-tag pins from the budget repo (k8s/values.yaml, rewritten by its
+    # release workflow). DISABLED until ArgoCD has a credential for the private
+    # repo: a repository Secret `argocd-budget` (sshPrivateKey from 1Password
+    # item `argocd-budget`, same shape as argocd-syscd-app in argo-support.yaml)
+    # plus the matching read-only deploy key on yurifrl/budget. Then uncomment
+    # this and `valueFiles` above (see budget docs/MORNING.md).
+    # - repoURL: git@github.com:yurifrl/budget.git
+    #   targetRevision: main
+    #   ref: values

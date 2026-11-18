@@ -180,6 +180,31 @@ spec:
                 login: true
                 passwordSecret:
                   name: buzz-db
+              # budget app (yurifrl/budget; budget Application) login role. It
+              # uses the EXISTING `budget` database (owned by `syscd`) while
+              # both apps run on it: membership in `syscd` (inherit, the
+              # default) gives it syscd's rights on syscd-owned objects. Password
+              # lives in the `budget` 1Password item (field DB_PASSWORD);
+              # mirrored into the databases ns as `budget-app-db` by an
+              # ExternalSecret in k8s/applications/budget.yaml.
+              - name: budget_app
+                ensure: present
+                login: true
+                inRoles:
+                  - syscd
+                passwordSecret:
+                  name: budget-app-db
+              # budget's own Temporal (budget Application): owns the
+              # budget_temporal + budget_temporal_visibility databases. Password
+              # lives in the `budget-temporal` 1Password item (field
+              # DB_PASSWORD); mirrored into the databases ns as
+              # `budget-temporal-db` by an ExternalSecret in
+              # k8s/applications/budget.yaml.
+              - name: budget_temporal
+                ensure: present
+                login: true
+                passwordSecret:
+                  name: budget-temporal-db
 
             # initdb bootstrap (runs ONCE at cluster creation as superuser).
             # The existing `pg` cluster already bootstrapped, so applying this
@@ -288,6 +313,16 @@ spec:
             - name: syscd_temporal_visibility
               ensure: present
               owner: syscd_temporal
+              databaseReclaimPolicy: retain
+            # budget Temporal persistence + SQL visibility (both owned by the
+            # budget_temporal role; schema is managed by the chart's schema jobs).
+            - name: budget_temporal
+              ensure: present
+              owner: budget_temporal
+              databaseReclaimPolicy: retain
+            - name: budget_temporal_visibility
+              ensure: present
+              owner: budget_temporal
               databaseReclaimPolicy: retain
             - name: user_management
               ensure: present
