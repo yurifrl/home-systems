@@ -15,8 +15,13 @@ apiVersion: zero.upjet-cloudflare.upbound.io/v1alpha1
 kind: TrustAccessPolicy
 metadata:
   name: {{ .key }}
+  {{- /* With an id: adopt that existing policy. Without: crossplane creates
+  the policy once and records its id as the external-name itself (never set
+  a wrong external-name here: that is what caused the duplicate churn). */}}
+  {{- with .id }}
   annotations:
-    crossplane.io/external-name: {{ .id | quote }}
+    crossplane.io/external-name: {{ . | quote }}
+  {{- end }}
 spec:
   deletionPolicy: Orphan
   providerConfigRef:
