@@ -206,7 +206,9 @@ spec:
                   cpu: 20m
                   memory: 96Mi
                 limits:
-                  memory: 384Mi
+                  # 384Mi was OOMKilled at every start: the Temporal worker bundles its
+                  # workflows with webpack on boot (peak well above the ~160Mi steady state).
+                  memory: 768Mi
               envFrom:
                 - secretRef:
                     name: budget
