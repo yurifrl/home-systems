@@ -170,6 +170,7 @@ spec:
           interval: 1m
           domainFilters:
             - syscd.dev
+            - yurifrl.dev  # GitHub Pages records in dns-records chart
           sources:
             - crd
           provider: cloudflare

@@ -13,5 +13,7 @@ spec:
       recordType: {{ .recordType | default "CNAME" }}
       recordTTL: {{ .ttl | default 1 }}
       targets:
-        - {{ .target | quote }}
+        {{- range (.targets | default (list .target)) }}
+        - {{ . | quote }}
+        {{- end }}
 {{- end }}
