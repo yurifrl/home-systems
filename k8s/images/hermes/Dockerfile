@@ -30,7 +30,7 @@ ARG DEBIAN_VERSION=trixie-slim
 FROM debian:${DEBIAN_VERSION}
 
 # renovate: datasource=github-releases depName=NousResearch/hermes-agent versioning=semver
-ARG HERMES_VERSION=0.23.2
+ARG HERMES_VERSION=0.23.3
 
 # renovate: datasource=github-releases depName=kubernetes/kubectl versioning=semver
 ARG KUBECTL_VERSION=1.33.0
