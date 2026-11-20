@@ -64,3 +64,43 @@ records:
   # to the gateway LB, reachable from the LAN only -- the gap that forced the
   # dex/mecatl move to the CF-fronted *.syscd.live routes. external-dns
   # prunes the A + heritage TXT records on sync (owner match).
+
+  # yurifrl.dev -> GitHub Pages (repo yurifrl/yurifrl.github.io, CNAME file
+  # holds "yurifrl.dev"). Published by the syscd-dev external-dns instance
+  # (crd-only, unproxied). Must stay DNS-only: GitHub needs to see its own IPs
+  # to issue the Let's Encrypt cert. IPs: https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site
+  - name: yurifrl-dev-a
+    dnsName: yurifrl.dev
+    recordType: A
+    targets:
+      - 185.199.108.153
+      - 185.199.109.153
+      - 185.199.110.153
+      - 185.199.111.153
+    proxied: false
+    ttl: 300
+
+  - name: yurifrl-dev-aaaa
+    dnsName: yurifrl.dev
+    recordType: AAAA
+    targets:
+      - 2606:50c0:8000::153
+      - 2606:50c0:8001::153
+      - 2606:50c0:8002::153
+      - 2606:50c0:8003::153
+    proxied: false
+    ttl: 300
+
+  - name: www-yurifrl-dev
+    dnsName: www.yurifrl.dev
+    target: yurifrl.github.io
+    proxied: false
+    ttl: 300
+
+  # GitHub Pages domain verification (github.com/settings/pages -> Add a domain).
+  # Fill in the challenge name/value GitHub shows, then uncomment.
+  # - name: yurifrl-dev-gh-pages-challenge
+  #   dnsName: _github-pages-challenge-yurifrl.yurifrl.dev
+  #   recordType: TXT
+  #   target: "<value-from-github>"
+  #   proxied: false
