@@ -53,13 +53,15 @@ spec:
       targetRevision: HEAD
       path: k8s/charts/support
       helm:
-        # Image tags: pinned inline below (deployments[].image.tag) until
-        # ArgoCD can read the private yurifrl/budget repo. Then uncomment this
-        # and the `ref: values` source at the bottom: budget's release workflow
-        # rewrites k8s/values.yaml `imageTags` (a map, deep-merged over these
-        # declared tags), so a VERSION push rolls the cluster by itself.
-        # valueFiles:
-        #   - $values/k8s/values.yaml
+        # Image tags come from the budget repo's k8s/values.yaml (`imageTags`,
+        # a map keyed by Deployment name, rewritten by budget's release
+        # workflow; the `ref: values` source at the bottom). The chart's
+        # deployment template prefers `imageTags[<name>]` over the declared
+        # deployments[].image.tag, so the tags below are only the fallback
+        # for a Deployment missing from that map. A VERSION push therefore
+        # rolls the cluster by itself; do not bump the tags here.
+        valueFiles:
+          - $values/k8s/values.yaml
         valuesObject:
           externalSecrets:
             # App env (every key of the 1Password item `budget`).
@@ -100,7 +102,7 @@ spec:
                   key: budget
                   property: TEMPORAL_DB_PASSWORD
             # ArgoCD credential for the PRIVATE yurifrl/budget repo (the
-            # `ref: values` source below, once enabled). Same shape as
+            # `ref: values` source below). Same shape as
             # argocd-syscd-app in argo-support.yaml; kept here so this app's
             # pending secret never shows up on another Application. Private
             # key: 1Password item `budget` (field ARGOCD_SSH_PRIVATE_KEY), public
@@ -428,12 +430,11 @@ spec:
                           limits: { memory: 128Mi }
 
     # Image-tag pins from the budget repo (k8s/values.yaml, rewritten by its
-    # release workflow). DISABLED until ArgoCD can read the private repo: the
-    # `argocd-budget` repository secret above must be synced (1Password item
-    # `budget` field ARGOCD_SSH_PRIVATE_KEY + its read-only deploy key on
-    # yurifrl/budget). Enabling
-    # it before that breaks manifest generation for the WHOLE app. Then
-    # uncomment this and `valueFiles` above (see budget docs/MORNING.md).
-    # - repoURL: git@github.com:yurifrl/budget.git
-    #   targetRevision: main
-    #   ref: values
+    # release workflow). Read through the `argocd-budget` repository secret
+    # above (1Password item `budget` field ARGOCD_SSH_PRIVATE_KEY; its public
+    # half is the read-only deploy key "argocd@home-systems" on
+    # yurifrl/budget). If that credential breaks, manifest generation fails
+    # for the WHOLE app (pods keep running the last synced tags).
+    - repoURL: git@github.com:yurifrl/budget.git
+      targetRevision: main
+      ref: values
