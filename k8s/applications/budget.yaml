@@ -127,7 +127,7 @@ spec:
             - name: budget-web
               image:
                 repository: ghcr.io/yurifrl/budget-web
-                tag: "2026.11.20"
+                tag: "2026.11.21"
                 pullPolicy: Always
               # Multi-arch image (amd64+arm64): no node/arch pin.
               containerPort: 8080
@@ -149,7 +149,7 @@ spec:
             - name: budget-api
               image:
                 repository: ghcr.io/yurifrl/budget-api
-                tag: "2026.11.20"
+                tag: "2026.11.21"
                 pullPolicy: Always
               containerPort: 3100
               readinessProbe:
@@ -197,7 +197,7 @@ spec:
             - name: budget-worker
               image:
                 repository: ghcr.io/yurifrl/budget-api
-                tag: "2026.11.20"
+                tag: "2026.11.21"
                 pullPolicy: Always
               command: ["bun"]
               args: ["src/worker.ts"]
@@ -238,7 +238,7 @@ spec:
             - name: budget-admin
               image:
                 repository: ghcr.io/yurifrl/budget-admin
-                tag: "2026.11.20"
+                tag: "2026.11.21"
                 pullPolicy: Always
               containerPort: 8080
               readinessProbe:
